@@ -6,6 +6,7 @@ import json
 from .contracts import digest
 from .kernel import audit, force_experiment, refinement_experiment, reversal_experiment
 from .providers import ProviderError, safe_response_diagnostic
+from .action_selection import PROTOCOL as ACTION_PROTOCOL, PROBLEM as ACTION_PROBLEM, WIRE_TOOL
 
 
 def tool(name, description, properties=None, required=None):
@@ -92,6 +93,9 @@ def investigate(example, provider, *, contract=None, review=None, max_turns=5, m
     initial_requests = getattr(provider, 'request_attempts', 0)
     state, error = 'incomplete', None
     failed_provider_response = {}
+    selection_protocol = getattr(getattr(provider, 'config', None), 'selection_protocol', 'native_tools_v1')
+    selection_meta = ({'selection_protocol': ACTION_PROTOCOL, 'wire_tool': WIRE_TOOL}
+                      if selection_protocol == ACTION_PROTOCOL else {})
     checks = {name: function for name, function in CHECKS.items()
               if name != 'check_reversibility' or c.declared_method == 'velocity_verlet'}
     messages = [{'role': 'system', 'content': SYSTEM},
@@ -112,6 +116,36 @@ def investigate(example, provider, *, contract=None, review=None, max_turns=5, m
                 calls = raw.get('tool_calls')
                 if raw.get('role') != 'assistant' or not isinstance(calls, list) or not 1 <= len(calls) <= 3:
                     raise ProviderError('Expected one to three supported check calls, or finish alone.')
+                if turn.protocol_error is not None:
+                    if (selection_protocol != ACTION_PROTOCOL or turn.protocol_error != ACTION_PROBLEM or
+                            len(calls) != 1 or not isinstance(calls[0], dict)):
+                        raise ProviderError('Invalid action-selection feedback was rejected.')
+                    call = calls[0]
+                    identity, function = call.get('id'), call.get('function')
+                    if (call.get('type') != 'function' or not isinstance(identity, str) or
+                            not 1 <= len(identity) <= 100 or
+                            any(not (ch.isalnum() or ch in '_-') for ch in identity) or
+                            any(event['call_id'] == identity for event in trace) or
+                            not isinstance(function, dict) or function.get('name') != WIRE_TOOL or
+                            not isinstance(function.get('arguments'), str) or len(function['arguments']) > 2048):
+                        raise ProviderError('Invalid or repeated action-selection identifier or envelope.')
+                    if c.sha256 != locked:
+                        raise ProviderError('The locked contract changed.')
+                    # Invalid arguments remain only in transient model conversation history;
+                    # the receipt records the controlled rejection, never their values.
+                    messages.append({'role': 'assistant', 'content': None, 'tool_calls': [deepcopy(call)]})
+                    rejections += 1
+                    can_correct = corrections < max_protocol_corrections and attempts < max_turns
+                    trace.append({'call_id': identity, 'tool': WIRE_TOOL, 'status': 'rejected',
+                                  'error_code': ACTION_PROBLEM['code'], **selection_meta})
+                    feedback = {'error': dict(ACTION_PROBLEM), 'retry_allowed': can_correct,
+                                'available_actions': [item['function']['name'] for item in remaining_tools(checks, executed, evidence)],
+                                'recorded_evidence_ids': sorted(evidence)}
+                    messages.append({'role': 'tool', 'tool_call_id': identity, 'content': json.dumps(feedback)})
+                    if not can_correct:
+                        raise ProviderError('The bounded action-selection correction allowance was exhausted.')
+                    corrections += 1
+                    continue
                 clean_calls = []
                 for call in calls:
                     if (not isinstance(call, dict) or call.get('type') != 'function' or
@@ -159,14 +193,15 @@ def investigate(example, provider, *, contract=None, review=None, max_turns=5, m
                         raise ProviderError('The locked contract changed.')
                     if name == 'finish':
                         ids = args.get('evidence_ids')
-                        trace.append({'call_id': call['id'], 'tool': name, 'status': 'completed', 'evidence_ids': ids})
+                        trace.append({'call_id': call['id'], 'tool': name, 'status': 'completed', 'evidence_ids': ids,
+                                      **selection_meta})
                         state = 'completed'
                         break
                     check = checks[name](example, c)
                     executed.add(name)
                     evidence[check['id']] = check
                     trace.append({'call_id': call['id'], 'tool': name, 'status': 'executed', 'evidence_id': check['id'],
-                                  'evidence_sha256': digest(check)})
+                                  'evidence_sha256': digest(check), **selection_meta})
                     messages.append({'role': 'tool', 'tool_call_id': call['id'],
                                      'content': json.dumps(compact_check(check), allow_nan=False)})
                 if state == 'completed':
@@ -193,12 +228,13 @@ def investigate(example, provider, *, contract=None, review=None, max_turns=5, m
             getattr(provider, 'request_attempts', 0) - initial_requests if provider.mode == 'live_token_factory' else 0,
         'usage': usage, 'trace': trace, 'error': error,
         'inference_profile': getattr(getattr(provider, 'config', None), 'inference_profile', 'not_applicable'),
+        'selection_protocol': selection_protocol,
         'failed_provider_response': failed_provider_response,
         'protocol_rejections': rejections, 'protocol_corrections': corrections,
         'contract_sha256': locked, 'kernel_audit_id': report['audit_id'],
         'summary': report['summary'], 'summary_origin': 'deterministic_kernel',
         'reproduction_scope': 'Numerical evidence can be reproduced locally; the provider selection transcript is a recorded run, not a claim of repeatable inference.',
         'source_versions': {name: sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
-                            for name in ('investigation.py', 'providers.py')}}
+                            for name in ('investigation.py', 'providers.py', 'action_selection.py')}}
     report['report_payload_sha256'] = digest({k: v for k, v in report.items() if k != 'report_payload_sha256'})
     return report

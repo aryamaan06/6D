@@ -10,5 +10,6 @@
   "output_usd_per_million_ceiling": 0,
   "max_output_tokens": 8192,
   "request_timeout_seconds": 180,
-  "inference_profile": "tool_sampling"
+  "inference_profile": "tool_sampling",
+  "selection_protocol": "native_tools_v1"
 }

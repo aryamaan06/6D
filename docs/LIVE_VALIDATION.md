@@ -1,44 +1,38 @@
-# One private live-validation session
+# One forced action-selection validation
 
-October 14, 2026. Provider access has been demonstrated, but no complete live investigation has passed yet. Repeating the earlier investigate command is no longer the recommended troubleshooting path.
+October 14, 2026. Provider access works, but no complete live investigation has passed yet. The latest three-profile session isolated an interface failure; increasing limits or repeating that matrix is no longer the next step.
 
-## What changed
+## What the latest receipts establish
 
-The latest receipt again reports `finish_reason=length` with the configured 8,192-token allowance. Its old error path discarded valid usage, so the receipt cannot establish how many tokens were reasoning. Increasing the limit alone did not establish reliability. Previous requests used temperature 0 with unspecified thinking behavior. NVIDIA recommends temperature 0.6 / top_p 0.95 for Nano tool calling; this mismatch is a plausible contributor, not a proven diagnosis. [NVIDIA Nano model card](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16)
+The session summary validation-20261014T111452267736Z.json records four requests. Native-no-thinking returned two accepted tool envelopes, each using 29 completion tokens. Both chose supported checks, but supplied one argument to checks that required an empty object. Neither check executed. The other two profiles returned finish_reason=stop, not the earlier truncation error. Exact extra argument values were not saved and cannot be inferred. The active configuration was correctly left unchanged.
 
-The new explicitly invoked session tests three request profiles using the same Nano model, endpoint and approved prices:
+These observations establish provider access and short native tool responses. They do not establish that thinking was disabled or that an investigation completed. The kernel findings remain independent.
 
-| Order | Profile | Requested settings | Output ceiling |
-| --- | --- | --- | --- |
-| 1 | `nebius_no_reasoning` | temperature 0, reasoning_effort `none` | 2,048 |
-| 2 | `native_no_thinking` | temperature 0, top-level chat_template_kwargs enable_thinking false | 2,048 |
-| 3 | `tool_sampling` | temperature 0.6, top_p 0.95 | 8,192 |
+## The redesigned interface
 
-Nebius lists reasoning_effort `none` in its [API reference](https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion). NVIDIA documents the native flag for Nano under vLLM, and a [Nebius-owned hosted verification](https://github.com/nebius/nebius-physical-ai/blob/main/docs/workbench/token-factory-deprecation-verification.md) demonstrates it for Lightning. Neither establishes behavior on this exact hosted Nano deployment. These are labelled compatibility experiments; a completed run does not itself prove thinking was disabled. Raw HTTP uses a top-level native field; `extra_body` in an OpenAI SDK example is a merge argument.
+Every request now forces **one** function, select_next_action, with exactly two required fields:
 
-## One terminal sequence
+    {"action": "check_force", "evidence_ids": []}
 
-The Euler contract was reviewed earlier. Display the second constructed example's contract, then start the session:
+The action enum contains only unfinished applicable checks. Once all evidence exists, it contains only finish, with the exact recorded identifiers required. The model never supplies physics parameters. Strict local validation rejects missing/extra fields, duplicate JSON keys, unavailable actions and invented evidence before any experiment runs. Valid selections are mapped to canonical runner calls using the locked contract. A semantic mistake can receive one controlled correction; malformed envelopes remain terminal.
 
-```powershell
-Set-Location -LiteralPath 'C:\Users\Arya\Documents\Codex\2026-10-04\i-a\6d-startup'
-$sixdPython = 'C:\Users\Arya\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
-& $sixdPython -X utf8 run.py contract --case force_sign_error
-& $sixdPython -X utf8 tools/with_token_factory_key.py verify-live --accept-contract
-```
+The request and response conversation preserves actual tool-call identifiers. Receipts record selection_protocol=forced_action_v1, wire_tool=select_next_action and source fingerprints, so the adapter is visible. The model must actually select finish; the independent audit cannot finish its investigation for it. Nebius documents explicit named function choice in [Function calling & Tools](https://docs.tokenfactory.nebius.com/ai-models-inference/function-calling).
 
-The displayed contract applies only to a constructed numerical example. The deliberately defective candidate must produce supported defect evidence; it is not a real mission. Enter the existing key once at the hidden prompt. It stays in this process and is removed when the helper exits. No key, account setup, package installation or Git pull is needed in this chat.
+The new session uses **only** the previously responsive native_no_thinking request profile, 2,048 output tokens, and the forced selector. There is no repeated profile matrix, transport retry, model switch or fixture fallback. The [NVIDIA Nano model card](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16) documents the native flag; the request profile name still describes a requested setting, not measured hosted reasoning behavior.
 
-The session prints profile/case progress. Allow it to finish; individual requests allow up to 180 seconds. It stops at the first profile that completes **both** the Euler method-limitation and force-sign-defect investigations, verifies their recorded evidence, and matches independently rerun kernel findings. Only then does it atomically save that profile and output ceiling in the ignored local configuration. Every other account, approval, price and cap field is preserved. Partial success cannot change configuration.
+## Private terminal command
 
-## Limits and truthful outcomes
+Both constructed example contracts were acknowledged in the earlier session. Use the same folder and existing active key:
 
-- At most three profiles, fifteen reserved requests and $0.10 in conservative session reservations, all within the existing cumulative $5 allowance and same durable ledger.
-- Every request, including one controlled tool-format correction, reserves before sending. Failed requests retain reservations; these are ceilings, not provider invoices.
-- Account, network, TLS, timeout, ledger and usage-bound failures stop the whole session. Profile incompatibility may advance to a visibly named next profile. No transport retry, model switch or fixture fallback occurs.
-- Each actual report is retained in `artifacts/provider-validation`. Failed-response diagnostics keep only controlled finish reasons, validated token counts, configured limit and profile; reasoning text and parameter values are excluded.
-- The final summary retains actual outcomes and source/profile provenance. A fixture, independent kernel headline or accepted HTTP response alone cannot pass the session.
+    Set-Location -LiteralPath 'C:\Users\Arya\Documents\Codex\2026-10-04\i-a\6d-startup'
+    & 'C:\Users\Arya\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' -X utf8 tools/with_token_factory_key.py verify-live --accept-contract
 
-Success prints **`Live end-to-end investigation completed. The validated profile is now saved locally.`** Failure preserves the active configuration and prints no success claim. Send the **Validation summary JSON** path from either outcome; Codex can inspect all included receipts without repeated output copying or receiving the key. Do not repeat a failed session manually.
+Enter the key once at the hidden prompt. It stays in that process and is removed on exit. No setup, key recreation, contract re-reading or Git pull is required in this workspace.
 
-All **197 tests passed offline**, covering profile payloads, metadata privacy, key cleanup, session/global ceilings, fatal billing stops, partial failures and the two-case acceptance gate. This is local verification, not evidence that the new session has already succeeded on Nebius. No paid inference was run by Codex during this correction.
+The session must complete **both** the Euler method-limitation and force-sign-defect investigations, verify actual evidence and match independently rerun kernel findings. Only then does it atomically save the selection protocol, request profile and output ceiling in the ignored configuration. Other account, approval, price and cap fields remain unchanged. A partial result cannot install the new protocol.
+
+Limits: **$0.10 and at most ten reserved requests**, within the existing **$5 cumulative allowance and same durable ledger**. Failed requests retain reservations; these are ceilings, not invoices. Account, transport, ledger and usage-bound failures stop the session. Every actual report and a final summary are saved in artifacts/provider-validation.
+
+Success prints **Live end-to-end investigation completed. The validated profile is now saved locally.** A failure keeps the active configuration unchanged. Send only the final **Validation summary JSON** path; do not repeat a failed session manually.
+
+All **214 tests passed offline**, including a bounded wire-conversation replay with an invalid selection, one correction and actual kernel evidence for Euler, Verlet and a force defect. An independent implementation review found no blocking issue. This verifies local behavior, not live compatibility: a new completed live receipt is still required. No paid inference was run by Codex during this redesign. Codex's process has no local inference credential; the hidden key entered in Arya's earlier terminal invocations is not retained.

@@ -14,6 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 import sixd.live_validation as validation
 from sixd.providers import BudgetLedger, FAILURE_SUFFIX, FixtureProvider, LiveConfig, ProviderError, Turn
+from sixd.contracts import digest
+from sixd.action_selection import PROBLEM
 
 SECRET = 'synthetic-session-credential-never-persist-or-display'
 PRIVATE_DETAIL = 'untrusted-response-secret-never-persist-or-display'
@@ -49,6 +51,11 @@ class SyntheticLiveProvider:
             return Turn({'role': 'assistant', 'content': PRIVATE_DETAIL, 'tool_calls': [
                 {'id': 'offline-invalid-arguments', 'type': 'function', 'function':
                     {'name': 'check_force', 'arguments': json.dumps({'mu': PRIVATE_DETAIL})}}]}, {})
+        if self.behavior == 'selector_recover' and self.request_attempts == 1:
+            return Turn({'role': 'assistant', 'content': PRIVATE_DETAIL, 'tool_calls': [
+                {'id': 'offline-invalid-selection', 'type': 'function', 'function':
+                    {'name': 'select_next_action', 'arguments': json.dumps({'extra': PRIVATE_DETAIL})}}]},
+                        {}, protocol_error=dict(PROBLEM))
         return self.fixture.complete(messages, tools)
 
 
@@ -104,7 +111,7 @@ class LiveValidationTests(unittest.TestCase):
         factory.assert_not_called()
         self.assertFalse((self.local / 'budget.sqlite3').exists())
 
-    def test_first_profile_must_complete_both_distinct_kernel_outcomes(self):
+    def test_forced_protocol_must_complete_both_distinct_kernel_outcomes(self):
         calls = []
 
         def factory(config, budget):
@@ -113,14 +120,17 @@ class LiveValidationTests(unittest.TestCase):
 
         self.assertEqual(self.invoke(factory), 0)
         self.assertEqual([config.inference_profile for config, _ in calls],
-                         ['nebius_no_reasoning', 'nebius_no_reasoning'])
+                         ['native_no_thinking', 'native_no_thinking'])
+        self.assertEqual([config.selection_protocol for config, _ in calls],
+                         ['forced_action_v1', 'forced_action_v1'])
         summary = self.summary()
         self.assertEqual(summary['state'], 'completed')
         self.assertTrue(summary['configuration_updated'])
         self.assertEqual([row['case'] for row in summary['attempts']], list(validation.CASES))
         self.assertEqual([row['kernel_verdict'] for row in summary['attempts']],
                          ['method_limitation', 'defect_likely'])
-        expected = dict(self.original, inference_profile='nebius_no_reasoning', max_output_tokens=2048)
+        expected = dict(self.original, inference_profile='native_no_thinking', max_output_tokens=2048,
+                        selection_protocol='forced_action_v1')
         self.assertEqual(json.loads(self.path.read_text()), expected)
         self.assertEqual(len({id(budget) for _, budget in calls}), 1)
         self.assert_no_private_data()
@@ -134,28 +144,29 @@ class LiveValidationTests(unittest.TestCase):
                 behavior='complete' if len(calls) == 1 else 'fail')
 
         self.assertEqual(self.invoke(factory), 2)
-        self.assertEqual(calls, ['nebius_no_reasoning', 'nebius_no_reasoning',
-                                 'native_no_thinking', 'tool_sampling'])
+        self.assertEqual(calls, ['native_no_thinking', 'native_no_thinking'])
         self.assertEqual(json.loads(self.path.read_text()), self.original)
         summary = self.summary()
         self.assertEqual(summary['attempts'][0]['state'], 'completed')
         self.assertEqual(summary['state'], 'failed')
         self.assertFalse(summary['configuration_updated'])
-        self.assertEqual(len(summary['attempts']), 4)
+        self.assertEqual(len(summary['attempts']), 2)
         self.assert_no_private_data()
 
-    def test_profiles_run_in_order_and_stop_after_second_profile_passes_both(self):
+    def test_failure_stops_the_single_candidate_without_profile_tuning_or_second_case(self):
         calls = []
 
         def factory(config, budget):
             calls.append((config.inference_profile, config.max_output_tokens))
-            return SyntheticLiveProvider(config, budget,
-                behavior='fail' if config.inference_profile == 'nebius_no_reasoning' else 'complete')
+            return SyntheticLiveProvider(config, budget, behavior='fail')
 
-        self.assertEqual(self.invoke(factory), 0)
-        self.assertEqual(calls, [('nebius_no_reasoning', 2048), ('native_no_thinking', 2048),
-                                 ('native_no_thinking', 2048)])
-        self.assertEqual(self.summary()['successful_profile'], 'native_no_thinking')
+        self.assertEqual(self.invoke(factory), 2)
+        self.assertEqual(calls, [('native_no_thinking', 2048)])
+        summary = self.summary()
+        self.assertEqual([row['case'] for row in summary['attempts']], ['euler_method_limit'])
+        self.assertEqual(summary['selection_protocol'], 'forced_action_v1')
+        self.assertEqual(summary['wire_tool'], 'select_next_action')
+        self.assertEqual(json.loads(self.path.read_text()), self.original)
         self.assert_no_private_data()
 
     def test_all_failures_preserve_active_settings_and_save_each_receipt(self):
@@ -169,11 +180,11 @@ class LiveValidationTests(unittest.TestCase):
         self.assertEqual(calls, list(validation.PROFILES))
         self.assertEqual(json.loads(self.path.read_text()), self.original)
         summary = self.summary()
-        self.assertEqual(summary['request_reservations'], 3)
-        self.assertEqual(len(summary['attempts']), 3)
-        self.assertEqual(summary['session_reserved_usd'], 0.003)
+        self.assertEqual(summary['request_reservations'], 1)
+        self.assertEqual(len(summary['attempts']), 1)
+        self.assertEqual(summary['session_reserved_usd'], 0.001)
         self.assertEqual(len(list((self.root / 'artifacts' / 'provider-validation')
-                                  .glob('????????????????????-*.json'))), 3)
+                                  .glob('????????????????????-*.json'))), 1)
         self.assert_no_private_data()
 
     def test_offline_mode_cannot_pass_live_gate_even_with_completed_trace(self):
@@ -196,6 +207,22 @@ class LiveValidationTests(unittest.TestCase):
             self.assertEqual(report['investigation']['protocol_corrections'], 1)
             self.assertEqual(report['investigation']['trace'][0]['status'], 'rejected')
             self.assertEqual(report['investigation']['trace'][-1]['tool'], 'finish')
+        self.assert_no_private_data()
+
+    def test_forced_selector_rejection_is_recorded_as_controlled_operator_code(self):
+        self.assertEqual(self.invoke(lambda config, budget:
+                                    SyntheticLiveProvider(config, budget, behavior='selector_recover')), 0)
+        summary = self.summary()
+        from sixd.reporting import read_report
+        for attempt in summary['attempts']:
+            self.assertEqual(attempt['operator_error_codes'], ['invalid_action_selection'])
+            self.assertEqual(attempt['selection_protocol'], 'forced_action_v1')
+            self.assertEqual(attempt['wire_tool'], 'select_next_action')
+            report = read_report(attempt['evidence_json'])
+            rejected = report['investigation']['trace'][0]
+            self.assertEqual(rejected['status'], 'rejected')
+            self.assertEqual(rejected['error_code'], 'invalid_action_selection')
+            self.assertEqual(rejected['wire_tool'], 'select_next_action')
         self.assert_no_private_data()
 
     def test_invalid_report_digest_never_updates_configuration(self):
@@ -238,7 +265,8 @@ class LiveValidationTests(unittest.TestCase):
 
     def test_safe_diagnostic_excludes_remote_text_and_invalid_values(self):
         result = validation.safe_diagnostic({
-            'finish_reason': 'length', 'max_output_tokens': 2048, 'inference_profile': 'nebius_no_reasoning',
+            'finish_reason': 'length', 'max_output_tokens': 2048, 'inference_profile': 'native_no_thinking',
+            'selection_protocol': 'forced_action_v1',
             'private': PRIVATE_DETAIL, 'message': SECRET,
             'usage': {'prompt_tokens': 10, 'completion_tokens': 2048, 'total_tokens': 2058,
                       'remote': PRIVATE_DETAIL, 'completion_tokens_details': {'reasoning_tokens': 2048, 'private': SECRET}},
@@ -246,6 +274,7 @@ class LiveValidationTests(unittest.TestCase):
         self.assertNotIn(SECRET, json.dumps(result))
         self.assertNotIn(PRIVATE_DETAIL, json.dumps(result))
         self.assertEqual(result['usage']['completion_tokens_details'], {'reasoning_tokens': 2048})
+        self.assertEqual(result['selection_protocol'], 'forced_action_v1')
         self.assertEqual(validation.safe_diagnostic({'finish_reason': SECRET,
                          'usage': {'completion_tokens': True}, 'max_output_tokens': -1}), {'usage': {}})
 
@@ -262,6 +291,22 @@ class LiveValidationTests(unittest.TestCase):
 
         self.assertEqual(self.invoke(factory), 2)
         self.assertEqual(json.loads(self.path.read_text())['custom_nonsecret_note'], 'external update')
+        self.assertFalse(self.summary()['configuration_updated'])
+        self.assert_no_private_data()
+
+    def test_completed_native_tool_receipt_cannot_install_forced_action_protocol(self):
+        original_investigate = validation.investigate
+
+        def wrong_protocol(*args, **kwargs):
+            report = original_investigate(*args, **kwargs)
+            report['investigation']['selection_protocol'] = 'native_tools_v1'
+            report['report_payload_sha256'] = digest({key: value for key, value in report.items()
+                                                     if key != 'report_payload_sha256'})
+            return report
+
+        with patch.object(validation, 'investigate', side_effect=wrong_protocol):
+            self.assertEqual(self.invoke(lambda config, budget: SyntheticLiveProvider(config, budget)), 2)
+        self.assertEqual(json.loads(self.path.read_text()), self.original)
         self.assertFalse(self.summary()['configuration_updated'])
         self.assert_no_private_data()
 
@@ -293,14 +338,14 @@ class SessionBudgetTests(unittest.TestCase):
         with closing(sqlite3.connect(self.path)) as connection:
             self.assertEqual(connection.execute('SELECT cap FROM budget').fetchone()[0], 5.0)
 
-    def test_sixteenth_reservation_blocks_before_delegate(self):
+    def test_eleventh_reservation_blocks_before_delegate(self):
         session = validation.SessionBudget(self.ledger)
-        for _ in range(15):
+        for _ in range(10):
             session.reserve(self.config, 0.001)
         before = self.reserved()
         with self.assertRaises(ProviderError):
             session.reserve(self.config, 0.001)
-        self.assertEqual(session.reservations, 15)
+        self.assertEqual(session.reservations, 10)
         self.assertEqual(self.reserved(), before)
 
     def test_global_rejection_does_not_consume_session_reservation(self):

@@ -1,4 +1,4 @@
-"""Explicit, budget-limited live compatibility validation; never a fixture fallback."""
+"""Explicit, budget-limited forced action validation; never a fixture fallback."""
 from dataclasses import replace
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -17,10 +17,16 @@ from .reporting import save_report, verify_payload
 
 
 SESSION_CAP_USD = 0.10
-MAX_RESERVATIONS = 15
+MAX_RESERVATIONS = 10
 CASES = ('euler_method_limit', 'force_sign_error')
-PROFILES = (('nebius_no_reasoning', 2048), ('native_no_thinking', 2048),
-            ('tool_sampling', 8192))
+PROFILES = (('native_no_thinking', 2048),)
+SELECTION_PROTOCOL = 'forced_action_v1'
+WIRE_TOOL = 'select_next_action'
+OPERATOR_ERROR_CODES = frozenset((
+    'check_arguments_not_empty', 'duplicate_check_batch', 'check_already_executed',
+    'finish_must_be_alone', 'finish_before_checks', 'finish_evidence_mismatch',
+    'invalid_action_selection',
+))
 SESSION_STOP_PREFIXES = (
     'Usage exceeded the configured reservation bound;',
     'The approved inference allowance is exhausted.',
@@ -78,8 +84,11 @@ def safe_diagnostic(record):
         if (isinstance(details, dict) and type(details.get('reasoning_tokens')) is int and
                 0 <= details['reasoning_tokens'] <= result['usage'].get('completion_tokens', -1)):
             result['usage']['completion_tokens_details'] = {'reasoning_tokens': details['reasoning_tokens']}
-    if record.get('inference_profile') in {profile for profile, _ in PROFILES}:
+    if (isinstance(record.get('inference_profile'), str) and
+            record['inference_profile'] in {profile for profile, _ in PROFILES}):
         result['inference_profile'] = record['inference_profile']
+    if record.get('selection_protocol') in ('native_tools_v1', SELECTION_PROTOCOL):
+        result['selection_protocol'] = record['selection_protocol']
     return result
 
 
@@ -87,7 +96,8 @@ def update_profile(path, original, profile, limit):
     """Commit a validated profile atomically, preserving every unrelated setting."""
     if json.loads(path.read_text(encoding='utf-8')) != original:
         raise ValueError('Configuration changed while validation ran.')
-    revised = dict(original, inference_profile=profile, max_output_tokens=limit)
+    revised = dict(original, inference_profile=profile, max_output_tokens=limit,
+                   selection_protocol=SELECTION_PROTOCOL)
     temporary = path.with_name(path.name + '.' + uuid4().hex + '.tmp')
     try:
         with temporary.open('x', encoding='utf-8') as target:
@@ -99,7 +109,7 @@ def update_profile(path, original, profile, limit):
 
 
 def validate_live(root, *, accept_contract=False):
-    """Validate up to three explicit profiles with one private key entry."""
+    """Validate one forced action protocol across two cases with one private key entry."""
     if accept_contract is not True:
         for name in CASES:
             print('Constructed case:', name)
@@ -126,19 +136,22 @@ def validate_live(root, *, accept_contract=False):
                'contract_sha256': {name: EXAMPLES[name].contract.sha256 for name in CASES},
                'session_cap_usd': SESSION_CAP_USD, 'max_request_reservations': MAX_RESERVATIONS,
                'global_spend_cap_usd': config.spend_cap_usd,
+               'selection_protocol': SELECTION_PROTOCOL, 'wire_tool': WIRE_TOOL,
                'profiles': [{'inference_profile': profile, 'max_output_tokens': limit}
                             for profile, limit in PROFILES],
                'source_versions': {name: sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
-                                   for name in ('live_validation.py', 'providers.py', 'investigation.py', 'reporting.py')},
+                                   for name in ('live_validation.py', 'providers.py', 'investigation.py',
+                                                'action_selection.py', 'reporting.py')},
                'attempts': [], 'state': 'failed', 'configuration_updated': False,
-               'claim_boundary': 'Compatibility validation on two constructed numerical examples; not model quality or whole-mission validation. Profile names describe requested settings, not measured reasoning behavior.'}
-    print('Live validation: up to three explicit compatibility profiles; no transport retries or fixture fallback.')
-    print('Session ceiling: $0.10 and 15 request reservations within the existing approved cumulative allowance.')
+               'claim_boundary': 'Forced action protocol validation on two constructed numerical examples; not model quality or whole-mission validation. The native_no_thinking profile previously produced short accepted responses; its name describes requested settings, not proof of reasoning being disabled.'}
+    print('Live validation: one forced action-selection protocol; no profile matrix, transport retries or fixture fallback.')
+    print('Session ceiling: $0.10 and 10 request reservations within the existing approved cumulative allowance.')
     try:
         stop_session = False
         for profile, limit in PROFILES:
-            selected = replace(config, inference_profile=profile, max_output_tokens=limit)
-            print(f'Profile: {profile}; output ceiling: {limit} tokens.')
+            selected = replace(config, inference_profile=profile, max_output_tokens=limit,
+                               selection_protocol=SELECTION_PROTOCOL)
+            print(f'Profile: {profile}; selection protocol: {SELECTION_PROTOCOL}; output ceiling: {limit} tokens.')
             completed_cases = []
             for name in CASES:
                 if budget.reservations >= MAX_RESERVATIONS:
@@ -159,27 +172,34 @@ def validate_live(root, *, accept_contract=False):
                 state = run.get('state') if run.get('state') in (
                     'completed', 'failed', 'incomplete', 'blocked_contract') else 'invalid'
                 attempt = {'inference_profile': profile, 'max_output_tokens': limit, 'case': name,
+                           'selection_protocol': SELECTION_PROTOCOL, 'wire_tool': WIRE_TOOL,
                            'state': state, 'record_id': paths['record_id'],
                            'evidence_json': paths['json_path'], 'kernel_verdict': report['verdict'],
                            'live_request_attempts': run.get('live_request_attempts', 0),
                            'accepted_live_responses': report.get('live_model_calls', 0),
-                           'failed_provider_response': safe_diagnostic(run.get('failed_provider_response'))}
+                           'failed_provider_response': safe_diagnostic(run.get('failed_provider_response')),
+                           'operator_error_codes': sorted({event.get('error_code') for event in run.get('trace', [])
+                                                           if isinstance(event, dict) and isinstance(event.get('error_code'), str) and
+                                                           event.get('error_code') in OPERATOR_ERROR_CODES})}
                 summary['attempts'].append(attempt)
                 print(f'Investigation: {state}; accepted live responses: {attempt["accepted_live_responses"]}; '
                       f'request attempts: {attempt["live_request_attempts"]}.')
                 if attempt['failed_provider_response']:
                     print('Controlled provider diagnostic:', json.dumps(attempt['failed_provider_response']))
+                if attempt['operator_error_codes']:
+                    print('Controlled operator error codes:', ', '.join(attempt['operator_error_codes']))
                 print('Evidence JSON:', paths['json_path'])
                 error = run.get('error')
                 if isinstance(error, str) and error.startswith(SESSION_STOP_PREFIXES):
                     stop_session = True
-                    print('Session stopped: a budget, account or transport boundary requires review. No further profile will run.')
+                    print('Session stopped: a budget, account or transport boundary requires review. No further request will run.')
                     break
                 completed = (state == 'completed' and provider.mode == 'live_token_factory' and
                              report.get('model_mode') == 'live_token_factory' and
                              type(report.get('live_model_calls')) is int and report['live_model_calls'] > 0 and
                              type(run.get('live_request_attempts')) is int and run['live_request_attempts'] > 0 and
-                             run.get('model') == selected.model and run.get('inference_profile') == profile)
+                             run.get('model') == selected.model and run.get('inference_profile') == profile and
+                             run.get('selection_protocol') == SELECTION_PROTOCOL)
                 if not completed:
                     break
                 completed_cases.append(name)
@@ -188,12 +208,12 @@ def validate_live(root, *, accept_contract=False):
                 summary['successful_profile'] = profile
                 update_profile(config_path, original, profile, limit)
                 summary['configuration_updated'] = True
-                print('Live end-to-end investigation completed. The validated profile is now saved locally.')
+                print('Both live end-to-end investigations completed. The validated action protocol is now saved locally.')
                 break
             if stop_session or budget.reservations >= MAX_RESERVATIONS:
                 break
         if summary['state'] != 'completed':
-            print('No profile completed the live investigation. The active configuration remains unchanged.')
+            print('The action protocol did not complete both live cases. The active configuration remains unchanged.')
     except (ProviderError, OSError, ValueError, TypeError, KeyError, ArithmeticError):
         summary['state'] = 'failed'
         print('Validation stopped on a configuration, evidence, budget or local storage error. Private details were suppressed.')

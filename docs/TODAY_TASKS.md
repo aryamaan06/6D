@@ -66,21 +66,15 @@ Expected: the example's assumptions followed by `Contract SHA-256`. This example
 
 ## 5. Run one bounded live-validation session
 
-The repeated investigate command has been replaced by a diagnostic session that enters the key once and tests explicit request profiles. First display and review the second constructed example's contract:
-
-```powershell
-& $sixdPython -X utf8 run.py contract --case force_sign_error
-```
-
-Then run:
+Both constructed contracts were acknowledged in the earlier session. The profile matrix is now replaced by one forced action-selection protocol using the previously responsive native profile. Run:
 
 ```powershell
 & $sixdPython -X utf8 tools/with_token_factory_key.py verify-live --accept-contract
 ```
 
-Enter the existing key once at the hidden prompt. Let the session finish while it prints profile/case progress. It uses the same Nano model, endpoint and persistent $5 ledger, with a stricter session ceiling of **$0.10 and 15 reserved requests**. Failed reservations remain; do not delete `.local\budget.sqlite3`. Account, transport and billing-bound failures stop the session. No additional card spending is authorized.
+Enter the existing key once at the hidden prompt. Let the session finish while it prints protocol/case progress. It uses the same Nano model, endpoint and persistent $5 ledger, with a stricter ceiling of **$0.10 and ten reserved requests**. Failed reservations remain; do not delete `.local\budget.sqlite3`. Account, transport and billing-bound failures stop the session. No additional card spending is authorized.
 
-Success requires both the Euler method-limitation and force-defect investigations to complete with verified independent kernel evidence. It prints **Live end-to-end investigation completed. The validated profile is now saved locally.** Only then is the working profile saved. If all profiles fail, the original configuration is preserved and no success is claimed. All 197 offline tests passed; the session has not yet been measured live. See LIVE_VALIDATION.md for the three request profiles and their source/compatibility limits.
+Success requires both the Euler method-limitation and force-defect investigations to complete through select_next_action with verified independent kernel evidence. It prints **Live end-to-end investigation completed. The validated profile is now saved locally.** Only then are the protocol/profile saved. Failure preserves the original configuration. All 214 offline tests passed, including actual adapter conversation replay; this redesigned protocol has not yet completed live. See LIVE_VALIDATION.md for the measured failure and new interface. No parameter sweep or alternative-profile fallback is run.
 
 From either outcome, send only the final **Validation summary JSON** path. It references every receipt, allowing Codex to inspect the whole session without repeated output copying or receiving the key. Do not manually repeat a failed session.
 

@@ -11,11 +11,13 @@ import math
 import os
 import sqlite3
 import ssl
+from .action_selection import build_action_request, decode_action_message
 
 
 RESPONSE_TOO_LARGE = 'Provider response exceeded the bounded size.'
 FAILURE_SUFFIX = ' Reservation retained; no automatic retry.'
 INFERENCE_PROFILES = ('tool_sampling', 'nebius_no_reasoning', 'native_no_thinking')
+SELECTION_PROTOCOLS = ('native_tools_v1', 'forced_action_v1')
 FINISH_REASONS = ('length', 'stop', 'content_filter', 'function_call', 'tool_calls')
 
 
@@ -81,6 +83,7 @@ class Turn:
     message: dict
     usage: dict
     request_id: str | None = None
+    protocol_error: dict | None = None
 
 
 class Provider(Protocol):
@@ -125,6 +128,7 @@ class LiveConfig:
     max_output_tokens: int = 1024
     request_timeout_seconds: int = 45
     inference_profile: str = 'tool_sampling'
+    selection_protocol: str = 'native_tools_v1'
 
     @classmethod
     def load(cls, path):
@@ -156,6 +160,8 @@ class LiveConfig:
                 raise ProviderError('Choose a 15–180 second request timeout.')
             if not isinstance(config.inference_profile, str) or config.inference_profile not in INFERENCE_PROFILES:
                 raise ProviderError('Choose a supported inference profile; see docs/PROVIDER_SETUP.md.')
+            if not isinstance(config.selection_protocol, str) or config.selection_protocol not in SELECTION_PROTOCOLS:
+                raise ProviderError('Choose a supported action-selection protocol; see docs/PROVIDER_SETUP.md.')
             return config
         except (OSError, KeyError, TypeError, ValueError) as exc:
             if isinstance(exc, ProviderError):
@@ -209,9 +215,15 @@ class TokenFactoryProvider:
             return json.loads(data)
 
     def complete(self, messages, tools):
-        selection = ({'type': 'function', 'function': {'name': tools[0]['function']['name']}}
-                     if len(tools) == 1 else 'auto')
-        payload = {'model': self.model, 'messages': messages, 'tools': tools,
+        if self.config.selection_protocol == 'forced_action_v1':
+            wire_messages, wire_tools, selection = build_action_request(messages, tools)
+        elif self.config.selection_protocol == 'native_tools_v1':
+            wire_messages, wire_tools = messages, tools
+            selection = ({'type': 'function', 'function': {'name': tools[0]['function']['name']}}
+                         if len(tools) == 1 else 'auto')
+        else:
+            raise ProviderError('Unsupported action-selection protocol. No request was sent.')
+        payload = {'model': self.model, 'messages': wire_messages, 'tools': wire_tools,
                    'tool_choice': selection, 'max_tokens': self.config.max_output_tokens,
                    'stream': False}
         # NVIDIA recommends this sampling pair for Nano tool calling. Thinking-off
@@ -273,6 +285,16 @@ class TokenFactoryProvider:
                                 diagnostic={'finish_reason': safe_reason, 'usage': counts,
                                             'max_output_tokens': self.config.max_output_tokens,
                                             'inference_profile': self.config.inference_profile})
+        if self.config.selection_protocol == 'forced_action_v1':
+            try:
+                message, problem = decode_action_message(message, tools)
+            except ProviderError as error:
+                error.diagnostic = safe_response_diagnostic(
+                    {'finish_reason': reason, 'usage': counts,
+                     'max_output_tokens': self.config.max_output_tokens,
+                     'inference_profile': self.config.inference_profile})
+                raise
+            return Turn(message, counts, protocol_error=problem)
         return Turn(message, counts)
 
 
