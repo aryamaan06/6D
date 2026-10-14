@@ -8,7 +8,7 @@ October 14, 2026. Codex owns engineering implementation, tests and integration. 
 - **VS Code:** open the existing project files and run the commands below in its PowerShell terminal. The installed Codex sidebar can be used for a separately assigned, bounded task later. Official OpenAI documentation describes the IDE extension as a coding interface working with editor context: https://learn.chatgpt.com/docs/codex/ide. This does not require moving our lead build conversation.
 - **GitHub:** the private repository is already connected and pushed. No new repository, clone or upload is needed. Codex handles reviewed commits/pushes.
 
-Perform the steps below in order. Paste each command into the terminal, press Enter and wait for it to finish before the next command. If a command errors, stop that terminal sequence and send its error text here; the written interface review can proceed independently.
+Current checkpoint: account/key setup and initial live validation are complete. Session validation-20261014T181514388787Z.json completed both actual Nano investigations and saved the validated configuration; seven native responses and independent evidence matches were verified. **Do not repeat steps 1–5 now.** Continue with product-flow review and the next connected-project increment. The setup commands below remain a reference for a fresh environment or a relevant future change. If a later command errors, stop that sequence and send its error text here.
 
 ## 1. Open the existing folder
 
@@ -74,7 +74,7 @@ Both constructed contracts were acknowledged in the earlier session. The profile
 
 Enter the existing key once at the hidden prompt. Let the session finish while it prints protocol/case progress. It uses the same Nano model, endpoint and persistent $5 ledger, with a stricter ceiling of **$0.10 and ten reserved requests**. Failed reservations remain; do not delete `.local\budget.sqlite3`. Account, transport and billing-bound failures stop the session. No additional card spending is authorized.
 
-Success requires both the Euler method-limitation and force-defect investigations to complete through select_next_action with verified independent kernel evidence. It prints **Both live end-to-end investigations completed. The validated action protocol is now saved locally.** Only then are the protocol/profile saved. Failure preserves the original configuration. All 237 offline tests passed, including stop/native and exact JSON-content selection compatibility, explicit response provenance and strict guards; the corrected receiver has not yet completed live. See LIVE_VALIDATION.md for the measured response and client correction. No parameter sweep or alternative-profile fallback is run.
+Success requires both the Euler method-limitation and force-defect investigations to complete through select_next_action with verified independent kernel evidence. The completed October 14 session printed **Both live end-to-end investigations completed. The validated action protocol is now saved locally.** Its saved settings and both actual receipts were verified. All 237 offline tests remain the development baseline. See LIVE_VALIDATION.md for the measured completion. No parameter sweep or alternative-profile fallback was run; this gate requires no repeat now.
 
 From either outcome, send only the final **Validation summary JSON** path. It references every receipt, allowing Codex to inspect the whole session without repeated output copying or receiving the key. Do not manually repeat a failed session.
 

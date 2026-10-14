@@ -1,8 +1,8 @@
 # One forced action-selection validation
 
-October 14, 2026. Provider access works, but no complete live investigation has passed yet. The latest request got past HTTP handling and returned stop with 19 completion tokens. The client rejected it before inspecting the action. The corrected receiver permits strictly validated forced-action responses with stop, the documented named-call completion boundary. The actual discarded message format remains unknown. See [the measured sequence](LIVE_INTEGRATION_STATUS.md). Increasing limits or repeating the profile matrix is not the next step.
+October 14, 2026. **Both initial live investigations passed** in validation-20261014T181514388787Z.json: three native responses for the Euler method limitation and four for the force defect, all with stop and zero protocol corrections. Saved contracts/evidence/source versions and independently rerun kernel findings match. The validated settings are installed under the same $5 ledger. **No repeat is needed now.** The command below remains a setup/acceptance reference for new environments or relevant changes. See [verified status and earlier failures](LIVE_INTEGRATION_STATUS.md).
 
-## What the latest receipts establish
+## Historical interface findings
 
 The session summary validation-20261014T111452267736Z.json records four requests. Native-no-thinking returned two accepted tool envelopes, each using 29 completion tokens. Both chose supported checks, but supplied one argument to checks that required an empty object. Neither check executed. The other two profiles returned finish_reason=stop, not the earlier truncation error. Exact extra argument values were not saved and cannot be inferred. The active configuration was correctly left unchanged.
 
@@ -37,4 +37,4 @@ Limits: **$0.10 and at most ten reserved requests**, within the existing **$5 cu
 
 Success prints **Both live end-to-end investigations completed. The validated action protocol is now saved locally.** A failure keeps the active configuration unchanged. Send only the final **Validation summary JSON** path; do not repeat a failed session manually.
 
-All **237 tests passed offline**, including both constructed cases under native stop and exact content JSON, preserved response provenance, strict failed-response handling, a schema-rejecting mock gateway and bounded conversation correction. Independent implementation review found no blocking issue. This verifies local behavior, not live compatibility: new completed live receipts are still required. No paid inference was run by Codex during this correction. Codex's process has no local inference credential; the hidden key entered in Arya's earlier terminal invocations is not retained.
+All **237 tests passed offline**, including both constructed cases under native stop and exact content JSON, preserved response provenance, strict failed-response handling, a schema-rejecting mock gateway and bounded conversation correction. Independent implementation review found no blocking issue. The subsequent actual live receipts establish completion for the two native-response examples; the JSON-content compatibility path remains offline-tested only. No paid inference was run by Codex while inspecting and documenting success. The hidden key entered in Arya's terminal is not retained by that helper.

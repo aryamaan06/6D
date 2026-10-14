@@ -1,6 +1,14 @@
 # 6D — first live integration attempt and diagnostics
 
-October 14, 2026, Asia/Calcutta. Live provider access is confirmed, but the full agent investigation is not yet completed. Current model: `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`; existing approved cumulative allowance: $5, unchanged.
+October 14, 2026, Asia/Calcutta. **The initial two-case live integration gate is complete.** Current model: `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`; existing approved cumulative allowance: $5, unchanged. Historical failures below are preserved as measured debugging history.
+
+## Verified completion
+
+Session `artifacts/provider-validation/validation-20261014T181514388787Z.json` completed both constructed cases and installed native_no_thinking/forced_action_v1 with a 2,048-token ceiling. Euler receipt ending `20261014T181519125190Z.json` records three accepted native responses and two experiments with method_limitation. Force-defect receipt ending `20261014T181525508833Z.json` records four accepted native responses and three experiments with defect_likely. All seven requests produced accepted native tool calls with finish_reason=stop and provider-origin IDs. There were zero protocol rejections or corrections; no content-selection adapter, fixture, profile matrix or transport retry was used.
+
+Post-run verification checked both saved payloads, locked contracts, exact finish citations, source fingerprints against current code, installed configuration and independently rerun kernel findings. The session retained a $0.01461258 conservative reservation, not a provider invoice, within the existing cumulative $5 ledger. Existing 237 offline tests remain the development baseline; no additional paid request was made while inspecting the result. This establishes end-to-end integration for these two constructed examples. It does not establish broad model performance, thinking-off behavior, customer value, whole-vehicle coverage or mission readiness.
+
+Initial provider troubleshooting is closed for this tested workflow. Continue the connected project/requirements investigation and product journey. Do not repeat the live validator without a relevant change or unresolved concern.
 
 ## What was measured
 
@@ -66,6 +74,6 @@ The [current vLLM serving implementation](https://docs.vllm.ai/en/stable/api/vll
 
 Receipts retain actual response_format, finish_reason and call_id_origin; saved reports check their consistency. Failed responses retain only controlled outer shape/count/presence facts alongside existing safe diagnostics. No raw text or reasoning is saved. All **237 offline tests passed**, including four complete conversations (Euler and force defect in both response formats), mixed formats, semantic correction, strict failure cases, persisted provenance and refusal to install offline results. Independent review found no blocker. No paid inference was run by Codex. Actual live completion remains pending.
 
-Next: use **verify-live** following [LIVE_VALIDATION.md](LIVE_VALIDATION.md), with one private key entry. The command is unchanged; the receiver now handles the supported completion boundary and records format explicitly. Send the final Validation summary JSON path. No new account setup, key creation, contract re-reading or budget approval is required.
+That pending validation subsequently completed, as recorded at the top of this document. [LIVE_VALIDATION.md](LIVE_VALIDATION.md) remains the setup/acceptance reference for new environments or relevant future changes; no repeat is currently required.
 
 Primary API references: [Nebius chat completion parameters](https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion), [function calling](https://docs.tokenfactory.nebius.com/ai-models-inference/function-calling), [Nano recipe](https://github.com/nebius/token-factory-cookbook/blob/main/models/nemotron/nemotron3-nano-30b.md) and [NVIDIA's Nano model card](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16). LIVE_VALIDATION.md distinguishes documented parameter shapes from unmeasured compatibility on this hosted Nano deployment.
