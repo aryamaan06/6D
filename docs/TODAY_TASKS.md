@@ -44,7 +44,7 @@ The command saves JSON receipts in `artifacts\projects`. It makes no model reque
 
 ## 3. Check the private-key configuration — no inference
 
-Completed prerequisites: Arya confirmed $29.50 usable balance, active `6d-local-development`, exact routing ID `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`, and console prices $0.06 input / $0.24 output per million tokens. The selected model's official license and API tool-calling documentation were reviewed. `.local\token-factory.json` is configured for the already-approved $5 cumulative initial test allowance; it contains no key. Remote access/model behavior remain untested.
+Completed prerequisites: Arya confirmed $29.50 usable balance, active `6d-local-development`, exact routing ID `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`, and console prices $0.06 input / $0.24 output per million tokens. The selected model's official license and API tool-calling documentation were reviewed. `.local\token-factory.json` is configured for the already-approved $5 cumulative initial test allowance; it contains no key. A private live receipt now confirms provider access and one accepted response; complete agent orchestration is still pending. Steps 1–4 already completed do not need repeating for the current tool-protocol correction.
 
 First inspect configuration through the private helper:
 
@@ -72,13 +72,13 @@ Then run **one** live investigation under the existing allowance:
 & $sixdPython -X utf8 tools/with_token_factory_key.py investigate --case euler_method_limit --provider token-factory --accept-contract
 ```
 
-Enter the key privately again. This command sends actual model requests to Nebius and reserves spending before each one. A normal sequential run needs about three completions, with at most four. The $5 allowance is cumulative across runs through this adapter, not $5 for each run. Keep `.local\budget.sqlite3`; deleting it would erase the local spending history. No additional card spending is authorized.
+Enter the key privately again. This command sends actual model requests to Nebius and reserves spending before each one. A normal sequential Euler run needs about three completions. The runner allows at most five turns, including one eligible tool-format correction handled internally. The $5 allowance is cumulative across runs through this adapter, not $5 for each run. Keep `.local\budget.sqlite3`; deleting it would erase the local spending history. No additional card spending is authorized.
 
 Allow the command to finish; several model requests may take a few minutes. Expected success markers are `6D: Method limitation`, `Provider: live_token_factory`, a positive `Live model calls` count, `Investigation: completed`, and an `Evidence JSON` path. `Live request attempts` is printed separately; `Live model calls` counts accepted provider responses. These are test expectations, not a promise that a model run succeeds.
 
 Copy only those printed lines into this chat. If it fails, send the safe error text and the evidence path if one is shown; do not repeatedly retry. The saved receipt lets Codex inspect actual tool selections and usage without receiving your key. A numerical headline alone does not mean the AI investigation completed; include its state. Configuration alone does not prove live integration.
 
-October 14 correction: the classified follow-up confirmed the 1,024-token completion allowance was exhausted. Codex increased the local Nano limit to 8,192 tokens and the request timeout to 180 seconds, preserving the $5 cumulative cap and existing ledger. All 140 tests passed offline. Run this step once again in the existing updated workspace and allow several minutes. A completed live receipt is still required. No key re-creation or new configuration entry is needed. Send `Live request attempts`, the accepted call count, investigation state, error if any and the new evidence path.
+October 14 corrections: the larger 8,192-token allowance produced an accepted live response, confirming provider access. That response contained extra check parameters, which the runner rejected before executing any selected experiment. Codex has now corrected the full tool conversation: pending-check menus, exact finish evidence and one bounded protocol correction. The 180-second timeout, $5 cumulative cap and existing ledger remain unchanged. After offline recovery checks pass, run this step once in the updated workspace and allow several minutes. A completed live receipt is still required. No key re-creation or new configuration entry is needed. Send `Live request attempts`, the accepted call count, `Tool protocol corrections`, investigation state, error if any and the new evidence path. No repeated manual retries are expected for a single recoverable format mistake.
 
 ## 6. Review the proposed product experience
 

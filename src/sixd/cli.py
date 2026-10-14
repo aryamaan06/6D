@@ -22,6 +22,7 @@ def describe(report):
     print(f"Execution: local curated functions. Provider: {report['model_mode']}. Live model calls: {report['live_model_calls']}.")
     if 'investigation' in report:
         print('Live request attempts:', report['investigation']['live_request_attempts'])
+        print('Tool protocol corrections:', report['investigation'].get('protocol_corrections', 0))
         print('Investigation:', report['investigation']['state'])
         if report['investigation']['error']:
             print(report['investigation']['error'])

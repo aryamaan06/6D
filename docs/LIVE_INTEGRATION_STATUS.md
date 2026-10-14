@@ -1,6 +1,6 @@
 # 6D — first live integration attempt and diagnostics
 
-October 14, 2026, Asia/Calcutta. Live integration is not yet completed. Current model: `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`; existing approved cumulative allowance: $5, unchanged.
+October 14, 2026, Asia/Calcutta. Live provider access is confirmed, but the full agent investigation is not yet completed. Current model: `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`; existing approved cumulative allowance: $5, unchanged.
 
 ## What was measured
 
@@ -24,8 +24,18 @@ The configured Nano completion limit is now **8,192 tokens**, with a **180-secon
 
 Ten additional offline tests verify backward-compatible configuration, validated limits/timeouts, retained reservations, rejection before sending when the cap is insufficient, completion usage bounds and timeout forwarding. All **140 tests passed**. No paid call was made by Codex during this adjustment.
 
+## Accepted live response and tool-protocol correction
+
+The verified receipt `artifacts/ce9ec2c95b6c9f98cb7c-20261014T083917308009Z.json` records **one live request and one accepted provider response**, with 1,035 prompt tokens and 3,308 completion tokens. The larger allowance solved this request's truncation. The investigation then failed before any selected check executed because the first check had nonempty arguments. The empty trace rules out a repeated check at that point; exact extra fields were not retained and cannot be reconstructed. Independent kernel findings still show the expected Euler method limitation. Provider access is now measured; completed agent orchestration remains pending.
+
+The runner now offers only unfinished checks and explicitly specifies their empty `{}` arguments. It offers finish only when every applicable check has recorded evidence, with the exact evidence IDs in its schema and description. A supported but invalid tool batch is rejected atomically, receives a controlled error reply, and may get **one protocol correction within at most five provider turns**. Invalid arguments never reach the physics functions; checks cannot rerun, and invented evidence cannot finish a review. Unsupported tools, malformed messages, identifier violations, transport errors and truncated completions remain terminal. A protocol correction is a separately budgeted continuation, not a transport retry or hidden fixture fallback.
+
+Rejected calls now have a safe trace status, controlled error category and argument count, without parameter values or free-form model text. HTML distinguishes rejected calls from executed evidence. The independent final audit and contract lock still govern findings. The original receipt is preserved. The existing ledger has a $5 cap and $0.00437928 in conservative reservations at inspection; these reservations are not invoices. No live inference was run by Codex while applying this correction.
+
+All **159 tests passed offline**, including 19 new cases covering recovery, atomic rejection, never rerunning checks, exact finish citations, message continuity, repair exhaustion, budget exhaustion before transport and truthful report rendering. An independent read-only review found no remaining blocking implementation issue. These checks establish local behavior, not a completed live investigation.
+
 ## Next step
 
-Arya runs the same private-key investigation command once in the existing updated workspace, following TODAY_TASKS.md. Allow several minutes for the investigation. A completed live receipt is still required; the larger allowance is a targeted correction, not a guarantee of success. The key is entered locally through the hidden prompt; no key is needed in this chat. Preserve the ledger and send the attempt count, accepted-response count, investigation state/error and new evidence path. Do not repeatedly retry a new failure.
+After the offline recovery checks pass, Arya runs the same private-key investigation command once in the existing updated workspace, following TODAY_TASKS.md. A completed live receipt is still required; offline recovery tests do not prove future model behavior. Only Arya's private terminal supplies the key, which is why Codex cannot perform that live check directly. The command handles one eligible tool-format correction internally under the same $5 cap. Preserve the ledger and send the final attempt count, accepted-response count, protocol-correction count, investigation state/error and new evidence path. Do not repeatedly retry a new failure.
 
 Primary API references: [Nebius chat completion parameters](https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion), [function calling](https://docs.tokenfactory.nebius.com/ai-models-inference/function-calling) and [Nano recipe](https://github.com/nebius/token-factory-cookbook/blob/main/models/nemotron/nemotron3-nano-30b.md). Nebius documents a default max_tokens value of 8192 and describes a completion-token bound including reasoning tokens. NVIDIA documents reasoning controls for [Nano](https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-nano-30b-a3b), but their support on Arya's Nebius endpoint has not been established; no such parameter was added speculatively.

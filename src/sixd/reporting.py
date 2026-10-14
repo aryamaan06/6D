@@ -35,6 +35,9 @@ def verify_payload(report):
         evidence = {check['id']: check for check in report['checks']}
         selected = set()
         for event in run['trace']:
+            if event.get('status') == 'rejected' and any(
+                    key in event for key in ('evidence_id', 'evidence_ids', 'evidence_sha256')):
+                raise ValueError('A rejected tool call cannot claim recorded evidence.')
             if 'evidence_id' in event:
                 key = event['evidence_id']
                 if key not in evidence or event['evidence_sha256'] != digest(evidence[key]) or key in selected:
@@ -68,8 +71,8 @@ def report_html(report):
     investigation = ''
     if 'investigation' in report:
         run = report['investigation']
-        events = ''.join(f"<li>{escape(event['tool'])}</li>" for event in run['trace'])
-        investigation = f"<h2>Structured investigation</h2><p>State: {escape(run['state'])}. Provider: {mode}. Live completed calls: {report['live_model_calls']}.</p><p>Summary comes from the deterministic kernel. Fixture mode is scripted orchestration with no model inference.</p><ol>{events}</ol><p>{escape(run['error'] or '')}</p><p>{escape(run['reproduction_scope'])}</p>"
+        events = ''.join(f"<li>{escape(event['tool'])}: {escape(event.get('status', 'recorded'))}</li>" for event in run['trace'])
+        investigation = f"<h2>Structured investigation</h2><p>State: {escape(run['state'])}. Provider: {mode}. Accepted live provider responses: {report['live_model_calls']}.</p><p>Summary comes from the deterministic kernel. Fixture mode is scripted orchestration with no model inference.</p><ol>{events}</ol><p>{escape(run['error'] or '')}</p><p>{escape(run['reproduction_scope'])}</p>"
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>6D evidence: {escape(label)}</title>
 <style>body{{font:16px/1.6 system-ui,sans-serif;color:#142d3a;background:#f5f8fa;margin:0;padding:32px}}main{{max-width:1040px;margin:auto}}h1{{font-size:36px;line-height:1.2}}h2{{font-size:23px;margin-top:32px}}table{{border-collapse:collapse;width:100%}}th,td{{padding:12px;text-align:left;border-bottom:1px solid #d0dce3}}th{{background:#e7eef2}}pre{{white-space:pre-wrap;overflow-wrap:anywhere;background:#e8eef1;padding:16px}}.mode{{color:#315565}}@media(max-width:550px){{body{{padding:16px}}table{{font-size:13px}}th,td{{padding:7px}}}}</style></head><body><main>
 <p class="mode">6D research prototype / Local curated execution / Provider: {mode}</p><h1>{escape(label)}</h1><p>{escape(report['summary'])}</p><p>{escape(report['claim_boundary'])}</p>{investigation}

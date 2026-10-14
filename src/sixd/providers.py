@@ -65,7 +65,8 @@ class FixtureProvider:
     model = "scripted-tool-sequence-v1"
 
     def complete(self, messages, tools):
-        seen = [json.loads(m['content'])['id'] for m in messages if m['role'] == 'tool']
+        seen = [record['id'] for m in messages if m['role'] == 'tool'
+                if 'id' in (record := json.loads(m['content']))]
         available = {item['function']['name'] for item in tools}
         sequence = (('check_force', 'central_force_reference'),
                     ('check_refinement', 'analytic_reference_refinement'),
@@ -73,7 +74,7 @@ class FixtureProvider:
         name = next((name for name, evidence_id in sequence if name in available and evidence_id not in seen), 'finish')
         args = {} if name != 'finish' else {'evidence_ids': seen}
         return Turn({'role': 'assistant', 'content': None, 'tool_calls': [
-            {'id': f'fixture-{len(seen)}', 'type': 'function',
+            {'id': f"fixture-{sum(m['role'] == 'tool' for m in messages)}", 'type': 'function',
              'function': {'name': name, 'arguments': json.dumps(args)}}]}, {})
 
 
@@ -174,8 +175,10 @@ class TokenFactoryProvider:
             return json.loads(data)
 
     def complete(self, messages, tools):
+        selection = ({'type': 'function', 'function': {'name': tools[0]['function']['name']}}
+                     if len(tools) == 1 else 'auto')
         payload = {'model': self.model, 'messages': messages, 'tools': tools,
-                   'tool_choice': 'auto', 'max_tokens': self.config.max_output_tokens,
+                   'tool_choice': selection, 'max_tokens': self.config.max_output_tokens,
                    'temperature': 0, 'stream': False}
         encoded = json.dumps(payload, allow_nan=False).encode('utf-8')
         if len(encoded) > 120_000:
