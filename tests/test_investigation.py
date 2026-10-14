@@ -124,6 +124,7 @@ class InvestigationTests(unittest.TestCase):
         self.assertEqual(report['investigation']['state'], 'incomplete')
 
     def test_fixture_snapshot_reproduces_kernel_and_labels_export(self):
+        (ROOT / 'work').mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=ROOT / 'work') as directory:
             report = investigate(EXAMPLES['verlet_correct'], FixtureProvider())
             paths = save_report(report, directory)
@@ -134,6 +135,7 @@ class InvestigationTests(unittest.TestCase):
 
 class ProviderTests(unittest.TestCase):
     def setUp(self):
+        (ROOT / 'work').mkdir(exist_ok=True)
         self.directory = tempfile.TemporaryDirectory(dir=ROOT / 'work')
         self.addCleanup(self.directory.cleanup)
         self.local = Path(self.directory.name)
