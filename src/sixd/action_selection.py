@@ -106,11 +106,10 @@ def _history_call(call):
 def build_action_request(messages, tools):
     """Return wire messages, one selection tool and its explicit named choice."""
     actions, ids = _menu(tools)
-    evidence_schema = {'type': 'array', 'items': {'type': 'string'},
-                       'uniqueItems': True, 'minItems': 0, 'maxItems': 0}
-    if actions == ['finish']:
-        evidence_schema.update(items={'type': 'string', 'enum': ids},
-                               minItems=len(ids), maxItems=len(ids))
+    # Named tool choice may compile this schema through a constrained decoder.
+    # Keep the wire schema portable; _parse/decode still enforce empty, unique
+    # and exact recorded IDs locally before any kernel invocation.
+    evidence_schema = {'type': 'array', 'items': {'type': 'string'}}
     wire_tool = {'type': 'function', 'function': {
         'name': WIRE_TOOL,
         'description': 'Select one currently available action; the runner owns all physics inputs.',

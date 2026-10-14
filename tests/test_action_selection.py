@@ -3,6 +3,8 @@ from contextlib import closing
 from copy import deepcopy
 from dataclasses import replace
 from pathlib import Path
+from urllib.error import HTTPError
+import io
 import json
 import sqlite3
 import sys
@@ -69,18 +71,21 @@ class ActionSelectionUnitTests(unittest.TestCase):
                 self.assertEqual(set(schema['required']), {'action', 'evidence_ids'})
                 self.assertIs(schema['additionalProperties'], False)
                 self.assertEqual(set(schema['properties']['action']['enum']), expected)
-                self.assertEqual(schema['properties']['evidence_ids']['maxItems'], 0)
+                self.assertEqual(schema['properties']['evidence_ids'],
+                                 {'type': 'array', 'items': {'type': 'string'}})
                 self.assertEqual([item['role'] for item in messages].count('system'), 1)
                 self.assertIn(snapshot[1], messages)
 
-    def test_finish_wire_schema_uses_exact_recorded_ids_and_no_check_actions(self):
-        _, tools, _ = build_action_request([], finish_menu())
+    def test_finish_wire_menu_uses_exact_recorded_ids_and_no_check_actions(self):
+        messages, tools, _ = build_action_request([], finish_menu())
         schema = tools[0]['function']['parameters']['properties']
         self.assertEqual(schema['action']['enum'], ['finish'])
-        self.assertEqual(schema['evidence_ids']['items']['enum'], EULER_IDS)
-        self.assertEqual(schema['evidence_ids']['minItems'], len(EULER_IDS))
-        self.assertEqual(schema['evidence_ids']['maxItems'], len(EULER_IDS))
-        self.assertIs(schema['evidence_ids']['uniqueItems'], True)
+        self.assertEqual(schema['evidence_ids'],
+                         {'type': 'array', 'items': {'type': 'string'}})
+        menu = json.loads(messages[-1]['content'])
+        self.assertEqual(menu['recorded_evidence_ids'], EULER_IDS)
+        self.assertEqual(menu['valid_selections'],
+                         [{'action': 'finish', 'evidence_ids': EULER_IDS}])
 
     def test_valid_check_decodes_only_action_with_locked_inputs(self):
         decoded, problem = decode_action_message(message(), check_menu())
@@ -283,7 +288,8 @@ class ActionSelectionIntegrationTests(unittest.TestCase):
                         return message(raw=json.dumps({'action': actions[0], 'evidence_ids': [],
                             'radius': PRIVATE_VALUE}), identity=f'{case}-rejected')
                     action = actions[0]
-                    ids = schema['evidence_ids']['items'].get('enum', []) if action == 'finish' else []
+                    ids = json.loads(payload['messages'][-1]['content'])['recorded_evidence_ids'] \
+                          if action == 'finish' else []
                     return message(action, ids, identity=f'{case}-accepted-{attempt}')
                 provider = self.provider(select)
                 example = EXAMPLES[case]
@@ -347,6 +353,46 @@ class ActionSelectionIntegrationTests(unittest.TestCase):
             trap.assert_not_called()
         self.assertGreater(self.reserved(), 0)
         self.assert_independent_findings(report, EXAMPLES['euler_method_limit'])
+
+    def test_gateway_without_array_constraint_support_completes_actual_checks(self):
+        forbidden = {'uniqueItems', 'minItems', 'maxItems'}
+        def unsupported(value):
+            if isinstance(value, dict):
+                return bool(set(value) & forbidden) or any(unsupported(item) for item in value.values())
+            if isinstance(value, list):
+                return any(unsupported(item) for item in value)
+            return False
+
+        # The gateway fixture would reject the former richer wire schema as HTTP 400.
+        self.assertTrue(unsupported({'type': 'array', 'uniqueItems': True,
+                                     'minItems': 2, 'maxItems': 2}))
+        for case in ('euler_method_limit', 'force_sign_error'):
+            with self.subTest(case=case):
+                self.requests = []
+                def select(payload, attempt):
+                    wire_schema = payload['tools'][0]['function']['parameters']
+                    if unsupported(wire_schema):
+                        raise HTTPError('https://api.tokenfactory.nebius.com/v1/chat/completions',
+                                        400, 'Synthetic unsupported array schema.', {},
+                                        io.BytesIO(b'private synthetic gateway response'))
+                    evidence_schema = wire_schema['properties']['evidence_ids']
+                    self.assertEqual(evidence_schema,
+                                     {'type': 'array', 'items': {'type': 'string'}})
+                    action = wire_schema['properties']['action']['enum'][0]
+                    ids = json.loads(payload['messages'][-1]['content'])['recorded_evidence_ids'] \
+                          if action == 'finish' else []
+                    return message(action, ids, identity=f'{case}-portable-{attempt}')
+                provider = self.provider(select)
+                example = EXAMPLES[case]
+                report = investigate(example, provider)
+                run = report['investigation']
+                self.assertEqual(run['state'], 'completed')
+                self.assertEqual(run['protocol_corrections'], 0)
+                self.assertEqual(run['protocol_rejections'], 0)
+                self.assertEqual(provider.request_attempts, 3 if case == 'euler_method_limit' else 4)
+                self.assertEqual(run['provider_successes'], provider.request_attempts)
+                self.assert_independent_findings(report, example)
+                self.assertGreater(self.reserved(), 0)
 
     def test_unknown_wire_tool_is_terminal_without_a_semantic_retry(self):
         def select(payload, attempt):

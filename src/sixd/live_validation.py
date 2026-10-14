@@ -12,7 +12,7 @@ import os
 from .examples import EXAMPLES
 from .investigation import investigate
 from .kernel import audit
-from .providers import BudgetLedger, LiveConfig, ProviderError, TokenFactoryProvider
+from .providers import BudgetLedger, LiveConfig, ProviderError, TokenFactoryProvider, safe_response_diagnostic
 from .reporting import save_report, verify_payload
 
 
@@ -66,10 +66,12 @@ def safe_diagnostic(record):
     """Copy only bounded response facts, never remote text or exception details."""
     if not isinstance(record, dict):
         return {}
-    result = {}
+    result = safe_response_diagnostic(record)
     if record.get('finish_reason') in ('length', 'stop', 'tool_calls', 'content_filter',
                                        'function_call', 'unknown'):
         result['finish_reason'] = record['finish_reason']
+    else:
+        result.pop('finish_reason', None)
     for key in ('http_status', 'max_output_tokens', 'prompt_tokens',
                 'completion_tokens', 'total_tokens'):
         value = record.get(key)

@@ -1,6 +1,6 @@
 # One forced action-selection validation
 
-October 14, 2026. Provider access works, but no complete live investigation has passed yet. The latest three-profile session isolated an interface failure; increasing limits or repeating that matrix is no longer the next step.
+October 14, 2026. Provider access works, but no complete live investigation has passed yet. The forced-protocol request was rejected with HTTP 400 before any accepted response. Its exact rejection cause was not retained. The corrected wire schema removes constrained-array keywords; strict evidence checks remain local. See [the measured sequence](LIVE_INTEGRATION_STATUS.md) for the compatibility inference and its limits. Increasing limits or repeating the profile matrix is not the next step.
 
 ## What the latest receipts establish
 
@@ -14,7 +14,7 @@ Every request now forces **one** function, select_next_action, with exactly two 
 
     {"action": "check_force", "evidence_ids": []}
 
-The action enum contains only unfinished applicable checks. Once all evidence exists, it contains only finish, with the exact recorded identifiers required. The model never supplies physics parameters. Strict local validation rejects missing/extra fields, duplicate JSON keys, unavailable actions and invented evidence before any experiment runs. Valid selections are mapped to canonical runner calls using the locked contract. A semantic mistake can receive one controlled correction; malformed envelopes remain terminal.
+The action enum contains only unfinished applicable checks. Once all evidence exists, it contains only finish. The evidence array sent on the wire has only a string-item type; the controlled menu supplies actual recorded identifiers. Local validation requires empty evidence for checks and unique exact recorded IDs for finish. The model never supplies physics parameters. Strict local validation rejects missing/extra fields, duplicate JSON keys, unavailable actions and invented evidence before any experiment runs. Valid selections are mapped to canonical runner calls using the locked contract. A semantic mistake can receive one controlled correction; malformed envelopes remain terminal.
 
 The request and response conversation preserves actual tool-call identifiers. Receipts record selection_protocol=forced_action_v1, wire_tool=select_next_action and source fingerprints, so the adapter is visible. The model must actually select finish; the independent audit cannot finish its investigation for it. Nebius documents explicit named function choice in [Function calling & Tools](https://docs.tokenfactory.nebius.com/ai-models-inference/function-calling).
 
@@ -35,4 +35,4 @@ Limits: **$0.10 and at most ten reserved requests**, within the existing **$5 cu
 
 Success prints **Live end-to-end investigation completed. The validated profile is now saved locally.** A failure keeps the active configuration unchanged. Send only the final **Validation summary JSON** path; do not repeat a failed session manually.
 
-All **214 tests passed offline**, including a bounded wire-conversation replay with an invalid selection, one correction and actual kernel evidence for Euler, Verlet and a force defect. An independent implementation review found no blocking issue. This verifies local behavior, not live compatibility: a new completed live receipt is still required. No paid inference was run by Codex during this redesign. Codex's process has no local inference credential; the hidden key entered in Arya's earlier terminal invocations is not retained.
+All **223 tests passed offline**, including a schema-rejecting mock gateway, safe HTTP diagnostics and bounded wire-conversation replay with an invalid selection, one correction and actual kernel evidence for Euler, Verlet and a force defect. Independent implementation review found no blocking issue. This verifies local behavior, not live compatibility: a new completed live receipt is still required. No paid inference was run by Codex during this correction. Codex's process has no local inference credential; the hidden key entered in Arya's earlier terminal invocations is not retained.

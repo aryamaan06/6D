@@ -9,6 +9,7 @@ from urllib.request import Request, build_opener, HTTPRedirectHandler
 import json
 import math
 import os
+import re
 import sqlite3
 import ssl
 from .action_selection import build_action_request, decode_action_message
@@ -19,6 +20,13 @@ FAILURE_SUFFIX = ' Reservation retained; no automatic retry.'
 INFERENCE_PROFILES = ('tool_sampling', 'nebius_no_reasoning', 'native_no_thinking')
 SELECTION_PROTOCOLS = ('native_tools_v1', 'forced_action_v1')
 FINISH_REASONS = ('length', 'stop', 'content_filter', 'function_call', 'tool_calls')
+API_ERROR_TYPES = ('invalid_request_error', 'BadRequestError', 'validation_error')
+API_ERROR_CODES = ('invalid_schema', 'unsupported_value', 'invalid_parameter',
+                   'unsupported_parameter', 'bad_request', 'validation_error')
+API_PARAMETERS = ('tools', 'tool_choice', 'messages', 'max_tokens', 'response_format',
+                  'chat_template_kwargs', 'reasoning_effort', 'model', 'temperature', 'top_p')
+SCHEMA_KEYWORDS = ('uniqueItems', 'minItems', 'maxItems', 'contains', 'minContains',
+                   'maxContains', 'additionalProperties', 'oneOf', 'anyOf')
 
 
 def safe_response_diagnostic(value):
@@ -26,6 +34,22 @@ def safe_response_diagnostic(value):
     if not isinstance(value, dict):
         return {}
     result = {}
+    status = value.get('http_status')
+    if type(status) is int and 100 <= status <= 599:
+        result['http_status'] = status
+    for key, allowed in (('api_error_type', API_ERROR_TYPES),
+                         ('api_error_code', API_ERROR_CODES),
+                         ('rejected_parameter', API_PARAMETERS)):
+        item = value.get(key)
+        if isinstance(item, str) and item in allowed:
+            result[key] = item
+    if type(value.get('api_error_code')) is int and 100 <= value['api_error_code'] <= 599:
+        result['api_error_code'] = value['api_error_code']
+    mentions = value.get('schema_keyword_mentions')
+    if isinstance(mentions, list):
+        selected = [key for key in SCHEMA_KEYWORDS if key in mentions]
+        if selected:
+            result['schema_keyword_mentions'] = selected
     if 'finish_reason' in value:
         reason = value['finish_reason']
         result['finish_reason'] = reason if isinstance(reason, str) and reason in FINISH_REASONS else 'unknown'
@@ -47,11 +71,35 @@ def safe_response_diagnostic(value):
     return result
 
 
+def http_error_diagnostic(error):
+    """Inspect a bounded structured error internally; retain only allowlisted facts."""
+    diagnostic = {'http_status': error.code}
+    try:
+        body = error.read(8193)
+        if not isinstance(body, bytes) or len(body) > 8192:
+            return safe_response_diagnostic(diagnostic)
+        parsed = json.loads(body)
+        remote = parsed.get('error') if isinstance(parsed, dict) else None
+        if not isinstance(remote, dict):
+            return safe_response_diagnostic(diagnostic)
+        diagnostic.update(api_error_type=remote.get('type'), api_error_code=remote.get('code'),
+                          rejected_parameter=remote.get('param'))
+        message = remote.get('message')
+        if isinstance(message, str):
+            # A mention is recorded as a mention, not asserted as the cause.
+            diagnostic['schema_keyword_mentions'] = [keyword for keyword in SCHEMA_KEYWORDS
+                if re.search(r'(?<![A-Za-z0-9_])' + keyword + r'(?![A-Za-z0-9_])', message)]
+    except Exception:
+        pass  # Unreadable/unstructured remote details must never escape.
+    return safe_response_diagnostic(diagnostic)
+
+
 def transport_failure(error):
     """Translate transport errors without copying remote text or credentials."""
     if isinstance(error, HTTPError):
         code = error.code if type(error.code) is int and 100 <= error.code <= 599 else 'unknown'
-        return ProviderError(f'Nebius request failed: HTTP {code}.' + FAILURE_SUFFIX)
+        return ProviderError(f'Nebius request failed: HTTP {code}.' + FAILURE_SUFFIX,
+                             diagnostic=http_error_diagnostic(error))
     if isinstance(error, (TimeoutError,)):
         return ProviderError('Nebius request timed out.' + FAILURE_SUFFIX)
     if isinstance(error, ssl.SSLError):
