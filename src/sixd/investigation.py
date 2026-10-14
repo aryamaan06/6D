@@ -80,6 +80,21 @@ def batch_error(calls, checks, executed, evidence):
     return None
 
 
+def response_metadata(turn, selection_protocol):
+    """Persist only controlled adapter facts, never arbitrary provider metadata."""
+    meta = getattr(turn, 'response_meta', None)
+    if meta is None:
+        return {}
+    if not isinstance(meta, dict) or selection_protocol != ACTION_PROTOCOL:
+        raise ProviderError('Invalid action-response provenance was rejected.')
+    triple = (meta.get('finish_reason'), meta.get('response_format'), meta.get('call_id_origin'))
+    if triple not in (('stop', 'native_tool_call', 'provider'),
+                      ('tool_calls', 'native_tool_call', 'provider'),
+                      ('stop', 'content_selection_json', 'runner')):
+        raise ProviderError('Invalid action-response provenance was rejected.')
+    return {key: meta[key] for key in ('finish_reason', 'response_format', 'call_id_origin')}
+
+
 def investigate(example, provider, *, contract=None, review=None, max_turns=5, max_protocol_corrections=1):
     if (type(max_turns) is not int or not 1 <= max_turns <= 5 or
             type(max_protocol_corrections) is not int or not 0 <= max_protocol_corrections <= 1):
@@ -110,6 +125,7 @@ def investigate(example, provider, *, contract=None, review=None, max_turns=5, m
                 turn = provider.complete(deepcopy(messages), remaining_tools(checks, executed, evidence))
                 successes += 1
                 usage.append(turn.usage)
+                event_meta = {**selection_meta, **response_metadata(turn, selection_protocol)}
                 raw = turn.message
                 if not isinstance(raw, dict):
                     raise ProviderError('Expected a structured assistant message.')
@@ -137,7 +153,7 @@ def investigate(example, provider, *, contract=None, review=None, max_turns=5, m
                     rejections += 1
                     can_correct = corrections < max_protocol_corrections and attempts < max_turns
                     trace.append({'call_id': identity, 'tool': WIRE_TOOL, 'status': 'rejected',
-                                  'error_code': ACTION_PROBLEM['code'], **selection_meta})
+                                  'error_code': ACTION_PROBLEM['code'], **event_meta})
                     feedback = {'error': dict(ACTION_PROBLEM), 'retry_allowed': can_correct,
                                 'available_actions': [item['function']['name'] for item in remaining_tools(checks, executed, evidence)],
                                 'recorded_evidence_ids': sorted(evidence)}
@@ -179,7 +195,8 @@ def investigate(example, provider, *, contract=None, review=None, max_turns=5, m
                     for call in clean_calls:
                         trace.append({'call_id': call['id'], 'tool': call['function']['name'],
                                       'status': 'rejected', 'error_code': code,
-                                      'argument_count': len(json.loads(call['function']['arguments']))})
+                                      'argument_count': len(json.loads(call['function']['arguments'])),
+                                      **event_meta})
                         messages.append({'role': 'tool', 'tool_call_id': call['id'],
                                          'content': json.dumps(feedback)})
                     if not can_correct:
@@ -194,14 +211,14 @@ def investigate(example, provider, *, contract=None, review=None, max_turns=5, m
                     if name == 'finish':
                         ids = args.get('evidence_ids')
                         trace.append({'call_id': call['id'], 'tool': name, 'status': 'completed', 'evidence_ids': ids,
-                                      **selection_meta})
+                                      **event_meta})
                         state = 'completed'
                         break
                     check = checks[name](example, c)
                     executed.add(name)
                     evidence[check['id']] = check
                     trace.append({'call_id': call['id'], 'tool': name, 'status': 'executed', 'evidence_id': check['id'],
-                                  'evidence_sha256': digest(check), **selection_meta})
+                                  'evidence_sha256': digest(check), **event_meta})
                     messages.append({'role': 'tool', 'tool_call_id': call['id'],
                                      'content': json.dumps(compact_check(check), allow_nan=False)})
                 if state == 'completed':

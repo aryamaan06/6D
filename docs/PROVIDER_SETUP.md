@@ -15,7 +15,7 @@ python run.py serve
 
 In the local UI, select **Scripted tool investigation · no model inference**. The fixture selects force, refinement, applicable Verlet reversibility and finish tools. The Euler example requires the first two checks only. The numerical results are freshly computed by the kernel, not fixture measurements. Reports label the provider `fixture` and record zero live calls. An injected mock HTTP transport labels itself `offline_transport_fixture`.
 
-The live adapter shares the same provider interface. It uses standard-library HTTPS, OpenAI-style messages/tools and `/v1/chat/completions`. Current Nebius documentation lists `tool_choice: auto` and explicit function selection; this adapter uses `auto` and rejects responses without structured tool calls. Live API compatibility and model behavior remain to be tested after the gates below are satisfied.
+The live adapter shares the same provider interface. It uses standard-library HTTPS, OpenAI-style messages/tools and `/v1/chat/completions`. Nebius documents automatic and explicit named function selection. The current forced-action validator requests one named selector and strictly decodes native tool calls or exact bounded selection JSON; response format and ID origin remain explicit. Full live orchestration is still pending.
 
 ## Prepared configuration and remaining private step
 
@@ -68,7 +68,9 @@ Confirm `model_mode: live_token_factory`, completed investigation, positive `liv
 
 The wire evidence schema is a plain typed string array; strict citation constraints are checked locally, avoiding unsupported constrained-decoder array keywords. HTTP errors are inspected only as bounded structured JSON and retain allowlisted status/type/code/parameter and schema-keyword mentions. Raw remote bodies, messages, headers and unknown values are never saved or printed. Mentions are clues, not confirmed causes.
 
-All 223 development tests passed offline after the correction. No completed live session is claimed until the two-case validation actually succeeds. A failed session retains the prior active configuration, all reports and previous budget reservations. Account/transport/billing-bound failures stop the session. No profile matrix, model switch, transport retry or fixture fallback is run by the validator.
+The forced receiver accepts native named calls with stop or tool_calls, and exact whole selection JSON in content only with stop and no tool calls. No free-form prose or embedded/fenced JSON is extracted. Content selections use runner-origin internal IDs and the same locked action/evidence validation. Receipt provenance distinguishes them from native provider calls. Safe failed-response diagnostics record only outer response shape/count/presence facts, never values.
+
+All 237 development tests passed offline after the correction. No completed live session is claimed until the two-case validation actually succeeds. A failed session retains the prior active configuration, all reports and previous budget reservations. Account/transport/billing-bound failures stop the session. No profile matrix, model switch, transport retry or fixture fallback is run by the validator.
 
 ## Budget accounting
 

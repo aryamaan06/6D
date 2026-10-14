@@ -35,6 +35,16 @@ def verify_payload(report):
         evidence = {check['id']: check for check in report['checks']}
         selected = set()
         for event in run['trace']:
+            response_fields = ('finish_reason', 'response_format', 'call_id_origin')
+            if any(field in event for field in response_fields):
+                response = tuple(event.get(field) for field in response_fields)
+                if (run.get('selection_protocol') != 'forced_action_v1' or
+                        response not in (('stop', 'native_tool_call', 'provider'),
+                                         ('tool_calls', 'native_tool_call', 'provider'),
+                                         ('stop', 'content_selection_json', 'runner')) or
+                        (event.get('call_id_origin') == 'runner' and
+                         not re.fullmatch(r'sixd-selection-[a-f0-9]{32}', event.get('call_id', '')))):
+                    raise ValueError('The action-response provenance is inconsistent.')
             if event.get('status') == 'rejected' and any(
                     key in event for key in ('evidence_id', 'evidence_ids', 'evidence_sha256')):
                 raise ValueError('A rejected tool call cannot claim recorded evidence.')

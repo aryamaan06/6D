@@ -179,6 +179,9 @@ def validate_live(root, *, accept_contract=False):
                            'evidence_json': paths['json_path'], 'kernel_verdict': report['verdict'],
                            'live_request_attempts': run.get('live_request_attempts', 0),
                            'accepted_live_responses': report.get('live_model_calls', 0),
+                           'response_formats': sorted({event.get('response_format') for event in run.get('trace', [])
+                                                       if isinstance(event, dict) and event.get('response_format') in
+                                                       ('native_tool_call', 'content_selection_json')}),
                            'failed_provider_response': safe_diagnostic(run.get('failed_provider_response')),
                            'operator_error_codes': sorted({event.get('error_code') for event in run.get('trace', [])
                                                            if isinstance(event, dict) and isinstance(event.get('error_code'), str) and
@@ -188,6 +191,8 @@ def validate_live(root, *, accept_contract=False):
                       f'request attempts: {attempt["live_request_attempts"]}.')
                 if attempt['failed_provider_response']:
                     print('Controlled provider diagnostic:', json.dumps(attempt['failed_provider_response']))
+                if attempt['response_formats']:
+                    print('Accepted action response formats:', ', '.join(attempt['response_formats']))
                 if attempt['operator_error_codes']:
                     print('Controlled operator error codes:', ', '.join(attempt['operator_error_codes']))
                 print('Evidence JSON:', paths['json_path'])

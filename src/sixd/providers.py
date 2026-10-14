@@ -6,13 +6,14 @@ from typing import Protocol
 from urllib.parse import urlsplit
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, build_opener, HTTPRedirectHandler
+from uuid import uuid4
 import json
 import math
 import os
 import re
 import sqlite3
 import ssl
-from .action_selection import build_action_request, decode_action_message
+from .action_selection import build_action_request, decode_action_response
 
 
 RESPONSE_TOO_LARGE = 'Provider response exceeded the bounded size.'
@@ -27,6 +28,8 @@ API_PARAMETERS = ('tools', 'tool_choice', 'messages', 'max_tokens', 'response_fo
                   'chat_template_kwargs', 'reasoning_effort', 'model', 'temperature', 'top_p')
 SCHEMA_KEYWORDS = ('uniqueItems', 'minItems', 'maxItems', 'contains', 'minContains',
                    'maxContains', 'additionalProperties', 'oneOf', 'anyOf')
+RESPONSE_SHAPES = ('native_tool_call', 'content_without_tool_calls',
+                   'invalid_tool_envelope', 'empty_response')
 
 
 def safe_response_diagnostic(value):
@@ -53,6 +56,13 @@ def safe_response_diagnostic(value):
     if 'finish_reason' in value:
         reason = value['finish_reason']
         result['finish_reason'] = reason if isinstance(reason, str) and reason in FINISH_REASONS else 'unknown'
+    if value.get('response_shape') in RESPONSE_SHAPES:
+        result['response_shape'] = value['response_shape']
+    count = value.get('tool_call_count')
+    if type(count) is int and 0 <= count <= 16:
+        result['tool_call_count'] = count
+    if type(value.get('content_present')) is bool:
+        result['content_present'] = value['content_present']
     if value.get('inference_profile') in INFERENCE_PROFILES:
         result['inference_profile'] = value['inference_profile']
     limit = value.get('max_output_tokens')
@@ -69,6 +79,27 @@ def safe_response_diagnostic(value):
                 counts['completion_tokens_details'] = {'reasoning_tokens': count}
         result['usage'] = counts
     return result
+
+
+def response_envelope_diagnostic(message):
+    """Describe only the outer response shape; never retain remote values."""
+    if not isinstance(message, dict):
+        return {'response_shape': 'invalid_tool_envelope'}
+    calls = message.get('tool_calls')
+    content = message.get('content')
+    present = isinstance(content, str) and bool(content)
+    if calls is None or calls == []:
+        shape = 'content_without_tool_calls' if present else 'empty_response'
+    elif isinstance(calls, list) and len(calls) == 1 and isinstance(calls[0], dict):
+        shape = 'native_tool_call'
+    else:
+        shape = 'invalid_tool_envelope'
+    diagnostic = {'response_shape': shape, 'content_present': present}
+    if isinstance(calls, list) and len(calls) <= 16:
+        diagnostic['tool_call_count'] = len(calls)
+    elif calls is None:
+        diagnostic['tool_call_count'] = 0
+    return diagnostic
 
 
 def http_error_diagnostic(error):
@@ -132,6 +163,7 @@ class Turn:
     usage: dict
     request_id: str | None = None
     protocol_error: dict | None = None
+    response_meta: dict | None = None
 
 
 class Provider(Protocol):
@@ -325,24 +357,32 @@ class TokenFactoryProvider:
         if counts.get('prompt_tokens', 0) > input_bound or counts.get('completion_tokens', 0) > self.config.max_output_tokens:
             raise ProviderError('Usage exceeded the configured reservation bound; stop and review provider billing.' + FAILURE_SUFFIX)
         reason = choice.get('finish_reason')
-        if reason != 'tool_calls':
+        forced = self.config.selection_protocol == 'forced_action_v1'
+        diagnostic = {'finish_reason': reason, 'usage': counts,
+                      'max_output_tokens': self.config.max_output_tokens,
+                      'inference_profile': self.config.inference_profile}
+        if forced:
+            diagnostic.update(response_envelope_diagnostic(message))
+        # Named tool calls can finish with stop. The envelope and action are
+        # still strictly validated below; stop alone never completes a run.
+        if reason != 'tool_calls' and not (forced and reason == 'stop'):
             safe_reason = reason if isinstance(reason, str) and reason in FINISH_REASONS else 'unknown'
             detail = (' The output token limit was reached; no complete tool response was accepted.'
                       if safe_reason == 'length' else ' A complete structured tool response is required.')
             raise ProviderError(f'Provider returned finish_reason={safe_reason}.' + detail + FAILURE_SUFFIX,
-                                diagnostic={'finish_reason': safe_reason, 'usage': counts,
-                                            'max_output_tokens': self.config.max_output_tokens,
-                                            'inference_profile': self.config.inference_profile})
-        if self.config.selection_protocol == 'forced_action_v1':
+                                diagnostic=diagnostic)
+        if forced:
             try:
-                message, problem = decode_action_message(message, tools)
+                message, problem, response_format, origin = decode_action_response(
+                    message, tools, internal_call_id='sixd-selection-' + uuid4().hex)
+                if response_format == 'content_selection_json' and reason != 'stop':
+                    raise ProviderError('A tool-call finish reason requires a native tool envelope.')
             except ProviderError as error:
-                error.diagnostic = safe_response_diagnostic(
-                    {'finish_reason': reason, 'usage': counts,
-                     'max_output_tokens': self.config.max_output_tokens,
-                     'inference_profile': self.config.inference_profile})
+                error.diagnostic = safe_response_diagnostic(diagnostic)
                 raise
-            return Turn(message, counts, protocol_error=problem)
+            return Turn(message, counts, protocol_error=problem,
+                        response_meta={'finish_reason': reason, 'response_format': response_format,
+                                       'call_id_origin': origin})
         return Turn(message, counts)
 
 

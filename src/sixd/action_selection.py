@@ -184,3 +184,36 @@ def decode_action_message(message, tools):
         'name': action, 'arguments': json.dumps(canonical_args, allow_nan=False),
     }
     return sanitized, None
+
+
+def decode_action_response(message, tools, *, internal_call_id):
+    """Accept a native envelope or exact selection JSON, never extract prose.
+
+    Content selections use an explicitly runner-origin internal ID. They are
+    never represented in receipts as native provider tool calls.
+    """
+    if not isinstance(message, dict) or message.get('role') != 'assistant':
+        _fail('Expected a bounded assistant action response.')
+    calls = message.get('tool_calls')
+    if calls is not None and calls != []:
+        decoded, problem = decode_action_message(message, tools)
+        return decoded, problem, 'native_tool_call', 'provider'
+    content = message.get('content')
+    if not isinstance(content, str) or not 1 <= len(content) <= 2048:
+        _fail('Expected a native selector or an exact bounded selection JSON object.')
+    try:
+        selection = _parse(content)
+        if (not isinstance(selection, dict) or set(selection) != {'action', 'evidence_ids'} or
+                not isinstance(selection['action'], str) or
+                not isinstance(selection['evidence_ids'], list) or
+                not all(isinstance(value, str) for value in selection['evidence_ids'])):
+            raise ValueError
+    except (TypeError, ValueError, RecursionError):
+        _fail('Content did not contain an exact bounded action selection. No action was executed.')
+    envelope = {'role': 'assistant', 'content': None, 'tool_calls': [{
+        'id': internal_call_id, 'type': 'function', 'function': {
+            'name': WIRE_TOOL, 'arguments': content,
+        },
+    }]}
+    decoded, problem = decode_action_message(envelope, tools)
+    return decoded, problem, 'content_selection_json', 'runner'
