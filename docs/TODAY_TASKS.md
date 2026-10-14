@@ -74,9 +74,11 @@ Then run **one** live investigation under the existing allowance:
 
 Enter the key privately again. This command sends actual model requests to Nebius and reserves spending before each one. A normal sequential run needs about three completions, with at most four. The $5 allowance is cumulative across runs through this adapter, not $5 for each run. Keep `.local\budget.sqlite3`; deleting it would erase the local spending history. No additional card spending is authorized.
 
-Allow the command to finish; several model requests may take a few minutes. Expected success markers are `6D: Method limitation`, `Provider: live_token_factory`, a positive `Live model calls` count, `Investigation: completed`, and an `Evidence JSON` path. These are test expectations, not a promise that the first real model run succeeds.
+Allow the command to finish; several model requests may take a few minutes. Expected success markers are `6D: Method limitation`, `Provider: live_token_factory`, a positive `Live model calls` count, `Investigation: completed`, and an `Evidence JSON` path. `Live request attempts` is printed separately; `Live model calls` counts accepted provider responses. These are test expectations, not a promise that a model run succeeds.
 
 Copy only those printed lines into this chat. If it fails, send the safe error text and the evidence path if one is shown; do not repeatedly retry. The saved receipt lets Codex inspect actual tool selections and usage without receiving your key. A numerical headline alone does not mean the AI investigation completed; include its state. Configuration alone does not prove live integration.
+
+October 14 diagnostic update: the first live run failed before a response was accepted. Codex fixed error classification and verified 130 tests offline. After that fix, run this step once again in the existing configured workspace so a new receipt can show the classified cause or completion. No re-creation of the key/configuration, ledger reset or budget increase is needed. Send `Live request attempts`, the accepted call count, investigation state, error and new evidence path.
 
 ## 6. Review the proposed product experience
 

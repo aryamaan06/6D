@@ -21,6 +21,7 @@ def describe(report):
     print(f"Not tested: {len(report['not_tested'])} explicit exclusions.")
     print(f"Execution: local curated functions. Provider: {report['model_mode']}. Live model calls: {report['live_model_calls']}.")
     if 'investigation' in report:
+        print('Live request attempts:', report['investigation']['live_request_attempts'])
         print('Investigation:', report['investigation']['state'])
         if report['investigation']['error']:
             print(report['investigation']['error'])

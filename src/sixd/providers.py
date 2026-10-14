@@ -4,11 +4,41 @@ from contextlib import closing
 from pathlib import Path
 from typing import Protocol
 from urllib.parse import urlsplit
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 import json
 import math
 import os
 import sqlite3
+import ssl
+
+
+RESPONSE_TOO_LARGE = 'Provider response exceeded the bounded size.'
+FAILURE_SUFFIX = ' Reservation retained; no automatic retry.'
+
+
+def transport_failure(error):
+    """Translate transport errors without copying remote text or credentials."""
+    if isinstance(error, HTTPError):
+        code = error.code if type(error.code) is int and 100 <= error.code <= 599 else 'unknown'
+        return ProviderError(f'Nebius request failed: HTTP {code}.' + FAILURE_SUFFIX)
+    if isinstance(error, (TimeoutError,)):
+        return ProviderError('Nebius request timed out.' + FAILURE_SUFFIX)
+    if isinstance(error, ssl.SSLError):
+        return ProviderError('Nebius TLS connection failed.' + FAILURE_SUFFIX)
+    if isinstance(error, URLError):
+        reason = error.reason
+        if isinstance(reason, TimeoutError):
+            return ProviderError('Nebius request timed out.' + FAILURE_SUFFIX)
+        if isinstance(reason, ssl.SSLError):
+            return ProviderError('Nebius TLS connection failed.' + FAILURE_SUFFIX)
+        return ProviderError('Nebius network connection failed.' + FAILURE_SUFFIX)
+    if isinstance(error, json.JSONDecodeError):
+        return ProviderError('Provider response was not valid JSON.' + FAILURE_SUFFIX)
+    # _send has one controlled size error. Never echo arbitrary transport messages.
+    if isinstance(error, ProviderError) and error.args == (RESPONSE_TOO_LARGE,):
+        return ProviderError(RESPONSE_TOO_LARGE + FAILURE_SUFFIX)
+    return ProviderError('Inference transport failed; private exception details were suppressed.' + FAILURE_SUFFIX)
 
 
 class ProviderError(ValueError):
@@ -135,7 +165,7 @@ class TokenFactoryProvider:
         with build_opener(NoRedirect()).open(request, timeout=45) as response:
             data = response.read(2_000_001)
             if len(data) > 2_000_000:
-                raise ProviderError('Provider response exceeded the bounded size.')
+                raise ProviderError(RESPONSE_TOO_LARGE)
             return json.loads(data)
 
     def complete(self, messages, tools):
@@ -152,24 +182,34 @@ class TokenFactoryProvider:
         self.ledger.reserve(self.config, ceiling)
         request = Request(self.config.base_url.rstrip('/') + '/chat/completions', data=encoded,
                           headers={'Content-Type': 'application/json', 'Authorization': 'Bearer ' + self._key})
+        self.request_attempts += 1
         try:
-            self.request_attempts += 1
             result = self._transport(request)
-            choice = result['choices'][0]
-            if choice.get('finish_reason') != 'tool_calls':
-                raise ProviderError('Provider did not finish with structured tool calls.')
-            message = choice['message']
-            usage = result.get('usage', {})
-            if not isinstance(message, dict) or not isinstance(usage, dict):
-                raise ProviderError('Provider returned an invalid structured response.')
-            # Preserve only token counts, never remote metadata or echoed credentials.
-            counts = {k: v for k, v in usage.items() if k in
-                      ('prompt_tokens', 'completion_tokens', 'total_tokens') and type(v) is int and v >= 0}
-            if counts.get('prompt_tokens', 0) > input_bound or counts.get('completion_tokens', 0) > self.config.max_output_tokens:
-                raise ProviderError('Usage exceeded the configured reservation bound; stop and review provider billing.')
-            return Turn(message, counts)
-        except Exception:
-            raise ProviderError('Inference failed or returned an invalid response; reservation retained, no automatic retry.') from None
+        except Exception as error:
+            raise transport_failure(error) from None
+        if (not isinstance(result, dict) or not isinstance(result.get('choices'), list) or
+                not result['choices'] or not isinstance(result['choices'][0], dict)):
+            raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX)
+        choice = result['choices'][0]
+        message, usage = choice.get('message'), result.get('usage', {})
+        if not isinstance(message, dict) or not isinstance(usage, dict):
+            raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX)
+        count_keys = ('prompt_tokens', 'completion_tokens', 'total_tokens')
+        if any(key in usage and (type(usage[key]) is not int or usage[key] < 0) for key in count_keys):
+            raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX)
+        # Preserve only token counts, never remote metadata or echoed credentials.
+        counts = {k: v for k, v in usage.items() if k in
+                  count_keys}
+        if counts.get('prompt_tokens', 0) > input_bound or counts.get('completion_tokens', 0) > self.config.max_output_tokens:
+            raise ProviderError('Usage exceeded the configured reservation bound; stop and review provider billing.' + FAILURE_SUFFIX)
+        reason = choice.get('finish_reason')
+        if reason != 'tool_calls':
+            safe_reason = reason if isinstance(reason, str) and reason in (
+                'length', 'stop', 'content_filter', 'function_call') else 'unknown'
+            detail = (' The output token limit was reached; no complete tool response was accepted.'
+                      if safe_reason == 'length' else ' A complete structured tool response is required.')
+            raise ProviderError(f'Provider returned finish_reason={safe_reason}.' + detail + FAILURE_SUFFIX)
+        return Turn(message, counts)
 
 
 def make_provider(name, root):
