@@ -78,13 +78,13 @@ Allow the command to finish; several model requests may take a few minutes. Expe
 
 Copy only those printed lines into this chat. If it fails, send the safe error text and the evidence path if one is shown; do not repeatedly retry. The saved receipt lets Codex inspect actual tool selections and usage without receiving your key. A numerical headline alone does not mean the AI investigation completed; include its state. Configuration alone does not prove live integration.
 
-October 14 diagnostic update: the first live run failed before a response was accepted. Codex fixed error classification and verified 130 tests offline. After that fix, run this step once again in the existing configured workspace so a new receipt can show the classified cause or completion. No re-creation of the key/configuration, ledger reset or budget increase is needed. Send `Live request attempts`, the accepted call count, investigation state, error and new evidence path.
+October 14 correction: the classified follow-up confirmed the 1,024-token completion allowance was exhausted. Codex increased the local Nano limit to 8,192 tokens and the request timeout to 180 seconds, preserving the $5 cumulative cap and existing ledger. All 140 tests passed offline. Run this step once again in the existing updated workspace and allow several minutes. A completed live receipt is still required. No key re-creation or new configuration entry is needed. Send `Live request attempts`, the accepted call count, investigation state, error if any and the new evidence path.
 
 ## 6. Review the proposed product experience
 
 In VS Code's left Explorer, expand **docs** and open **SCREEN_SPEC.md**. Read the visual direction, proposed screens and evidence states. This is a written screen proposal, not the new website yet; no terminal command or key is required.
 
-Review the clarity and your Apple/Notion preference, not the correctness of spacecraft equations. Return concrete issues or say the direction works for you:
+The Antigravity review has been incorporated: current backend intake is explicitly JSON via CLI; proposed import/template forms are labelled as future UI controls; calculated unmet requirements and unassessed requirements have separate sections; simulation stays in the full plan without an enabled control in the first workflow. Review clarity and your Apple/Notion preference, not the correctness of spacecraft equations. Return concrete issues or say the direction works for you:
 
 ```text
 Confusing wording:

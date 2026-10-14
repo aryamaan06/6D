@@ -8,5 +8,6 @@
   "spend_cap_usd": 0,
   "input_usd_per_million_ceiling": 0,
   "output_usd_per_million_ceiling": 0,
-  "max_output_tokens": 1024
+  "max_output_tokens": 8192,
+  "request_timeout_seconds": 180
 }

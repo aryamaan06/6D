@@ -91,15 +91,18 @@ class LiveConfig:
     input_usd_per_million_ceiling: float
     output_usd_per_million_ceiling: float
     max_output_tokens: int = 1024
+    request_timeout_seconds: int = 45
 
     @classmethod
     def load(cls, path):
         try:
             data = json.loads(Path(path).read_text(encoding='utf-8'))
+            if not isinstance(data, dict):
+                raise ProviderError('Local provider configuration is missing or invalid; see docs/PROVIDER_SETUP.md.')
             if any(data.get(k) is not True for k in
                    ('account_verified', 'model_license_reviewed', 'spend_approved')):
                 raise ProviderError('Account, model license and user spending approval must be verified locally.')
-            config = cls(**{k: data[k] for k in cls.__dataclass_fields__})
+            config = cls(**{k: data[k] for k in cls.__dataclass_fields__ if k in data})
             endpoint = urlsplit(config.base_url)
             if (endpoint.scheme != 'https' or endpoint.username or endpoint.password or
                 endpoint.port not in (None, 443) or endpoint.query or endpoint.fragment or
@@ -114,8 +117,10 @@ class LiveConfig:
                            config.output_usd_per_million_ceiling):
                 if isinstance(number, bool) or not isinstance(number, (int, float)) or not math.isfinite(number) or number <= 0:
                     raise ProviderError('A positive finite cap and verified price ceilings are required.')
-            if type(config.max_output_tokens) is not int or not 128 <= config.max_output_tokens <= 4096:
-                raise ProviderError('Choose 128–4096 maximum output tokens.')
+            if type(config.max_output_tokens) is not int or not 128 <= config.max_output_tokens <= 8192:
+                raise ProviderError('Choose 128–8192 maximum output tokens.')
+            if type(config.request_timeout_seconds) is not int or not 15 <= config.request_timeout_seconds <= 180:
+                raise ProviderError('Choose a 15–180 second request timeout.')
             return config
         except (OSError, KeyError, TypeError, ValueError) as exc:
             if isinstance(exc, ProviderError):
@@ -162,7 +167,7 @@ class TokenFactoryProvider:
             self.mode = 'offline_transport_fixture'
 
     def _send(self, request):
-        with build_opener(NoRedirect()).open(request, timeout=45) as response:
+        with build_opener(NoRedirect()).open(request, timeout=self.config.request_timeout_seconds) as response:
             data = response.read(2_000_001)
             if len(data) > 2_000_000:
                 raise ProviderError(RESPONSE_TOO_LARGE)
