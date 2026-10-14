@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>6D | Numerical evidence review</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a href="/" class="brand">6D<span>Research prototype</span></a><span class="mode">Local curated inputs · AI inference off</span></header>
+  <main>
+    <section class="intro">
+      <p class="eyebrow">First capability / Circular-orbit verification</p>
+      <h1>What evidence supports this model?</h1>
+      <p class="lede">Review the assumptions, run independent numerical checks, and inspect what the results establish.</p>
+    </section>
+    <div class="workspace">
+      <section class="setup" aria-labelledby="setup-title">
+        <h2 id="setup-title">Review the contract</h2>
+        <label for="example">Curated example</label>
+        <select id="example"><option>Loading examples…</option></select>
+        <p id="example-summary" class="secondary"></p>
+        <dl id="contract-fields"></dl>
+        <details><summary>Full assumptions and source</summary><pre id="contract-json"></pre><h3>Functions under review</h3><pre id="candidate-source"></pre></details>
+        <div class="contract-hash"><span>Contract SHA-256</span><code id="contract-hash"></code></div>
+        <label for="workflow">Workflow</label>
+        <select id="workflow"><option value="audit">Deterministic audit</option><option value="investigate">Scripted tool investigation · no model inference</option></select>
+        <label class="acknowledge"><input id="accept" type="checkbox"><span>I have reviewed this example contract and acknowledge its limited scope.</span></label>
+        <button id="run" type="button" disabled>Run supported checks</button>
+        <p class="small-note">Local acknowledgement only. No authenticated signature is claimed.</p>
+        <p id="error" role="alert" hidden></p>
+      </section>
+      <section class="evidence" aria-labelledby="evidence-title">
+        <h2 id="evidence-title">Evidence for this version</h2>
+        <div id="empty" class="empty"><p>No audit selected.</p><p>Run a curated example to see its measured findings and exclusions.</p></div>
+        <div id="result" hidden>
+          <div id="verdict-block" class="verdict" aria-live="polite"><p id="verdict" class="verdict-label"></p><p id="summary"></p></div>
+          <p id="claim-boundary" class="secondary"></p>
+          <div id="investigation" hidden><h3>Structured investigation</h3><p id="investigation-status"></p><ol id="investigation-trace"></ol><p class="small-note">Provider mode distinguishes scripted fixtures from live inference. Every measurement is computed locally. The deterministic kernel issues the finding.</p></div>
+          <h3>Recorded checks</h3>
+          <div id="checks"></div>
+          <div id="refinement-section" hidden>
+            <h3>Exact-reference refinement</h3>
+            <p class="secondary">Errors are measured against the analytic circular orbit. Smaller steps test the declared numerical order.</p>
+            <div class="table-wrap"><table><thead><tr><th>Steps</th><th>Step (s)</th><th>Max. normalized state error</th><th>Max. fractional energy change</th></tr></thead><tbody id="refinement"></tbody></table></div>
+            <p id="orders" class="secondary"></p>
+            <p class="small-note">These are deterministic convergence estimates, not statistical confidence intervals.</p>
+          </div>
+          <div class="excluded"><h3>Not tested</h3><ul id="not-tested"></ul></div>
+          <details><summary>Versions and reproduction</summary><dl id="versions"></dl><p>From the startup directory:</p><pre id="reproduce"></pre><p class="small-note">The JSON contains all recorded experiments and source fingerprints. Digests do not establish authenticity.</p></details>
+          <div class="actions"><button id="download-json" type="button" class="secondary-button">Download evidence JSON</button></div>
+        </div>
+      </section>
+    </div>
+    <section class="comparison" aria-labelledby="comparison-title">
+      <h2 id="comparison-title">Compare saved audits</h2>
+      <p class="secondary">Inspect differences in assumptions, findings and measured evidence. Each audit retains its own scope.</p>
+      <div class="comparison-selects">
+        <div><label for="previous-report">Earlier audit</label><select id="previous-report" disabled></select></div>
+        <div><label for="new-report">Later audit</label><select id="new-report" disabled></select></div>
+      </div>
+      <div class="actions"><button id="compare" type="button" disabled>Compare saved audits</button></div>
+      <p id="comparison-empty" class="secondary">Save at least two audits to compare their evidence.</p>
+      <p id="comparison-error" role="alert" hidden></p>
+      <div id="comparison-result" hidden>
+        <p id="comparison-summary" aria-live="polite"></p>
+        <p id="comparison-scope" class="small-note"></p>
+        <dl id="comparison-versions"></dl>
+        <h3>Changed assumptions</h3>
+        <p id="comparison-no-assumptions" class="secondary" hidden>No contract fields changed.</p>
+        <div id="comparison-contract-table" class="table-wrap"><table class="comparison-table"><thead><tr><th>Assumption</th><th>Earlier</th><th>Later</th></tr></thead><tbody id="comparison-contracts"></tbody></table></div>
+        <h3>Recorded checks and measurement changes</h3>
+        <p id="comparison-no-checks" class="secondary" hidden>No numerical checks were run in either audit.</p>
+        <div class="table-wrap"><table class="comparison-table"><thead><tr><th>Evidence</th><th>Earlier</th><th>Later</th></tr></thead><tbody id="comparison-checks"></tbody></table></div>
+        <h3>Not tested</h3>
+        <ul id="comparison-gaps"></ul>
+        <details><summary>Comparison source records</summary><dl id="comparison-records"></dl></details>
+      </div>
+    </section>
+    <section class="history" aria-labelledby="history-title">
+      <div class="section-head"><h2 id="history-title">Recorded audits</h2><button id="refresh" type="button" class="secondary-button">Refresh</button></div>
+      <p class="secondary">Each snapshot applies to its own assumptions and source versions. Select a record to inspect it.</p>
+      <div id="history-list"></div>
+    </section>
+    <footer>This first increment covers synthetic circular-orbit examples. It is not the full future platform, a validated flight tool, or a customer benchmark.</footer>
+  </main>
+</body>
+</html>
