@@ -16,8 +16,11 @@ def main():
     args = sys.argv[1:] or ['provider-status']
     # This helper supplies a credential, never spending authorization.
     # Existing account/model/license/budget gates still apply to live commands.
-    if args[0] not in ('provider-status', 'investigate'):
-        print('Use provider-status or investigate with this local helper.')
+    if args[0] not in ('provider-status', 'investigate', 'verify-live'):
+        print('Use provider-status, investigate or verify-live with this local helper.')
+        return 2
+    if args[0] == 'verify-live' and args != ['verify-live', '--accept-contract']:
+        print('Read the constructed Euler and force-defect example contracts first, then use verify-live --accept-contract.')
         return 2
     from sixd.cli import main as sixd_main
     previous = os.environ.pop('NEBIUS_API_KEY', None)
@@ -34,9 +37,15 @@ def main():
             return 2
         os.environ['NEBIUS_API_KEY'] = key
         key = None
+        if args[0] == 'verify-live':
+            from sixd.live_validation import validate_live
+            return validate_live(ROOT, accept_contract=True)
         return sixd_main(args)
     except KeyboardInterrupt:
         print('\nCommand interrupted. Any previous live request retains its budget reservation.')
+        return 2
+    except Exception:
+        print('The private local command stopped unexpectedly; exception details were suppressed. Existing reservations are retained.')
         return 2
     finally:
         os.environ.pop('NEBIUS_API_KEY', None)

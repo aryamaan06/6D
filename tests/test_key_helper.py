@@ -62,6 +62,45 @@ class KeyHelperTests(unittest.TestCase):
             self.assertEqual(helper.main(), 2)
             command.assert_not_called()
 
+    def test_live_validation_requires_acknowledgment_before_key_entry(self):
+        with patch.object(helper.sys.stdin, 'isatty', return_value=True), \
+             patch.object(helper.sys, 'argv', ['helper', 'verify-live']), \
+             patch.object(helper, 'getpass') as prompt, redirect_stdout(StringIO()):
+            self.assertEqual(helper.main(), 2)
+            prompt.assert_not_called()
+
+    def test_live_validation_uses_one_private_entry_and_restores_environment(self):
+        def validate(root, *, accept_contract):
+            self.assertEqual(root, ROOT)
+            self.assertTrue(accept_contract)
+            self.assertEqual(os.environ['NEBIUS_API_KEY'], 'offline-new-test-value')
+            return 0
+        with patch.dict(os.environ, {'NEBIUS_API_KEY': 'offline-prior-test-value'}), \
+             patch.object(helper.sys.stdin, 'isatty', return_value=True), \
+             patch.object(helper.sys, 'argv', ['helper', 'verify-live', '--accept-contract']), \
+             patch.object(helper, 'getpass', return_value='offline-new-test-value') as prompt, \
+             patch('sixd.live_validation.validate_live', side_effect=validate), \
+             patch('sixd.cli.main') as ordinary_command:
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(helper.main(), 0)
+            prompt.assert_called_once()
+            ordinary_command.assert_not_called()
+            self.assertEqual(os.environ['NEBIUS_API_KEY'], 'offline-prior-test-value')
+            self.assertNotIn('offline-new-test-value', output.getvalue())
+
+    def test_unexpected_live_validation_error_hides_private_details_and_cleans_key(self):
+        with patch.dict(os.environ, {'NEBIUS_API_KEY': 'offline-prior-test-value'}), \
+             patch.object(helper.sys.stdin, 'isatty', return_value=True), \
+             patch.object(helper.sys, 'argv', ['helper', 'verify-live', '--accept-contract']), \
+             patch.object(helper, 'getpass', return_value='offline-new-test-value'), \
+             patch('sixd.live_validation.validate_live', side_effect=RuntimeError('offline-new-test-value')):
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(helper.main(), 2)
+            self.assertEqual(os.environ['NEBIUS_API_KEY'], 'offline-prior-test-value')
+            self.assertNotIn('offline-new-test-value', output.getvalue())
+
 
 if __name__ == '__main__':
     unittest.main()

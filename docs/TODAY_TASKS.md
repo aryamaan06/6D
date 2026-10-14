@@ -64,21 +64,25 @@ Review the constructed Euler contract before acknowledging it:
 
 Expected: the example's assumptions followed by `Contract SHA-256`. This example deliberately uses a first-order numerical method with known limitations. The demonstration should distinguish that limitation from a code defect. Read it as a supplied constructed example; your acknowledgment applies to that example, not a real spacecraft design. If a field is unclear, send its name so Codex can explain it.
 
-## 5. Run one live Nano investigation
+## 5. Run one bounded live-validation session
 
-Then run **one** live investigation under the existing allowance:
+The repeated investigate command has been replaced by a diagnostic session that enters the key once and tests explicit request profiles. First display and review the second constructed example's contract:
 
 ```powershell
-& $sixdPython -X utf8 tools/with_token_factory_key.py investigate --case euler_method_limit --provider token-factory --accept-contract
+& $sixdPython -X utf8 run.py contract --case force_sign_error
 ```
 
-Enter the key privately again. This command sends actual model requests to Nebius and reserves spending before each one. A normal sequential Euler run needs about three completions. The runner allows at most five turns, including one eligible tool-format correction handled internally. The $5 allowance is cumulative across runs through this adapter, not $5 for each run. Keep `.local\budget.sqlite3`; deleting it would erase the local spending history. No additional card spending is authorized.
+Then run:
 
-Allow the command to finish; several model requests may take a few minutes. Expected success markers are `6D: Method limitation`, `Provider: live_token_factory`, a positive `Live model calls` count, `Investigation: completed`, and an `Evidence JSON` path. `Live request attempts` is printed separately; `Live model calls` counts accepted provider responses. These are test expectations, not a promise that a model run succeeds.
+```powershell
+& $sixdPython -X utf8 tools/with_token_factory_key.py verify-live --accept-contract
+```
 
-Copy only those printed lines into this chat. If it fails, send the safe error text and the evidence path if one is shown; do not repeatedly retry. The saved receipt lets Codex inspect actual tool selections and usage without receiving your key. A numerical headline alone does not mean the AI investigation completed; include its state. Configuration alone does not prove live integration.
+Enter the existing key once at the hidden prompt. Let the session finish while it prints profile/case progress. It uses the same Nano model, endpoint and persistent $5 ledger, with a stricter session ceiling of **$0.10 and 15 reserved requests**. Failed reservations remain; do not delete `.local\budget.sqlite3`. Account, transport and billing-bound failures stop the session. No additional card spending is authorized.
 
-October 14 corrections: the larger 8,192-token allowance produced an accepted live response, confirming provider access. That response contained extra check parameters, which the runner rejected before executing any selected experiment. Codex has now corrected the full tool conversation: pending-check menus, exact finish evidence and one bounded protocol correction. The 180-second timeout, $5 cumulative cap and existing ledger remain unchanged. After offline recovery checks pass, run this step once in the updated workspace and allow several minutes. A completed live receipt is still required. No key re-creation or new configuration entry is needed. Send `Live request attempts`, the accepted call count, `Tool protocol corrections`, investigation state, error if any and the new evidence path. No repeated manual retries are expected for a single recoverable format mistake.
+Success requires both the Euler method-limitation and force-defect investigations to complete with verified independent kernel evidence. It prints **Live end-to-end investigation completed. The validated profile is now saved locally.** Only then is the working profile saved. If all profiles fail, the original configuration is preserved and no success is claimed. All 197 offline tests passed; the session has not yet been measured live. See LIVE_VALIDATION.md for the three request profiles and their source/compatibility limits.
+
+From either outcome, send only the final **Validation summary JSON** path. It references every receipt, allowing Codex to inspect the whole session without repeated output copying or receiving the key. Do not manually repeat a failed session.
 
 ## 6. Review the proposed product experience
 
@@ -102,9 +106,8 @@ You may report each task as you finish it, or use this template. Do not put the 
 ```text
 Offline demo: completed / error
 Provider status: configured true / false
-Live investigation: completed / error / not run yet
-Live model calls:
-Evidence JSON path:
+Live validation: completed / error / not run yet
+Validation summary JSON path:
 UI feedback:
 ```
 

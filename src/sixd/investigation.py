@@ -5,7 +5,7 @@ from pathlib import Path
 import json
 from .contracts import digest
 from .kernel import audit, force_experiment, refinement_experiment, reversal_experiment
-from .providers import ProviderError
+from .providers import ProviderError, safe_response_diagnostic
 
 
 def tool(name, description, properties=None, required=None):
@@ -91,6 +91,7 @@ def investigate(example, provider, *, contract=None, review=None, max_turns=5, m
     attempts = successes = 0
     initial_requests = getattr(provider, 'request_attempts', 0)
     state, error = 'incomplete', None
+    failed_provider_response = {}
     checks = {name: function for name, function in CHECKS.items()
               if name != 'check_reversibility' or c.declared_method == 'velocity_verlet'}
     messages = [{'role': 'system', 'content': SYSTEM},
@@ -174,6 +175,7 @@ def investigate(example, provider, *, contract=None, review=None, max_turns=5, m
                 error = 'The bounded tool-turn limit was reached.'
         except ProviderError as exc:
             state, error = 'failed', str(exc)
+            failed_provider_response = safe_response_diagnostic(exc.diagnostic)
         except (ValueError, TypeError, KeyError, ArithmeticError, StopIteration):
             state = 'failed'
             error = 'The investigation stopped on a provider, protocol or experiment error. Kernel findings remain independent.'
@@ -190,6 +192,8 @@ def investigate(example, provider, *, contract=None, review=None, max_turns=5, m
         'provider_successes': successes, 'live_request_attempts':
             getattr(provider, 'request_attempts', 0) - initial_requests if provider.mode == 'live_token_factory' else 0,
         'usage': usage, 'trace': trace, 'error': error,
+        'inference_profile': getattr(getattr(provider, 'config', None), 'inference_profile', 'not_applicable'),
+        'failed_provider_response': failed_provider_response,
         'protocol_rejections': rejections, 'protocol_corrections': corrections,
         'contract_sha256': locked, 'kernel_audit_id': report['audit_id'],
         'summary': report['summary'], 'summary_origin': 'deterministic_kernel',

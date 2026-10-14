@@ -23,7 +23,7 @@ The exact account routing ID above is used, rather than the display name `Nemotr
 
 The [NVIDIA model card](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16) links the [NVIDIA Nemotron Open Model License](https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-nemotron-open-model-license/), reviewed October 14. No model weights are bundled in 6D. The [Nebius function-calling documentation](https://docs.tokenfactory.nebius.com/ai-models-inference/function-calling) documents structured tool calls. Price ceilings use Arya's current console values, not a claim that a pricing page was successfully fetched. Recheck prices before a later testing phase if they change.
 
-No replacement key, renewed $5 approval or cloud deployment is needed for this initial check. The remaining step is to enter the existing active key privately through the helper and run one capped investigation. `docs/token-factory.example.json` remains an intentionally disabled template for other installations.
+No replacement key, renewed $5 approval or cloud deployment is needed. After recurring truncation, the recommended check is the one-entry **verify-live** session in [LIVE_VALIDATION.md](LIVE_VALIDATION.md). It tests up to three explicit request profiles under $0.10/15 reserved requests within the existing $5 ledger and installs a profile only after two real completed investigations with verified independent evidence. `docs/token-factory.example.json` remains an intentionally disabled template for other installations.
 
 Supported endpoints are `https://api.tokenfactory.nebius.com/v1` and `https://api.tokenfactory.us-central1.nebius.com/v1`. Redirects are rejected rather than forwarding a credential. The adapter does not load `.env` files.
 
@@ -58,7 +58,13 @@ A sequential Euler investigation ordinarily needs three completions; a model may
 
 The latest private live receipt confirms provider access and one accepted response; its first check incorrectly contained parameters and the previous runner stopped. The corrected tool conversation is tested offline before the next private check. An accepted provider response and a completed investigation are distinct outcomes; see LIVE_INTEGRATION_STATUS.md for the measured sequence.
 
-Confirm `model_mode: live_token_factory`, completed investigation, positive `live_model_calls`, actual tool trace and token usage. `live_model_calls` counts accepted provider responses; `live_request_attempts` separately counts transport attempts. Zero accepted responses does not establish zero billing. Preserve the saved JSON/HTML as the live-integration receipt. A successful HTTP-shaped mock does not meet this gate. The local UI can inspect live reports created by CLI, but its run endpoints currently expose only deterministic and fixture execution.
+Confirm `model_mode: live_token_factory`, completed investigation, positive `live_model_calls`, actual tool trace and token usage. `live_model_calls` counts accepted provider responses; `live_request_attempts` separately counts transport attempts. Zero accepted responses does not establish zero billing. Valid token counts from rejected completions are now recorded separately in `failed_provider_response`, including reported reasoning-token counts when available; absence remains unknown. No reasoning text is saved. Preserve the JSON/HTML as the receipt. A successful HTTP-shaped mock does not meet this gate. The local UI can inspect live reports created by CLI, but its run endpoints currently expose only deterministic and fixture execution.
+
+## Explicit request profiles
+
+`inference_profile` defaults to `tool_sampling` for legacy configurations. It uses NVIDIA's recommended Nano tool-calling sampling pair (temperature 0.6 / top_p 0.95). The explicitly invoked validation session also tests `nebius_no_reasoning` (temperature 0, reasoning_effort none) and `native_no_thinking` (temperature 0, top-level chat_template_kwargs enable_thinking false). These are labelled hosted compatibility requests, not established Nano behavior. Never claim the profile name proves reasoning was disabled. No literal nested SDK `extra_body` field is sent. [Profile references and limits](LIVE_VALIDATION.md)
+
+All 197 development tests passed offline after this correction. No completed live session is claimed until the two-case validation actually succeeds. A failed session retains the prior active configuration, all reports and previous budget reservations. Account/transport/billing-bound failures stop the session; profile incompatibility may advance to a visibly named next profile. No model switch, transport retry or fixture fallback occurs.
 
 ## Budget accounting
 

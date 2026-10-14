@@ -15,6 +15,34 @@ import ssl
 
 RESPONSE_TOO_LARGE = 'Provider response exceeded the bounded size.'
 FAILURE_SUFFIX = ' Reservation retained; no automatic retry.'
+INFERENCE_PROFILES = ('tool_sampling', 'nebius_no_reasoning', 'native_no_thinking')
+FINISH_REASONS = ('length', 'stop', 'content_filter', 'function_call', 'tool_calls')
+
+
+def safe_response_diagnostic(value):
+    """Keep controlled response facts, never response text or arbitrary metadata."""
+    if not isinstance(value, dict):
+        return {}
+    result = {}
+    if 'finish_reason' in value:
+        reason = value['finish_reason']
+        result['finish_reason'] = reason if isinstance(reason, str) and reason in FINISH_REASONS else 'unknown'
+    if value.get('inference_profile') in INFERENCE_PROFILES:
+        result['inference_profile'] = value['inference_profile']
+    limit = value.get('max_output_tokens')
+    if type(limit) is int and 128 <= limit <= 8192:
+        result['max_output_tokens'] = limit
+    usage = value.get('usage')
+    if isinstance(usage, dict):
+        counts = {key: usage[key] for key in ('prompt_tokens', 'completion_tokens', 'total_tokens')
+                  if type(usage.get(key)) is int and usage[key] >= 0}
+        details = usage.get('completion_tokens_details')
+        if isinstance(details, dict):
+            count = details.get('reasoning_tokens')
+            if type(count) is int and 0 <= count <= counts.get('completion_tokens', 8192):
+                counts['completion_tokens_details'] = {'reasoning_tokens': count}
+        result['usage'] = counts
+    return result
 
 
 def transport_failure(error):
@@ -43,6 +71,9 @@ def transport_failure(error):
 
 class ProviderError(ValueError):
     """Safe operator-facing error; never includes a key or remote response body."""
+    def __init__(self, message, *, diagnostic=None):
+        super().__init__(message)
+        self.diagnostic = safe_response_diagnostic(diagnostic)
 
 
 @dataclass
@@ -93,6 +124,7 @@ class LiveConfig:
     output_usd_per_million_ceiling: float
     max_output_tokens: int = 1024
     request_timeout_seconds: int = 45
+    inference_profile: str = 'tool_sampling'
 
     @classmethod
     def load(cls, path):
@@ -122,6 +154,8 @@ class LiveConfig:
                 raise ProviderError('Choose 128–8192 maximum output tokens.')
             if type(config.request_timeout_seconds) is not int or not 15 <= config.request_timeout_seconds <= 180:
                 raise ProviderError('Choose a 15–180 second request timeout.')
+            if not isinstance(config.inference_profile, str) or config.inference_profile not in INFERENCE_PROFILES:
+                raise ProviderError('Choose a supported inference profile; see docs/PROVIDER_SETUP.md.')
             return config
         except (OSError, KeyError, TypeError, ValueError) as exc:
             if isinstance(exc, ProviderError):
@@ -179,7 +213,18 @@ class TokenFactoryProvider:
                      if len(tools) == 1 else 'auto')
         payload = {'model': self.model, 'messages': messages, 'tools': tools,
                    'tool_choice': selection, 'max_tokens': self.config.max_output_tokens,
-                   'temperature': 0, 'stream': False}
+                   'stream': False}
+        # NVIDIA recommends this sampling pair for Nano tool calling. Thinking-off
+        # profiles are explicit hosted compatibility experiments, not guaranteed flags.
+        if self.config.inference_profile == 'tool_sampling':
+            payload.update(temperature=0.6, top_p=0.95)
+        elif self.config.inference_profile == 'nebius_no_reasoning':
+            payload.update(temperature=0, reasoning_effort='none')
+        elif self.config.inference_profile == 'native_no_thinking':
+            # Raw HTTP fields go at top level; SDK extra_body is a merge argument.
+            payload.update(temperature=0, chat_template_kwargs={'enable_thinking': False})
+        else:
+            raise ProviderError('Unsupported inference profile. No request was sent.')
         encoded = json.dumps(payload, allow_nan=False).encode('utf-8')
         if len(encoded) > 120_000:
             raise ProviderError('The bounded investigation context is too large. No request was sent.')
@@ -208,15 +253,26 @@ class TokenFactoryProvider:
         # Preserve only token counts, never remote metadata or echoed credentials.
         counts = {k: v for k, v in usage.items() if k in
                   count_keys}
+        details = usage.get('completion_tokens_details')
+        if details is not None:
+            if not isinstance(details, dict):
+                raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX)
+            if 'reasoning_tokens' in details:
+                count = details['reasoning_tokens']
+                if type(count) is not int or not 0 <= count <= counts.get('completion_tokens', self.config.max_output_tokens):
+                    raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX)
+                counts['completion_tokens_details'] = {'reasoning_tokens': count}
         if counts.get('prompt_tokens', 0) > input_bound or counts.get('completion_tokens', 0) > self.config.max_output_tokens:
             raise ProviderError('Usage exceeded the configured reservation bound; stop and review provider billing.' + FAILURE_SUFFIX)
         reason = choice.get('finish_reason')
         if reason != 'tool_calls':
-            safe_reason = reason if isinstance(reason, str) and reason in (
-                'length', 'stop', 'content_filter', 'function_call') else 'unknown'
+            safe_reason = reason if isinstance(reason, str) and reason in FINISH_REASONS else 'unknown'
             detail = (' The output token limit was reached; no complete tool response was accepted.'
                       if safe_reason == 'length' else ' A complete structured tool response is required.')
-            raise ProviderError(f'Provider returned finish_reason={safe_reason}.' + detail + FAILURE_SUFFIX)
+            raise ProviderError(f'Provider returned finish_reason={safe_reason}.' + detail + FAILURE_SUFFIX,
+                                diagnostic={'finish_reason': safe_reason, 'usage': counts,
+                                            'max_output_tokens': self.config.max_output_tokens,
+                                            'inference_profile': self.config.inference_profile})
         return Turn(message, counts)
 
 
