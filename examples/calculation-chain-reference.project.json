@@ -1,0 +1,170 @@
+{
+  "schema": "sixd.project.v1",
+  "project_id": "constructed-calculation-chain",
+  "name": "Constructed aerodynamic load and structure review",
+  "revision": "1",
+  "description": "Synthetic scalar drag-to-beam reference. The full drag magnitude is declared as a transverse free-end point load on a static beam. Geometry, direction and load case are assumptions; the independent thermal case is not coupled. No vehicle or mission validation is implied.",
+  "lifecycle_stage": "design",
+  "inputs": {
+    "mount_length": {
+      "value": 2,
+      "unit": "m",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "young_modulus": {
+      "value": 200000000000.0,
+      "unit": "Pa",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "second_moment": {
+      "value": 1e-06,
+      "unit": "m^4",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "outer_fiber": {
+      "value": 0.01,
+      "unit": "m",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "maximum_bending_stress": {
+      "value": 1000000.0,
+      "unit": "Pa",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "maximum_tip_deflection": {
+      "value": 0.001,
+      "unit": "m",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "heat_input": {
+      "value": 200,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "radiator_area": {
+      "value": 1,
+      "unit": "m^2",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "emissivity": {
+      "value": 0.8,
+      "unit": "1",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "background_temperature": {
+      "value": 3,
+      "unit": "K",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "maximum_temperature": {
+      "value": 320,
+      "unit": "K",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "density": {
+      "value": 0.4,
+      "unit": "kg/m^3",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "relative_speed": {
+      "value": 10,
+      "unit": "m/s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "drag_coefficient": {
+      "value": 0.5,
+      "unit": "1",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "reference_area": {
+      "value": 2,
+      "unit": "m^2",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "maximum_drag_force": {
+      "value": 10,
+      "unit": "N",
+      "source": "Constructed demonstration input; not measured hardware data."
+    }
+  },
+  "models": [
+    {
+      "id": "beam",
+      "type": "static_cantilever",
+      "description": "Ideal static cantilever with an explicitly mapped aerodynamic point load.",
+      "inputs": {
+        "length": "mount_length",
+        "young_modulus": "young_modulus",
+        "second_moment": "second_moment",
+        "outer_fiber": "outer_fiber"
+      },
+      "links": {
+        "tip_force": {
+          "model_id": "aero",
+          "metric": "drag_force",
+          "unit": "N",
+          "rationale": "For this constructed load case, apply the entire drag-force magnitude as a transverse point load at the beam free end. Load direction, location and boundary conditions are explicitly assumed."
+        }
+      }
+    },
+    {
+      "id": "aero",
+      "type": "drag_load",
+      "description": "Supplied steady density, relative speed, coefficient and reference area.",
+      "inputs": {
+        "density": "density",
+        "relative_speed": "relative_speed",
+        "drag_coefficient": "drag_coefficient",
+        "reference_area": "reference_area"
+      }
+    },
+    {
+      "id": "thermal",
+      "type": "radiative_equilibrium",
+      "inputs": {
+        "heat_input": "heat_input",
+        "area": "radiator_area",
+        "emissivity": "emissivity",
+        "background_temperature": "background_temperature"
+      }
+    }
+  ],
+  "requirements": [
+    {
+      "id": "mount_stress",
+      "title": "Declared static beam stress limit",
+      "model_id": "beam",
+      "metric": "bending_stress",
+      "operator": "<=",
+      "limit_input": "maximum_bending_stress",
+      "critical": true
+    },
+    {
+      "id": "mount_deflection",
+      "title": "Declared beam deflection limit",
+      "model_id": "beam",
+      "metric": "tip_deflection",
+      "operator": "<=",
+      "limit_input": "maximum_tip_deflection",
+      "critical": true
+    },
+    {
+      "id": "thermal_limit",
+      "title": "Declared steady equilibrium temperature limit",
+      "model_id": "thermal",
+      "metric": "equilibrium_temperature",
+      "operator": "<=",
+      "limit_input": "maximum_temperature",
+      "critical": true
+    },
+    {
+      "id": "drag_limit",
+      "title": "Declared drag-force limit",
+      "model_id": "aero",
+      "metric": "drag_force",
+      "operator": "<=",
+      "limit_input": "maximum_drag_force",
+      "critical": true
+    }
+  ]
+}

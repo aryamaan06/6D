@@ -1,0 +1,7 @@
+measurement_id,requirement_id,value,unit,tolerance,note
+force-a,drag_limit,310,N,15,"Synthetic: measured criterion fails while prediction agrees within tolerance"
+force-b,strict_drag_limit,302,N,5,"Synthetic: both criteria fail while prediction agrees within tolerance"
+on-boundary,drag_limit,305,N,5,"Synthetic: exact agreement boundary"
+over-boundary,drag_limit,305.000001,N,5,"Synthetic: outside agreement boundary"
+wrong-unit,drag_limit,300000,mN,5,"Synthetic negative case: no automatic unit conversion"
+missing-tolerance,drag_limit,300,N,,"Synthetic gap: criterion can be checked but no agreement tolerance supplied"

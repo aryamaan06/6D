@@ -48,13 +48,16 @@ class ProjectWorkflowTests(unittest.TestCase):
         self.assertTrue(all(review['launch_authorization'] is False for review in reviews.values()))
 
     def test_demo_writes_preserved_verified_snapshots_without_provider_access(self):
-        with patch('sixd.providers.make_provider', side_effect=AssertionError('No provider in project demo')):
+        self.assertIn('orbital_review', example_projects())
+        with patch('sixd.providers.make_provider', side_effect=AssertionError('No provider in project demo')), \
+                patch('sixd.orbital_adapter.evaluate', side_effect=AssertionError('Independent templates do not enter the revision-chain demo')):
             result, output = self.run_cli(['project-demo', '--output', str(self.directory)])
         self.assertEqual(result, 0)
         self.assertIn('Live model calls: 0', output)
         records = [read_review(path) for path in self.directory.glob('*.json')]
         self.assertEqual(len(records), 3)
         self.assertEqual({review['revision'] for review in records}, {'1', '2', '3'})
+        self.assertEqual({review['project_id'] for review in records}, {'constructed-engineering-change'})
 
     def test_json_input_to_review_compare_and_verify_is_usable(self):
         examples = example_projects()

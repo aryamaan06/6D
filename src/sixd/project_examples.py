@@ -1,6 +1,8 @@
 """Constructed component-screening examples, not a real spacecraft design."""
 from copy import deepcopy
 
+from .simulation import default_spec
+
 
 def _input(value, unit):
     return {"value": value, "unit": unit, "source": "Constructed demonstration input; not measured hardware data."}
@@ -62,4 +64,152 @@ def example_projects():
     missing["requirements"].append({"id": "control_tracking", "title": "Unimplemented control-performance requirement",
         "model_id": "control", "metric": "tracking_error", "operator": "<=",
         "limit_input": "maximum_tracking_error", "critical": True})
-    return {"baseline": baseline, "revised": revised, "missing_evidence": missing}
+    return {"baseline": baseline, "revised": revised, "missing_evidence": missing,
+            "orbital_review": _orbital_review(baseline), "power_budget": _power_review(baseline),
+            "attitude_review": _attitude_review(baseline), "chain_review": _chain_review(baseline)}
+
+
+def _chain_review(baseline):
+    """An explicitly declared scalar drag-to-beam mapping, not a flight case."""
+    project = deepcopy(baseline)
+    project.update(project_id="constructed-calculation-chain", name="Constructed aerodynamic load and structure review",
+        description="Synthetic scalar drag-to-beam reference. The full drag magnitude is declared as a transverse free-end point load on a static beam. Geometry, direction and load case are assumptions; the independent thermal case is not coupled. No vehicle or mission validation is implied.")
+    project["inputs"].update(density=_input(.4,"kg/m^3"), relative_speed=_input(10,"m/s"),
+        drag_coefficient=_input(.5,"1"), reference_area=_input(2,"m^2"), mount_length=_input(2,"m"),
+        young_modulus=_input(2e11,"Pa"), second_moment=_input(1e-6,"m^4"), maximum_drag_force=_input(10,"N"))
+    by_id = {model["id"]: model for model in project["models"]}
+    beam, aero, thermal = by_id["mount"], by_id["atmospheric_load"], by_id["thermal"]
+    beam["id"] = "beam"
+    beam["description"] = "Ideal static cantilever with an explicitly mapped aerodynamic point load."
+    del beam["inputs"]["tip_force"]
+    aero["id"] = "aero"
+    aero["description"] = "Supplied steady density, relative speed, coefficient and reference area."
+    beam["links"] = {"tip_force": {"model_id":"aero", "metric":"drag_force", "unit":"N",
+        "rationale":"For this constructed load case, apply the entire drag-force magnitude as a transverse point load at the beam free end. Load direction, location and boundary conditions are explicitly assumed."}}
+    # Deliberately reverse dependency order to exercise topological execution.
+    project["models"] = [beam, aero, thermal]
+    project["requirements"] = [r for r in project["requirements"] if r["model_id"] != "propulsion"]
+    for requirement in project["requirements"]:
+        requirement["model_id"] = {"mount":"beam", "atmospheric_load":"aero"}.get(requirement["model_id"], requirement["model_id"])
+    used = {key for model in project["models"] for key in model["inputs"].values()} | {r["limit_input"] for r in project["requirements"]}
+    project["inputs"] = {key:value for key,value in project["inputs"].items() if key in used}
+    return project
+
+
+def _attitude_review(baseline):
+    """Constructed critically damped single-axis response; not flight data."""
+    from .attitude import PARAMETERS
+    import math
+    values = dict(inertia=10, initial_angle=0, initial_rate=0, target_angle=0.2,
+                  proportional_gain=1, derivative_gain=2*math.sqrt(10), max_torque=1,
+                  disturbance_torque=0, duration=40, steps=512, assessment_start=30,
+                  angle_numerical_tolerance=1e-6, rate_numerical_tolerance=1e-6)
+    inputs = {key:_input(value, PARAMETERS[key]) for key,value in values.items()}
+    inputs.update(pointing_limit=_input(0.001,'rad'), rate_limit=_input(0.001,'rad/s'))
+    for key in ('heat_input','radiator_area','emissivity','background_temperature','maximum_temperature'):
+        inputs[key] = deepcopy(baseline['inputs'][key])
+    return {
+        'schema':'sixd.project.v1', 'project_id':'constructed-attitude-review',
+        'name':'Constructed single-axis pointing review', 'revision':'1', 'lifecycle_stage':'simulation',
+        'description':'Illustrative rigid principal-axis PD control with a fixed target and ideal torque source. Values and limits are constructed references, not real spacecraft data. The separate thermal calculation is not coupled to control.',
+        'inputs':inputs,
+        'models':[{'id':'pointing', 'type':'attitude_control',
+                   'description':'Critically damped unsaturated reference; ideal state feedback, no navigation or wheel momentum model.',
+                   'inputs':{key:key for key in PARAMETERS}},
+                  deepcopy(next(m for m in baseline['models'] if m['id']=='thermal'))],
+        'requirements':[
+            {'id':'pointing_window', 'title':'Sampled pointing error during declared assessment window',
+             'model_id':'pointing', 'metric':'max_assessed_error', 'operator':'<=','limit_input':'pointing_limit','critical':True},
+            {'id':'rate_window', 'title':'Sampled angular rate during declared assessment window',
+             'model_id':'pointing', 'metric':'max_assessed_rate','operator':'<=','limit_input':'rate_limit','critical':True},
+            deepcopy(next(r for r in baseline['requirements'] if r['id']=='thermal_limit'))],
+    }
+
+
+def _power_review(baseline):
+    """Constructed concurrent loads and independent thermal reference."""
+    scalars = {
+        "usable_battery_energy": (6000, "J"), "battery_power_limit": (60, "W"), "bus_power_limit": (100, "W"),
+        "cruise_duration": (100, "s"), "cruise_generation": (20, "W"), "avionics_power": (10, "W"),
+        "avionics_count": (1, "1"), "payload_power": (30, "W"), "payload_count": (2, "1"),
+        "downlink_duration": (50, "s"), "downlink_generation": (100, "W"), "radio_power": (40, "W"),
+        "radio_count": (1, "1"), "minimum_power_margin": (0, "W"), "minimum_energy_margin": (0, "J"),
+        "declared_load_allowance": (80, "W"),
+    }
+    inputs = {key: _input(value, unit) for key, (value, unit) in scalars.items()}
+    for key in ("heat_input", "radiator_area", "emissivity", "background_temperature", "maximum_temperature"):
+        inputs[key] = deepcopy(baseline["inputs"][key])
+    bindings = {"usable_battery_energy": "usable_battery_energy", "max_battery_power": "battery_power_limit", "bus_power_limit": "bus_power_limit"}
+    for index, name in ((1, "cruise"), (2, "downlink")):
+        prefix = f"mode.{index}.{name}."
+        bindings[prefix + "duration"] = name + "_duration"
+        bindings[prefix + "generation"] = name + "_generation"
+        for load in (("avionics", "payload") if name == "cruise" else ("avionics", "radio")):
+            bindings[prefix + "load." + load + ".power"] = load + "_power"
+            bindings[prefix + "load." + load + ".count"] = load + "_count"
+    return {
+        "schema": "sixd.project.v1", "project_id": "constructed-power-energy-review", "name": "Constructed operating-mode power and energy review",
+        "revision": "1", "lifecycle_stage": "design",
+        "description": "Synthetic constant simultaneous loads in two sequential modes, declared generation and upfront reserve-adjusted usable bus battery energy. No charging, illumination or state-of-charge model. The thermal example is independent; values are illustrative, not real spacecraft data.",
+        "inputs": inputs,
+        "models": [{"id": "electrical_budget", "type": "power_energy_budget", "description": "Explicit mode durations and equipment concurrency. Generation surplus has no recharge credit.", "inputs": bindings}, deepcopy(next(m for m in baseline["models"] if m["id"] == "thermal"))],
+        "requirements": [
+            {"id": "power_capacity", "title": "Power capacity covers every declared mode", "model_id": "electrical_budget", "metric": "minimum_power_margin", "operator": ">=", "limit_input": "minimum_power_margin", "critical": True},
+            {"id": "usable_energy", "title": "Usable battery energy covers the declared schedule", "model_id": "electrical_budget", "metric": "battery_energy_margin", "operator": ">=", "limit_input": "minimum_energy_margin", "critical": True},
+            deepcopy(next(r for r in baseline["requirements"] if r["id"] == "thermal_limit")),
+        ],
+        "systems": [
+            {"id": "space_system", "title": "Constructed space system", "description": "Organization only; not a complete vehicle.", "parent_id": None, "model_ids": []},
+            {"id": "electrical", "title": "Electrical power", "description": "Bounded bus power and energy budget.", "parent_id": "space_system", "model_ids": ["electrical_budget"]},
+            {"id": "load_allocation", "title": "Declared load allowance", "description": "Declared allocation only; no downstream solver consumes the interface.", "parent_id": "space_system", "model_ids": []},
+            {"id": "radiator", "title": "Independent thermal case", "description": "Explicit static heat input; electrical output is not automatically converted to heat.", "parent_id": "space_system", "model_ids": ["thermal"]},
+        ],
+        "interfaces": [{"id": "declared_bus_allowance", "title": "Peak simultaneous load against declared allocation", "description": "Scalar comparison only; not a data feed into another model.", "from_system": "electrical", "to_system": "load_allocation", "source": {"kind": "model_metric", "model_id": "electrical_budget", "metric": "peak_load_power"}, "target_input": "declared_load_allowance", "quantity": "Bus load power", "unit": "W", "operator": "<=", "critical": True}],
+    }
+
+
+def _orbital_review(baseline):
+    """Constructed orbit criteria and an explicitly independent thermal case."""
+    spec = default_spec()
+    # Three guarded grids (512, 1024, 2048) can demonstrate refinement here.
+    # These are labelled illustrative criteria, never mission requirements.
+    spec["steps"] = 2048
+    scalars = {
+        "mu_m3_s2": (spec["mu_m3_s2"], "m^3/s^2"),
+        "exclusion_radius_m": (spec["exclusion_radius_m"], "m"),
+        "duration_s": (spec["duration_s"], "s"), "steps": (spec["steps"], "1"),
+        **{f"position_{axis}": (spec["position_m"][index], "m") for index, axis in enumerate("xyz")},
+        **{f"velocity_{axis}": (spec["velocity_m_s"][index], "m/s") for index, axis in enumerate("xyz")},
+    }
+    inputs = {key: _input(value, unit) for key, (value, unit) in scalars.items()}
+    inputs.update({
+        "minimum_sampled_radius": _input(6_900_000, "m"),
+        "maximum_sampled_radius": _input(7_100_000, "m"),
+        "maximum_sampled_speed": _input(7_800, "m/s"),
+        "maximum_final_radius": _input(7_050_000, "m"),
+    })
+    for key in ("heat_input", "radiator_area", "emissivity", "background_temperature", "maximum_temperature"):
+        inputs[key] = deepcopy(baseline["inputs"][key])
+    models = [{"id": "orbit", "type": "orbital_trajectory",
+               "description": "Constructed inclined circular orbit; sampled criteria apply only to the declared duration and integration grid.",
+               "accuracy": {"position_tolerance_m": 500, "velocity_tolerance_m_s": 0.6,
+                            "source": "Constructed demonstration grid-agreement allowances only; not measured or mission accuracy requirements."},
+               "inputs": {key: key for key in scalars}},
+              deepcopy(next(model for model in baseline["models"] if model["id"] == "thermal"))]
+    models[1]["description"] = "Independent static thermal case with explicitly supplied heat input; no orbital/thermal coupling is inferred."
+    requirements = []
+    for identity, title, metric, operator, limit in (
+        ("orbit_min_radius", "Minimum sampled radius over the declared window", "min_radius_m", ">=", "minimum_sampled_radius"),
+        ("orbit_max_radius", "Maximum sampled radius over the declared window", "max_radius_m", "<=", "maximum_sampled_radius"),
+        ("orbit_max_speed", "Maximum sampled speed over the declared window", "max_speed_m_s", "<=", "maximum_sampled_speed"),
+        ("orbit_final_radius", "Final-sample radius at the declared duration", "final_radius_m", "<=", "maximum_final_radius"),
+    ):
+        requirements.append({"id": identity, "title": title, "model_id": "orbit", "metric": metric,
+                             "operator": operator, "limit_input": limit, "critical": True})
+    requirements.append(deepcopy(next(item for item in baseline["requirements"] if item["id"] == "thermal_limit")))
+    return {
+        "schema": "sixd.project.v1", "project_id": "constructed-orbital-review",
+        "name": "Constructed orbital engineering review", "revision": "1", "lifecycle_stage": "simulation",
+        "description": "Synthetic bounded two-body orbit with explicit sampled criteria and an independent thermal model. Values and limits are illustrative; no real spacecraft, flight validation or complete mission is represented.",
+        "inputs": inputs, "models": models, "requirements": requirements,
+    }

@@ -1,0 +1,76 @@
+# Open the latest 6D application
+
+October 20 Ultra verification result: refresh http://127.0.0.1:8768/ and confirm build **a654eda494e1**. **Connect AI → Ultra compatibility diagnostic** shows the preserved corrected-case receipt and JSON download. Its live failed state is historical: the format fix worked, a wording false positive was then corrected offline, and separate review found a wrong grid-pair attribution. See ULTRA_DIAGNOSTIC_RESULTS.md; no clean semantic pass or Ultra activation is claimed. Super remains selected. The restart cleared the private connection; no reconnection is needed to inspect saved results or run local calculations. No more paid runs are queued.
+
+October 20 live evaluation result: refresh http://127.0.0.1:8768/ and confirm build **b43da12e0240**. Open **Connect AI → Engineering workflow evaluation** for the recorded Nano/Super/Ultra results, attempted/completed/untested counts, stop reason and JSON download. Super remains selected; no model is automatically enabled. See LIVE_WORKFLOW_RESULTS.md for the separate Codex review and known explanation errors. The final restart cleared the memory-only key. No key is needed to read results or run local checks; connect privately only for a deliberate future AI investigation.
+
+October 20 accuracy update: refresh http://127.0.0.1:8768/ and confirm build **5f3fd17543b0**. Use the orbital model definition editor to supply or revise position/velocity accuracy criteria and their source; save the draft and run checks. The orbital reference template now has explicitly illustrative criteria and 2048 finest steps. Existing saved projects and history are preserved. See ACCURACY_SAFEGUARDS.md. No AI key is needed for local calculations.
+
+October 19 published-reference update: refresh http://127.0.0.1:8768/ and confirm build **854446b6f9d8**. Read PUBLISHED_BENCHMARK_RESULTS.md for reference evidence and important orbital error limits. The application now accepts the intended eight-period boundary within a narrow machine-roundoff allowance. Existing reports remain historical records; run local checks when you need a review under the current verifier. No AI key is required for local calculations.
+
+October 19 verification update: refresh http://127.0.0.1:8768/ and confirm build **e1e69fe17796**. The existing workspace workflow is preserved; this update fixes signed-zero reuse and adds a reproducible offline verification report. See RECALCULATION_VERIFICATION_RESULTS.md. No AI key is needed for local calculations or the benchmark.
+
+October 19: refresh http://127.0.0.1:8768/ and confirm build **c6fb931d0af2**. Choose **Calculation chains â†’ Open constructed reference â†’ Create project â†’ Run saved checks** to see a declared aerodynamic-force result feed structural stress/deflection checks. The example is separate from your existing project. **Edit in shared draft â†’ Add calculation link** connects a supported scalar to an exact-unit receiving parameter with an explicit rationale; save and run the revision. Upstream changes trigger downstream rechecks; missing upstream evidence leaves dependents unassessed. Local calculation, history and reports need no AI key. See CALCULATION_CHAINS.md and CALCULATION_CHAINS_ACCEPTANCE.md.
+
+October 18: open http://127.0.0.1:8768/, refresh, and confirm build **04103cfe02e1**. Choose **Guidance & control** in the sidebar. **Open constructed reference â†’ Create project â†’ Run saved checks** creates and reviews a separate analytical spacecraft-pointing example. Inspect the saved error, angular-rate and requested/applied torque histories, assessment window and numerical diagnostics. Select a requirement to see its criterion and evidence. **Investigate** opens the scoped Assistant; it does not start inference. No AI key is needed for the calculations or saved views. See ATTITUDE_MODEL.md and ATTITUDE_ACCEPTANCE.md for scope and the verified delivery receipt.
+
+For your own applicable single-axis model, choose **Author project**, add sourced inputs with the exact units, add **Single-axis spacecraft pointing**, bind every parameter and declare requirements. Preview and save the shared draft, then run checks. **Inspect or edit inputs** opens the same Table/Inspector workflow. Changes to control inputs target control; unchanged independent models can reuse evidence. Draft plots remain unavailable until a saved configuration is reviewed. Full report/JSON preserves the response and its provenance. This model does not calculate navigation, three-axis attitude or rocket landing.
+
+October 18: choose **Power & energy** in the sidebar. **Open constructed reference â†’ Create project â†’ Run saved checks** demonstrates separate power/energy budgets without changing an existing project. To author your own budget, use **Edit in shared draft**, author sourced inputs, **Add power budget**, bind capacities/modes/equipment, declare requirements, save the shared revision, then run checks. No AI key is needed. Surplus generation is not credited as battery recharge; these are supplied-value budgets. See POWER_ENERGY.md and POWER_ACCEPTANCE.md. Delivered build: **fdf2e37af2fc**.
+
+October 18: choose **Systems & interfaces** in the sidebar, then **Edit in shared draft** to add parent/child systems, model ownership and explicit interface contracts. Save the shared revision; run checks for saved model-metric evidence. Changes, Reader/Report and Inspector show interface comparisons and separate downstream review flags. No AI key is needed. Existing evidence may need an explicit Run checks for the new verifier version. See SYSTEMS_AND_INTERFACES.md and SYSTEMS_ACCEPTANCE.md. Delivered build: **f1fb885e40b1**.
+
+October 18: select a mapped requirement to see saved test comparisons in Inspector/Evidence. **Investigate comparison** selects one row without starting inference; only **Start live investigation** sends it. **Changes** shows draft/historical applicability. **Report â†’ Export combined review JSON** and **Print report / Save PDF** include linked test provenance. Original measurements and canonical findings remain separate. No key is needed for these views or exports. See TEST_EVIDENCE_WORKFLOW.md and TEST_EVIDENCE_ACCEPTANCE.md. Delivered build: **7e9e961dc48a**.
+
+October 18: **Test data** now imports supplied scalar CSV measurements and compares them with the exact saved prediction. Use **Run baseline checks** if prompted, upload/paste CSV, read headers, map columns, preview, declare source/origin/measurement definition and conditions, then save. Measurement compliance and prediction agreement stay separate. No AI key is needed. See TEST_DATA_COMPARISON.md for the optional constructed project/CSV walkthrough and TEST_DATA_ACCEPTANCE.md for verification. Delivered build: **acc50e0ee10b**.
+
+October 18: **Scenarios** now opens bounded hypothetical sweeps and named alternatives, with stored comparisons, margins, plots and JSON/print reports. Select a saved revision and use **Run baseline checks** if prompted, then enter explicit hypothetical values and their source. Opening/history performs no calculations or paid inference. See SCENARIO_STUDIES.md and SCENARIO_ACCEPTANCE.md. Verified build: **1ee19b0f7496**.
+
+Latest build: open http://127.0.0.1:8768/ and choose New project to start empty, then Author project â†’ Edit draft. Add inputs, models and requirements, validate setup, preview/save the revision and run checks. Existing projects/templates/simulation are still available. This workflow needs no AI key. See PROJECT_AUTHORING.md.
+
+Latest workflow: open http://127.0.0.1:8768/, choose Import project and the orbital engineering review reference template, create it, then Run checks â†’ View trajectory. This calculates locally without an AI key. Simulation â†’ Project evidence also offers the template. Existing projects and exploratory simulations remain saved. See ORBITAL_WORKFLOW.md.
+
+October 17: choose **Simulation** in the workspace toolbar. Open **Configure a new scenario**, inspect the synthetic reference inputs or enter your own supported orbital conditions, then choose **Calculate & save run**. Use Play, the timeline, 3D/XY/XZ/YZ views and the history graph. **Saved run** reopens earlier receipts; **Compare with** overlays compatible runs. No key or paid call is required. [Simulation scope](SIMULATION_PLAYBACK.md) explains the separate scenario inputs and model limits.
+
+Latest visual evidence: select a saved reviewed revision and open Reader (selected system) or Report (whole project). Results against limits shows current and comparable historical results, each with its own criterion. Inspect evidence opens the contextual Inspector; Recorded sources and full values retains precision and receipt IDs. Report also offers Print report / Save PDF using your browser. Drafts and revisions awaiting checks cannot be printed as reviewed reports. See VISUAL_EVIDENCE_ACCEPTANCE.md.
+
+Current project Assistant: reviewed Nemotron Super, with six requests / USD 0.20 per investigation inside the USD 29.50 development allowance. The separate global Nano CLI config is preserved. See RELIABILITY_LIVE_ACCEPTANCE.md. Reconnect privately after the final backend restart when you want a new live investigation; saved history and calculations need no key.
+
+Updated October 18, 2026, Asia/Calcutta. The stable local address is http://127.0.0.1:8768/ . It opens the connected project workspace with actual local engineering calculations, persistent revisions and the requirement-scoped Assistant. The older captured-reference prototype remains under design/.
+
+## Open and refresh
+
+Open the address in Chrome or Edge. Press Ctrl+D to bookmark it as 6D. After a completed delivery, refresh with Ctrl+R. The footer shows the build ID and update time. Responses are not browser-cached; no manual frontend build command is needed. Codex handles and verifies required server restarts before reporting delivery.
+
+If the server is stopped or Windows has restarted:
+
+1. Open Windows File Explorer with Win+E.
+2. Paste this folder in its address bar and press Enter:
+
+   C:/Users/Arya/Documents/Codex/2026-10-04/i-a/6d-startup
+
+3. Double-click **Open-6D.cmd**. It starts or reuses this workspace's background server and opens the same address. Clicking the file in VS Code opens its source instead of running it.
+
+The launcher locates an available local Python runtime. The development server binds only to loopback and serves allowlisted assets/APIs, never arbitrary repository files or credentials. It is not a public deployment. Conflicting services and older runtimes are identified rather than terminated without review.
+
+## What is saved
+
+Projects, immutable revisions, calculation receipts, orbital simulation receipts and investigation history are stored in .local/workspace.sqlite3 in the project folder. Saved records survive browser closure, refresh and server restarts. Do not delete this database during updates. Save or discard unsaved drafts before switching records. Export evidence or investigation JSON when a portable copy is useful.
+
+The Nebius key entered through **Connect AI** remains only in local server memory. It is not saved in project records, browser storage or exported receipts. **Disconnect key** or restarting the server clears that browser-connected key. The existing cumulative spending ledger remains separately in .local/budget.sqlite3; do not delete/reset it.
+
+## Run calculations or investigate evidence
+
+Local calculations need no key. Import supported sixd.project.v1 JSON or use a constructed template; inspect Canvas, Table or Reader; edit inputs or limits; preview explicit dependencies; save a revision; run affected checks; compare and export evidence. Verified reused results retain their original execution origins.
+
+For AI, choose **Connect AI**, enter the key privately and choose **Connect key**. Select a saved requirement with current checks, choose **Investigate**, enter a question and choose **Start live investigation**. Only this explicit start sends the scoped question and project records to the reviewed Nemotron Super model on Nebius. Opening the app, connecting, selecting a requirement and refreshing do not start an inference request. See TODAY_TASKS.md for the walkthrough.
+
+The Assistant reads recorded requirement/model/change evidence, can request one fresh same-adapter recheck, and returns labelled interpretation with citations. Rechecking establishes reproducibility of a maintained calculation, not independent physical validation. The canonical engineering finding stays unchanged. Actual actions and failures are recorded; no scripted activity is presented as live work. Interrupted jobs preserve partial activity and are never automatically retried. Each current Super job has a six-request/USD 0.20 reservation ceiling inside the current configured development allowance from existing balance, with no additional card spending.
+
+Offline API/browser checks passed, and the October 16 project live orchestration gate subsequently passed: four actual native tool responses for thermal, including its exact same-adapter recheck, and three for unsupported GNC with no invented solver. Both canonical saved records stayed unchanged. Their saved investigations can be reopened in the default constructed project, revision 1, without another call. See PROJECT_ASSISTANT_LIVE_ACCEPTANCE.md for the receipts and prose-quality limitation. This is not a general model-quality benchmark or full vehicle validation.
+
+## Current boundaries
+
+The workspace calculates bounded ideal propulsion, static cantilever, radiative equilibrium, drag, two-body orbital trajectories, supplied power/energy budgets and ideal single-axis spacecraft pointing. It also supports explicit saved subsystem hierarchies/interfaces and declared scalar CSV test comparisons. Unsupported domains remain **Not assessed**. Full rocket simulation, three-axis control/navigation, automatic physical coupling, live telemetry integration, general per-task model routing and whole-mission readiness are not provided. The preserved original orbital-verifier interface is separate at http://127.0.0.1:8766/ when its server is started.
+
+This local address works only on this computer while its server is running. Delivery updates should state the verified opening address, visible build identity, actual changes and material limits.

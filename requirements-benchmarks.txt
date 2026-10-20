@@ -1,0 +1,2 @@
+# Development-only external reference. Never needed by the 6D application.
+spiceypy==8.3.0

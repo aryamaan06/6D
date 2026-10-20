@@ -98,7 +98,11 @@ def main(argv=None):
             elif args.command == 'project-demo':
                 from .project_examples import example_projects
                 previous = None
-                for label, record in example_projects().items():
+                examples = example_projects()
+                # This demo is one project's revision chain. Other independent
+                # templates must not be compared as its subsequent revision.
+                for label in ('baseline', 'revised', 'missing_evidence'):
+                    record = examples[label]
                     reviewed = validate_project(record)
                     report = review_project(reviewed, evaluate_models(reviewed))
                     path = save_review(report, args.output)

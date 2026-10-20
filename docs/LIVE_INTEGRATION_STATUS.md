@@ -8,7 +8,7 @@ Session `artifacts/provider-validation/validation-20261014T181514388787Z.json` c
 
 Post-run verification checked both saved payloads, locked contracts, exact finish citations, source fingerprints against current code, installed configuration and independently rerun kernel findings. The session retained a $0.01461258 conservative reservation, not a provider invoice, within the existing cumulative $5 ledger. Existing 237 offline tests remain the development baseline; no additional paid request was made while inspecting the result. This establishes end-to-end integration for these two constructed examples. It does not establish broad model performance, thinking-off behavior, customer value, whole-vehicle coverage or mission readiness.
 
-Initial provider troubleshooting is closed for this tested workflow. Continue the connected project/requirements investigation and product journey. Do not repeat the live validator without a relevant change or unresolved concern.
+Initial provider troubleshooting is closed for this tested workflow. The separate project-aware browser orchestration gate also passed on October 16 after private connection: thermal completed four native tool responses and its exact fresh same-adapter recheck; unsupported GNC completed three while remaining not assessed, without an invented solver. Canonical saved records stayed unchanged. The seven requests reserved USD 0.00780588 under the existing allowance. See PROJECT_ASSISTANT_LIVE_ACCEPTANCE.md for receipts and the explanation-quality caveat. Continue product/model-quality evaluation; do not repeat either live validator without a relevant change or unresolved concern.
 
 ## What was measured
 

@@ -1,0 +1,231 @@
+{
+  "schema": "sixd.project.v1",
+  "project_id": "constructed-power-energy-review",
+  "name": "Constructed operating-mode power and energy review",
+  "revision": "1",
+  "lifecycle_stage": "design",
+  "description": "Synthetic constant simultaneous loads in two sequential modes, declared generation and upfront reserve-adjusted usable bus battery energy. No charging, illumination or state-of-charge model. The thermal example is independent; values are illustrative, not real spacecraft data.",
+  "inputs": {
+    "usable_battery_energy": {
+      "value": 6000,
+      "unit": "J",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "battery_power_limit": {
+      "value": 60,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "bus_power_limit": {
+      "value": 100,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "cruise_duration": {
+      "value": 100,
+      "unit": "s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "cruise_generation": {
+      "value": 20,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "avionics_power": {
+      "value": 10,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "avionics_count": {
+      "value": 1,
+      "unit": "1",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "payload_power": {
+      "value": 30,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "payload_count": {
+      "value": 2,
+      "unit": "1",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "downlink_duration": {
+      "value": 50,
+      "unit": "s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "downlink_generation": {
+      "value": 100,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "radio_power": {
+      "value": 40,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "radio_count": {
+      "value": 1,
+      "unit": "1",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "minimum_power_margin": {
+      "value": 0,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "minimum_energy_margin": {
+      "value": 0,
+      "unit": "J",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "declared_load_allowance": {
+      "value": 80,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "heat_input": {
+      "value": 200,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "radiator_area": {
+      "value": 1,
+      "unit": "m^2",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "emissivity": {
+      "value": 0.8,
+      "unit": "1",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "background_temperature": {
+      "value": 3,
+      "unit": "K",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "maximum_temperature": {
+      "value": 320,
+      "unit": "K",
+      "source": "Constructed demonstration input; not measured hardware data."
+    }
+  },
+  "models": [
+    {
+      "id": "electrical_budget",
+      "type": "power_energy_budget",
+      "description": "Explicit mode durations and equipment concurrency. Generation surplus has no recharge credit.",
+      "inputs": {
+        "usable_battery_energy": "usable_battery_energy",
+        "max_battery_power": "battery_power_limit",
+        "bus_power_limit": "bus_power_limit",
+        "mode.1.cruise.duration": "cruise_duration",
+        "mode.1.cruise.generation": "cruise_generation",
+        "mode.1.cruise.load.avionics.power": "avionics_power",
+        "mode.1.cruise.load.avionics.count": "avionics_count",
+        "mode.1.cruise.load.payload.power": "payload_power",
+        "mode.1.cruise.load.payload.count": "payload_count",
+        "mode.2.downlink.duration": "downlink_duration",
+        "mode.2.downlink.generation": "downlink_generation",
+        "mode.2.downlink.load.avionics.power": "avionics_power",
+        "mode.2.downlink.load.avionics.count": "avionics_count",
+        "mode.2.downlink.load.radio.power": "radio_power",
+        "mode.2.downlink.load.radio.count": "radio_count"
+      }
+    },
+    {
+      "id": "thermal",
+      "type": "radiative_equilibrium",
+      "inputs": {
+        "heat_input": "heat_input",
+        "area": "radiator_area",
+        "emissivity": "emissivity",
+        "background_temperature": "background_temperature"
+      }
+    }
+  ],
+  "requirements": [
+    {
+      "id": "power_capacity",
+      "title": "Power capacity covers every declared mode",
+      "model_id": "electrical_budget",
+      "metric": "minimum_power_margin",
+      "operator": ">=",
+      "limit_input": "minimum_power_margin",
+      "critical": true
+    },
+    {
+      "id": "usable_energy",
+      "title": "Usable battery energy covers the declared schedule",
+      "model_id": "electrical_budget",
+      "metric": "battery_energy_margin",
+      "operator": ">=",
+      "limit_input": "minimum_energy_margin",
+      "critical": true
+    },
+    {
+      "id": "thermal_limit",
+      "title": "Declared steady equilibrium temperature limit",
+      "model_id": "thermal",
+      "metric": "equilibrium_temperature",
+      "operator": "<=",
+      "limit_input": "maximum_temperature",
+      "critical": true
+    }
+  ],
+  "systems": [
+    {
+      "id": "space_system",
+      "title": "Constructed space system",
+      "description": "Organization only; not a complete vehicle.",
+      "parent_id": null,
+      "model_ids": []
+    },
+    {
+      "id": "electrical",
+      "title": "Electrical power",
+      "description": "Bounded bus power and energy budget.",
+      "parent_id": "space_system",
+      "model_ids": [
+        "electrical_budget"
+      ]
+    },
+    {
+      "id": "load_allocation",
+      "title": "Declared load allowance",
+      "description": "Declared allocation only; no downstream solver consumes the interface.",
+      "parent_id": "space_system",
+      "model_ids": []
+    },
+    {
+      "id": "radiator",
+      "title": "Independent thermal case",
+      "description": "Explicit static heat input; electrical output is not automatically converted to heat.",
+      "parent_id": "space_system",
+      "model_ids": [
+        "thermal"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "declared_bus_allowance",
+      "title": "Peak simultaneous load against declared allocation",
+      "description": "Scalar comparison only; not a data feed into another model.",
+      "from_system": "electrical",
+      "to_system": "load_allocation",
+      "source": {
+        "kind": "model_metric",
+        "model_id": "electrical_budget",
+        "metric": "peak_load_power"
+      },
+      "target_input": "declared_load_allowance",
+      "quantity": "Bus load power",
+      "unit": "W",
+      "operator": "<=",
+      "critical": true
+    }
+  ]
+}

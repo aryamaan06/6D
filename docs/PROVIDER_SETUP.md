@@ -1,99 +1,72 @@
-# 6D Token Factory setup
+# 6D Token Factory connection and accounting
 
-Updated October 14, 2026, Asia/Calcutta. Arya confirmed $29.50 and an active `6d-local-development` key, exact routing ID `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`, and console prices $0.06 input / $0.24 output per million tokens. The selected model's official license and tool-calling API documentation were reviewed. The existing approval is $5 cumulative initial inference from current balance only; no additional card spending. Nonsecret `.local/token-factory.json` is configured. After a generic first failure, the classified follow-up confirmed output truncation at 1,024 tokens. The local Nano configuration now permits 8,192 completion tokens and a 180-second request timeout. Successful live tool integration is still pending. [Exact Windows commands](TODAY_TASKS.md) are ready for Arya's private terminal, and [live status](LIVE_INTEGRATION_STATUS.md) records the receipts and targeted correction.
+Updated October 16, 2026, Asia/Calcutta. The existing account configuration uses `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` on Nebius Token Factory. Arya confirmed an active `6d-local-development` key and USD 29.50 balance on October 14; that historical balance is not a current account query. The unchanged authorization is USD 5 cumulative inference from existing balance only, with no additional card spending. No replacement key or new approval is needed for this setup.
 
-## Offline workflow now available
+## Connect through the browser
 
-No credentials, inference credits or third-party Python packages are needed:
+Open http://127.0.0.1:8768/ and refresh after a delivery. If needed, start it with **Open-6D.cmd** from Windows File Explorer; see OPEN_6D.md.
+
+1. Choose **Connect AI**. Paste the existing key privately into the password field and choose **Connect key**. Do not share it in chat, put it in source files or include it in a question.
+2. Select a saved requirement whose current revision has calculation evidence. Choose **Investigate** and enter a bounded engineering question.
+3. Review the scope notice, then choose **Start live investigation**. This sends the question and scoped requirement/model/input records to NVIDIA Nemotron Nano on Nebius and consumes the existing allowance.
+4. Inspect actual activity, the canonical finding, separately labelled AI interpretation and evidence citations. Download the investigation JSON if useful.
+5. Choose **Disconnect key** in the connection settings when finished. Restarting the local server also clears a key entered through this dialog.
+
+Connecting validates local configuration only. It does not authenticate remotely or start an inference call. Opening the app, selecting a requirement, refreshing and reconnecting never start jobs automatically. The password field is cleared after submission; the key stays in server memory, not browser storage, project records, exports or the nonsecret configuration file. Local calculations and saved-history inspection work without a key.
+
+A server may also inherit NEBIUS_API_KEY from its launch environment. Environment variables set in another terminal do not appear retroactively in the running server. The browser connection is the current recommended founder workflow; repeated terminal/profile experiments are unnecessary.
+
+## Separate acceptance gates
+
+The October 14 orbital integration passed on two constructed cases: Euler method limitation and force defect, with seven actual native responses and independently matching orbital kernel evidence. The installed local settings are native_no_thinking, forced_action_v1 and a 2,048-token completion ceiling. That pass is preserved in LIVE_INTEGRATION_STATUS.md; it does not establish general model quality or whole-mission validity.
+
+The October 16 project Assistant completed its first two actual live investigations after private connection: thermal (four native responses with matching fresh recheck) and unsupported control (three native responses, status still Not assessed, no invented solver). This passes the tested project orchestration gate, separately from the earlier orbital pass. The control prose has a documented ambiguity: insufficient evidence cannot establish satisfaction; it does not prove a physically impossible requirement. See [project live acceptance](PROJECT_ASSISTANT_LIVE_ACCEPTANCE.md). Offline wire/API/browser checks still cover bounded tools, revision locks, citations, memory-only connection, persisted jobs and accounting. No repeat of this initial gate is needed absent a relevant change.
+
+The browser shows actual request attempts and accepted live responses separately. A connection indicator is not a successful remote response, and an accepted response alone is not a completed investigation. A completed live project receipt must identify its selected saved revision, review digest, model, actual tool activity, citations and fresh recheck where supported.
+
+## What the Assistant can do
+
+The project agent can read one selected requirement, its bound model and saved evidence, inspect explicitly recorded revision differences, request one fresh calculation with the maintained adapter and finish with exact evidence IDs and a bounded explanation. The fresh recheck tests reproducibility using the same adapter; it is not independent physical validation. The canonical engineering finding cannot be changed by model text. Unsupported models stay unassessed even if the agent finishes explaining them.
+
+Tools cannot edit inputs, execute arbitrary code, modify requirements, supply new physics values, authorize launch or silently expand scope. Project strings, source labels, questions and provider prose are untrusted data. Valid model explanations are stored as **AI interpretation**, separate from the deterministic finding.
+
+Jobs persist in .local/workspace.sqlite3 with actual progress, evidence and revision/review provenance. A server restart marks unfinished work failed and preserves partial activity; it does not resubmit it. Disconnect blocks later request reservations, while a request already reserved/sent can still be in flight. Check saved status before deciding on another explicit start. No transport retry, automatic job retry, profile matrix, model fallback or fixture fallback runs in this workflow.
+
+## Provider configuration
+
+The nonsecret .local/token-factory.json records the exact routing ID, approved spending reference, price ceilings, endpoint and explicit request settings. It is separate from the private key. `docs/token-factory.example.json` remains an intentionally disabled template for other installations. The adapter does not load .env files.
+
+Supported HTTPS endpoints are `https://api.tokenfactory.nebius.com/v1/` and `https://api.tokenfactory.us-central1.nebius.com/v1/`. Requests use `/chat/completions`, structured messages and one named `select_next_action` tool. The project adapter validates the current action menu and exact evidence IDs locally. The default orbital action adapter is unchanged. Redirects are rejected so bearer credentials are not forwarded elsewhere.
+
+The current profile requests temperature zero and top-level chat_template_kwargs with enable_thinking false. This is a requested hosted setting, not proof of measured reasoning behavior. Forced named calls are accepted with stop or tool_calls after strict envelope validation; exact bounded content-selection JSON is accepted only with stop and no tool calls. Response format and call-ID origin remain explicit. Arbitrary/fenced prose, extra fields, fabricated citations, duplicate JSON fields and unavailable actions are rejected.
+
+Remote errors retain only controlled categories and allowlisted diagnostics, never raw bodies, headers, arbitrary messages or private exception text. Failed responses retain their reservation. Safe token counts may be recorded when available; missing usage does not establish zero billing. A validated stronger model or automatic model router is not implemented. See MODEL_STRATEGY.md for the proposed evaluation.
+
+## Existing allowance and per-job bounds
+
+.local/budget.sqlite3 atomically reserves allowance before every request across runs/processes. All old and new requests share the existing USD 5 cumulative approval; changing a model or starting another job does not create a new allowance. Reservations use request UTF-8 bytes plus framing as a conservative input-token bound, the maximum output tokens and verified price ceilings. They are never refunded automatically, including after failure or timeout. Exhaustion blocks before transport. Changing the approval ID/cap on the existing ledger is rejected.
+
+Each browser project investigation has a further ceiling of six request reservations and USD 0.10 conservatively reserved. These bounds sit inside the cumulative USD 5 allowance; they are not extra spending approval. Do not delete/reset the ledger, create a second ledger or change prices/caps to regain room. No additional card charge is authorized.
+
+These are conservative application controls, not a provider invoice or a provider-side card limit. Other API clients, taxes/fees, deleted ledgers, changed provider prices and incorrect ceilings are outside this application bound. The provider account's paid-usage preference does not authorize this app to exceed Arya's allowance.
+
+Nano's public rates were checked October 16 on the [official Nebius Nemotron overview](https://nebius.com/services/token-factory/models/nvidia-nemotron-models-inference): USD 0.06 per million input tokens and USD 0.24 per million output tokens, matching Arya's earlier console report and the existing local ceilings. This is dated metadata, not a new remote account/model-access test. No configuration or routing policy changed during that check.
+
+## Preserved offline and CLI workflows
+
+The workspace's deterministic calculations need no credential or paid inference. The preserved orbital workflow also supports an explicitly scripted offline investigation:
 
 ```console
-python run.py provider-status
-python run.py contract --case euler_method_limit
 python run.py investigate --case euler_method_limit --provider fixture --accept-contract
-python run.py serve
 ```
 
-In the local UI, select **Scripted tool investigation · no model inference**. The fixture selects force, refinement, applicable Verlet reversibility and finish tools. The Euler example requires the first two checks only. The numerical results are freshly computed by the kernel, not fixture measurements. Reports label the provider `fixture` and record zero live calls. An injected mock HTTP transport labels itself `offline_transport_fixture`.
+It records provider fixture and zero live calls; numerical evidence is freshly calculated. Injected HTTP transports identify themselves as offline_transport_fixture and do not meet a live gate. Existing private CLI helpers remain for developer reproduction and the earlier orbital workflow, but are not required for the browser steps above.
 
-The live adapter shares the same provider interface. It uses standard-library HTTPS, OpenAI-style messages/tools and `/v1/chat/completions`. Nebius documents automatic and explicit named function selection. The forced-action validator requests one named selector and strictly decodes native tool calls or exact bounded selection JSON; response format and ID origin remain explicit. Both initial actual live investigations passed on October 14, using only native responses. See [verified status](LIVE_INTEGRATION_STATUS.md). Existing successful setups do not need repeated validation without a relevant change.
+.local/, .env files, generated reports/work and caches are excluded by Git ignore rules. These rules do not replace reviewing staged/public files for private material. Keep the key and spending ledger local and out of Git. Local unsigned digests establish internal consistency, not authenticated security or team approval.
 
-## Prepared configuration and remaining private step
+## Primary references
 
-The exact account routing ID above is used, rather than the display name `Nemotron-3-Nano-30B-A3B`. The global base URL is `https://api.tokenfactory.nebius.com/v1/`. The $5 cap and user-confirmed prices are recorded with the approval reference `arya-approved-initial-tests-usd5-existing-balance`. The three verification flags reflect Arya's account report, the official license review, and the already-given spending approval; they do not claim a remote test.
-
-The [NVIDIA model card](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16) links the [NVIDIA Nemotron Open Model License](https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-nemotron-open-model-license/), reviewed October 14. No model weights are bundled in 6D. The [Nebius function-calling documentation](https://docs.tokenfactory.nebius.com/ai-models-inference/function-calling) documents structured tool calls. Price ceilings use Arya's current console values, not a claim that a pricing page was successfully fetched. Recheck prices before a later testing phase if they change.
-
-No replacement key, renewed $5 approval or cloud deployment is needed. After the profile matrix isolated empty-argument tool failures, the recommended check is the one-entry **verify-live** session in [LIVE_VALIDATION.md](LIVE_VALIDATION.md). It now tests one forced action-selection protocol on the previously responsive native profile, under $0.10/ten reserved requests within the existing $5 ledger. It installs the protocol only after two real completed investigations with verified independent evidence. `docs/token-factory.example.json` remains an intentionally disabled template for other installations.
-
-Supported endpoints are `https://api.tokenfactory.nebius.com/v1` and `https://api.tokenfactory.us-central1.nebius.com/v1`. Redirects are rejected rather than forwarding a credential. The adapter does not load `.env` files.
-
-In your own PowerShell terminal, use the helper rather than placing a key in a command or file. It asks privately, keeps the key in its own process environment and writes no key file. Its default command only inspects local configuration and makes no network request:
-
-```console
-python tools/with_token_factory_key.py provider-status
-```
-
-Nothing appears while you type/paste the key; press Enter when finished. With the prepared configuration, expect `configured: true` and the exact model routing ID. This command does not authenticate remotely. Use the same helper with `investigate --case euler_method_limit --provider token-factory --accept-contract` for the authorized first live test; enter the active key again privately.
-
-Alternatively, use a session environment variable:
-
-```powershell
-$sixdSecret = Read-Host 'Token Factory API key (local only)' -AsSecureString
-$sixdCredential = [System.Management.Automation.PSCredential]::new('6d', $sixdSecret)
-$env:NEBIUS_API_KEY = $sixdCredential.GetNetworkCredential().Password
-python run.py provider-status
-```
-
-`provider-status` is local and makes no network call. A configured result means local gates are present, not that authentication or credits have been remotely validated. Environment variables set in another terminal do not retroactively appear in the running Codex process; run the gated live command from the configured terminal. Do not print the environment variable.
-
-## First authorized live investigation
-
-The account/model/license/pricing and spending configuration are prepared. Review the constructed example contract first with `python run.py contract --case euler_method_limit`, then use the private helper:
-
-```console
-python tools/with_token_factory_key.py investigate --case euler_method_limit --provider token-factory --accept-contract
-```
-
-A sequential Euler investigation ordinarily needs three completions; a model may select both checks in one turn. The runner now has a hard limit of five turns, including at most one correction for an invalid supported tool batch. The configured Nano completion limit is 8,192 tokens with a 180-second request timeout, increased after a measured truncation failure. A full investigation can take several minutes. Optional configuration defaults remain 1,024 tokens/45 seconds for older installations; validated maximums are 8,192 tokens/180 seconds. Only unfinished checks are offered; finish is offered after all evidence exists, and a singleton tool is selected explicitly using the documented function-choice format. Invalid check parameters are never executed: controlled tool feedback permits one budgeted correction. Unsupported tools, malformed messages, repeated identifiers, truncation, transport failures and exhausted repair allowance stop the investigation. No transport retry or fixture fallback occurs. Every continuation reserves against the same durable $5 cap. The kernel still produces a separate supported numerical audit, while a stopped investigation remains failed/incomplete. Errors identify controlled categories without printing response bodies, headers, parameter values or private exception text.
-
-The completed session confirms actual orchestration for both constructed orbit cases, with seven accepted native responses, zero protocol corrections and independently matching evidence. An accepted response and a completed investigation remain distinct outcomes; see LIVE_INTEGRATION_STATUS.md for the measured sequence and narrow claim boundaries.
-
-Confirm `model_mode: live_token_factory`, completed investigation, positive `live_model_calls`, actual tool trace and token usage. `live_model_calls` counts accepted provider responses; `live_request_attempts` separately counts transport attempts. Zero accepted responses does not establish zero billing. Valid token counts from rejected completions are now recorded separately in `failed_provider_response`, including reported reasoning-token counts when available; absence remains unknown. No reasoning text is saved. Preserve the JSON/HTML as the receipt. A successful HTTP-shaped mock does not meet this gate. The local UI can inspect live reports created by CLI, but its run endpoints currently expose only deterministic and fixture execution.
-
-## Explicit request profiles
-
-`inference_profile` defaults to `tool_sampling` for legacy configurations. It uses NVIDIA's recommended Nano tool-calling sampling pair (temperature 0.6 / top_p 0.95). Supported compatibility settings also include `nebius_no_reasoning` (temperature 0, reasoning_effort none) and `native_no_thinking` (temperature 0, top-level chat_template_kwargs enable_thinking false). The current explicit validator requests only native_no_thinking with forced_action_v1; it no longer repeats the historical profile matrix. These are labelled hosted compatibility requests, not established Nano behavior. Never claim the profile name proves reasoning was disabled. No literal nested SDK `extra_body` field is sent. [Profile references and limits](LIVE_VALIDATION.md)
-
-`selection_protocol` defaults to `native_tools_v1` for backward compatibility. The new explicit `forced_action_v1` protocol always calls select_next_action with required action/evidence_ids rather than exposing empty-argument checks. Only validated selections are mapped to the kernel's canonical interface. The action/evidence menu changes after actual checks; parameters, extra fields, duplicate JSON keys and fabricated IDs are rejected. Conversation IDs remain matched and the adapter's provenance is recorded. The verification session requests this protocol with native_no_thinking but does not persist it until both live cases pass.
-
-The wire evidence schema is a plain typed string array; strict citation constraints are checked locally, avoiding unsupported constrained-decoder array keywords. HTTP errors are inspected only as bounded structured JSON and retain allowlisted status/type/code/parameter and schema-keyword mentions. Raw remote bodies, messages, headers and unknown values are never saved or printed. Mentions are clues, not confirmed causes.
-
-The forced receiver accepts native named calls with stop or tool_calls, and exact whole selection JSON in content only with stop and no tool calls. No free-form prose or embedded/fenced JSON is extracted. Content selections use runner-origin internal IDs and the same locked action/evidence validation. Receipt provenance distinguishes them from native provider calls. Safe failed-response diagnostics record only outer response shape/count/presence facts, never values.
-
-All 237 development tests passed offline after the correction. The subsequent actual two-case session completed and installed the validated profile/protocol. Future failed sessions still retain the prior active configuration, all reports and previous budget reservations. Account/transport/billing-bound failures stop the session. No profile matrix, model switch, transport retry or fixture fallback is run by the validator.
-
-## Budget accounting
-
-`.local/budget.sqlite3` atomically reserves allowance before each request, across runs/processes. Reservations use request UTF-8 bytes plus a framing allowance as a conservative input-token bound, the maximum output tokens and verified price ceilings. Reservations are never refunded automatically, including after a timeout or failed response. Exhaustion blocks before sending. Changing the approval ID or cap on an existing ledger is rejected.
-
-This is a conservative application allowance, not a provider invoice. It covers requests through this adapter; other API clients, account taxes/fees, deleted ledgers and incorrect price ceilings are outside it. Verify provider-side billing/limits where available, and review actual usage before changing the allowance. Do not delete/reset the ledger to regain spending room. Approval changes require explicit review.
-
-`.local/`, `.env*`, generated work and reports are excluded by `.gitignore`. This directory is now a Git repository connected to Arya's private `aryamaan06/6D` repository. Ignore rules do not replace reviewing staged files and the eventual public package for secrets. Keep the key in the process environment, separately from the JSON configuration. The private key and persistent spending ledger stay local and are not backed up through Git.
-
-Clear the key from the terminal when finished:
-
-```powershell
-Remove-Item Env:NEBIUS_API_KEY
-$sixdSecret.Dispose()
-$sixdCredential = $null
-```
-
-## Evidence boundaries
-
-The model selects supported experiments and cites their evidence IDs. It cannot provide a replacement verdict, edit a contract, execute arbitrary code, patch an adapter or add unsupported physics. Free-form model text is discarded. The report summary and engineering finding come from the deterministic kernel.
-
-Selected checks run against the locked contract; a mandatory full audit then independently reruns and compares those measurements. This deliberately favors conservative coverage in the first bounded increment. It is not yet proof of adaptive investigation value over directly running the applicable deterministic checks.
-
-Reports retain units, reference frame, assumptions, source fingerprints and eight explicit exclusions. Numerical reproduction reruns the matching kernel locally; it does not promise to reproduce a nondeterministic provider transcript. An inconclusive contract never invokes the provider.
-
-Primary references: [Quickstart](https://docs.tokenfactory.nebius.com/quickstart) and [billing](https://docs.tokenfactory.nebius.com/other-capabilities/billing-new), checked October 10; [function calling](https://docs.tokenfactory.nebius.com/ai-models-inference/function-calling), selected model card and license checked October 14.
+- [Nebius function calling](https://docs.tokenfactory.nebius.com/ai-models-inference/function-calling), reviewed October 16 for the project integration.
+- [NVIDIA Nano model card](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16) and [NVIDIA Nemotron Open Model License](https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-nemotron-open-model-license/), reviewed for the selected model; no weights are bundled in 6D.
+- [Official Nebius Nemotron overview and rates](https://nebius.com/services/token-factory/models/nvidia-nemotron-models-inference), checked October 16.
+- The original two-case receipts and narrow claim boundaries remain in LIVE_INTEGRATION_STATUS.md; historical debugging commands are not the current founder setup sequence.

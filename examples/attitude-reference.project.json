@@ -1,0 +1,171 @@
+{
+  "schema": "sixd.project.v1",
+  "project_id": "constructed-attitude-review",
+  "name": "Constructed single-axis pointing review",
+  "revision": "1",
+  "lifecycle_stage": "simulation",
+  "description": "Illustrative rigid principal-axis PD control with a fixed target and ideal torque source. Values and limits are constructed references, not real spacecraft data. The separate thermal calculation is not coupled to control.",
+  "inputs": {
+    "inertia": {
+      "value": 10,
+      "unit": "kg*m^2",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "initial_angle": {
+      "value": 0,
+      "unit": "rad",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "initial_rate": {
+      "value": 0,
+      "unit": "rad/s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "target_angle": {
+      "value": 0.2,
+      "unit": "rad",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "proportional_gain": {
+      "value": 1,
+      "unit": "N*m/rad",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "derivative_gain": {
+      "value": 6.324555320336759,
+      "unit": "N*m*s/rad",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "max_torque": {
+      "value": 1,
+      "unit": "N*m",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "disturbance_torque": {
+      "value": 0,
+      "unit": "N*m",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "duration": {
+      "value": 40,
+      "unit": "s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "steps": {
+      "value": 512,
+      "unit": "1",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "assessment_start": {
+      "value": 30,
+      "unit": "s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "angle_numerical_tolerance": {
+      "value": 1e-06,
+      "unit": "rad",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "rate_numerical_tolerance": {
+      "value": 1e-06,
+      "unit": "rad/s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "pointing_limit": {
+      "value": 0.001,
+      "unit": "rad",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "rate_limit": {
+      "value": 0.001,
+      "unit": "rad/s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "heat_input": {
+      "value": 200,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "radiator_area": {
+      "value": 1,
+      "unit": "m^2",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "emissivity": {
+      "value": 0.8,
+      "unit": "1",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "background_temperature": {
+      "value": 3,
+      "unit": "K",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "maximum_temperature": {
+      "value": 320,
+      "unit": "K",
+      "source": "Constructed demonstration input; not measured hardware data."
+    }
+  },
+  "models": [
+    {
+      "id": "pointing",
+      "type": "attitude_control",
+      "description": "Critically damped unsaturated reference; ideal state feedback, no navigation or wheel momentum model.",
+      "inputs": {
+        "inertia": "inertia",
+        "initial_angle": "initial_angle",
+        "initial_rate": "initial_rate",
+        "target_angle": "target_angle",
+        "proportional_gain": "proportional_gain",
+        "derivative_gain": "derivative_gain",
+        "max_torque": "max_torque",
+        "disturbance_torque": "disturbance_torque",
+        "duration": "duration",
+        "steps": "steps",
+        "assessment_start": "assessment_start",
+        "angle_numerical_tolerance": "angle_numerical_tolerance",
+        "rate_numerical_tolerance": "rate_numerical_tolerance"
+      }
+    },
+    {
+      "id": "thermal",
+      "type": "radiative_equilibrium",
+      "inputs": {
+        "heat_input": "heat_input",
+        "area": "radiator_area",
+        "emissivity": "emissivity",
+        "background_temperature": "background_temperature"
+      }
+    }
+  ],
+  "requirements": [
+    {
+      "id": "pointing_window",
+      "title": "Sampled pointing error during declared assessment window",
+      "model_id": "pointing",
+      "metric": "max_assessed_error",
+      "operator": "<=",
+      "limit_input": "pointing_limit",
+      "critical": true
+    },
+    {
+      "id": "rate_window",
+      "title": "Sampled angular rate during declared assessment window",
+      "model_id": "pointing",
+      "metric": "max_assessed_rate",
+      "operator": "<=",
+      "limit_input": "rate_limit",
+      "critical": true
+    },
+    {
+      "id": "thermal_limit",
+      "title": "Declared steady equilibrium temperature limit",
+      "model_id": "thermal",
+      "metric": "equilibrium_temperature",
+      "operator": "<=",
+      "limit_input": "maximum_temperature",
+      "critical": true
+    }
+  ]
+}

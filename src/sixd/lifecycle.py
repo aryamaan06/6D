@@ -17,7 +17,10 @@ PROJECT_SCHEMA = "sixd.project.v1"
 REVIEW_SCHEMA = "sixd.review.v1"
 STAGES = {"design", "simulation", "physical_test", "operation"}
 RESULT_STATUSES = {"completed", "not_assessed", "invalid_inputs"}
-VERIFICATION_SOURCE_NAMES = {"engineering.py", "lifecycle.py", "__init__.py"}
+LEGACY_VERIFICATION_SOURCE_NAMES = {"engineering.py", "lifecycle.py", "__init__.py"}
+ORBITAL_VERIFICATION_SOURCE_NAMES = LEGACY_VERIFICATION_SOURCE_NAMES | {"orbital_adapter.py", "simulation.py"}
+ATTITUDE_VERIFICATION_SOURCE_NAMES = ORBITAL_VERIFICATION_SOURCE_NAMES | {"attitude.py"}
+VERIFICATION_SOURCE_NAMES = ATTITUDE_VERIFICATION_SOURCE_NAMES | {"chains.py"}
 EXCLUSIONS = [
     "Only explicitly declared requirements and bound deterministic models are reviewed.",
     "Physical model validity, uncertainty and environmental qualification are not established by these calculations.",
@@ -77,14 +80,16 @@ def _digest(value):
     return sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def validate_project(project):
+def validate_project(project, *, allow_empty=False):
     """Validate strict shared records and return a caller-independent snapshot.
 
     No unit conversion, inferred references or arbitrary code execution occurs.
     Unknown model types remain representable so their coverage gaps are visible.
+    Workspace authoring may explicitly allow empty model/requirement lists;
+    review validation keeps the strict default and still requires both.
     """
     _fields(project, {"schema", "project_id", "name", "revision", "description",
-                      "lifecycle_stage", "inputs", "models", "requirements"}, "project")
+                      "lifecycle_stage", "inputs", "models", "requirements"}, "project", {"systems", "interfaces"})
     if project["schema"] != PROJECT_SCHEMA:
         raise ValueError("Unsupported project schema.")
     for key in ("project_id", "name", "revision", "description", "lifecycle_stage"):
@@ -99,11 +104,12 @@ def validate_project(project):
         _string(record["unit"], f"input {key}.unit")
         _string(record["source"], f"input {key}.source")
     models = project["models"]
-    if not isinstance(models, list) or not models:
-        raise ValueError("project.models must be a nonempty list.")
+    if not isinstance(models, list) or (not models and not allow_empty):
+        qualifier = "a list" if allow_empty else "a nonempty list"
+        raise ValueError(f"project.models must be {qualifier}.")
     model_ids = set()
     for model in models:
-        _fields(model, {"id", "type", "inputs"}, "model", {"description"})
+        _fields(model, {"id", "type", "inputs"}, "model", {"description", "links", "accuracy"})
         model_id = _string(model["id"], "model.id")
         _string(model["type"], "model.type")
         if model_id in model_ids:
@@ -111,14 +117,22 @@ def validate_project(project):
         model_ids.add(model_id)
         if "description" in model:
             _string(model["description"], f"model {model_id}.description")
+        if "accuracy" in model:
+            if model["type"] != "orbital_trajectory" or model["accuracy"] is None:
+                raise ValueError("Only an orbital model may declare a nonempty accuracy criteria object.")
+            from .orbital_adapter import validate_accuracy_criteria
+            validate_accuracy_criteria(model["accuracy"])
         for parameter, input_id in _object(model["inputs"], "model.inputs").items():
             _string(parameter, "model parameter")
             _string(input_id, "model input reference")
             if input_id not in inputs:
                 raise ValueError(f"Model {model_id} refers to missing input {input_id}.")
+    from .chains import ordered_models
+    ordered_models(project)
     requirements = project["requirements"]
-    if not isinstance(requirements, list) or not requirements:
-        raise ValueError("project.requirements must be a nonempty list.")
+    if not isinstance(requirements, list) or (not requirements and not allow_empty):
+        qualifier = "a list" if allow_empty else "a nonempty list"
+        raise ValueError(f"project.requirements must be {qualifier}.")
     requirement_ids = set()
     for requirement in requirements:
         _fields(requirement, {"id", "title", "model_id", "metric", "operator",
@@ -137,6 +151,11 @@ def validate_project(project):
             raise ValueError(f"Unsupported comparison operator for {requirement_id}.")
         if not isinstance(requirement["critical"], bool):
             raise ValueError(f"Requirement {requirement_id}.critical must be a boolean.")
+    # Optional architecture stays absent from legacy snapshots. It declares
+    # organization and review contracts; it never rewrites model bindings.
+    if "systems" in project or "interfaces" in project:
+        from .systems import validate_architecture
+        validate_architecture(project)
     _digest(project)
     return deepcopy(project)
 
@@ -157,20 +176,24 @@ def _verification_sources():
 
 
 def _validate_sources(sources):
-    _fields(sources, VERIFICATION_SOURCE_NAMES, "verification_sources")
+    _object(sources, "verification_sources")
+    if set(sources) not in (LEGACY_VERIFICATION_SOURCE_NAMES, ORBITAL_VERIFICATION_SOURCE_NAMES, ATTITUDE_VERIFICATION_SOURCE_NAMES, VERIFICATION_SOURCE_NAMES):
+        raise ValueError("Verification sources must match a complete maintained or legacy source set.")
     for name, fingerprint in sources.items():
         if not isinstance(fingerprint, str) or re.fullmatch(r"[0-9a-f]{64}", fingerprint) is None:
             raise ValueError(f"Verification source {name} must have a lowercase SHA-256 digest.")
     return deepcopy(sources)
 
 
-def _normalize_results(project, results, versions):
+def _normalize_results(project, results, versions, sources):
     _object(results, "model results")
     models = {model["id"]: model for model in project["models"]}
     if set(results) - set(models):
         raise ValueError("Results include model IDs absent from the project.")
     normalized = {}
-    for model_id, model in models.items():
+    from .chains import ordered_models, resolve, verify_calculation_inputs
+    for model in ordered_models(project):
+        model_id = model["id"]
         model_type = model["type"]
         version = versions.get(model_type)
         if model_id not in results:
@@ -180,10 +203,12 @@ def _normalize_results(project, results, versions):
                 "not_assessed": ["No fresh deterministic adapter result was supplied."],
                 "issues": [],
             }
+            if model.get("links"):
+                normalized[model_id]["calculation_inputs"] = resolve(project, model, normalized)[2]
             continue
         result = results[model_id]
         _fields(result, {"model_id", "model_type", "model_version", "status", "metrics",
-                         "assumptions", "not_assessed", "issues"}, f"result {model_id}", {"references"})
+                         "assumptions", "not_assessed", "issues"}, f"result {model_id}", {"references", "simulation", "power_budget", "attitude_response", "calculation_inputs", "numerical_accuracy", "applicability"})
         if result["model_id"] != model_id or result["model_type"] != model_type:
             raise ValueError(f"Result identity does not match model {model_id}.")
         if result["model_version"] != version:
@@ -201,6 +226,66 @@ def _normalize_results(project, results, versions):
             _strings(result[key], f"result {model_id}.{key}")
         if "references" in result:
             _strings(result["references"], f"result {model_id}.references")
+        if "applicability" in result:
+            context = result["applicability"]
+            _fields(context, {"schema", "physical_applicability", "scope", "checks", "requires_external_evidence", "references", "reference_disclosure"}, "model applicability")
+            if context["schema"] != "sixd.model-applicability.v1" or context["physical_applicability"] != "not_assessed":
+                raise ValueError("A reference context cannot assert physical applicability.")
+            for key in ("scope", "reference_disclosure"):
+                _string(context[key], "applicability " + key)
+            for key in ("checks", "requires_external_evidence"):
+                _strings(context[key], "applicability " + key)
+            if not isinstance(context["references"], list):
+                raise ValueError("Applicability references must be a list.")
+            for reference in context["references"]:
+                _fields(reference, {"title", "url", "kind", "note"}, "applicability reference")
+                for value in reference.values():
+                    _string(value, "applicability reference field")
+                if not reference["url"].startswith("https://"):
+                    raise ValueError("Applicability source links require HTTPS.")
+        if "numerical_accuracy" in result and (model_type != "orbital_trajectory" or version != "2" or result["status"] != "completed"):
+            raise ValueError("Only completed orbital v2 evidence may retain numerical accuracy.")
+        if "simulation" in result and (model_type != "orbital_trajectory" or result["status"] != "completed" or version is None):
+            raise ValueError("Only a completed maintained orbital model may retain a simulation artifact.")
+        if "power_budget" in result and (model_type != "power_energy_budget" or result["status"] != "completed" or version is None):
+            raise ValueError("Only a completed maintained power model may retain an operating-mode budget artifact.")
+        if "attitude_response" in result and (model_type != "attitude_control" or result["status"] != "completed" or version is None):
+            raise ValueError("Only a completed maintained attitude model may retain an attitude response artifact.")
+        if model.get("links") and set(sources) != VERIFICATION_SOURCE_NAMES:
+            raise ValueError("Linked calculation evidence requires its complete calculation-chain source manifest.")
+        bound_project, bound_model = verify_calculation_inputs(project, model, normalized, result)
+        if model_type == "attitude_control" and version is not None:
+            if result["status"] == "completed":
+                if "attitude_response" not in result or not ATTITUDE_VERIFICATION_SOURCE_NAMES.issubset(sources):
+                    raise ValueError("Completed attitude evidence requires its response and complete retained solver sources.")
+                from .engineering import _bind_inputs
+                from .attitude import validate_artifact
+                validate_artifact(result["attitude_response"], metrics, _bind_inputs(bound_project, bound_model), sources["attitude.py"])
+            elif metrics:
+                raise ValueError("Unassessed or invalid attitude evidence cannot carry numerical metrics.")
+        if model_type == "power_energy_budget" and version is not None:
+            if result["status"] == "completed":
+                if "power_budget" not in result:
+                    raise ValueError("Completed power evidence requires its operating-mode budget artifact.")
+                from .engineering import verify_power_artifact
+                verify_power_artifact(result["power_budget"], metrics, bound_project, bound_model)
+            elif metrics:
+                raise ValueError("Unassessed or invalid power evidence cannot carry numerical metrics.")
+        if model_type == "orbital_trajectory" and version is not None:
+            if result["status"] == "completed":
+                if "simulation" not in result or not ORBITAL_VERIFICATION_SOURCE_NAMES.issubset(sources):
+                    raise ValueError("Completed orbital evidence requires a trajectory and complete retained solver sources.")
+                from .engineering import _bind_inputs
+                from .orbital_adapter import validate_artifact
+                validate_artifact(result["simulation"], metrics, _bind_inputs(bound_project, bound_model), sources["simulation.py"])
+                if version == "2":
+                    from .orbital_adapter import validate_accuracy
+                    if "numerical_accuracy" not in result:
+                        raise ValueError("Completed orbital v2 evidence requires its numerical accuracy receipt.")
+                    validate_accuracy(result["numerical_accuracy"], result["simulation"],
+                                      _bind_inputs(bound_project, bound_model), model.get("accuracy"), sources["simulation.py"])
+            elif metrics:
+                raise ValueError("Unassessed or invalid orbital evidence cannot carry numerical metrics.")
         result = deepcopy(result)
         if version is None:
             result["status"] = "not_assessed"
@@ -213,8 +298,9 @@ def _normalize_results(project, results, versions):
 
 
 def _bound_inputs(project, model):
+    from .chains import input_ids
     return {input_id: deepcopy(project["inputs"][input_id])
-            for input_id in sorted(set(model["inputs"].values()))}
+            for input_id in input_ids(project, model["id"])}
 
 
 def _assemble(project, results, versions, sources):
@@ -238,8 +324,12 @@ def _assemble(project, results, versions, sources):
         dependency = {"model_definition": model, "input_records": dependency_inputs,
                       "model_version": receipt["model_version"], "requirement": requirement,
                       "verification_sources": sources}
+        if model.get("links"):
+            from .chains import dependency_configuration
+            dependency["calculation_dependencies"] = dependency_configuration(project, model["id"])
         status = "not_assessed"
         measured = None
+        accuracy_gap = None
         if receipt["status"] != "completed":
             reason = f"Model evidence is {receipt['status']}; it cannot satisfy this requirement."
         elif requirement["metric"] not in receipt["metrics"]:
@@ -249,13 +339,18 @@ def _assemble(project, results, versions, sources):
             if metric["unit"] != limit["unit"]:
                 reason = "Metric and limit units differ; no implicit conversion is permitted."
             else:
-                value, threshold = metric["value"], limit["value"]
-                operator = requirement["operator"]
-                passes = {"<=": value <= threshold, ">=": value >= threshold,
-                          "==": value == threshold}[operator]
-                status = "met" if passes else "not_met"
-                reason = "Calculated metric meets the declared limit." if passes else "Calculated metric violates the declared limit."
-                measured = {"metric": deepcopy(metric), "operator": operator, "limit": deepcopy(limit)}
+                from .engineering import requirement_accuracy_gap
+                accuracy_gap = requirement_accuracy_gap(receipt, requirement, metric, limit)
+                if accuracy_gap:
+                    reason = accuracy_gap["reason"]
+                else:
+                    value, threshold = metric["value"], limit["value"]
+                    operator = requirement["operator"]
+                    passes = {"<=": value <= threshold, ">=": value >= threshold,
+                              "==": value == threshold}[operator]
+                    status = "met" if passes else "not_met"
+                    reason = "Calculated metric meets the declared limit." if passes else "Calculated metric violates the declared limit."
+                    measured = {"metric": deepcopy(metric), "operator": operator, "limit": deepcopy(limit)}
         exclusions = deepcopy(receipt["not_assessed"])
         if status == "not_assessed" and reason not in exclusions:
             exclusions.append(reason)
@@ -267,6 +362,8 @@ def _assemble(project, results, versions, sources):
             "dependency_fingerprint": _digest(dependency), "evidence": measured,
             "assumptions": deepcopy(receipt["assumptions"]), "not_assessed": exclusions,
         }
+        if accuracy_gap:
+            findings[requirement_id]["assessment_status"] = accuracy_gap["status"]
     unresolved = sorted(key for key, finding in findings.items() if finding["status"] == "not_assessed")
     failed = sorted(key for key, finding in findings.items() if finding["status"] == "not_met")
     review_status = "incomplete" if unresolved else "requirements_not_met" if failed else "supported_requirements_met"
@@ -293,8 +390,8 @@ def review_project(project, model_results):
     from .engineering import MODEL_VERSIONS
     snapshot = validate_project(project)
     versions = _versions(MODEL_VERSIONS)
-    results = _normalize_results(snapshot, model_results, versions)
     sources = _validate_sources(_verification_sources())
+    results = _normalize_results(snapshot, model_results, versions, sources)
     return _assemble(snapshot, results, versions, sources)
 
 
@@ -323,10 +420,10 @@ def verify_review(review):
     for model_id, record in review["evidence"].items():
         _fields(record, {"model_id", "model_type", "model_version", "status", "metrics",
                          "assumptions", "not_assessed", "issues", "model_definition",
-                         "input_records", "verification_sources", "fingerprint"}, "evidence receipt", {"references"})
+                         "input_records", "verification_sources", "fingerprint"}, "evidence receipt", {"references", "simulation", "power_budget", "attitude_response", "calculation_inputs", "numerical_accuracy", "applicability"})
         results[model_id] = {key: deepcopy(value) for key, value in record.items()
                              if key not in {"model_definition", "input_records", "verification_sources", "fingerprint"}}
-    expected = _assemble(project, _normalize_results(project, results, versions), versions, sources)
+    expected = _assemble(project, _normalize_results(project, results, versions, sources), versions, sources)
     if expected != review:
         raise ValueError("Review evidence, dependencies or findings do not match their snapshots.")
     return True
@@ -369,9 +466,9 @@ def compare_reviews(old, new):
             unassessed.append(key)
     changed_evidence = sorted(key for key in set(old["evidence"]) & set(new["evidence"])
                               if old["evidence"][key]["fingerprint"] != new["evidence"][key]["fingerprint"])
-    changed_sources = sorted(name for name in VERIFICATION_SOURCE_NAMES
-                             if old["verification_sources"][name] != new["verification_sources"][name])
-    return {
+    changed_sources = sorted(name for name in set(old["verification_sources"]) | set(new["verification_sources"])
+                             if old["verification_sources"].get(name) != new["verification_sources"].get(name))
+    comparison = {
         "schema": "sixd.review-comparison.v1", "project_id": old["project_id"],
         "from_revision": old["revision"], "to_revision": new["revision"],
         "changed_inputs": changed_inputs, "added_inputs": added_inputs, "removed_inputs": removed_inputs,
@@ -386,3 +483,10 @@ def compare_reviews(old, new):
         "exclusions": ["Impact is derived only from explicit model/input/requirement bindings.",
                        "Unchanged applicability does not establish model validity or whole-mission readiness."],
     }
+    if any(key in project for project in (old["project"], new["project"]) for key in ("systems", "interfaces")):
+        from .systems import architecture_impact
+        comparison.update(architecture_impact(old["project"], new["project"],
+            changed_input_ids=changed_inputs + added_inputs + removed_inputs,
+            changed_model_ids=changed_models + added_models + removed_models,
+            sources_changed=bool(changed_sources)))
+    return comparison

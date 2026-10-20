@@ -1,0 +1,73 @@
+{
+  "schema": "sixd.project.v1",
+  "project_id": "synthetic-test-comparison-reference",
+  "revision": "1",
+  "name": "Synthetic space-hardware drag comparison",
+  "description": "Constructed scalar atmospheric load case for testing CSV evidence comparisons. No real hardware or physical validation is represented. Drag reference is 0.5*rho*v^2*Cd*A = 300 N.",
+  "lifecycle_stage": "design",
+  "inputs": {
+    "density": {
+      "value": 1.2,
+      "unit": "kg/m^3",
+      "source": "Constructed independent arithmetic fixture; not measured hardware data."
+    },
+    "relative_speed": {
+      "value": 50,
+      "unit": "m/s",
+      "source": "Constructed independent arithmetic fixture; not measured hardware data."
+    },
+    "drag_coefficient": {
+      "value": 0.8,
+      "unit": "1",
+      "source": "Constructed independent arithmetic fixture; not measured hardware data."
+    },
+    "reference_area": {
+      "value": 0.25,
+      "unit": "m^2",
+      "source": "Constructed independent arithmetic fixture; not measured hardware data."
+    },
+    "maximum_drag_force": {
+      "value": 305,
+      "unit": "N",
+      "source": "Constructed independent arithmetic fixture; not measured hardware data."
+    },
+    "strict_maximum_drag_force": {
+      "value": 290,
+      "unit": "N",
+      "source": "Constructed independent arithmetic fixture; not measured hardware data."
+    }
+  },
+  "models": [
+    {
+      "id": "atmospheric_load",
+      "type": "drag_load",
+      "description": "Explicit bounded static drag reference for a space vehicle atmospheric load case.",
+      "inputs": {
+        "density": "density",
+        "relative_speed": "relative_speed",
+        "drag_coefficient": "drag_coefficient",
+        "reference_area": "reference_area"
+      }
+    }
+  ],
+  "requirements": [
+    {
+      "id": "drag_limit",
+      "title": "Supplied drag-force criterion",
+      "model_id": "atmospheric_load",
+      "metric": "drag_force",
+      "operator": "<=",
+      "limit_input": "maximum_drag_force",
+      "critical": true
+    },
+    {
+      "id": "strict_drag_limit",
+      "title": "Stricter supplied drag-force criterion",
+      "model_id": "atmospheric_load",
+      "metric": "drag_force",
+      "operator": "<=",
+      "limit_input": "strict_maximum_drag_force",
+      "critical": true
+    }
+  ]
+}

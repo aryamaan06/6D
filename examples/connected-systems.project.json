@@ -1,0 +1,312 @@
+{
+  "schema": "sixd.project.v1",
+  "project_id": "constructed-connected-systems",
+  "name": "Constructed connected systems review",
+  "revision": "1",
+  "description": "Explicit subsystem organization and scalar review contracts for independent bounded component examples. Source directions and physical applicability are user declarations; interfaces do not feed or couple models.",
+  "lifecycle_stage": "design",
+  "inputs": {
+    "initial_mass": {
+      "value": 1000,
+      "unit": "kg",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "dry_mass": {
+      "value": 500,
+      "unit": "kg",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "delta_v": {
+      "value": 1000,
+      "unit": "m/s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "specific_impulse": {
+      "value": 300,
+      "unit": "s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "thrust": {
+      "value": 200,
+      "unit": "N",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "minimum_propellant_margin": {
+      "value": 0,
+      "unit": "kg",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "maximum_burn_duration": {
+      "value": 6000,
+      "unit": "s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "mount_length": {
+      "value": 0.2,
+      "unit": "m",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "young_modulus": {
+      "value": 70000000000.0,
+      "unit": "Pa",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "second_moment": {
+      "value": 2e-06,
+      "unit": "m^4",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "outer_fiber": {
+      "value": 0.01,
+      "unit": "m",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "maximum_bending_stress": {
+      "value": 1000000.0,
+      "unit": "Pa",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "maximum_tip_deflection": {
+      "value": 0.001,
+      "unit": "m",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "heat_input": {
+      "value": 200,
+      "unit": "W",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "radiator_area": {
+      "value": 1,
+      "unit": "m^2",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "emissivity": {
+      "value": 0.8,
+      "unit": "1",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "background_temperature": {
+      "value": 3,
+      "unit": "K",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "maximum_temperature": {
+      "value": 320,
+      "unit": "K",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "density": {
+      "value": 1.2,
+      "unit": "kg/m^3",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "relative_speed": {
+      "value": 50,
+      "unit": "m/s",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "drag_coefficient": {
+      "value": 0.8,
+      "unit": "1",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "reference_area": {
+      "value": 0.25,
+      "unit": "m^2",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "maximum_drag_force": {
+      "value": 305,
+      "unit": "N",
+      "source": "Constructed demonstration input; not measured hardware data."
+    },
+    "load_budget": {
+      "value": 250,
+      "unit": "N",
+      "source": "Constructed force allowance, not a qualified structural limit."
+    }
+  },
+  "models": [
+    {
+      "id": "propulsion",
+      "type": "ideal_propulsion",
+      "inputs": {
+        "initial_mass": "initial_mass",
+        "dry_mass": "dry_mass",
+        "delta_v": "delta_v",
+        "specific_impulse": "specific_impulse",
+        "thrust": "thrust"
+      }
+    },
+    {
+      "id": "mount",
+      "type": "static_cantilever",
+      "description": "Explicit ideal mapping: thrust magnitude is a transverse free-end load on this beam.",
+      "inputs": {
+        "tip_force": "thrust",
+        "length": "mount_length",
+        "young_modulus": "young_modulus",
+        "second_moment": "second_moment",
+        "outer_fiber": "outer_fiber"
+      }
+    },
+    {
+      "id": "thermal",
+      "type": "radiative_equilibrium",
+      "inputs": {
+        "heat_input": "heat_input",
+        "area": "radiator_area",
+        "emissivity": "emissivity",
+        "background_temperature": "background_temperature"
+      }
+    },
+    {
+      "id": "atmospheric_load",
+      "type": "drag_load",
+      "description": "Separate constructed atmospheric load case; it does not establish the orbital example's atmospheric applicability.",
+      "inputs": {
+        "density": "density",
+        "relative_speed": "relative_speed",
+        "drag_coefficient": "drag_coefficient",
+        "reference_area": "reference_area"
+      }
+    }
+  ],
+  "requirements": [
+    {
+      "id": "fuel_margin",
+      "title": "Nonnegative ideal propellant margin",
+      "model_id": "propulsion",
+      "metric": "propellant_margin",
+      "operator": ">=",
+      "limit_input": "minimum_propellant_margin",
+      "critical": true
+    },
+    {
+      "id": "burn_duration",
+      "title": "Declared burn-duration limit",
+      "model_id": "propulsion",
+      "metric": "burn_duration",
+      "operator": "<=",
+      "limit_input": "maximum_burn_duration",
+      "critical": true
+    },
+    {
+      "id": "mount_stress",
+      "title": "Declared static beam stress limit",
+      "model_id": "mount",
+      "metric": "bending_stress",
+      "operator": "<=",
+      "limit_input": "maximum_bending_stress",
+      "critical": true
+    },
+    {
+      "id": "mount_deflection",
+      "title": "Declared beam deflection limit",
+      "model_id": "mount",
+      "metric": "tip_deflection",
+      "operator": "<=",
+      "limit_input": "maximum_tip_deflection",
+      "critical": true
+    },
+    {
+      "id": "thermal_limit",
+      "title": "Declared steady equilibrium temperature limit",
+      "model_id": "thermal",
+      "metric": "equilibrium_temperature",
+      "operator": "<=",
+      "limit_input": "maximum_temperature",
+      "critical": true
+    },
+    {
+      "id": "drag_limit",
+      "title": "Declared drag-force limit",
+      "model_id": "atmospheric_load",
+      "metric": "drag_force",
+      "operator": "<=",
+      "limit_input": "maximum_drag_force",
+      "critical": true
+    }
+  ],
+  "systems": [
+    {
+      "id": "vehicle",
+      "title": "Space system example",
+      "description": "Organizational parent only; not a complete vehicle model.",
+      "parent_id": null,
+      "model_ids": []
+    },
+    {
+      "id": "propulsion_system",
+      "title": "Propulsion assembly",
+      "description": "Constructed independent model ownership.",
+      "parent_id": "vehicle",
+      "model_ids": [
+        "propulsion"
+      ]
+    },
+    {
+      "id": "structure_system",
+      "title": "Support assembly",
+      "description": "Constructed independent model ownership.",
+      "parent_id": "vehicle",
+      "model_ids": [
+        "mount"
+      ]
+    },
+    {
+      "id": "environment_system",
+      "title": "Atmospheric load case",
+      "description": "Constructed independent model ownership.",
+      "parent_id": "vehicle",
+      "model_ids": [
+        "atmospheric_load"
+      ]
+    },
+    {
+      "id": "thermal_system",
+      "title": "Radiator example",
+      "description": "Constructed independent model ownership.",
+      "parent_id": "vehicle",
+      "model_ids": [
+        "thermal"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "declared_thrust_allowance",
+      "title": "Declared force against allowance",
+      "description": "Compares a supplied thrust magnitude with a supplied allowance. The interface does not establish direction or application to a structure.",
+      "from_system": "propulsion_system",
+      "to_system": "structure_system",
+      "source": {
+        "kind": "input",
+        "input_id": "thrust"
+      },
+      "target_input": "load_budget",
+      "quantity": "Force magnitude",
+      "unit": "N",
+      "operator": "<=",
+      "critical": true
+    },
+    {
+      "id": "drag_allowance",
+      "title": "Saved drag against allowance",
+      "description": "One explicitly supplied atmospheric scalar condition; not a launch load envelope.",
+      "from_system": "environment_system",
+      "to_system": "structure_system",
+      "source": {
+        "kind": "model_metric",
+        "model_id": "atmospheric_load",
+        "metric": "drag_force"
+      },
+      "target_input": "maximum_drag_force",
+      "quantity": "Drag force magnitude",
+      "unit": "N",
+      "operator": "<=",
+      "critical": true
+    }
+  ]
+}

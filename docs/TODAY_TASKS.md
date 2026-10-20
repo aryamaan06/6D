@@ -1,122 +1,91 @@
-# 6D — Arya's next steps
+# 6D - current founder walkthrough
 
-October 14, 2026. Codex owns engineering implementation, tests and integration. These are founder/setup/review tasks, not a request for Arya to write the core product. Use the original 6D chat and the existing workspace.
+## Latest live result
 
-## Where to work
+Refresh http://127.0.0.1:8768/ (build **ad06ff57fb33**), then open **Connect AI → Evidence-linked explanation comparison**. Super and Ultra completed three cases each; Nano stopped immediately and two cases remain untested. Protocol completion is not semantic approval: Super reversed the direction of a limit change. Ultra produced more specific explanations in this small narrowed test. No selection or automatic rerun followed. The single batch reserved USD .49491808. Inspect saved results without reconnecting; details are in APPLICATION_ROLES_LIVE_RESULTS.md. Earlier pending-live instructions below are superseded.
 
-- **This original 6D chat:** product decisions, feedback and error/result messages. Codex already edits this project's files from here; no new conversation is needed for today's tasks.
-- **VS Code:** open the existing project files and run the commands below in its PowerShell terminal. The installed Codex sidebar can be used for a separately assigned, bounded task later. Official OpenAI documentation describes the IDE extension as a coding interface working with editor context: https://learn.chatgpt.com/docs/codex/ide. This does not require moving our lead build conversation.
-- **GitHub:** the private repository is already connected and pushed. No new repository, clone or upload is needed. Codex handles reviewed commits/pushes.
+## Current build: guided review and numerical evidence
 
-Current checkpoint: account/key setup and initial live validation are complete. Session validation-20261014T181514388787Z.json completed both actual Nano investigations and saved the validated configuration; seven native responses and independent evidence matches were verified. **Do not repeat steps 1–5 now.** Continue with product-flow review and the next connected-project increment. The setup commands below remain a reference for a fresh environment or a relevant future change. If a later command errors, stop that sequence and send its error text here.
+Refresh http://127.0.0.1:8768/ and confirm **ad06ff57fb33**. Choose **Guided review** in the header. Follow its current step; it can use your selected project, or explicitly create a constructed reference project. The journey is baseline → edit draft → preview impact → save revision → rerun affected checks → report/export. Only explicit actions change your project. Older revisions retain their evidence.
 
-## 1. Open the existing folder
+In a newly completed Assistant investigation, application-owned numerical roles show the exact calculated metric, declared limit and grid comparisons. Open the captured source to inspect each value. AI commentary is qualitative; its model-visible numerical payload is withheld explicitly. Historical explanations and failed comparisons stay unchanged.
 
-In VS Code, choose **File → Open Folder**, select:
+Both builds are verified offline. The corrected live Nano/Super/Ultra comparison is pending a fresh approval and private reconnection; no key is needed to inspect existing results or use local checks. No model has been newly enabled. See DELIVERY_PATH_RESULTS.md. The earlier walkthrough below is historical and its old build ID is superseded.
 
-`C:\Users\Arya\Documents\Codex\2026-10-04\i-a\6d-startup`
+## Evidence-linked Assistant walkthrough
 
-Choose **Terminal → New Terminal**. If Git Bash opens, use the dropdown beside the terminal's **+** button and select **PowerShell**. These commands are PowerShell commands. No installation or packages are required. VS Code terminal instructions: https://code.visualstudio.com/docs/terminal/basics.
+Refresh http://127.0.0.1:8768/ and confirm build **207b0fc5ba9e**. Select a requirement, open **Assistant**, then a saved investigation. Inspect **Recorded numerical evidence** and choose **Open captured source**. Historical prose is preserved and labelled separately from the source-bound facts. Grounded next checks remain above the original interpretation. No key is needed to inspect saved results.
 
-```powershell
-Set-Location -LiteralPath 'C:\Users\Arya\Documents\Codex\2026-10-04\i-a\6d-startup'
-$sixdPython = 'C:\Users\Arya\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
-& $sixdPython --version
-```
+The authorized comparison has finished under its USD 2 ceiling, reserving USD .20479984. All three first-case explanations were rejected, leaving six cases untested. Open **Connect AI → Evidence-linked explanation comparison** for the recorded counts and raw export; a finished batch does not mean candidate investigations passed. The new numerical-reference contract needs an offline correction before another live test. Super remains selected; no rerun or activation followed. You do not need to reconnect to inspect saved results. See EVIDENCE_LINKS_LIVE_RESULTS.md.
 
-Expected: a Python 3.x version, with no error. Keep this same terminal open for the following steps. `$sixdPython` is a shortcut available only in this terminal; if you open a new terminal, run this setup block again.
+## Build your own project
 
-## 2. Run the offline foundation demonstration
+1. Open http://127.0.0.1:8768/ and refresh. If needed, run Open-6D.cmd from this project folder in Windows File Explorer.
+2. Choose **New project**. Enter an ID, name, purpose and assumptions, and lifecycle stage, then **Create empty project**.
+3. In **Author project**, choose **Edit draft**. Add supplied **inputs**, including numerical values, exact units and sources. Add a supported **model** and explicitly bind its parameters.
+4. Add **requirements** with model, metric, operator, supplied limit input and criticality. Use **Validate setup** to inspect configuration gaps.
+5. Choose **Preview impact**, inspect definition changes, then **Save revision** and **Run checks**. Open **Report** or select a requirement to inspect its evidence.
+6. To revise, return to **Author project → Edit draft**, change the relevant input, model binding or criterion, preview/save, rerun and compare. Referenced records must be remapped or their dependents removed before deletion.
 
-Copy this one line into that terminal:
+No paid calls are needed for this workflow. A blank saved project is unreviewed. Setup validation does not calculate or establish a pass. For orbital models, **View trajectory** uses the exact saved samples supporting their criteria. See PROJECT_AUTHORING.md.
 
-```powershell
-& $sixdPython -X utf8 run.py project-demo
-```
+Earlier template walkthroughs remain below.
 
-Expected constructed examples, in order:
+## Try the connected orbital workflow
 
-1. `baseline`: `supported_requirements_met` — all six declared requirements are met within their bounded models.
-2. `revised`: `requirements_not_met` — the explicitly increased heat input exceeds the supplied thermal limit.
-3. `missing_evidence`: `incomplete` — the thermal failure remains visible and the unsupported control requirement is unresolved.
+1. Open http://127.0.0.1:8768/ and refresh. If the local server is stopped, double-click Open-6D.cmd in this project folder.
+2. Choose **Import project → Orbital trajectory and engineering review**, review the constructed example and click **Create project**.
+3. Click **Run checks**, then **Reader → View trajectory**. Play the stored trajectory and inspect its related requirements.
+4. Choose **Review / edit inputs**, then **Edit draft**. Change a sourced input or limit, preview impact, save the revision, and rerun affected checks.
+5. Compare saved runs and open **Report** to see which evidence was recalculated or reused. **Investigate** opens the selected requirement's Assistant context; starting live AI is a separate explicit action.
 
-The command saves JSON receipts in `artifacts\projects`. It makes no model requests and costs nothing. This is currently a backend demonstration; the new product screens are proposed in SCREEN_SPEC.md. When all three expected cases appear and the `PS ...>` prompt returns, continue. Report `Offline demo: completed` or the error text; there is no need to paste the entire JSON output.
+Calculations, playback, comparison and reports use no AI credits. Example values and limits are illustrative. Orbital extrema apply only to saved samples over the specified duration. See ORBITAL_WORKFLOW.md for the supported model and exclusions.
 
-## 3. Check the private-key configuration — no inference
+Earlier component and exploratory walkthroughs remain below.
 
-Completed prerequisites: Arya confirmed $29.50 usable balance, active `6d-local-development`, exact routing ID `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`, and console prices $0.06 input / $0.24 output per million tokens. The selected model's official license and API tool-calling documentation were reviewed. `.local\token-factory.json` is configured for the already-approved $5 cumulative initial test allowance; it contains no key. A private live receipt now confirms provider access and one accepted response; complete agent orchestration is still pending. Steps 1–4 already completed do not need repeating for the current tool-protocol correction.
+Updated October 17, 2026, Asia/Calcutta. No new key, purchase, repository setup or provider test is required for this delivery. Codex owns implementation, verification and local-server updates.
 
-First inspect configuration through the private helper:
+## Try the new simulation workspace
 
-```powershell
-& $sixdPython -X utf8 tools/with_token_factory_key.py provider-status
-```
+1. Open http://127.0.0.1:8768/ and refresh. Choose **Simulation** in the toolbar.
+2. Open **Configure a new scenario**. The preset is explicitly synthetic: review its starting position, velocity, gravity, exclusion radius and duration. It is not generated from the static component inputs.
+3. Choose **Calculate & save run**. No API key is needed.
+4. Drag the 3D view or use arrow keys to rotate. Choose XY, XZ or YZ for fixed projections; use the zoom controls to inspect the path.
+5. Play or scrub the timeline. The moving marker, numerical readouts and graph cursor select the same stored sample. **Exact recorded sample** shows full SI values.
+6. Change the scenario explicitly, calculate another run, and select **Compare with** to overlay a compatible history. Each run retains its own inputs and exact revision. Incompatible frame/gravity/exclusion/source combinations are blocked.
+7. Open **Numerical diagnostics, sources & coverage**, or **Export run JSON**. A saved trajectory is conditional on this bounded orbital model; it is not a whole-rocket prediction.
 
-At `Token Factory key (hidden, local only):`, paste/type **only your API key in that local terminal**, then press Enter. No letters or asterisks appear; that is expected. The helper keeps it in its own process environment and writes no key file. Expect `"configured": true`, the exact routing ID and `"live_calls_made": 0`. The note correctly says remote access is not yet tested. This command makes no inference request. If `configured` is false, send the printed `note` and stop before the live command.
+## Check the existing evidence views
 
-## 4. Read the constructed example contract — no inference
+1. Open http://127.0.0.1:8768/ and refresh with Ctrl+R. Bookmark it with Ctrl+D. If it is stopped, double-click Open-6D.cmd in the project folder using File Explorer. The footer shows the current build.
+2. Select a saved reviewed revision. Open Reader for the selected system, or Report for the whole project.
+3. In Results against limits, inspect the calculated result and declared criterion. If a comparable earlier review exists, each row keeps its own limit and status. Each chart has its own scale and unit.
+4. Choose Inspect evidence to keep that requirement in the Inspector. Open Recorded sources and full values to inspect exact saved numbers, run IDs and review digests.
+5. Check Without numeric plot evidence. Unsupported control remains Not assessed; it has no fabricated quantitative plot.
+6. In Report, choose Print report / Save PDF. Select Save as PDF in your browser's print dialog if you want a PDF copy. Source disclosures expand for printing and return to their earlier on-screen state afterward. Export evidence JSON retains the underlying record.
 
-Review the constructed Euler contract before acknowledging it:
+These report charts are saved scalar comparisons. The separate Simulation workspace provides the bounded orbital time histories described above.
 
-```powershell
-& $sixdPython -X utf8 run.py contract --case euler_method_limit
-```
+## Optional local revision exercise
 
-Expected: the example's assumptions followed by `Contract SHA-256`. This example deliberately uses a first-order numerical method with known limitations. The demonstration should distinguish that limitation from a code defect. Read it as a supplied constructed example; your acknowledgment applies to that example, not a real spacecraft design. If a field is unclear, send its name so Codex can explain it.
+Use a constructed reference template to keep experiments separate from a real design. Inputs below are illustrative, not engineering recommendations.
 
-## 5. Run one bounded live-validation session
+1. Select Thermal, choose Edit draft, and change Heat input to 700 W with an explicit source description.
+2. Preview impact, save the revision, then run affected checks. Drafts and saved revisions awaiting checks cannot show current plots or print as reviewed reports.
+3. Open Report. The revised temperature and its criterion appear next to the earlier recorded finding.
+4. To understand a limit-only change, edit the temperature limit while preserving the heat input. Save and run again. The calculated temperature stays the same; each revision's own requirement criterion determines its status. Raising a requirement limit changes the acceptance criterion, not the physical design.
+5. Earlier revisions, receipts and investigations remain in history. No AI key or paid model request is required for these calculations.
 
-Both constructed contracts were acknowledged in the earlier session. The profile matrix is now replaced by one forced action-selection protocol using the previously responsive native profile. Run:
+## Optional AI investigation
 
-```powershell
-& $sixdPython -X utf8 tools/with_token_factory_key.py verify-live --accept-contract
-```
+The application Assistant currently uses reviewed Nemotron Super. It reads a selected saved requirement and evidence, can request one same-adapter reproducibility recheck, and returns labelled interpretation with citations. It cannot change a canonical finding or supply a missing physics model.
 
-Enter the existing key once at the hidden prompt. Let the session finish while it prints protocol/case progress. It uses the same Nano model, endpoint and persistent $5 ledger, with a stricter ceiling of **$0.10 and ten reserved requests**. Failed reservations remain; do not delete `.local\budget.sqlite3`. Account, transport and billing-bound failures stop the session. No additional card spending is authorized.
+Connect the existing key privately through Connect AI only when you want a new investigation. Enter a question for a saved requirement and choose Start live investigation. Only that explicit start sends scoped data and consumes the allowance. Current Super jobs have six-request/USD 0.20 reservation ceilings inside the existing cumulative USD 29.50 development allowance, including earlier reservations. This is application accounting, not an invoice or provider-side card limit; no additional card spending is authorized. There is no automatic retry or fallback.
 
-Success requires both the Euler method-limitation and force-defect investigations to complete through select_next_action with verified independent kernel evidence. The completed October 14 session printed **Both live end-to-end investigations completed. The validated action protocol is now saved locally.** Its saved settings and both actual receipts were verified. All 237 offline tests remain the development baseline. See LIVE_VALIDATION.md for the measured completion. No parameter sweep or alternative-profile fallback was run; this gate requires no repeat now.
+The server key remains in memory only; restarting clears it. Saved calculations and historical investigations need no key. Do not paste the key in chat.
 
-From either outcome, send only the final **Validation summary JSON** path. It references every receipt, allowing Codex to inspect the whole session without repeated output copying or receiving the key. Do not manually repeat a failed session.
+## Product feedback
 
-## 6. Review the proposed product experience
+Describe the action you took, what you expected and where the workflow was unclear. Cosmetic refinement remains deferred as agreed. Broader engineering and dynamic models, physical-test/operational evidence, collaboration and deployment continue on this same codebase. October 21 is the working snapshot checkpoint, not the complete product boundary.
 
-In VS Code's left Explorer, expand **docs** and open **SCREEN_SPEC.md**. Read the visual direction, proposed screens and evidence states. This is a written screen proposal, not the new website yet; no terminal command or key is required.
-
-The Antigravity review has been incorporated: current backend intake is explicitly JSON via CLI; proposed import/template forms are labelled as future UI controls; calculated unmet requirements and unassessed requirements have separate sections; simulation stays in the full plan without an enabled control in the first workflow. Review clarity and your Apple/Notion preference, not the correctness of spacecraft equations. Return concrete issues or say the direction works for you:
-
-```text
-Confusing wording:
-Navigation order:
-Too crowded:
-Overall design direction:
-```
-
-For a clearer explanation of your added visual feature, read **docs → SIMULATION_PLAYBACK.md**. It records the planned model-linked simulation feature; it does not claim playback is already built.
-
-## 7. Send a compact result update here
-
-You may report each task as you finish it, or use this template. Do not put the key in the update:
-
-```text
-Offline demo: completed / error
-Provider status: configured true / false
-Live validation: completed / error / not run yet
-Validation summary JSON path:
-UI feedback:
-```
-
-Codex then inspects the receipt, fixes any integration issue, and continues the supported project journey/interface work. Git setup and the 115-test fresh-checkout verification are already completed; Arya does not need to repeat those tasks.
-
-## Optional independent review using Antigravity
-
-Use the Gemini Pro model already available to you. Open this same folder and paste the entire prompt below. This task is read-only, so it will not conflict with Codex's implementation. Return the short structured result, not the tool transcript.
-
-```text
-Review 6D's proposed first product journey for clarity and honesty. Do not edit files, run commands, access credentials, contact external services, or redesign the architecture. Read AGENTS.md, PROJECT_BRIEF.md, docs/BUILD_PLAN.md, docs/SCREEN_SPEC.md and docs/TODAY_TASKS.md in this folder. Check whether a non-specialist can understand what to provide, what is actually checked, what an unmet or unresolved requirement means, and which capability is implemented versus planned. Identify the three most consequential improvements, with the affected screen and a concrete wording/flow change. Do not assess unprovided customer traction or award speculative hackathon scores. Output only: Issues (maximum three), Suggested changes, and Any contradiction. Keep the response under 250 words. If there is no important issue, say so; do not invent one.
-```
-
-No new Codex model selection is required for today's terminal/file-review tasks. Continue the lead build here. If a separate coding/review session is assigned later, Codex will provide its scoped prompt, model and effort setting.
-
-## Later founder tasks
-
-Codex prepares a reviewer shortlist and a concise feedback request; Arya chooses whom to contact. Codex also prepares the deployment/repository/license package and video script; Arya reviews concrete publication/company decisions and records the demo when ready. No outreach, new cloud spending or new account setup is needed for today's foundation check.
+Development-model preference is Sol 6.1 Ultra or Astra 6 Ultra. This is separate from the application's reviewed Nemotron model.

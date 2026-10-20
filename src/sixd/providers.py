@@ -13,6 +13,7 @@ import os
 import re
 import sqlite3
 import ssl
+from datetime import datetime, timezone
 from .action_selection import build_action_request, decode_action_response
 
 
@@ -30,6 +31,19 @@ SCHEMA_KEYWORDS = ('uniqueItems', 'minItems', 'maxItems', 'contains', 'minContai
                    'maxContains', 'additionalProperties', 'oneOf', 'anyOf')
 RESPONSE_SHAPES = ('native_tool_call', 'content_without_tool_calls',
                    'invalid_tool_envelope', 'empty_response')
+SELECTION_REJECTIONS = frozenset({
+    'selection_shape', 'unavailable_action', 'citations_shape', 'citation_mismatch',
+    'summary_type', 'summary_length', 'read_payload_not_empty',
+    'assistant_envelope', 'selector_count', 'selector_envelope',
+    'arguments_type_or_length', 'invalid_json',
+})
+ERROR_CODES = frozenset({
+    'cumulative_budget_exhausted', 'case_budget_exhausted', 'batch_budget_exhausted',
+    'request_limit', 'budget_ledger_error', 'configuration_error', 'provider_transport_error',
+    'provider_response_invalid', 'provider_output_limit', 'invalid_action_response',
+    'verification_sources_changed', 'recheck_mismatch', 'explanation_rejected',
+    'session_changed', 'budget_approval_mismatch', 'budget_reservation_invalid',
+})
 
 
 def safe_response_diagnostic(value):
@@ -37,6 +51,12 @@ def safe_response_diagnostic(value):
     if not isinstance(value, dict):
         return {}
     result = {}
+    if isinstance(value.get('selection_rejection'), str) and value['selection_rejection'] in SELECTION_REJECTIONS:
+        result['selection_rejection'] = value['selection_rejection']
+    for key in ('summary_characters', 'arguments_characters', 'evidence_ids_count', 'expected_evidence_ids_count'):
+        count = value.get(key)
+        if type(count) is int and 0 <= count <= 100000:
+            result[key] = count
     status = value.get('http_status')
     if type(status) is int and 100 <= status <= 599:
         result['http_status'] = status
@@ -130,31 +150,32 @@ def transport_failure(error):
     if isinstance(error, HTTPError):
         code = error.code if type(error.code) is int and 100 <= error.code <= 599 else 'unknown'
         return ProviderError(f'Nebius request failed: HTTP {code}.' + FAILURE_SUFFIX,
-                             diagnostic=http_error_diagnostic(error))
+                             diagnostic=http_error_diagnostic(error), code='provider_transport_error')
     if isinstance(error, (TimeoutError,)):
-        return ProviderError('Nebius request timed out.' + FAILURE_SUFFIX)
+        return ProviderError('Nebius request timed out.' + FAILURE_SUFFIX, code='provider_transport_error')
     if isinstance(error, ssl.SSLError):
-        return ProviderError('Nebius TLS connection failed.' + FAILURE_SUFFIX)
+        return ProviderError('Nebius TLS connection failed.' + FAILURE_SUFFIX, code='provider_transport_error')
     if isinstance(error, URLError):
         reason = error.reason
         if isinstance(reason, TimeoutError):
-            return ProviderError('Nebius request timed out.' + FAILURE_SUFFIX)
+            return ProviderError('Nebius request timed out.' + FAILURE_SUFFIX, code='provider_transport_error')
         if isinstance(reason, ssl.SSLError):
-            return ProviderError('Nebius TLS connection failed.' + FAILURE_SUFFIX)
-        return ProviderError('Nebius network connection failed.' + FAILURE_SUFFIX)
+            return ProviderError('Nebius TLS connection failed.' + FAILURE_SUFFIX, code='provider_transport_error')
+        return ProviderError('Nebius network connection failed.' + FAILURE_SUFFIX, code='provider_transport_error')
     if isinstance(error, json.JSONDecodeError):
-        return ProviderError('Provider response was not valid JSON.' + FAILURE_SUFFIX)
+        return ProviderError('Provider response was not valid JSON.' + FAILURE_SUFFIX, code='provider_response_invalid')
     # _send has one controlled size error. Never echo arbitrary transport messages.
     if isinstance(error, ProviderError) and error.args == (RESPONSE_TOO_LARGE,):
-        return ProviderError(RESPONSE_TOO_LARGE + FAILURE_SUFFIX)
-    return ProviderError('Inference transport failed; private exception details were suppressed.' + FAILURE_SUFFIX)
+        return ProviderError(RESPONSE_TOO_LARGE + FAILURE_SUFFIX, code='provider_response_invalid')
+    return ProviderError('Inference transport failed; private exception details were suppressed.' + FAILURE_SUFFIX, code='provider_transport_error')
 
 
 class ProviderError(ValueError):
     """Safe operator-facing error; never includes a key or remote response body."""
-    def __init__(self, message, *, diagnostic=None):
+    def __init__(self, message, *, diagnostic=None, code=None):
         super().__init__(message)
         self.diagnostic = safe_response_diagnostic(diagnostic)
+        self.code = code if isinstance(code, str) and code in ERROR_CODES else None
 
 
 @dataclass
@@ -256,28 +277,66 @@ class BudgetLedger:
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
     def reserve(self, config, amount):
+        # Legacy callers use zero to verify the existing approval without
+        # increasing usage. Actual request/job reservations remain positive.
+        if type(amount) not in (int, float) or not math.isfinite(amount) or amount < 0:
+            raise ProviderError('Invalid request reservation. No request was sent.', code='budget_reservation_invalid')
         try:
             with closing(sqlite3.connect(self.path, timeout=10)) as db, db:
                 db.execute('CREATE TABLE IF NOT EXISTS budget (id TEXT PRIMARY KEY, cap REAL, reserved REAL)')
                 db.execute('BEGIN IMMEDIATE')
                 row = db.execute('SELECT id, cap, reserved FROM budget').fetchall()
                 # One approval per ledger: changing an ID must not silently reset allowance.
-                if row and (row[0][0] != config.approval_id or row[0][1] != config.spend_cap_usd):
-                    raise ProviderError('The ledger approval/cap differs; budget changes require explicit operator review.')
+                if row and (len(row) != 1 or row[0][0] != config.approval_id or row[0][1] != config.spend_cap_usd
+                            or type(row[0][2]) not in (int, float) or not math.isfinite(row[0][2])
+                            or not 0 <= row[0][2] <= config.spend_cap_usd):
+                    raise ProviderError('The ledger approval/cap differs; budget changes require explicit operator review.', code='budget_approval_mismatch')
                 used = row[0][2] if row else 0.0
                 if used + amount > config.spend_cap_usd:
-                    raise ProviderError('The approved inference allowance is exhausted. No request was sent.')
+                    raise ProviderError('The approved inference allowance is exhausted. No request was sent.', code='cumulative_budget_exhausted')
                 db.execute('INSERT OR REPLACE INTO budget VALUES (?, ?, ?)',
                            (config.approval_id, config.spend_cap_usd, used + amount))
         except sqlite3.Error:
-            raise ProviderError('The budget ledger could not be locked or written. No request was sent.') from None
+            raise ProviderError('The budget ledger could not be locked or written. No request was sent.', code='budget_ledger_error') from None
+
+    def increase_cap(self, config, new_cap, *, approved_maximum, authorization):
+        """Explicit operator migration; keep approval identity and all reservations.
+
+        Not called by inference, startup or HTTP routes. The host must update
+        its local config separately; any interim mismatch fails closed.
+        """
+        if (type(new_cap) not in (int, float) or type(approved_maximum) not in (int, float)
+                or not math.isfinite(new_cap) or not math.isfinite(approved_maximum)
+                or not config.spend_cap_usd < new_cap <= approved_maximum
+                or not isinstance(authorization, str) or not 1 <= len(authorization) <= 500):
+            raise ProviderError('A bounded, explicitly authorized allowance increase is required.', code='configuration_error')
+        try:
+            with closing(sqlite3.connect(self.path, timeout=10)) as db, db:
+                db.execute('BEGIN IMMEDIATE')
+                row = db.execute('SELECT id,cap,reserved FROM budget').fetchall()
+                if (len(row) != 1 or row[0][0] != config.approval_id or row[0][1] != config.spend_cap_usd
+                        or type(row[0][2]) not in (int, float) or not math.isfinite(row[0][2])
+                        or not 0 <= row[0][2] <= config.spend_cap_usd):
+                    raise ProviderError('The existing ledger needs operator review; no cap changed.', code='budget_approval_mismatch')
+                db.execute('CREATE TABLE IF NOT EXISTS allowance_changes (sequence INTEGER PRIMARY KEY, approval_id TEXT NOT NULL, old_cap REAL NOT NULL, new_cap REAL NOT NULL, reserved REAL NOT NULL, authorization TEXT NOT NULL, changed_at TEXT NOT NULL)')
+                db.execute('INSERT INTO allowance_changes (approval_id,old_cap,new_cap,reserved,authorization,changed_at) VALUES (?,?,?,?,?,?)',
+                    (config.approval_id, config.spend_cap_usd, new_cap, row[0][2], authorization, datetime.now(timezone.utc).isoformat()))
+                db.execute('UPDATE budget SET cap=? WHERE id=?', (new_cap, config.approval_id))
+                return {'approval_id': config.approval_id, 'old_cap_usd': config.spend_cap_usd,
+                        'cap_usd': new_cap, 'reserved_usd': row[0][2], 'authorization': authorization}
+        except sqlite3.Error:
+            raise ProviderError('The ledger migration failed; inspect the saved allowance before proceeding.', code='budget_ledger_error') from None
 
 
 class TokenFactoryProvider:
     mode = 'live_token_factory'
 
-    def __init__(self, config, ledger, *, api_key=None, transport=None):
+    def __init__(self, config, ledger, *, api_key=None, transport=None, action_adapter=None):
         self.config, self.ledger = config, ledger
+        # Default dispatch preserves the validated orbital protocol. A project
+        # runner may supply its own bounded menu without changing transport or
+        # accounting behavior.
+        self._action_adapter = action_adapter
         self.model = config.model
         self.request_attempts = 0
         self._key = api_key or os.environ.get('NEBIUS_API_KEY')
@@ -296,7 +355,9 @@ class TokenFactoryProvider:
 
     def complete(self, messages, tools):
         if self.config.selection_protocol == 'forced_action_v1':
-            wire_messages, wire_tools, selection = build_action_request(messages, tools)
+            build = (self._action_adapter.build_action_request
+                     if self._action_adapter is not None else build_action_request)
+            wire_messages, wire_tools, selection = build(messages, tools)
         elif self.config.selection_protocol == 'native_tools_v1':
             wire_messages, wire_tools = messages, tools
             selection = ({'type': 'function', 'function': {'name': tools[0]['function']['name']}}
@@ -334,28 +395,28 @@ class TokenFactoryProvider:
             raise transport_failure(error) from None
         if (not isinstance(result, dict) or not isinstance(result.get('choices'), list) or
                 not result['choices'] or not isinstance(result['choices'][0], dict)):
-            raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX)
+            raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX, code='provider_response_invalid')
         choice = result['choices'][0]
         message, usage = choice.get('message'), result.get('usage', {})
         if not isinstance(message, dict) or not isinstance(usage, dict):
-            raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX)
+            raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX, code='provider_response_invalid')
         count_keys = ('prompt_tokens', 'completion_tokens', 'total_tokens')
         if any(key in usage and (type(usage[key]) is not int or usage[key] < 0) for key in count_keys):
-            raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX)
+            raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX, code='provider_response_invalid')
         # Preserve only token counts, never remote metadata or echoed credentials.
         counts = {k: v for k, v in usage.items() if k in
                   count_keys}
         details = usage.get('completion_tokens_details')
         if details is not None:
             if not isinstance(details, dict):
-                raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX)
+                raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX, code='provider_response_invalid')
             if 'reasoning_tokens' in details:
                 count = details['reasoning_tokens']
                 if type(count) is not int or not 0 <= count <= counts.get('completion_tokens', self.config.max_output_tokens):
-                    raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX)
+                    raise ProviderError('Invalid provider response structure.' + FAILURE_SUFFIX, code='provider_response_invalid')
                 counts['completion_tokens_details'] = {'reasoning_tokens': count}
         if counts.get('prompt_tokens', 0) > input_bound or counts.get('completion_tokens', 0) > self.config.max_output_tokens:
-            raise ProviderError('Usage exceeded the configured reservation bound; stop and review provider billing.' + FAILURE_SUFFIX)
+            raise ProviderError('Usage exceeded the configured reservation bound; stop and review provider billing.' + FAILURE_SUFFIX, code='provider_response_invalid')
         reason = choice.get('finish_reason')
         forced = self.config.selection_protocol == 'forced_action_v1'
         diagnostic = {'finish_reason': reason, 'usage': counts,
@@ -370,15 +431,18 @@ class TokenFactoryProvider:
             detail = (' The output token limit was reached; no complete tool response was accepted.'
                       if safe_reason == 'length' else ' A complete structured tool response is required.')
             raise ProviderError(f'Provider returned finish_reason={safe_reason}.' + detail + FAILURE_SUFFIX,
-                                diagnostic=diagnostic)
+                                diagnostic=diagnostic, code='provider_output_limit' if safe_reason == 'length' else 'provider_response_invalid')
         if forced:
             try:
-                message, problem, response_format, origin = decode_action_response(
+                decode = (self._action_adapter.decode_action_response
+                          if self._action_adapter is not None else decode_action_response)
+                message, problem, response_format, origin = decode(
                     message, tools, internal_call_id='sixd-selection-' + uuid4().hex)
                 if response_format == 'content_selection_json' and reason != 'stop':
                     raise ProviderError('A tool-call finish reason requires a native tool envelope.')
             except ProviderError as error:
-                error.diagnostic = safe_response_diagnostic(diagnostic)
+                error.diagnostic = safe_response_diagnostic({**error.diagnostic, **diagnostic})
+                error.code = 'invalid_action_response'
                 raise
             return Turn(message, counts, protocol_error=problem,
                         response_meta={'finish_reason': reason, 'response_format': response_format,
