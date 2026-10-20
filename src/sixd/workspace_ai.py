@@ -1,4 +1,4 @@
-"""Local project-investigation jobs, memory-only credentials and shared budgets.
+"""Local jobs, optional current-user encrypted credentials and shared budgets.
 
 The public surface never returns credentials. Project revisions and calculation
 receipts are read-only to this service. No call is sent on connect or startup.
@@ -19,6 +19,7 @@ from uuid import uuid4
 
 from .providers import BudgetLedger, LiveConfig, ProviderError, TokenFactoryProvider
 from .workspace import ConflictError, WorkspaceError
+from .credential_store import CredentialStore, CredentialError, valid_key
 
 MAX_JOB_REQUESTS = 6
 MAX_JOB_RESERVATION_USD = .10
@@ -65,14 +66,32 @@ class JobBudget:
 
 
 class WorkspaceAI:
-    def __init__(self, store, local_directory, *, provider_factory=None):
+    def __init__(self, store, local_directory, *, provider_factory=None, credential_store=None):
         self.store = store
         self.local = Path(local_directory)
         self.owner = uuid4().hex
         self._lock = threading.RLock()
         self._active = None
         self._epoch = 0
-        self._key = os.environ.get("NEBIUS_API_KEY") or None
+        self._credential_store = (credential_store if credential_store is not None else
+                                  CredentialStore(self.local / "credentials" / "nebius.dpapi"))
+        self._credential_error = None
+        self._remembered = False
+        environment_key = os.environ.get("NEBIUS_API_KEY") or None
+        self._environment_key_configured = bool(environment_key)
+        self._key = environment_key if valid_key(environment_key) else None
+        self._key_source = "environment" if self._key else None
+        if environment_key and self._key is None:
+            self._credential_error = "environment_key_invalid"
+        try:
+            self._remembered = self._credential_store.exists()
+            if self._key is None and self._remembered:
+                restored = self._credential_store.load()
+                if not valid_key(restored):
+                    raise CredentialError("credential_data_invalid")
+                self._key, self._key_source = restored, "remembered"
+        except CredentialError as error:
+            self._credential_error = error.code
         self._factory = provider_factory or self._provider
         self._provider_mode = "offline_transport_fixture" if provider_factory is not None else "live_token_factory"
         self._runtime = self._sources()
@@ -107,7 +126,7 @@ class WorkspaceAI:
     @staticmethod
     def _sources():
         folder = Path(__file__).resolve().parent
-        names = ("workspace_ai.py", "project_investigation.py", "explanation_quality.py", "evidence_facts.py", "evidence_roles.py", "evidence_evaluation.py", "workspace_evidence_evaluation.py", "test_evidence.py", "workspace_test_data.py", "model_evaluation.py", "workspace_evaluation.py", "workflow_evaluation.py", "workspace_workflow_evaluation.py", "providers.py", "action_selection.py", "workspace.py", "engineering.py", "lifecycle.py", "__init__.py")
+        names = ("workspace_ai.py", "credential_store.py", "project_investigation.py", "explanation_quality.py", "evidence_facts.py", "evidence_roles.py", "change_evidence.py", "evidence_evaluation.py", "workspace_evidence_evaluation.py", "test_evidence.py", "workspace_test_data.py", "model_evaluation.py", "workspace_evaluation.py", "workflow_evaluation.py", "workspace_workflow_evaluation.py", "providers.py", "action_selection.py", "workspace.py", "engineering.py", "lifecycle.py", "__init__.py")
         return {name: sha256((folder / name).read_bytes()).hexdigest() for name in names if (folder / name).is_file()}
 
     def _config(self):
@@ -188,10 +207,14 @@ class WorkspaceAI:
     def status(self):
         with self._lock:
             present = bool(self._key)
+            credential_status = {"remember_supported": self._credential_store.supported,
+                "key_remembered": self._remembered, "key_source": self._key_source,
+                "credential_error": self._credential_error,
+                "environment_key_configured": self._environment_key_configured}
         value = {"configured": False, "key_present": present, "model": None,
                  "provider_mode": self._provider_mode, "max_job_requests": MAX_JOB_REQUESTS,
                  "max_job_reservation_usd": MAX_JOB_RESERVATION_USD,
-                 "live_validated": False, "budget": None}
+                 "live_validated": False, "budget": None, **credential_status}
         try:
             config = self._config()
             value.update(model=config.model, budget=self._budget(config), configured=present,
@@ -202,27 +225,69 @@ class WorkspaceAI:
                 and record.get("live_model_calls", 0) > 0 and record.get("agent_sources") == self._runtime
                 and record.get("model") == config.model and record.get("provider_settings") == self._settings(config)
                 for record in records)
-            value["note"] = ("Connected in server memory. No inference call is made until you start an investigation."
-                             if present else "Connect a Nebius key privately to enable live investigations.")
+            if self._key_source == "remembered":
+                value["note"] = "Connected with a key remembered in Windows-encrypted local storage. No inference call is made until you start an investigation."
+            elif self._key_source == "environment":
+                value["note"] = "Connected using the process environment. Remove NEBIUS_API_KEY from the launch environment to prevent restoration after a restart. No inference call was made."
+            else:
+                value["note"] = ("Connected for this session. No inference call is made until you start an investigation."
+                                 if present else "Connect a Nebius key privately to enable live investigations.")
         except (ProviderError, sqlite3.Error, OSError):
             value["note"] = "The local provider configuration or budget is unavailable. Saved project work is preserved."
         return value
 
-    def connect(self, key):
-        if not isinstance(key, str) or not 16 <= len(key) <= 8192 or any(ch.isspace() or ord(ch) < 32 for ch in key):
-            raise WorkspaceError("Enter a valid private API key. The value is never returned or saved.")
+    def connect(self, key, remember=False):
+        if not valid_key(key):
+            raise WorkspaceError("Enter a valid private API key. The value is never returned.")
+        if type(remember) is not bool:
+            raise WorkspaceError("Remember on this device must be true or false.")
         self._config()
         with self._lock:
             if self._active:
                 raise ConflictError("Wait for the active investigation before changing its connection.")
+            try:
+                if remember:
+                    self._credential_store.save(key)
+                else:
+                    self._credential_store.forget()
+            except CredentialError as error:
+                self._credential_error = error.code
+                raise WorkspaceError("The private connection was not changed because local credential storage could not be updated. Use the storage status to review it.") from None
             self._key = key
+            self._key_source = "remembered" if remember else "session"
+            self._remembered = remember
+            self._credential_error = None
             self._epoch += 1
         return self.status()
 
     def disconnect(self):
         with self._lock:
             self._key = None
+            self._key_source = None
             self._epoch += 1
+            try:
+                self._credential_store.forget()
+            except CredentialError as error:
+                self._credential_error = error.code
+                raise WorkspaceError("Disconnected for this session, but the remembered copy could not be removed. Review local credential storage before restarting.") from None
+            self._remembered = False
+            self._credential_error = None
+        return self.status()
+
+    def forget_key(self):
+        """Delete the remembered copy while leaving a current session connected."""
+        with self._lock:
+            if self._active:
+                raise ConflictError("Wait for the active investigation before changing its remembered connection.")
+            try:
+                self._credential_store.forget()
+            except CredentialError as error:
+                self._credential_error = error.code
+                raise WorkspaceError("The remembered copy could not be removed. The current private connection was not changed.") from None
+            self._remembered = False
+            self._credential_error = None
+            if self._key_source == "remembered":
+                self._key_source = "session"
         return self.status()
 
     def begin_comparison(self, identity):

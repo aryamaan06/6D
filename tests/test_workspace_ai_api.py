@@ -1,5 +1,6 @@
 """End-to-end HTTP investigations through an explicitly offline wire transport."""
 from dataclasses import asdict
+from contextlib import closing
 from http.client import HTTPConnection
 import json
 from pathlib import Path
@@ -60,6 +61,14 @@ class WorkspaceAIAPITests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        # HTTP shutdown alone does not join an explicitly started background AI
+        # worker. Let its final SQLite write close before removing the fixture,
+        # especially on Windows where open files cannot be unlinked.
+        deadline = time.monotonic() + 10
+        while cls.server.ai._active and time.monotonic() < deadline:
+            time.sleep(.01)
+        if cls.server.ai._active:
+            raise AssertionError("Offline investigation did not become idle before fixture cleanup.")
         cls.server.shutdown()
         cls.server.server_close()
         cls.worker.join()
@@ -151,7 +160,7 @@ class WorkspaceAIAPITests(unittest.TestCase):
         self.request("/api/ai/connect", {"api_key": KEY})
         payload = {**self.question(), "question": "Do not save " + KEY}
         self.assertEqual(self.request("/api/investigations", payload)[0], 400)
-        with sqlite3.connect(self.folder / "workspace.sqlite3") as db:
+        with closing(sqlite3.connect(self.folder / "workspace.sqlite3")) as db:
             self.assertNotIn(KEY, " ".join(row[0] for row in db.execute("SELECT record FROM project_investigations")))
 
     def test_local_boundary_blocks_cross_origin_connection_without_echo(self):

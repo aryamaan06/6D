@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import re
 import sqlite3
+import threading
 from urllib.parse import parse_qs, urlsplit
 
 from .project_examples import example_projects
@@ -38,7 +39,7 @@ CODE_FILES = [Path(__file__).with_name(name) for name in (
     "workspace_server.py", "workspace.py", "engineering.py", "lifecycle.py",
     "__init__.py", "project_examples.py", "project_io.py", "workspace_ai.py",
     "project_investigation.py", "explanation_quality.py", "model_evaluation.py", "workspace_evaluation.py", "providers.py", "action_selection.py",
-    "chains.py", "attitude.py", "simulation.py", "orbital_adapter.py", "workspace_simulation.py", "project_authoring.py", "workspace_scenarios.py", "workspace_test_data.py", "test_evidence.py", "systems.py", "workspace_systems.py", "workflow_evaluation.py", "workspace_workflow_evaluation.py", "evidence_facts.py", "evidence_roles.py", "evidence_evaluation.py", "workspace_evidence_evaluation.py")]
+    "chains.py", "attitude.py", "simulation.py", "orbital_adapter.py", "workspace_simulation.py", "project_authoring.py", "workspace_scenarios.py", "workspace_test_data.py", "test_evidence.py", "systems.py", "workspace_systems.py", "workflow_evaluation.py", "workspace_workflow_evaluation.py", "evidence_facts.py", "evidence_roles.py", "change_evidence.py", "credential_store.py", "evidence_evaluation.py", "workspace_evidence_evaluation.py")]
 
 
 def _code_fingerprint():
@@ -73,6 +74,8 @@ class WorkspaceHTTPServer(ThreadingHTTPServer):
     daemon_threads = True
 
     def __init__(self, address, db_path, *, ai_local_directory=None, provider_factory=None):
+        self._post_lock = threading.RLock()
+        self._stopping = False
         self.store = WorkspaceStore(db_path)
         self.simulations = WorkspaceSimulation(self.store)
         self.scenarios = WorkspaceScenarios(self.store)
@@ -307,12 +310,30 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self._local_request():
             return
+        # Serialize explicit writes with stopping, so no new mutation begins
+        # after shutdown has been accepted. Background AI jobs are checked too.
+        with self.server._post_lock:
+            if self.server._stopping:
+                self._error(409, "6D is stopping. Reopen it before changing project data.")
+                return
+            self._post_action()
+
+    def _post_action(self):
         try:
             route, query = self._query()
             value = self._body()
+            if route == "/api/shutdown":
+                self._fields(value, set())
+                with self.server.ai._lock:
+                    if self.server.ai._active:
+                        raise ConflictError("Wait for the active investigation or comparison before stopping 6D.")
+                    self.server._stopping = True
+                self._reply(200, {"stopping": True})
+                threading.Thread(target=self.server.shutdown, daemon=True).start()
+                return
             if _code_fingerprint() != RUNTIME_ID:
                 raise ConflictError("6D application code has changed. Restart the local workspace server before saving or running checks.")
-            if route not in {"/api/projects", "/api/revisions", "/api/impact", "/api/run", "/api/ai/connect", "/api/ai/disconnect", "/api/investigations", "/api/model-evaluation/start", "/api/workflow-evaluation/start", "/api/ultra-diagnostic/start", "/api/evidence-evaluation/prepare", "/api/evidence-evaluation/start", "/api/simulations", "/api/authoring/preflight", "/api/scenarios", "/api/test-data/preview", "/api/test-comparisons", "/api/test-evidence/impact", "/api/interfaces/preview"}:
+            if route not in {"/api/projects", "/api/revisions", "/api/impact", "/api/run", "/api/ai/connect", "/api/ai/disconnect", "/api/ai/forget", "/api/investigations", "/api/model-evaluation/start", "/api/workflow-evaluation/start", "/api/ultra-diagnostic/start", "/api/evidence-evaluation/prepare", "/api/evidence-evaluation/start", "/api/simulations", "/api/authoring/preflight", "/api/scenarios", "/api/test-data/preview", "/api/test-comparisons", "/api/test-evidence/impact", "/api/interfaces/preview"}:
                 self._error(404, "This workspace action is not available.")
                 return
             if route == "/api/interfaces/preview":
@@ -352,11 +373,14 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 self._fields(value, {"allow_spend", "allowance_usd"})
                 view = self.server.evidence_evaluation.start(allow_spend=value["allow_spend"], allowance_usd=value["allowance_usd"])
             elif route == "/api/ai/connect":
-                self._fields(value, {"api_key"})
-                view = self.server.ai.connect(value["api_key"])
+                self._fields(value, {"api_key", "remember"} if "remember" in value else {"api_key"})
+                view = self.server.ai.connect(value["api_key"], remember=value.get("remember", False))
             elif route == "/api/ai/disconnect":
                 self._fields(value, set())
                 view = self.server.ai.disconnect()
+            elif route == "/api/ai/forget":
+                self._fields(value, set())
+                view = self.server.ai.forget_key()
             elif route == "/api/investigations":
                 basic = {"project_id", "revision", "requirement_id", "question"}
                 selected_test = {"test_comparison_id", "test_row_number"}

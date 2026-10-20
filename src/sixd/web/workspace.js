@@ -799,7 +799,8 @@
   function aiStatusMarkup() {
     const s=ai.status;
     if(!s)return '<p class="sd-small sd-muted">'+esc(ai.statusError || 'Reading local AI configuration…')+'</p>';
-    return '<div class="sd-ai-connection"><span class="sd-dot '+(s.key_present?'sd-green':'sd-amber')+'"></span><strong>'+(s.key_present?'Key connected locally':'No key connected')+'</strong></div><p class="sd-small sd-muted">'+esc(s.model?providerModelLabel(s.model):'Model not configured')+' · Nebius Token Factory</p><dl class="sd-details-grid sd-ai-budget"><dt>Approved development allowance</dt><dd>'+dollars(s.budget?.cap_usd)+'</dd><dt>Cumulative reservations</dt><dd>'+dollars(s.budget?.reserved_usd)+'</dd><dt>Reservation capacity remaining</dt><dd>'+dollars(s.budget?.remaining_usd)+'</dd></dl><p class="sd-small sd-muted">Per investigation: at most '+esc(s.max_job_requests ?? 6)+' requests and '+dollars(s.max_job_reservation_usd ?? .10)+' reserved. These conservative reservations track the application’s allowance; your Nebius console shows the actual balance and billed usage.</p>'+(!s.configured?'<p class="sd-notice">Live provider setup is not ready. '+esc(s.note || '')+'</p>':s.provider_mode&&s.provider_mode!=='live_token_factory'?'<p class="sd-notice">Offline test provider · no live NVIDIA inference.</p>':!s.live_validated?'<p class="sd-small sd-muted">The current build has no completed live investigation matching its source versions and provider settings. Earlier live receipts remain available in saved history.</p>':'');
+    const connectionNote=s.credential_error?'<p class="sd-notice">The saved connection could not be restored or updated. Re-enter the key privately, or forget the saved copy. No provider request was made.</p>':s.key_remembered?'<p class="sd-small sd-muted">Saved encrypted on this device. 6D restores the key on startup without making an inference call.</p>':s.key_source==='environment'?'<p class="sd-small sd-muted">Connected from the NEBIUS_API_KEY environment variable. Remove that variable to prevent its use on a later start.</p>':s.key_present?'<p class="sd-small sd-muted">Connected for this server session only. The key is not remembered.</p>':'';
+    return connectionNote+'<div class="sd-ai-connection"><span class="sd-dot '+(s.key_present?'sd-green':'sd-amber')+'"></span><strong>'+(s.key_present?'Key connected locally':'No key connected')+'</strong></div><p class="sd-small sd-muted">'+esc(s.model?providerModelLabel(s.model):'Model not configured')+' · Nebius Token Factory</p><dl class="sd-details-grid sd-ai-budget"><dt>Approved development allowance</dt><dd>'+dollars(s.budget?.cap_usd)+'</dd><dt>Cumulative reservations</dt><dd>'+dollars(s.budget?.reserved_usd)+'</dd><dt>Reservation capacity remaining</dt><dd>'+dollars(s.budget?.remaining_usd)+'</dd></dl><p class="sd-small sd-muted">Per investigation: at most '+esc(s.max_job_requests ?? 6)+' requests and '+dollars(s.max_job_reservation_usd ?? .10)+' reserved. These conservative reservations track the application’s allowance; your Nebius console shows the actual balance and billed usage.</p>'+(!s.configured?'<p class="sd-notice">Live provider setup is not ready. '+esc(s.note || '')+'</p>':s.provider_mode&&s.provider_mode!=='live_token_factory'?'<p class="sd-notice">Offline test provider · no live NVIDIA inference.</p>':!s.live_validated?'<p class="sd-small sd-muted">The current build has no completed live investigation matching its source versions and provider settings. Earlier live receipts remain available in saved history.</p>':'');
   }
   async function refreshAiStatus() {
     if(ai.statusLoading)return;
@@ -812,7 +813,11 @@
     const status=$('#sd-ai-status');if(status)status.innerHTML=aiStatusMarkup();
     const settings=$('#sd-ai-settings-status');if(settings)settings.innerHTML=aiStatusMarkup();
     const consentModel=$('#sd-ai-consent-model');if(consentModel)consentModel.textContent=providerModelLabel(ai.status?.model);
-    $('#sd-ai-disconnect-button').disabled=!ai.status?.key_present || ai.connecting;
+    $('#sd-ai-disconnect-button').disabled=(!ai.status?.key_present&&!ai.status?.key_remembered)||ai.connecting;
+    $('#sd-ai-disconnect-button').textContent=ai.status?.key_remembered?'Disconnect & forget':'Disconnect key';
+    $('#sd-ai-forget-button').disabled=!ai.status?.key_remembered||ai.connecting;
+    $('#sd-ai-remember').disabled=!ai.status?.remember_supported||ai.connecting;
+    $('#sd-ai-remember-hint').textContent=ai.status?.remember_supported?'Optional: save an encrypted copy for this Windows account and restore it when 6D starts. Forget removes the saved copy but keeps the current session connected. Disconnect also removes the saved copy.':'Remembering is available on Windows. This connection stays in server memory only.';
     updateAiControls();
   }
   function evaluationStatusMarkup() {
@@ -996,6 +1001,44 @@
     const rows=(roles.roles||[]).flatMap(item=>{const fact=byId.get(item.fact_id);return fact&&counts.get(item.role)===1&&rolePointer(item.role)===fact.pointer?[{item,fact}]:[];});
     return '<section class="sd-ai-facts sd-ai-roles" aria-label="Application-owned numerical evidence"><h4>Numerical evidence · assigned by 6D</h4><p class="sd-small">Metric, limit and grid roles come from saved sources. The AI cannot select or edit these values.</p><p class="sd-small">Recorded criterion: '+esc(human(roles.canonical_status))+(roles.operator?' · '+esc(roles.operator):'')+' · R'+esc(roles.scope.revision)+'</p>'+(!rows.some(row=>row.item.role==='calculated_metric')?'<p class="sd-notice">No assessable calculated requirement metric is recorded. A declared limit alone does not establish satisfaction.</p>':'')+'<div class="sd-table-wrap"><table class="sd-table"><thead><tr><th>Recorded role</th><th>Saved value</th></tr></thead><tbody>'+rows.map(({item,fact})=>'<tr><th scope="row">'+esc(numericalRoleLabels[item.role])+'<br><span class="sd-small">'+esc(fact.label)+'</span><br>'+factLink(fact,record,'Open captured source')+'</th><td>'+esc(exactFact(fact))+'</td></tr>').join('')+'</tbody></table></div>'+((roles.roles||[]).length!==rows.length?'<p class="sd-notice">One or more inconsistent role bindings were withheld.</p>':'')+'<p class="sd-small sd-muted">These are recorded bounded-model results. Source binding and reproducibility do not establish physical validity.</p></section>';
   }
+  function evidenceChangesMarkup(record){
+    // Historical receipts keep their original interpretation; never derive a new
+    // passing assessment for them from the currently selected revision.
+    if(record.change_commentary_policy!=='application_changes_v1')return '';
+    const context=record.evidence_change_context,source=record.evidence?.changes;
+    if(context==null&&source==null)return '';
+    const unavailable='<p class="sd-notice">Captured change directions are unavailable or inconsistent. No current-revision evidence was substituted.</p>';
+    if(context?.schema!=='sixd.change-context.v1'||typeof context.available!=='boolean')return unavailable;
+    if(!source||source.id!=='changes'||source.kind!=='changes'||context.source_evidence_id!=='changes'||!context.scope||!Array.isArray(context.comparisons)||!/^[a-f0-9]{64}$/.test(context.source_digest||''))return unavailable;
+    if(['project_id','revision','run_id','review_digest'].some(key=>Object.hasOwn(record,key)&&(source[key]!==record[key]||context.scope[key]!==record[key])))return unavailable;
+    if(!context.available)return source.comparison===null&&context.comparisons.length===0?'<section class="sd-ai-facts sd-ai-changes" aria-label="Captured revision changes"><h4>Revision changes · assigned by 6D</h4><p class="sd-small">No comparable before-and-after quantities are captured for this investigation. No change direction is inferred.</p></section>':unavailable;
+    const comparison=source.comparison;
+    if(!comparison||comparison.scope?.requirement_id!==record.requirement_id||comparison.scope?.model_id!==record.canonical_finding?.model_id||context.scope.requirement_id!==comparison.scope.requirement_id||context.scope.model_id!==comparison.scope.model_id||String(comparison.to_revision)!==String(record.revision)||context.scope.from_revision!==comparison.from_revision||context.scope.to_revision!==comparison.to_revision)return unavailable;
+    const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
+    const equal=(a,b)=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
+    const quantity=value=>value&&typeof value==='object'&&!Array.isArray(value)&&typeof value.value==='number'&&Number.isFinite(value.value)&&typeof value.unit==='string'&&value.unit.length>0;
+    const exact=value=>quantity(value)?String(value.value)+' '+value.unit:'Unavailable';
+    const directions={increased:'Increased',decreased:'Decreased',unchanged:'Unchanged',not_comparable:'Not comparable'};
+    const beforeFinding=comparison.before?.finding,afterFinding=comparison.after?.finding;
+    const counts=new Map();context.comparisons.forEach(row=>counts.set(row?.subject,(counts.get(row?.subject)||0)+1));
+    const rows=context.comparisons.filter(row=>{
+      if(!row||typeof row.subject!=='string'||counts.get(row.subject)!==1||row.source_evidence_id!=='changes'||!Object.hasOwn(directions,row.direction))return false;
+      let suffix;
+      if(row.subject==='declared_limit')suffix='/finding/evidence/limit';
+      else if(row.subject==='calculated_metric')suffix='/finding/evidence/metric';
+      else if(row.subject.startsWith('input:')&&row.subject.length>6)suffix='/input_records/'+row.subject.slice(6).replace(/~/g,'~0').replace(/\//g,'~1');
+      else return false;
+      if(row.before_pointer!=='/comparison/before'+suffix||row.after_pointer!=='/comparison/after'+suffix)return false;
+      const before=capturedPointer(source,row.before_pointer),after=capturedPointer(source,row.after_pointer);
+      if(!(before.found?equal(before.value,row.before):row.before===null)||!(after.found?equal(after.value,row.after):row.after===null))return false;
+      const identityChanged=!row.subject.startsWith('input:')&&(beforeFinding?.metric==null||['metric','model_id'].some(key=>beforeFinding?.[key]!==afterFinding?.[key]));
+      const operatorChanged=row.subject==='declared_limit'&&(beforeFinding?.evidence?.operator==null||beforeFinding.evidence.operator!==afterFinding?.evidence?.operator);
+      const comparable=quantity(row.before)&&quantity(row.after)&&row.before.unit===row.after.unit&&!identityChanged&&!operatorChanged;
+      const expected=comparable?(row.after.value>row.before.value?'increased':row.after.value<row.before.value?'decreased':'unchanged'):'not_comparable';
+      return expected===row.direction;
+    });
+    return '<section class="sd-ai-facts sd-ai-changes" aria-label="Captured revision changes"><h4>Revision changes · assigned by 6D</h4><p class="sd-small">Exact before-and-after values and direction come from this investigation’s captured revision comparison. AI commentary cannot edit them. Numerical direction alone does not establish a physical cause.</p><div class="sd-ai-citations">'+citationMarkup('changes',record)+'</div>'+(rows.length?'<div class="sd-table-wrap" tabindex="0" role="region" aria-label="Captured before-and-after comparison"><table class="sd-table"><thead><tr><th scope="col">Recorded quantity</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Direction</th></tr></thead><tbody>'+rows.map(row=>'<tr><th scope="row">'+esc(row.subject==='declared_limit'?'Declared requirement limit':row.subject==='calculated_metric'?'Calculated requirement metric':row.label||row.subject)+'<details class="sd-source"><summary>Captured source paths</summary><p class="sd-receipt">'+esc(row.before_pointer)+' → '+esc(row.after_pointer)+'</p></details></th><td>'+esc(exact(row.before))+'</td><td>'+esc(exact(row.after))+'</td><td>'+esc(directions[row.direction])+'</td></tr>').join('')+'</tbody></table></div>':'<p class="sd-notice">No source-matched change rows are available.</p>')+(rows.length!==context.comparisons.length?'<p class="sd-notice">Inconsistent change rows were withheld. No replacement values or directions were inferred.</p>':'')+'<p class="sd-small sd-muted">Not comparable means the captured quantities cannot support a numeric direction, for example after a unit or metric identity change, or a changed limit operator. No unit conversion is assumed.</p><details class="sd-source"><summary>Captured comparison identity</summary>'+factScopeMarkup(context.scope)+'<p class="sd-receipt">Captured changes digest '+esc(context.source_digest)+'</p></details></section>';
+  }
   function evidenceInterpretationMarkup(text,record) {
     if(record.evidence_facts_prose_policy==='application_roles_v1')return '<p class="sd-small sd-muted">Qualitative AI interpretation. Exact numerical roles are supplied separately by 6D.</p><p class="sd-ai-summary-text">'+esc(text)+'</p>';
     const {byId}=recordedFacts(record);let offset=0,html='',unknown=false,linked=false;
@@ -1021,13 +1064,13 @@
     if(!dialog.open)dialog.showModal();dialog.querySelector('.sd-ai-exact-source')?.focus({preventScroll:true});dialog.scrollTop=0;
   }
   // Pure escaped renderers also support isolated browser checks without API writes.
-  window.SixDEvidenceFacts=Object.freeze({render:evidenceFactsMarkup,roles:evidenceRolesMarkup,interpretation:evidenceInterpretationMarkup,source:factSourceMarkup,openSource:showFactSource});
+  window.SixDEvidenceFacts=Object.freeze({render:evidenceFactsMarkup,roles:evidenceRolesMarkup,changes:evidenceChangesMarkup,interpretation:evidenceInterpretationMarkup,source:factSourceMarkup,openSource:showFactSource});
   function rejectedInterpretationMarkup(record) {
     const rejected=record.rejected_interpretation;
     if(!rejected||typeof rejected.summary!=='string'||!rejected.summary)return '';
     const ids=Array.isArray(rejected.citations)?rejected.citations.filter(id=>typeof id==='string'&&Object.hasOwn(record.evidence || {},id)):[];
     const reasons=Array.isArray(rejected.reason_codes)?rejected.reason_codes.filter(code=>typeof code==='string'):[];
-    const reasonMeanings={unbound_numeric_literal:'The explanation included a number without an exact captured fact link.',fact_catalog_mismatch:'The fact catalogue did not match the captured evidence and saved scope.',unknown_fact_reference:'An explanation reference did not identify a fact in this captured evidence.'};
+    const reasonMeanings={unbound_numeric_literal:'The explanation included a number without an exact captured fact link.',fact_catalog_mismatch:'The fact catalogue did not match the captured evidence and saved scope.',unknown_fact_reference:'An explanation reference did not identify a fact in this captured evidence.',change_direction_contradiction:'The explanation’s change description contradicted the captured before-and-after evidence.',change_context_mismatch:'The application-owned change context did not match this investigation’s captured revision evidence.'};
     return '<details class="sd-source sd-ai-rejected"><summary>Rejected AI explanation · inspect original text</summary><p class="sd-notice">This text was rejected by 6D’s evidence checks. Use the recorded engineering finding and evidence-based guidance above.</p>'+(reasons.length?'<p class="sd-small sd-muted">Checks: '+esc(reasons.map(code=>reasonMeanings[code]||human(code)).join(' · '))+'</p>':'')+'<div class="sd-ai-interpretation">'+evidenceInterpretationMarkup(rejected.summary,record)+'</div>'+(ids.length?'<h4>Evidence identifiers supplied with rejected text</h4><div class="sd-ai-citations">'+ids.map(id=>citationMarkup(id,record)).join('')+'</div>':'')+'<p class="sd-small sd-muted">These identifiers open the captured evidence. Their presence alone does not support every claim in the rejected explanation.</p></details>';
   }
   function frozenTestMarkup(record) {
@@ -1053,6 +1096,7 @@
       (record.canonical_finding?'<div class="sd-ai-verdict"><span class="sd-label">Recorded requirement finding</span>'+chip(findingStatus(record.canonical_finding))+'<p>'+esc(record.canonical_finding.reason)+'</p></div>':'')+
       guidanceMarkup(record)+
       (record.evidence_facts_prose_policy==='application_roles_v1'?evidenceRolesMarkup(record)+'<details class="sd-source"><summary>All captured numerical facts</summary>'+evidenceFactsMarkup(record)+'</details>':evidenceFactsMarkup(record))+
+      evidenceChangesMarkup(record)+
       rejectedInterpretationMarkup(record)+
       (record.summary?'<div class="sd-ai-interpretation"><span class="sd-label">Original AI interpretation · not a kernel verdict</span>'+interpretationCaveatMarkup(record)+evidenceInterpretationMarkup(record.summary,record)+'</div>':'')+
       (citations.length?'<h4>Evidence cited</h4><div class="sd-ai-citations">'+citations.map(id=>citationMarkup(id,record)).join('')+'</div>':'')+
@@ -1115,17 +1159,17 @@
     finally{if(context===ai.context){ai.starting=false;updateAiControls();}}
   }
   async function showAiSettings() {
-    $('#sd-ai-key').value='';$('#sd-ai-connect-error').hidden=true;$('#sd-ai-evaluation-status').innerHTML=evaluationStatusMarkup();$('#sd-ai-connect-dialog').showModal();await Promise.all([refreshAiStatus(),refreshEvaluationStatus()]);
+    $('#sd-ai-key').value='';$('#sd-ai-remember').checked=false;$('#sd-ai-connect-error').hidden=true;$('#sd-ai-evaluation-status').innerHTML=evaluationStatusMarkup();$('#sd-ai-connect-dialog').showModal();await Promise.all([refreshAiStatus(),refreshEvaluationStatus()]);
   }
-  async function connectAi(disconnect=false) {
+  async function connectAi(disconnect=false,forget=false) {
     if(ai.connecting)return;
-    const input=$('#sd-ai-key');if(!disconnect&&!input.value.trim()){$('#sd-ai-connect-error').textContent='Enter the key privately in this field.';$('#sd-ai-connect-error').hidden=false;return;}
-    ai.connecting=true;$('#sd-ai-connect-button').disabled=true;$('#sd-ai-disconnect-button').disabled=true;$('#sd-ai-connect-error').hidden=true;
+    const input=$('#sd-ai-key');if(!disconnect&&!forget&&!input.value.trim()){$('#sd-ai-connect-error').textContent='Enter the key privately in this field.';$('#sd-ai-connect-error').hidden=false;return;}
+    ai.connecting=true;$('#sd-ai-connect-button').disabled=true;$('#sd-ai-disconnect-button').disabled=true;$('#sd-ai-forget-button').disabled=true;$('#sd-ai-remember').disabled=true;$('#sd-ai-connect-error').hidden=true;
     try{
-      const pending=api(disconnect?'/api/ai/disconnect':'/api/ai/connect',disconnect?{}:{api_key:input.value.trim()});input.value='';
-      ai.status=await pending;await refreshAiStatus();message(disconnect?'Nebius key disconnected from local server memory.':'Nebius key connected in local server memory. No inference request was made.');
-    }catch{input.value='';$('#sd-ai-connect-error').textContent=disconnect?'The disconnect could not be confirmed. Refresh connection settings.':'The key could not be connected. Check your local provider configuration and key, then try again. No key value is shown or saved in the browser.';$('#sd-ai-connect-error').hidden=false;}
-    finally{ai.connecting=false;$('#sd-ai-connect-button').disabled=false;$('#sd-ai-disconnect-button').disabled=!ai.status?.key_present;updateAiControls();}
+      const pending=api(forget?'/api/ai/forget':disconnect?'/api/ai/disconnect':'/api/ai/connect',disconnect||forget?{}:{api_key:input.value.trim(),remember:$('#sd-ai-remember').checked});input.value='';
+      ai.status=await pending;await refreshAiStatus();message(forget?(ai.status?.key_present?'Saved key forgotten. The current server session remains connected.':'Saved key forgotten. No key is connected.'):disconnect?'Nebius key disconnected and any remembered copy removed.':ai.status?.key_remembered?'Nebius key connected and remembered on this device. No inference request was made.':'Nebius key connected for this session. No inference request was made.');
+    }catch{input.value='';$('#sd-ai-connect-error').textContent=forget?'The saved copy could not be removed. Refresh connection settings.':disconnect?'The disconnect could not be confirmed. Refresh connection settings.':'The key could not be connected. Check your local provider configuration and key, then try again. No key value is shown or saved in the browser.';$('#sd-ai-connect-error').hidden=false;}
+    finally{ai.connecting=false;$('#sd-ai-connect-button').disabled=false;$('#sd-ai-disconnect-button').disabled=(!ai.status?.key_present&&!ai.status?.key_remembered);$('#sd-ai-forget-button').disabled=!ai.status?.key_remembered;$('#sd-ai-remember').disabled=!ai.status?.remember_supported;updateAiControls();}
   }
   function openCitation(id,recordId) {
     const record=ai.records.find(item=>investigationId(item)===recordId);if(!record)return;
@@ -1198,7 +1242,7 @@
     if(name==='ai-settings'){await showAiSettings();return;}
     if(name==='workflow-evaluation-refresh'){await refreshEvaluationStatus();return;}
     if(name==='ai-close-settings'){$('#sd-ai-key').value='';$('#sd-ai-connect-dialog').close();return;}
-    if(name==='ai-connect'||name==='ai-disconnect'){await connectAi(name==='ai-disconnect');return;}
+    if(name==='ai-connect'||name==='ai-disconnect'||name==='ai-forget'){await connectAi(name==='ai-disconnect',name==='ai-forget');return;}
     if(name==='refresh-test-evidence'){await refreshTestLinks(true);return;}
     if(name==='refresh-interfaces'){await refreshInterfaceLinks(true);return;}
     if(name==='systems'){state.page='systems';state.panel='details';stopInvestigationPolling();render();return;}

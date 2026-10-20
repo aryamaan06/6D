@@ -15,6 +15,7 @@ from .engineering import MODEL_VERSIONS, evaluate_models
 from .explanation_quality import build_guidance, evaluate_explanation, explanation_acceptance
 from .evidence_facts import build_fact_catalog, provider_fact_catalog, PROSE_POLICY
 from .evidence_roles import POLICY as ROLE_POLICY, build_roles, qualitative_projection
+from .change_evidence import POLICY as CHANGE_POLICY, context_from_record, build_change_context, provider_change_context
 from .providers import ProviderError, safe_response_diagnostic
 
 
@@ -91,6 +92,8 @@ SYSTEM = LEGACY_SYSTEM.split("New investigations use evidence_links_v1:")[0] + (
     "Do not type quantities, digits, grid sizes, revision numbers, fact IDs, reference tokens or numbered lists. "
     "Exact metric, limit, grid comparisons and test values are displayed by 6D in fixed source-bound roles. "
     "Numerical payload values are intentionally withheld on your wire view; never estimate them. "
+    "For revision changes, use application_change_context for exact increased, decreased, unchanged or not-comparable directions. "
+    "Do not infer directions, physical causes or whole-model equivalence from withheld values. "
     "Write one short paragraph explaining the recorded status, relevant scope and a concrete next review. "
     "Keep the required evidence_ids as separate whole-record citations."
 )
@@ -254,6 +257,7 @@ class ProjectActionAdapter:
             pass
         wire_messages = [{"role": "system", "content": LEGACY_SYSTEM if policy == PROSE_POLICY else SYSTEM}]
         canonical_status = None
+        change_context = None
         if not isinstance(messages, list):
             _fail("Invalid project history. No request was sent.")
         for original in deepcopy(messages):
@@ -265,6 +269,8 @@ class ProjectActionAdapter:
                 captured = _parse(original["content"])
                 if captured.get("kind") == "requirement":
                     canonical_status = captured.get("finding", {}).get("status")
+                if captured.get("kind") == "changes":
+                    change_context = provider_change_context(build_change_context(captured))
                 original["content"] = json.dumps(qualitative_projection(captured), allow_nan=False)
             if original.get("role") == "assistant":
                 calls = original.get("tool_calls")
@@ -298,6 +304,8 @@ class ProjectActionAdapter:
             "response_constraints": {"finish_summary_max_characters": SUMMARY_MAX_CHARACTERS, "read_summary_characters": 0},
             **({"explanation_contract": {
                 "policy": ROLE_POLICY, "canonical_status": canonical_status,
+                "change_commentary_policy": CHANGE_POLICY,
+                "application_change_context": change_context,
                 "instruction": "Finish summary must be words only: no numbers, values, IDs, inline references or numbered lists. Exact numerical roles are already displayed by 6D. Give scope and one concrete next check. Do not estimate withheld values.",
                 "example": {"met": "The calculated criterion is met within the bounded model. Review input provenance and excluded effects before extending this result.",
                     "not_met": "The calculated criterion is not met within the bounded model. Inspect the saved comparison and input sources, then evaluate a justified revision and rerun affected checks.",
@@ -655,6 +663,8 @@ def investigate_project(view, requirement_id, question, provider, *, investigati
         "required_actions": required_actions,
         "evidence_facts_prose_policy": explanation_policy,
     }
+    if explanation_policy == ROLE_POLICY:
+        record["change_commentary_policy"] = CHANGE_POLICY
     if "test_evidence" in locked:
         record["test_evidence"] = deepcopy(locked["test_evidence"])
     messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": json.dumps({
@@ -720,6 +730,7 @@ def investigate_project(view, requirement_id, question, provider, *, investigati
                 record["evidence_facts_origin"] = "recorded"
                 if explanation_policy == ROLE_POLICY:
                     record["evidence_roles"] = build_roles(record)
+                    record["evidence_change_context"] = context_from_record(record)
                 candidate = deepcopy(record)
                 candidate.update(summary=summary.strip(), citations=sorted(citations), state="completed")
                 acceptance = explanation_acceptance(candidate)

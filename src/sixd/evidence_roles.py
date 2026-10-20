@@ -76,6 +76,20 @@ def evaluate_roles(record):
     if literals:
         flags.append({"code": "unbound_numeric_literal", "severity": "error",
                       "message": "The model retyped numbers in qualitative commentary. Read the application-owned numerical evidence separately."})
+    # Earlier application_roles_v1 receipts have no change-policy marker. Their
+    # saved acceptance remains historical; new records opt in explicitly.
+    if "change_commentary_policy" in record:
+        from .change_evidence import POLICY as CHANGE_POLICY, context_from_record, evaluate_change_commentary
+        try:
+            context = context_from_record(record)
+            if (record["change_commentary_policy"] != CHANGE_POLICY
+                    or _digest(record.get("evidence_change_context")) != _digest(context)):
+                raise ValueError
+        except (KeyError, TypeError, ValueError, OverflowError):
+            flags.append({"code": "change_context_mismatch", "severity": "error",
+                          "message": "Change directions do not match the exact captured source and investigation scope."})
+        else:
+            flags.extend(evaluate_change_commentary(summary, context))
     return {"policy": POLICY, "flags": flags, "references": [], "numeric_literals": literals,
             "application_owned_role_count": len((record.get("evidence_roles") or {}).get("roles", [])),
             "semantic_accuracy_established": False}
@@ -97,8 +111,12 @@ def qualitative_projection(payload):
             return [project(item) for item in value]
         return deepcopy(value)
     result = project(payload)
+    if payload.get("kind") == "changes":
+        from .change_evidence import build_change_context, provider_change_context
+        result["application_change_context"] = provider_change_context(build_change_context(payload))
     result["numerical_context_disclosure"] = (
         "Numerical payload values are withheld from this qualitative commentary view. "
         "6D displays exact metric, limit and grid evidence in application-owned roles. "
-        "The complete original records remain captured locally. Explain status, scope and next checks in words; do not estimate omitted values.")
+        "The complete original records remain captured locally. Explain status, scope and next checks in words; do not estimate omitted values. "
+        "For revision changes, use the application_change_context directions; do not infer a direction from withheld values.")
     return result

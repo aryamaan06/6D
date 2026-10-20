@@ -1,5 +1,11 @@
 # 6D - current founder walkthrough
 
+## Current local build: change-direction correction
+
+Refresh http://127.0.0.1:8768/ and confirm **9e2910f46cda**. New Assistant investigations show **Revision changes · assigned by 6D** before the original AI commentary, with exact captured before/after quantities and their direction. Incompatible comparisons stay **Not comparable**. Contradictory supported change claims are rejected and their original text remains inspectable.
+
+Historical investigations keep their original explanations and recorded acceptance; no old result is silently upgraded. The new behavior has been verified offline, including the actual Super error in a separate reassessment, not another paid run. The restart cleared the memory-only key; no key is needed to inspect saved results or run local checks. See CHANGE_DIRECTION_RESULTS.md. Self-contained release packaging is next and has not started.
+
 ## Latest live result
 
 Refresh http://127.0.0.1:8768/ (build **ad06ff57fb33**), then open **Connect AI → Evidence-linked explanation comparison**. Super and Ultra completed three cases each; Nano stopped immediately and two cases remain untested. Protocol completion is not semantic approval: Super reversed the direction of a limit change. Ultra produced more specific explanations in this small narrowed test. No selection or automatic rerun followed. The single batch reserved USD .49491808. Inspect saved results without reconnecting; details are in APPLICATION_ROLES_LIVE_RESULTS.md. Earlier pending-live instructions below are superseded.

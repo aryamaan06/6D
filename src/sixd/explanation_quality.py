@@ -29,6 +29,7 @@ _BLOCKING_CODES = frozenset({
     "test_evidence_binding_mismatch", "test_evidence_status_contradiction",
     "test_evidence_unmatched_quantity", "test_evidence_validation_claim",
     "fact_catalog_mismatch", "unknown_fact_reference", "unbound_numeric_literal",
+    "change_direction_contradiction", "change_context_mismatch", "change_comparison_unavailable",
 })
 _MEANINGS = {
     "met": "The calculated metric meets the declared criterion within this bounded model and its stated assumptions.",
