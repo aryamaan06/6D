@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -107,6 +108,15 @@ class GuardedStartupTests(unittest.TestCase):
             with self.subTest(state=expected):
                 with patch.object(launcher, "build_opener", return_value=SimpleNamespace(open=lambda *a, **k: Reply(value))):
                     self.assertEqual(launcher.inspect_address()[0], expected)
+
+    def test_actual_free_loopback_port_is_closed_not_a_foreign_timeout(self):
+        # Reserve then release a local ephemeral port. This never probes or
+        # starts the founder's fixed-address server.
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as reserved:
+            reserved.bind(("127.0.0.1", 0))
+            port = reserved.getsockname()[1]
+        with patch.object(launcher, "ADDRESS", f"http://127.0.0.1:{port}/"):
+            self.assertEqual(launcher.inspect_address(), ("closed", None))
 
     def test_check_mode_never_probes_starts_or_opens_browser(self):
         with patch.object(launcher, "inspect_address") as probe, patch.object(launcher.subprocess, "Popen") as process, patch.object(launcher.webbrowser, "open") as browser:

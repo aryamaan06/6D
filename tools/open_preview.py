@@ -32,7 +32,10 @@ def inspect_address():
     """Identify this checkout without treating another service as safe to stop."""
     try:
         opener = build_opener(ProxyHandler({}))
-        with opener.open(ADDRESS + "health", timeout=1) as response:
+        # Windows loopback refusal can take longer than one second even when
+        # no process is listening. A shorter timeout misclassifies a free port
+        # as an unresponsive foreign service and prevents first startup.
+        with opener.open(ADDRESS + "health", timeout=5) as response:
             value = json.loads(response.read(4096))
         if (isinstance(value, dict) and value.get("service") == SERVICE
                 and value.get("workspace") == WORKSPACE_ID
