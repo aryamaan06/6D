@@ -34,3 +34,13 @@ recorded before integration. No paid model calls are authorized by this mileston
 
 Measured results will be recorded separately, including any limitations in the
 fresh-install, cryptographic, backup or UI checks.
+
+
+## Recorded result
+
+Implementation and verification completed:144 affected regression tests,17 native
+launcher checks (overlap), five synthetic browser connection groups, five exact
+clean-checkout/recovery groups and nine final read-only browser checks passed.
+No paid calls. Actual private data backup/recovery and old-record preservation
+were verified without copying credentials. See SELF_CONTAINED_RELEASE_RESULTS.md.
+GitHub source publication is the final step; no hosted deployment is implied.

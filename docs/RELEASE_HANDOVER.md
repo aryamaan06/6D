@@ -48,12 +48,14 @@ GitHub, screenshots, reports or project input fields.
   key using the current Windows account. It is not saved as plaintext in a project
   or configuration JSON. Startup can restore that private connection without
   making a model call.
-- **Forget key** removes the remembered copy; a currently active connection may
+- **Forget saved key** removes the remembered copy; a currently active connection may
   remain usable for that session as the UI explains.
 - **Disconnect** clears the active key and removes its remembered copy. It will
   not silently reconnect from that saved copy at the next startup.
 - A remembered key is not a portable backup. After recovery on another computer
   or Windows account, reconnect privately using your provider account's key.
+
+An explicitly configured `NEBIUS_API_KEY` environment variable takes precedence on startup. Remove it from the launch environment to prevent that source from restoring a connection after disconnecting.
 
 Connection, browsing, deterministic checks, historical viewing and exports do not
 by themselves start paid inference. Start an investigation deliberately. The

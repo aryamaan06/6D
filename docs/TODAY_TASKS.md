@@ -1,5 +1,13 @@
 # 6D - current founder walkthrough
 
+## Current local release
+
+Open **Open-6D.cmd**, or refresh http://127.0.0.1:8768/ and confirm **a36c689412a9**. Setup-6D.cmd prepares the independent project Python environment; Stop-6D.cmd safely stops this checkout before backup/update. No Codex runtime is required.
+
+To keep the Nebius connection across restarts, open **Connect AI**, enter your key privately, select **Remember on this device**, and connect once. This makes no inference call. Remembering is optional and off by default. **Forget saved key** removes the encrypted copy; **Disconnect & forget** also clears the active connection. Never paste the key in chat or GitHub.
+
+Read RELEASE_HANDOVER.md for installation, backup/recovery and a demonstration. The private backup lives outside Git under the founder's Documents/Codex/6D-backups folder. SELF_CONTAINED_RELEASE_RESULTS.md records verification and the remaining scope. This is a usable local release, not completion of the whole 6D roadmap.
+
 ## Current local build: change-direction correction
 
 Refresh http://127.0.0.1:8768/ and confirm **9e2910f46cda**. New Assistant investigations show **Revision changes · assigned by 6D** before the original AI commentary, with exact captured before/after quantities and their direction. Incompatible comparisons stay **Not comparable**. Contradictory supported change claims are rejected and their original text remains inspectable.

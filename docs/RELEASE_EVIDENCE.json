@@ -1,0 +1,42 @@
+{
+  "schema": "sixd.release-evidence-summary.v1",
+  "date": "2026-10-20",
+  "release": "v0.2.0-local",
+  "core_version": "0.2.0",
+  "mode": "offline_development_verification",
+  "python": "Independent installed Python 3.14.7",
+  "verification": {
+    "affected_regression_tests": 144,
+    "native_launcher_checks": 17,
+    "counts_overlap": true,
+    "connection_browser_groups": 5,
+    "clean_checkout_recovery_groups": 5,
+    "final_read_only_browser_checks": 9
+  },
+  "new_paid_requests": 0,
+  "historical_artifacts_preserved": true,
+  "original_data_matches_private_backup": true,
+  "credentials_in_source_or_backup": false,
+  "new_model_activations": 0,
+  "limits": [
+    "Targeted regression, not full suite.",
+    "Synthetic development and reference checks, not independent human engineering validation.",
+    "No new live-model evaluation.",
+    "No whole-vehicle, flight readiness or mission-success guarantee."
+  ],
+  "private_evidence_sha256": {
+    "release-connection-browser.json": "11fe98c1a56e6531f54399fec3c8d96abd51a671a81c2159ec75ba09515afdc8",
+    "clean-release-verification.json": "fa51cee05df3ff6ea0db2e29ba2d5c170fed4a7fcb562037c27afbef1c3fab8b",
+    "release-current-browser.json": "63fcb3cea72f0e16f06fbdc1b0d7edb769ef337dca84d5f298732eaeed36f7c2",
+    "self-contained-preservation.json": "2641af114192055c01fad7fac59ebd1ccf6921e61da044c97a7db8d3e5b0b73c"
+  },
+  "previous_live_comparison": {
+    "id": "44e03643f53f480c94df66aa1f87765b",
+    "nano_completed": 0,
+    "nano_untested": 2,
+    "super_completed": 3,
+    "super_material_semantic_error": "Reversed limit-change direction; historical receipt unchanged.",
+    "ultra_completed": 3,
+    "general_semantic_correctness_established": false
+  }
+}
