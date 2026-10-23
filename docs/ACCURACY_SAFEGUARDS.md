@@ -1,5 +1,7 @@
 # Model assumptions and orbital accuracy safeguards
 
+Historical implementation notes: the October 23 [numerical-accuracy update](NUMERICAL_ACCURACY.md) adds versioned RK4/fourth-order assessments. Retained earlier receipts keep the policy described below. Use the current guide for new runs.
+
 This increment brings bounded reference context and numerical gaps into the existing workspace. It does not add a new physics model or claim complete vehicle verification.
 
 ## What users can do

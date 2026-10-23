@@ -154,6 +154,7 @@ def _impact(before, after, *, sources_changed=False, changed_adapter_types=()):
 
 def _graph(project):
     titles = {"ideal_propulsion": "Propulsion", "static_cantilever": "Structures",
+              "powered_flight": "Powered vertical flight",
               "attitude_control": "Guidance and control · single-axis pointing",
               "power_energy_budget": "Electrical power",
               "radiative_equilibrium": "Thermal", "drag_load": "Atmospheric loads",
@@ -412,12 +413,17 @@ class WorkspaceStore:
         identity = project["project_id"]
         with self._connect() as connection:
             exists = connection.execute("SELECT 1 FROM projects WHERE project_id=?", (identity,)).fetchone()
+        created = False
         if not exists:
             try:
                 self.create_project(project)
+                created = True
             except ConflictError:
                 pass  # Another local request initialized the same example.
-        if self.get(identity, 1)["run"] is None:
+        # Only initialize a brand-new demo. Opening an existing workspace after
+        # a verifier update must preserve its stale evidence and require an
+        # explicit Run checks action, rather than silently appending a run.
+        if created and self.get(identity, 1)["run"] is None:
             self.run(identity, 1)
         return identity
 

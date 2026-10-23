@@ -147,7 +147,7 @@ class OrbitalEngineeringTests(unittest.TestCase):
         self.assertTrue(lifecycle.verify_review(old))
         current = lifecycle.review_project(project, results)
         comparison = lifecycle.compare_reviews(old, current)
-        self.assertEqual(comparison["verification_sources_changed"], ["attitude.py", "chains.py", "orbital_adapter.py", "simulation.py"])
+        self.assertEqual(comparison["verification_sources_changed"], ["attitude.py", "chains.py", "orbital_adapter.py", "powered_flight.py", "simulation.py"])
         self.assertEqual(old, retained)
         # Neither a partial new source set nor an orbital artifact without its
         # retained solver source may be accepted as legacy evidence.

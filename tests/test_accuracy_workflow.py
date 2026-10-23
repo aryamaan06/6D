@@ -45,7 +45,7 @@ class AccuracyWorkflowTests(unittest.TestCase):
         self.assertEqual(report['findings']['orbit_min_radius']['status'], 'met')
 
     def test_tight_tolerances_block_all_orbital_criteria(self):
-        self.project['models'][0]['accuracy']['position_tolerance_m'] = 1
+        self.project['models'][0]['accuracy']['position_tolerance_m'] = 1e-8
         report = self.review()
         self.assertEqual(report['evidence']['orbit']['numerical_accuracy']['status'], 'insufficient_accuracy')
         self.assertEqual(report['findings']['orbit_max_radius']['assessment_status'], 'insufficient_accuracy')
@@ -92,11 +92,16 @@ class AccuracyWorkflowTests(unittest.TestCase):
         results['thermal']['applicability']['physical_applicability'] = 'validated'
         with self.assertRaisesRegex(ValueError, 'physical applicability'):
             lifecycle.review_project(self.project, results)
-        self.assertEqual(len(catalog()['models']), 7)
+        self.assertEqual(len(catalog()['models']), 8)
 
     def test_legacy_v1_history_is_not_rewritten_or_rerun(self):
         self.project['models'][0].pop('accuracy')
         results = engineering.evaluate_models(self.project)
+        from sixd import orbital_adapter
+        params = engineering._bind_inputs(self.project, self.project['models'][0])
+        metrics, artifact = orbital_adapter.evaluate(params, method='velocity_verlet')
+        results['orbit']['metrics'] = metrics
+        results['orbit']['simulation'] = artifact
         results['orbit']['model_version'] = '1'
         results['orbit'].pop('numerical_accuracy')
         with patch.dict(engineering.MODEL_VERSIONS, {'orbital_trajectory': '1'}):
@@ -127,7 +132,7 @@ class AccuracyWorkflowTests(unittest.TestCase):
             store.create_project(self.project)
             first = store.run(identity, 1)['run']
             changed = deepcopy(self.project)
-            changed['models'][0]['accuracy']['position_tolerance_m'] = 1
+            changed['models'][0]['accuracy']['position_tolerance_m'] = 1e-8
             preview = store.preview_change(identity, 1, changed)
             self.assertIn('orbit', preview['affected_model_ids'])
             store.save_revision(identity, 1, changed)

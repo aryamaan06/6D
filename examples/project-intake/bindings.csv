@@ -1,0 +1,5 @@
+model_id,model_type,parameter,input_id
+drag,drag_load,density,density
+drag,drag_load,relative_speed,speed
+drag,drag_load,drag_coefficient,coefficient
+drag,drag_load,reference_area,area

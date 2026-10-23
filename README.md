@@ -1,5 +1,29 @@
 # 6D
 
+October 24 live AI qualification (build `a3da59c91ebc` at http://127.0.0.1:8768/): current-model four-case qualification and optional LangSmith metrics export are delivered locally. Nemotron Super completed all four constructed cases with 16 accepted live responses, USD0.1704048 reserved; the earlier HTTP401 receipt/one reservation remains unchanged after an explicitly authorized fresh batch. Separate coding-agent AI review found no material prose error in these four explanations, with minor omissions recorded; this is not independent human or general engineering validation. LangSmith accepted one explicitly approved sanitized metrics upload; keys/prompts/engineering values were excluded. Tavily is now connected and live-qualified: one Basic search returned five NASA references, reserved/reported one credit, and preserved exact unsaved reference-form provenance. Six live browser groups and 22 focused regression tests passed again without further credit use. No source/link/finding or Nebius budget changes occurred; only append-only search receipts were added. See docs/TAVILY_LIVE_RESULTS.md. The earlier pending Tavily status is superseded. Current cumulative ceiling USD29.50/reservations USD2.47998038 and model selection are preserved. All original workspace rows/configs match the baseline; 247 distinct affected tests passed, plus isolated/integrated/mobile browser checks. See docs/AI_QUALIFICATION.md and docs/AI_QUALIFICATION_RESULTS.md. Four agreed build implementations are delivered; final corrections/deployment/submission is the remaining milestone and requires its own start instruction. No GitHub push or hosted application deployment occurred. Earlier checkpoints are historical.
+
+Latest local build: **Connected review and interface polish** (`33affdca8bf9`, October 24). Refresh the app to open **Review overview**, filter recorded findings, inspect their assumptions and follow links to coverage, simulation, studies, actions or the full report. **Analysis tools** groups the existing simulation/study/import/test views. SI powers display as superscripts while raw tokens and exports stay exact. [Guide](docs/CONNECTED_REVIEW.md) · [Delivery evidence](docs/CONNECTED_REVIEW_RESULTS.md). No key is needed. Previous delivery notes follow.
+
+Latest local build: **Operating-envelope studies** (`395f0632f981`, October 23). Open **Envelope studies**, enter justified parameter ranges, **Preview exact grid**, then explicitly run/save it. Inspect worst observed margins, tied cases and unresolved findings. These are sampled observations, not continuous safety bounds. [Guide](docs/OPERATING_ENVELOPES.md) · [Delivery evidence](docs/OPERATING_ENVELOPES_RESULTS.md). No API key is required. Earlier deliveries follow.
+
+Latest local build: **Specialist simulation imports** (`3eed1f8127d9`, October 23). Open **Simulation imports → Use constructed CSV example → Validate & preview CSV → Save reviewed import**. Replay recorded samples, declare units/frame/configuration, and optionally compare compatible fields with a frozen orbital or vertical-flight calculation. [Guide](docs/SIMULATION_IMPORTS.md) · [Delivery evidence](docs/SIMULATION_IMPORTS_RESULTS.md). No key is required. Earlier delivery notes follow.
+
+Latest local build: **Numerical accuracy** (`a6215d46280d`, October 23). New orbital runs use RK4 with retained grid checks; saved older runs keep their original evidence. Open **Simulation → Project evidence → Open orbital review template**, explicitly create the reference project, then **Run affected checks**. [User guide](docs/NUMERICAL_ACCURACY.md) · [Measured results](docs/NUMERICAL_ACCURACY_RESULTS.md). No key is required. Earlier delivery notes follow.
+
+Latest local build: **Powered vertical flight** (`cedf1afe772d`, October 23). Open **Powered flight → Use constructed flight reference → Create project**, then **Powered flight → Run checks** to inspect saved ascent/coast, burnout and six charts. [User guide](docs/POWERED_FLIGHT.md) · [Delivery evidence](docs/POWERED_FLIGHT_RESULTS.md). This is the eighth bounded model; steering, staging and landing remain outside its scope.
+
+**Engineering coverage** maps mission checks, records model-fit rationale, exposes missing analysis and flags declarations after changes. [User guide](docs/ENGINEERING_COVERAGE.md) · [Delivery evidence](docs/ENGINEERING_COVERAGE_RESULTS.md).
+
+The local **Source library** now feeds pinned references into new saved-requirement investigations, with optional explicit Tavily search and preview before manual intake. See [the source-connected Assistant guide](docs/SOURCE_ASSISTANT.md) and [offline verification results](docs/SOURCE_ASSISTANT_RESULTS.md). Live qualification of the new source-aware workflow is pending.
+
+The local **Compare designs** view compares pinned saved runs and hypothetical cases, with criterion margins, evidence gaps and exact captured exports. See [the comparison guide](docs/DESIGN_COMPARISON.md) and [verified results](docs/DESIGN_COMPARISON_RESULTS.md).
+
+The local **Engineering actions** board tracks follow-up from findings and source-review flags, with versioned workflow, supporting records and change flags. See [the action guide](docs/ACTION_QUEUE.md) and [verified results](docs/ACTION_QUEUE_RESULTS.md).
+
+The local **Source library** connects versioned manual references to requirements, assumptions and saved findings, with review flags and report exports. See [the source-library guide](docs/SOURCE_LIBRARY.md) and [verified results](docs/SOURCE_LIBRARY_RESULTS.md).
+
+Project spreadsheet intake is available through **Import project → Import CSV / Excel**, with a downloadable constructed example. See [the intake guide](docs/SPREADSHEET_INTAKE.md) and [verified results](docs/SPREADSHEET_INTAKE_RESULTS.md).
+
 6D is a local engineering-evidence workspace for space projects. It connects
 requirements, bounded calculations, revisions and test evidence so engineers can
 inspect what was checked, what changed and what remains unassessed.
@@ -41,9 +65,10 @@ have not received the same native launcher verification as Windows.
 - Canvas, Table and Reader views of shared records, plus reports and evidence
   JSON/print export.
 - Targeted recalculation with source/dependency checks and recorded reuse.
-- Seven maintained bounded models: ideal propulsion budgets, static cantilever
+- Eight maintained bounded models: ideal propulsion budgets, static cantilever
   loads, steady radiative equilibrium, one-condition drag, unforced three-dimensional
-  two-body orbits, supplied power/energy budgets and single-axis PD attitude response.
+  two-body orbits, supplied power/energy budgets, single-axis PD attitude response,
+  and powered vertical ascent/coast with mass depletion and atmospheric drag.
 - Explicit one-way calculation chains, hypothetical scenarios, supplied scalar
   CSV test comparisons and revision-scoped test applicability.
 - Saved orbital playback and graphs of recorded trajectories, with accuracy gaps,

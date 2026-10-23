@@ -1,5 +1,22 @@
 # Open the latest 6D application
 
+Latest delivery, October 24: refresh http://127.0.0.1:8768/ and confirm build **33affdca8bf9**. The app opens **Review overview** with the selected saved project context. Filter unmet/unassessed findings, expand a requirement, then choose **Open requirement inspector**. Use the review map or **Analysis tools** menu for existing simulations/studies/imports, and **Review overview** in the sidebar to return. SI powers display as superscripts; raw unit entry/export remains exact. No AI key is needed. See [guide](CONNECTED_REVIEW.md) and [results](CONNECTED_REVIEW_RESULTS.md). Earlier build instructions below are historical.
+
+Latest delivery: refresh http://127.0.0.1:8768/ and confirm build **395f0632f981**. Choose **Envelope studies** in the top toolbar. Start from the latest saved project revision and a current baseline calculation, enter a study name/source and parameter ranges, then **Preview exact grid → Run and save**. Review worst observed margins, unresolved cases and the exact sampled combinations. No key is required. The guide includes a constructed drag example: [Operating-envelope studies](OPERATING_ENVELOPES.md). Earlier build instructions below are historical.
+
+Latest delivery, October 23: refresh http://127.0.0.1:8768/ and confirm build **3eed1f8127d9**. Open **Simulation imports** in the top toolbar. Try **Use constructed CSV example → Validate & preview CSV → Save reviewed import**, then play/scrub the retained samples. Or upload a UTF-8 CSV and explicitly map columns, units, frame, time origin and configuration. No API key is needed. Compared imports keep their original saved baseline and never change project findings. See [guide](SIMULATION_IMPORTS.md) and [results](SIMULATION_IMPORTS_RESULTS.md). Previous build instructions below are historical.
+
+Latest delivery, October 23: refresh http://127.0.0.1:8768/ and confirm build **a6215d46280d**. For the numerical-accuracy update, choose **Simulation → Project evidence → Open orbital review template**, review/create that reference project, then **Run affected checks → View saved trajectory**. Expand numerical diagnostics for RK4/order4; inspect grid agreement and any unresolved findings. No API key is needed. Older runs are retained and may be marked historical after this source update; rerunning is explicit. See [guide](NUMERICAL_ACCURACY.md) and [results](NUMERICAL_ACCURACY_RESULTS.md). Previous delivery instructions follow for reference.
+
+October 23: refresh http://127.0.0.1:8768/ and confirm build **cedf1afe772d**.
+Choose **Powered flight → Use constructed flight reference → Create project**,
+then **Powered flight → Run checks**. Play/scrub the saved trajectory, inspect
+cutoff and the six charts, edit inputs through the shared draft, and export the
+report. This is vertical ascent/coast, not steering/staging/landing. No key is
+needed. Existing projects now require an explicit rerun after source updates.
+See POWERED_FLIGHT.md and POWERED_FLIGHT_RESULTS.md. Earlier entries below retain
+their original build identities.
+
 Current local release: use Setup-6D.cmd once, Open-6D.cmd to start and Stop-6D.cmd before backup/update. The app runs with installed Python, independently of Codex. Optional Remember on this device restores a Windows-encrypted key after restart without inference. See RELEASE_HANDOVER.md and SELF_CONTAINED_RELEASE_RESULTS.md; current build a36c689412a9. The historical opening notes below retain their original build IDs and connection behavior.
 
 October 20 Ultra verification result: refresh http://127.0.0.1:8768/ and confirm build **a654eda494e1**. **Connect AI → Ultra compatibility diagnostic** shows the preserved corrected-case receipt and JSON download. Its live failed state is historical: the format fix worked, a wording false positive was then corrected offline, and separate review found a wrong grid-pair attribution. See ULTRA_DIAGNOSTIC_RESULTS.md; no clean semantic pass or Ultra activation is claimed. Super remains selected. The restart cleared the private connection; no reconnection is needed to inspect saved results or run local calculations. No more paid runs are queued.
@@ -73,6 +90,6 @@ Offline API/browser checks passed, and the October 16 project live orchestration
 
 ## Current boundaries
 
-The workspace calculates bounded ideal propulsion, static cantilever, radiative equilibrium, drag, two-body orbital trajectories, supplied power/energy budgets and ideal single-axis spacecraft pointing. It also supports explicit saved subsystem hierarchies/interfaces and declared scalar CSV test comparisons. Unsupported domains remain **Not assessed**. Full rocket simulation, three-axis control/navigation, automatic physical coupling, live telemetry integration, general per-task model routing and whole-mission readiness are not provided. The preserved original orbital-verifier interface is separate at http://127.0.0.1:8766/ when its server is started.
+The workspace calculates bounded ideal propulsion, static cantilever, radiative equilibrium, drag, two-body orbital trajectories, supplied power/energy budgets, ideal single-axis spacecraft pointing and powered vertical ascent/coast. It also supports explicit saved subsystem hierarchies/interfaces and declared scalar CSV test comparisons. Unsupported domains remain **Not assessed**. Full rocket simulation, staging/landing, three-axis control/navigation, automatic multidisciplinary coupling, live telemetry integration, general per-task model routing and whole-mission readiness are not provided. The preserved original orbital-verifier interface is separate at http://127.0.0.1:8766/ when its server is started.
 
 This local address works only on this computer while its server is running. Delivery updates should state the verified opening address, visible build identity, actual changes and material limits.

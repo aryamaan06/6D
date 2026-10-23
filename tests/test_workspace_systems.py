@@ -83,7 +83,7 @@ class WorkspaceSystemsTests(unittest.TestCase):
         self.assertEqual(_encode(self.store.get(self.identity, 1)["run"]["review"]), encoded_review)
         self.assertTrue(lifecycle.verify_review(before["run"]["review"]))
         self.assertEqual(set(before["run"]["review"]["verification_sources"]),
-                         {"engineering.py", "lifecycle.py", "__init__.py", "orbital_adapter.py", "simulation.py", "attitude.py", "chains.py"})
+                         {"engineering.py", "lifecycle.py", "__init__.py", "orbital_adapter.py", "simulation.py", "attitude.py", "chains.py", "powered_flight.py"})
 
     def test_saved_projection_checks_independent_values_without_new_physics_or_mutation(self):
         view = self.baseline()

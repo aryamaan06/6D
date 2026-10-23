@@ -1,5 +1,7 @@
 # Orbital numerical accuracy receipt
 
+Historical implementation notes: the October 23 [numerical-accuracy update](NUMERICAL_ACCURACY.md) adds versioned RK4/fourth-order assessments. Retained earlier receipts keep the policy described below. Use the current guide for new runs.
+
 The orbital project adapter can now retain three fixed-resolution trajectories
 and compare their signed position and velocity vectors at every aligned stored
 time. This assesses explicit numerical accuracy criteria for the supplied

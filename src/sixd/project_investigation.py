@@ -16,6 +16,7 @@ from .explanation_quality import build_guidance, evaluate_explanation, explanati
 from .evidence_facts import build_fact_catalog, provider_fact_catalog, PROSE_POLICY
 from .evidence_roles import POLICY as ROLE_POLICY, build_roles, qualitative_projection
 from .change_evidence import POLICY as CHANGE_POLICY, context_from_record, build_change_context, provider_change_context
+from .source_context import POLICY as SOURCE_POLICY, PROVIDER_NOTICE as SOURCE_NOTICE, validate_context as validate_source_context, provider_context as provider_source_context, contains_private_text
 from .providers import ProviderError, safe_response_diagnostic
 
 
@@ -74,6 +75,11 @@ LEGACY_SYSTEM = (
     "the assessment window includes recorded samples only. A sample saturation fraction is not a time fraction. "
     "Grid agreement is not a physical-validation, stability or settling-time proof. No navigation, sensors, "
     "three-axis motion, wheel momentum, flight controller or landing capability is verified. "
+    "Powered-flight responses cover one vertical axis through burnout and above-surface coast only. "
+    "Mass depletion is analytical; gravity and signed drag use supplied parameters. Separate cutoff samples "
+    "retain instantaneous thrust loss without a state jump. Failed grid agreement blocks quantitative "
+    "criteria and downstream use; metric allowances are not rigorous error bounds. No continuous-time "
+    "extrema, staging, steering, aeroheating or landing assessment is implied. "
     "For explicitly linked calculations, review each scalar transfer's source metric, exact unit and user-declared rationale. "
     "Recheck recomputes the selected model and its upstream dependency closure in order. A completed upstream "
     "calculation can feed a downstream model even when a separate upstream engineering criterion is not met. "
@@ -96,6 +102,7 @@ SYSTEM = LEGACY_SYSTEM.split("New investigations use evidence_links_v1:")[0] + (
     "Do not infer directions, physical causes or whole-model equivalence from withheld values. "
     "Write one short paragraph explaining the recorded status, relevant scope and a concrete next review. "
     "Keep the required evidence_ids as separate whole-record citations."
+    + " " + SOURCE_NOTICE
 )
 PURPOSE = {
     "read_requirement": "Read the selected requirement, its limit and authoritative finding.",
@@ -489,6 +496,8 @@ def _lock_view(view, requirement_id, *, require_current_sources=True):
             validate_investigation_context(locked["test_evidence"], locked, requirement_id)
         except (KeyError, TypeError, ValueError) as error:
             raise ValueError("The selected test evidence is inconsistent with this investigation.") from error
+    if "project_sources" in locked:
+        validate_source_context(locked["project_sources"], locked, requirement_id)
     return locked
 
 
@@ -521,6 +530,8 @@ def _provider_evidence(payload):
     it is never used to compare results or generate canonical findings.
     """
     projected = deepcopy(payload)
+    if "supplemental_project_sources" in projected:
+        projected["supplemental_project_sources"] = provider_source_context(projected["supplemental_project_sources"])
     for field in ("recorded_evidence", "fresh_result"):
         result = projected.get(field)
         if isinstance(result, dict) and isinstance(result.get("numerical_accuracy"), dict):
@@ -554,6 +565,23 @@ def _provider_evidence(payload):
             "values": deepcopy(full["values"]), "links": deepcopy(full["links"]),
             "ancestor_count": len(full["ancestors"]),
             "projection_note": "Resolved scalar roles and direct transfer records are copied from captured evidence. Full ancestor provenance remains in the saved calculation inputs; no physics is inferred."}
+    for field in ("recorded_evidence", "fresh_result"):
+        result = projected.get(field)
+        if not isinstance(result, dict) or "flight_response" not in result:
+            continue
+        artifact = result.pop("flight_response")
+        samples = artifact["samples"]
+        witnesses = {0, len(samples)-1, *(item["sample_index"] for item in artifact["events"])}
+        for key in ("altitude_m", "velocity_m_s", "dynamic_pressure_pa", "drag_n", "acceleration_m_s2"):
+            witnesses.add(max(range(len(samples)), key=lambda i: abs(samples[i][key])))
+        result["flight_summary_projection"] = {
+            "artifact_schema": artifact["schema"], "artifact_digest": lifecycle._digest(artifact),
+            "source_fingerprint": artifact["source_fingerprint"],
+            "parameters": deepcopy(artifact["parameters"]), "solver": deepcopy(artifact["solver"]),
+            "diagnostics": deepcopy(artifact["diagnostics"]),
+            "witness_samples": [{"sample_index": i, **deepcopy(samples[i])} for i in sorted(witnesses)],
+            "assumptions": deepcopy(artifact["assumptions"]), "not_assessed": deepcopy(artifact["not_assessed"]),
+            "projection_note": "Saved endpoint, cutoff and sampled-extremum witnesses only. Full grids remain captured. Grid agreement is not an error bound; this vertical model does not assess staging, steering, landing or mission readiness."}
     for field in ("recorded_evidence", "fresh_result"):
         result = projected.get(field)
         if not isinstance(result, dict) or "attitude_response" not in result:
@@ -634,7 +662,8 @@ def investigate_project(view, requirement_id, question, provider, *, investigati
         raise ValueError("Use a bounded question and a valid local investigation ID.")
     secret = getattr(provider, "_key", None)
     if (isinstance(secret, str) and secret
-            and (secret in question or secret in json.dumps(locked, allow_nan=False))):
+            and (secret in question or secret in json.dumps(locked, allow_nan=False)
+                 or 'project_sources' in locked and contains_private_text(locked['project_sources'], secret))):
         raise ValueError("Do not include provider credentials in project data or a question.")
     review, project = locked["run"]["review"], locked["project"]
     requirement = next(item for item in project["requirements"] if item["id"] == requirement_id)
@@ -667,6 +696,9 @@ def investigate_project(view, requirement_id, question, provider, *, investigati
         record["change_commentary_policy"] = CHANGE_POLICY
     if "test_evidence" in locked:
         record["test_evidence"] = deepcopy(locked["test_evidence"])
+    if "project_sources" in locked:
+        record["project_sources"] = deepcopy(locked["project_sources"])
+        record["source_commentary_policy"] = SOURCE_POLICY
     messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": json.dumps({
         "task": "Investigate the selected requirement using the bounded menu.",
         "locked_project_id": locked["project_id"], "locked_revision": locked["revision"],
@@ -755,6 +787,8 @@ def investigate_project(view, requirement_id, question, provider, *, investigati
                                "review_guidance": deepcopy(guidance)}
                     if "test_evidence" in locked:
                         payload["selected_test_evidence"] = deepcopy(locked["test_evidence"])
+                    if "project_sources" in locked:
+                        payload["supplemental_project_sources"] = deepcopy(locked["project_sources"])
                 elif action == "read_model":
                     eid = _evidence_id("model", model_id)
                     payload = {"id": eid, **base, "kind": "model", "model": deepcopy(model),

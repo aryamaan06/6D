@@ -126,7 +126,7 @@ class WorkspaceAI:
     @staticmethod
     def _sources():
         folder = Path(__file__).resolve().parent
-        names = ("workspace_ai.py", "credential_store.py", "project_investigation.py", "explanation_quality.py", "evidence_facts.py", "evidence_roles.py", "change_evidence.py", "evidence_evaluation.py", "workspace_evidence_evaluation.py", "test_evidence.py", "workspace_test_data.py", "model_evaluation.py", "workspace_evaluation.py", "workflow_evaluation.py", "workspace_workflow_evaluation.py", "providers.py", "action_selection.py", "workspace.py", "engineering.py", "lifecycle.py", "__init__.py")
+        names = ("workspace_ai.py", "ai_qualification.py", "workspace_qualification.py", "workspace_observability.py", "powered_flight.py", "attitude.py", "simulation.py", "orbital_adapter.py", "credential_store.py", "project_investigation.py", "source_context.py", "workspace_sources.py", "explanation_quality.py", "evidence_facts.py", "evidence_roles.py", "change_evidence.py", "evidence_evaluation.py", "workspace_evidence_evaluation.py", "test_evidence.py", "workspace_test_data.py", "model_evaluation.py", "workspace_evaluation.py", "workflow_evaluation.py", "workspace_workflow_evaluation.py", "providers.py", "action_selection.py", "workspace.py", "engineering.py", "lifecycle.py", "__init__.py")
         return {name: sha256((folder / name).read_bytes()).hexdigest() for name in names if (folder / name).is_file()}
 
     def _config(self):
@@ -396,11 +396,15 @@ class WorkspaceAI:
             raise WorkspaceError("Select a requirement for the investigation.")
         if not isinstance(question, str) or not 1 <= len(question.strip()) <= 2000:
             raise WorkspaceError("Enter an investigation question of 1–2000 characters.")
-        view = self.store.get(project_id, revision)
-        if not view["run"]:
-            raise ConflictError("Run checks for the selected saved revision before starting an investigation.")
-        if not any(item["id"] == requirement_id for item in view["project"]["requirements"]):
-            raise WorkspaceError("The requirement is not in the selected saved revision.")
+        from .source_context import capture_in_snapshot, contains_private_text
+        with self.store._connect() as connection:
+            connection.execute("BEGIN")
+            view = self.store._view(connection, project_id, revision)
+            if not view["run"]:
+                raise ConflictError("Run checks for the selected saved revision before starting an investigation.")
+            if not any(item["id"] == requirement_id for item in view["project"]["requirements"]):
+                raise WorkspaceError("The requirement is not in the selected saved revision.")
+            view["project_sources"] = capture_in_snapshot(connection, self.store, view, requirement_id)
         if (test_comparison_id is None) != (test_row_number is None):
             raise WorkspaceError("Select both a saved test comparison and its row number.")
         if test_comparison_id is not None:
@@ -422,6 +426,8 @@ class WorkspaceAI:
                 raise ConflictError("Connect Nebius privately before starting an investigation. No request was sent.")
             if self._key in question:
                 raise WorkspaceError("Remove private credential material from the question before saving or sending it.")
+            if contains_private_text(view["project_sources"], self._key):
+                raise WorkspaceError("Remove private credential material from linked references before starting an investigation.")
             if self._sources() != self._runtime:
                 raise ConflictError("Application sources changed. Restart 6D before an investigation.")
             identity = uuid4().hex
@@ -435,6 +441,8 @@ class WorkspaceAI:
                       "error": None, "agent_sources": self._runtime, "provider_settings": self._settings(config)}
             if "test_evidence" in view:
                 record["test_evidence"] = deepcopy(view["test_evidence"])
+            if "project_sources" in view:
+                record["project_sources"] = deepcopy(view["project_sources"])
             with self._db() as db:
                 db.execute("INSERT INTO project_investigations VALUES (?,?,?,?,?,?,?,?,?)",
                            (identity, project_id, revision, requirement_id, record["started_at"],

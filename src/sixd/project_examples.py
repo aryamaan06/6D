@@ -66,7 +66,36 @@ def example_projects():
         "limit_input": "maximum_tracking_error", "critical": True})
     return {"baseline": baseline, "revised": revised, "missing_evidence": missing,
             "orbital_review": _orbital_review(baseline), "power_budget": _power_review(baseline),
-            "attitude_review": _attitude_review(baseline), "chain_review": _chain_review(baseline)}
+            "attitude_review": _attitude_review(baseline), "chain_review": _chain_review(baseline),
+            "powered_flight_review": powered_flight_review()}
+
+
+def powered_flight_review():
+    """Synthetic vertical-flight case; all numbers are illustrative inputs."""
+    from .powered_flight import PARAMETERS
+    values = dict(initial_mass=1000, dry_mass=700, thrust=20000, specific_impulse=250,
+                  reference_area=.8, drag_coefficient=.4, reference_density=1.225,
+                  scale_height=8500, gravitational_parameter=3.986004418e14,
+                  launch_radius=6371000, coast_duration=20, steps=128,
+                  altitude_numerical_tolerance=.5, velocity_numerical_tolerance=.02,
+                  relative_numerical_tolerance=1e-6)
+    inputs = {key: _input(value, PARAMETERS[key]) for key,value in values.items()}
+    inputs.update(minimum_burnout_altitude=_input(5000, 'm'),
+                  maximum_dynamic_pressure=_input(50000, 'Pa'),
+                  maximum_upward_acceleration=_input(25, 'm/s^2'))
+    requirements = []
+    for identity,title,metric,operator,limit in (
+        ('burnout_height', 'Declared minimum burnout altitude', 'burnout_altitude', '>=', 'minimum_burnout_altitude'),
+        ('dynamic_pressure', 'Declared maximum sampled dynamic pressure', 'max_sampled_dynamic_pressure', '<=', 'maximum_dynamic_pressure'),
+        ('upward_acceleration', 'Declared maximum sampled upward acceleration', 'max_sampled_upward_acceleration', '<=', 'maximum_upward_acceleration'),
+    ):
+        requirements.append(dict(id=identity,title=title,model_id='vertical_flight',metric=metric,
+                                 operator=operator,limit_input=limit,critical=True))
+    return dict(schema='sixd.project.v1', project_id='constructed-powered-flight', revision='1',
+                name='Constructed powered vertical flight', lifecycle_stage='simulation',
+                description='Synthetic vertical ascent through burnout and above-surface coast. Constant engine and drag inputs in an exponential atmosphere; no staging, steering, aeroheating or landing. Inputs and criteria are illustrative, not flight data.',
+                inputs=inputs, models=[dict(id='vertical_flight', type='powered_flight', inputs={key:key for key in PARAMETERS})],
+                requirements=requirements)
 
 
 def _chain_review(baseline):

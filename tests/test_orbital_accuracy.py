@@ -9,6 +9,10 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from sixd import orbital_adapter as orbit, simulation
+from functools import partial
+# Preserve v1 refinement regression coverage explicitly after the default upgrade.
+legacy_evaluate = partial(orbit.evaluate, method="velocity_verlet")
+legacy_accuracy = partial(orbit.evaluate_with_accuracy, method="velocity_verlet")
 
 
 def parameters(**overrides):
@@ -32,11 +36,11 @@ class OrbitalAccuracyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.parameters = parameters()
-        cls.metrics, cls.artifact, cls.receipt = orbit.evaluate_with_accuracy(cls.parameters, CRITERIA)
+        cls.metrics, cls.artifact, cls.receipt = legacy_accuracy(cls.parameters, CRITERIA)
 
     def test_missing_criteria_never_invents_accuracy_or_references(self):
         with patch.object(orbit, "evaluate", wraps=orbit.evaluate) as evaluate:
-            metrics, artifact, accuracy = orbit.evaluate_with_accuracy(self.parameters)
+            metrics, artifact, accuracy = legacy_accuracy(self.parameters)
         self.assertEqual(evaluate.call_count, 1)
         self.assertEqual(metrics, self.metrics)
         self.assertEqual(artifact, self.artifact)
@@ -59,14 +63,14 @@ class OrbitalAccuracyTests(unittest.TestCase):
 
     def test_tight_position_tolerance_blocks_without_changing_finest_result(self):
         criteria = dict(CRITERIA, position_tolerance_m=0.01)
-        metrics, artifact, accuracy = orbit.evaluate_with_accuracy(self.parameters, criteria)
+        metrics, artifact, accuracy = legacy_accuracy(self.parameters, criteria)
         self.assertEqual(metrics, self.metrics)
         self.assertEqual(artifact, self.artifact)
         self.assertEqual(accuracy["status"], "insufficient_accuracy")
         self.assertIn("exceeds", accuracy["reason"])
 
     def test_velocity_tolerance_is_independent_of_position_tolerance(self):
-        _, _, accuracy = orbit.evaluate_with_accuracy(self.parameters, dict(CRITERIA, velocity_tolerance_m_s=1e-8))
+        _, _, accuracy = legacy_accuracy(self.parameters, dict(CRITERIA, velocity_tolerance_m_s=1e-8))
         self.assertEqual(accuracy["status"], "insufficient_accuracy")
 
     def test_circle_analytic_phase_error_is_nonzero_despite_conserved_scalars(self):
@@ -118,7 +122,7 @@ class OrbitalAccuracyTests(unittest.TestCase):
 
     def test_coarse_grid_rejection_retains_valid_finest(self):
         p = parameters(steps=64)
-        metrics, artifact, accuracy = orbit.evaluate_with_accuracy(p, CRITERIA)
+        metrics, artifact, accuracy = legacy_accuracy(p, CRITERIA)
         self.assertEqual(accuracy["status"], "not_assessed")
         self.assertEqual(accuracy["reference_failure"]["steps"], 16)
         self.assertIn("too coarse", accuracy["reference_failure"]["message"])
@@ -130,12 +134,12 @@ class OrbitalAccuracyTests(unittest.TestCase):
         for steps in (32, 66):
             with self.subTest(steps=steps):
                 p = parameters(steps=steps, duration_s=100.0)
-                _, artifact, accuracy = orbit.evaluate_with_accuracy(p, CRITERIA)
+                _, artifact, accuracy = legacy_accuracy(p, CRITERIA)
                 self.assertEqual(accuracy["status"], "not_assessed")
                 self.assertEqual(accuracy["reference_levels"], [])
                 self.assertTrue(orbit.validate_accuracy(accuracy, artifact, p, CRITERIA, simulation.source_fingerprint()))
         with self.assertRaisesRegex(ValueError, "too coarse"):
-            orbit.evaluate_with_accuracy(parameters(steps=16), CRITERIA)
+            legacy_accuracy(parameters(steps=16), CRITERIA)
 
     def test_invalid_criteria_reject_before_any_propagation(self):
         invalid = [False, {}, dict(CRITERIA, unknown=1), dict(CRITERIA, source=" "),
@@ -145,7 +149,7 @@ class OrbitalAccuracyTests(unittest.TestCase):
         with patch.object(simulation, "simulate", side_effect=AssertionError("Unexpected propagation")):
             for criteria in invalid:
                 with self.subTest(criteria=str(criteria)[:150]), self.assertRaises(ValueError):
-                    orbit.evaluate_with_accuracy(self.parameters, criteria)
+                    legacy_accuracy(self.parameters, criteria)
 
     def test_saved_validation_does_not_rerun_solver_or_current_domain_policy(self):
         with patch.object(simulation, "simulate", side_effect=AssertionError("Unexpected solver rerun")), \
@@ -174,7 +178,7 @@ class OrbitalAccuracyTests(unittest.TestCase):
             orbit.validate_accuracy(self.receipt, self.artifact, self.parameters, dict(CRITERIA, velocity_tolerance_m_s=2), simulation.source_fingerprint())
 
     def test_legacy_artifact_contract_remains_unchanged(self):
-        metrics, artifact = orbit.evaluate(self.parameters)
+        metrics, artifact = legacy_evaluate(self.parameters)
         self.assertEqual(artifact, self.artifact)
         self.assertNotIn("numerical_accuracy", artifact)
         self.assertTrue(orbit.validate_artifact(artifact, metrics, self.parameters, simulation.source_fingerprint()))

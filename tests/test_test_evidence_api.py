@@ -334,9 +334,11 @@ class TestEvidenceAPITests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=ROOT / "work") as temporary:
             local = Path(temporary)
             providers = []
-            summary = ("The canonical design criterion is met at 300 N against 305 N within this bounded model. "
-                       "The measured criterion is not met at 310 N against the recorded 305 N limit. "
-                       "The recorded measurement is within tolerance of the saved prediction: the difference is 10 N and tolerance is 15 N. "
+            # Current application_roles_v1 owns numeric display; the provider
+            # fixture supplies qualitative interpretation of the frozen row.
+            summary = ("The canonical design criterion is met within this bounded model. "
+                       "The measured criterion is not met against its recorded limit. "
+                       "The recorded measurement is within the supplied tolerance of the saved prediction. "
                        "Declared test conditions are unverified. Review calibration, observable definition and model assumptions before attributing a cause.")
 
             class OfflineTransport:

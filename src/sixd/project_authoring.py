@@ -7,11 +7,16 @@ domains and model applicability remain the maintained adapters' responsibility.
 from copy import deepcopy
 
 from . import lifecycle
-from . import attitude
+from . import attitude, powered_flight
 from .engineering import MODEL_PARAMETERS, MODEL_VERSIONS, _ASSUMPTIONS, _NOT_ASSESSED, model_applicability
 
 
 _MODEL_DETAILS = {
+    "powered_flight": (
+        "Powered vertical flight",
+        "Constant-thrust vertical ascent through burnout and above-surface coast, with gravity, exponential-atmosphere drag and analytical mass depletion. Sampled checks with declared grid tolerances.",
+        list(powered_flight.METRICS),
+    ),
     "attitude_control": (
         "Single-axis spacecraft pointing",
         "Continuous PD control of a rigid principal axis with a fixed target, ideal clipped torque and constant supplied disturbance. Saved sampled checks only.",

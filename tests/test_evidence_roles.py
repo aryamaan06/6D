@@ -79,7 +79,6 @@ class ApplicationRoleTests(unittest.TestCase):
                                   investigation_id="role-wire")
         self.assertEqual(rec["state"], "completed", rec.get("error"))
         wire_text = json.dumps(requests[-1]["messages"])
-        self.assertNotIn("7000032.9432812715", wire_text)
         self.assertIn("withheld", wire_text)
         menu = json.loads(requests[-1]["messages"][-1]["content"])
         self.assertEqual(menu["explanation_contract"]["policy"], evidence_roles.POLICY)
@@ -87,7 +86,10 @@ class ApplicationRoleTests(unittest.TestCase):
         self.assertEqual(menu["explanation_contract"]["canonical_status"], "met")
         self.assertEqual(self.view, before)
         captured = rec["evidence"]["model:orbit"]["recorded_evidence"]["metrics"]["max_radius_m"]["value"]
-        self.assertEqual(captured, 7000032.9432812715)
+        # Current RK4 circle: this wire test preserves the exact captured quantity.
+        # Independent numerical accuracy is checked by the orbit reference suite.
+        self.assertEqual(captured, 7000000.0)
+        self.assertNotIn(str(captured), wire_text)
 
     def test_projection_is_read_only_and_preserves_booleans_status_and_context(self):
         source = {"kind": "recheck", "matches_saved_result": True,

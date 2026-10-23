@@ -20,7 +20,8 @@ RESULT_STATUSES = {"completed", "not_assessed", "invalid_inputs"}
 LEGACY_VERIFICATION_SOURCE_NAMES = {"engineering.py", "lifecycle.py", "__init__.py"}
 ORBITAL_VERIFICATION_SOURCE_NAMES = LEGACY_VERIFICATION_SOURCE_NAMES | {"orbital_adapter.py", "simulation.py"}
 ATTITUDE_VERIFICATION_SOURCE_NAMES = ORBITAL_VERIFICATION_SOURCE_NAMES | {"attitude.py"}
-VERIFICATION_SOURCE_NAMES = ATTITUDE_VERIFICATION_SOURCE_NAMES | {"chains.py"}
+CHAIN_VERIFICATION_SOURCE_NAMES = ATTITUDE_VERIFICATION_SOURCE_NAMES | {"chains.py"}
+VERIFICATION_SOURCE_NAMES = CHAIN_VERIFICATION_SOURCE_NAMES | {"powered_flight.py"}
 EXCLUSIONS = [
     "Only explicitly declared requirements and bound deterministic models are reviewed.",
     "Physical model validity, uncertainty and environmental qualification are not established by these calculations.",
@@ -177,7 +178,7 @@ def _verification_sources():
 
 def _validate_sources(sources):
     _object(sources, "verification_sources")
-    if set(sources) not in (LEGACY_VERIFICATION_SOURCE_NAMES, ORBITAL_VERIFICATION_SOURCE_NAMES, ATTITUDE_VERIFICATION_SOURCE_NAMES, VERIFICATION_SOURCE_NAMES):
+    if set(sources) not in (LEGACY_VERIFICATION_SOURCE_NAMES, ORBITAL_VERIFICATION_SOURCE_NAMES, ATTITUDE_VERIFICATION_SOURCE_NAMES, CHAIN_VERIFICATION_SOURCE_NAMES, VERIFICATION_SOURCE_NAMES):
         raise ValueError("Verification sources must match a complete maintained or legacy source set.")
     for name, fingerprint in sources.items():
         if not isinstance(fingerprint, str) or re.fullmatch(r"[0-9a-f]{64}", fingerprint) is None:
@@ -208,7 +209,7 @@ def _normalize_results(project, results, versions, sources):
             continue
         result = results[model_id]
         _fields(result, {"model_id", "model_type", "model_version", "status", "metrics",
-                         "assumptions", "not_assessed", "issues"}, f"result {model_id}", {"references", "simulation", "power_budget", "attitude_response", "calculation_inputs", "numerical_accuracy", "applicability"})
+                         "assumptions", "not_assessed", "issues"}, f"result {model_id}", {"references", "simulation", "power_budget", "attitude_response", "flight_response", "calculation_inputs", "numerical_accuracy", "applicability"})
         if result["model_id"] != model_id or result["model_type"] != model_type:
             raise ValueError(f"Result identity does not match model {model_id}.")
         if result["model_version"] != version:
@@ -243,17 +244,30 @@ def _normalize_results(project, results, versions, sources):
                     _string(value, "applicability reference field")
                 if not reference["url"].startswith("https://"):
                     raise ValueError("Applicability source links require HTTPS.")
-        if "numerical_accuracy" in result and (model_type != "orbital_trajectory" or version != "2" or result["status"] != "completed"):
-            raise ValueError("Only completed orbital v2 evidence may retain numerical accuracy.")
+        if "numerical_accuracy" in result and (model_type != "orbital_trajectory" or version not in {"2", "3"} or result["status"] != "completed"):
+            raise ValueError("Only completed orbital v2/v3 evidence may retain numerical accuracy.")
         if "simulation" in result and (model_type != "orbital_trajectory" or result["status"] != "completed" or version is None):
             raise ValueError("Only a completed maintained orbital model may retain a simulation artifact.")
         if "power_budget" in result and (model_type != "power_energy_budget" or result["status"] != "completed" or version is None):
             raise ValueError("Only a completed maintained power model may retain an operating-mode budget artifact.")
         if "attitude_response" in result and (model_type != "attitude_control" or result["status"] != "completed" or version is None):
             raise ValueError("Only a completed maintained attitude model may retain an attitude response artifact.")
-        if model.get("links") and set(sources) != VERIFICATION_SOURCE_NAMES:
+        if "flight_response" in result and (model_type != "powered_flight" or result["status"] != "completed" or version not in {"1", "2"}):
+            raise ValueError("Only completed powered-flight v1/v2 evidence may retain a flight response.")
+        if model.get("links") and not CHAIN_VERIFICATION_SOURCE_NAMES.issubset(sources):
             raise ValueError("Linked calculation evidence requires its complete calculation-chain source manifest.")
         bound_project, bound_model = verify_calculation_inputs(project, model, normalized, result)
+        if model_type == "powered_flight" and version is not None:
+            if result["status"] == "completed":
+                if "flight_response" not in result or not VERIFICATION_SOURCE_NAMES.issubset(sources):
+                    raise ValueError("Completed powered-flight evidence requires retained response and solver sources.")
+                from .engineering import _bind_inputs
+                if result["flight_response"].get("solver", {}).get("version", "1") != version:
+                    raise ValueError("Powered-flight adapter and solver versions disagree.")
+                from .powered_flight import validate_artifact
+                validate_artifact(result["flight_response"], metrics, _bind_inputs(bound_project, bound_model), sources["powered_flight.py"])
+            elif metrics:
+                raise ValueError("Invalid or unassessed powered-flight evidence cannot carry metrics.")
         if model_type == "attitude_control" and version is not None:
             if result["status"] == "completed":
                 if "attitude_response" not in result or not ATTITUDE_VERIFICATION_SOURCE_NAMES.issubset(sources):
@@ -278,10 +292,13 @@ def _normalize_results(project, results, versions, sources):
                 from .engineering import _bind_inputs
                 from .orbital_adapter import validate_artifact
                 validate_artifact(result["simulation"], metrics, _bind_inputs(bound_project, bound_model), sources["simulation.py"])
-                if version == "2":
+                expected_method = "rk4" if version == "3" else "velocity_verlet"
+                if result["simulation"]["method"]["name"] != expected_method:
+                    raise ValueError("Orbital adapter and retained solver version disagree.")
+                if version in {"2", "3"}:
                     from .orbital_adapter import validate_accuracy
                     if "numerical_accuracy" not in result:
-                        raise ValueError("Completed orbital v2 evidence requires its numerical accuracy receipt.")
+                        raise ValueError("Completed orbital v2/v3 evidence requires its numerical accuracy receipt.")
                     validate_accuracy(result["numerical_accuracy"], result["simulation"],
                                       _bind_inputs(bound_project, bound_model), model.get("accuracy"), sources["simulation.py"])
             elif metrics:
@@ -420,7 +437,7 @@ def verify_review(review):
     for model_id, record in review["evidence"].items():
         _fields(record, {"model_id", "model_type", "model_version", "status", "metrics",
                          "assumptions", "not_assessed", "issues", "model_definition",
-                         "input_records", "verification_sources", "fingerprint"}, "evidence receipt", {"references", "simulation", "power_budget", "attitude_response", "calculation_inputs", "numerical_accuracy", "applicability"})
+                         "input_records", "verification_sources", "fingerprint"}, "evidence receipt", {"references", "simulation", "power_budget", "attitude_response", "flight_response", "calculation_inputs", "numerical_accuracy", "applicability"})
         results[model_id] = {key: deepcopy(value) for key, value in record.items()
                              if key not in {"model_definition", "input_records", "verification_sources", "fingerprint"}}
     expected = _assemble(project, _normalize_results(project, results, versions, sources), versions, sources)

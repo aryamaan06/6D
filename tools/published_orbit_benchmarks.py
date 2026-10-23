@@ -1,4 +1,4 @@
-"""Development-only external orbit comparisons; never called by the product.
+"""Legacy Velocity Verlet regression comparisons (explicit method); never called by the product.
 
 NASA NAIF CSPICE prop2b/conics, through pinned SpiceyPy, supplies reference
 states. No production acceleration, integrator, element extraction or stored
@@ -74,7 +74,7 @@ def _expected_metrics(states):
 
 
 def _compare(parameters, expected_states, position_scale, velocity_scale):
-    metrics, artifact = orbital_adapter.evaluate(parameters)
+    metrics, artifact = orbital_adapter.evaluate(parameters, method="velocity_verlet")
     actual_states = [row["position_m"] + row["velocity_m_s"] for row in artifact["samples"]]
     position_errors = [_norm_error(a[:3], e[:3]) for a, e in zip(actual_states, expected_states)]
     velocity_errors = [_norm_error(a[3:], e[3:]) for a, e in zip(actual_states, expected_states)]

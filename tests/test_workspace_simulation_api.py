@@ -160,7 +160,7 @@ class WorkspaceSimulationAPITests(unittest.TestCase):
         baseline = {"project_id": view["project_id"], "revision": 1, "spec": simulation.default_spec()}
         for payload in ({**baseline, "project_id": []}, {**baseline, "revision": True},
                         {**baseline, "revision": 2}, {**baseline, "spec": None},
-                        {**baseline, "spec": {**baseline["spec"], "steps": 4097}},
+                        {**baseline, "spec": {**baseline["spec"], "steps": simulation.MAX_STEPS + 1}},
                         {**baseline, "spec": {**baseline["spec"], "position_m": [1, 0, 0]}},
                         {**baseline, "provider": "live"}, {**baseline, "spec": {**baseline["spec"], "execute": "code"}}):
             with self.subTest(payload=payload):

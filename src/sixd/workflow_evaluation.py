@@ -66,7 +66,11 @@ def build_plan(*, temporary_root=None):
         add('orbit-no-accuracy', 'Completed trajectory without accuracy criteria', missing, 'orbit_max_radius',
             'not_assessed', assessment='accuracy_not_assessed')
         tight = deepcopy(orbit)
-        tight['models'][0]['accuracy']['position_tolerance_m'] = 1
+        # Freshly prepared cases use an intentionally unresolved numerical
+        # criterion for the current RK4 adapter. Its retained fine/middle
+        # difference is below the old one-metre criterion, which no longer
+        # exercises a gap. Historical plans and receipts are never rewritten.
+        tight['models'][0]['accuracy']['position_tolerance_m'] = 1e-6
         add('orbit-tight-accuracy', 'Position grid disagreement exceeds declared tolerance', tight, 'orbit_max_radius',
             'not_assessed', assessment='insufficient_accuracy')
         near = deepcopy(orbit)

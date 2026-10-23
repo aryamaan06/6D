@@ -1,0 +1,244 @@
+{
+  "schema": "sixd.numerical-benchmark.v1",
+  "source_sha256": "33eed3ef2736155cbd9288cd63ff6126b88cab2cac15e16112b48cab0a61a03e",
+  "method": "classical RK4 v2",
+  "reference": "NASA NAIF CSPICE conics via SpiceyPy",
+  "spiceypy": "8.3.0",
+  "toolkit": "CSPICE_N0067",
+  "source_url": "https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/conics_c.html",
+  "conditions": "Constructed ideal two-body cases; not flight validation or a universal error bound",
+  "cases": [
+    {
+      "case": "circle_one_period",
+      "steps": 1024,
+      "analytic": {
+        "sample_count": 1025,
+        "max_position_error_m": 0.0015090065144765963,
+        "max_velocity_error_m_s": 1.594150527693853e-06,
+        "final_position_error_m": 0.0014788353182256615,
+        "final_velocity_error_m_s": 1.594150527693853e-06,
+        "max_position_error_time_s": 5196.714541218097,
+        "metric_absolute_errors": {
+          "min_radius_m": 0.00031542032957077026,
+          "max_radius_m": 1.862645149230957e-09,
+          "max_speed_m_s": 3.3714059100020677e-07,
+          "final_radius_m": 1.061614602804184e-05,
+          "final_speed_m_s": 5.719812179449946e-09
+        }
+      },
+      "cspice_max_position_difference_m": 0.0015090248623446092,
+      "cspice_max_velocity_difference_m_s": 1.5941433308220268e-06,
+      "analytic_cspice_position_difference_m": 2.56504987938408e-08,
+      "analytic_cspice_velocity_difference_m_s": 2.7754494148515966e-11,
+      "accuracy_status": "not_assessed",
+      "observed_orders": {
+        "position": null,
+        "velocity": null
+      },
+      "reason": "Reference grid with 256 steps could not be calculated: Time step is too coarse: duration_s / steps * pericenter_speed / pericenter_radius must be <= 0.02. Increase steps or shorten duration. Finest trajectory retained; numerical accuracy is not assessed."
+    },
+    {
+      "case": "circle_eight_periods",
+      "steps": 4096,
+      "analytic": {
+        "sample_count": 4097,
+        "max_position_error_m": 0.2854248743497381,
+        "max_velocity_error_m_s": 0.00030767964448909566,
+        "final_position_error_m": 0.2854248743497381,
+        "final_velocity_error_m_s": 0.00030767964448909566,
+        "max_position_error_time_s": 46628.13310148812,
+        "metric_absolute_errors": {
+          "min_radius_m": 0.007513067685067654,
+          "max_radius_m": 1.862645149230957e-09,
+          "max_speed_m_s": 6.723542355757672e-06,
+          "final_radius_m": 0.002720358781516552,
+          "final_speed_m_s": 1.4662855392089114e-06
+        }
+      },
+      "cspice_max_position_difference_m": 0.2854248195755788,
+      "cspice_max_velocity_difference_m_s": 0.00030767958515743915,
+      "analytic_cspice_position_difference_m": 9.191474402097603e-08,
+      "analytic_cspice_velocity_difference_m_s": 9.209454890455227e-11,
+      "accuracy_status": "not_assessed",
+      "observed_orders": {
+        "position": null,
+        "velocity": null
+      },
+      "reason": "Reference grid with 1024 steps could not be calculated: Time step is too coarse: duration_s / steps * pericenter_speed / pericenter_radius must be <= 0.02. Increase steps or shorten duration. Finest trajectory retained; numerical accuracy is not assessed."
+    },
+    {
+      "case": "eccentric_four_periods",
+      "steps": 4096,
+      "analytic": {
+        "sample_count": 4097,
+        "max_position_error_m": 0.06059189078851265,
+        "max_velocity_error_m_s": 3.675680028068854e-05,
+        "final_position_error_m": 0.0459244510574742,
+        "final_velocity_error_m_s": 3.675680028068854e-05,
+        "max_position_error_time_s": 46861.07206174879,
+        "metric_absolute_errors": {
+          "min_radius_m": 2.1470710635185242e-05,
+          "max_radius_m": 0.0023610442876815796,
+          "max_speed_m_s": 0.0,
+          "final_radius_m": 2.1470710635185242e-05,
+          "final_speed_m_s": 5.443871486932039e-08
+        }
+      },
+      "cspice_max_position_difference_m": 0.0605919164915428,
+      "cspice_max_velocity_difference_m_s": 3.67568368291096e-05,
+      "analytic_cspice_position_difference_m": 1.2867616759694957e-07,
+      "analytic_cspice_velocity_difference_m_s": 8.797128346614748e-11,
+      "accuracy_status": "not_assessed",
+      "observed_orders": {
+        "position": null,
+        "velocity": null
+      },
+      "reason": "Reference grid with 1024 steps could not be calculated: Time step is too coarse: duration_s / steps * pericenter_speed / pericenter_radius must be <= 0.02. Increase steps or shorten duration. Finest trajectory retained; numerical accuracy is not assessed."
+    },
+    {
+      "case": "eccentric_one_period",
+      "steps": 4096,
+      "analytic": {
+        "sample_count": 4097,
+        "max_position_error_m": 0.013709696957382148,
+        "max_velocity_error_m_s": 9.886681060397148e-06,
+        "final_position_error_m": 0.013704397623138695,
+        "final_velocity_error_m_s": 9.886681060397148e-06,
+        "max_position_error_time_s": 28093.568856408496,
+        "metric_absolute_errors": {
+          "min_radius_m": 0.0,
+          "max_radius_m": 0.0015549249947071075,
+          "max_speed_m_s": 0.0,
+          "final_radius_m": 5.438923835754395e-07,
+          "final_speed_m_s": 2.4429027689620852e-09
+        }
+      },
+      "cspice_max_position_difference_m": 0.013709150983031482,
+      "cspice_max_velocity_difference_m_s": 9.886683888547555e-06,
+      "analytic_cspice_position_difference_m": 5.957360274331875e-07,
+      "analytic_cspice_velocity_difference_m_s": 4.121478878824689e-10,
+      "accuracy_status": "not_assessed",
+      "observed_orders": {
+        "position": null,
+        "velocity": null
+      },
+      "reason": "Reference grid with 1024 steps could not be calculated: Time step is too coarse: duration_s / steps * pericenter_speed / pericenter_radius must be <= 0.02. Increase steps or shorten duration. Finest trajectory retained; numerical accuracy is not assessed."
+    },
+    {
+      "case": "retrograde_eccentric_partial",
+      "steps": 4096,
+      "analytic": {
+        "sample_count": 4097,
+        "max_position_error_m": 4.88996361055345e-06,
+        "max_velocity_error_m_s": 3.539359659768056e-09,
+        "final_position_error_m": 4.88996361055345e-06,
+        "final_velocity_error_m_s": 3.539359659768056e-09,
+        "max_position_error_time_s": 38784.136439452675,
+        "metric_absolute_errors": {
+          "min_radius_m": 1.6279518604278564e-06,
+          "max_radius_m": 4.842877388000488e-07,
+          "max_speed_m_s": 9.595169103704393e-10,
+          "final_radius_m": 1.6279518604278564e-06,
+          "final_speed_m_s": 9.595169103704393e-10
+        }
+      },
+      "cspice_max_position_difference_m": 5.0921373139272445e-06,
+      "cspice_max_velocity_difference_m_s": 3.609636695473509e-09,
+      "analytic_cspice_position_difference_m": 4.244954094345442e-07,
+      "analytic_cspice_velocity_difference_m_s": 8.837672849160477e-11,
+      "accuracy_status": "not_assessed",
+      "observed_orders": {
+        "position": null,
+        "velocity": null
+      },
+      "reason": "Reference grid with 1024 steps could not be calculated: Time step is too coarse: duration_s / steps * pericenter_speed / pericenter_radius must be <= 0.02. Increase steps or shorten duration. Finest trajectory retained; numerical accuracy is not assessed."
+    },
+    {
+      "case": "high_eccentricity_pericenter_passage",
+      "steps": 2048,
+      "analytic": {
+        "sample_count": 2049,
+        "max_position_error_m": 0.00011920433907560479,
+        "max_velocity_error_m_s": 2.4539133195956978e-08,
+        "final_position_error_m": 0.00011920433907560479,
+        "final_velocity_error_m_s": 1.8793920036218256e-08,
+        "max_position_error_time_s": 6450.985784345971,
+        "metric_absolute_errors": {
+          "min_radius_m": 4.4871121644973755e-06,
+          "max_radius_m": 1.7624348402023315e-05,
+          "max_speed_m_s": 5.753463483415544e-09,
+          "final_radius_m": 1.7624348402023315e-05,
+          "final_speed_m_s": 7.967173587530851e-10
+        }
+      },
+      "cspice_max_position_difference_m": 0.00011920645138420878,
+      "cspice_max_velocity_difference_m_s": 2.4538186353831147e-08,
+      "analytic_cspice_position_difference_m": 3.094458528950093e-08,
+      "analytic_cspice_velocity_difference_m_s": 1.0951766470309208e-11,
+      "accuracy_status": "supported",
+      "observed_orders": {
+        "position": 4.01177564912387,
+        "velocity": 4.007953623276222
+      },
+      "reason": "Aligned fine/middle position and velocity differences meet the supplied tolerances, with observed fourth-order refinement; this is not a rigorous true-error bound."
+    },
+    {
+      "case": "eccentric_fractional_endpoint",
+      "steps": 2048,
+      "analytic": {
+        "sample_count": 2049,
+        "max_position_error_m": 9.138095768187469e-05,
+        "max_velocity_error_m_s": 3.2398752755189355e-08,
+        "final_position_error_m": 9.138095768187469e-05,
+        "final_velocity_error_m_s": 3.2398752755189355e-08,
+        "max_position_error_time_s": 13346.602594349952,
+        "metric_absolute_errors": {
+          "min_radius_m": 0.0,
+          "max_radius_m": 1.9516795873641968e-05,
+          "max_speed_m_s": 0.0,
+          "final_radius_m": 3.1206756830215454e-05,
+          "final_speed_m_s": 1.1067641025874764e-08
+        }
+      },
+      "cspice_max_position_difference_m": 9.131473035356591e-05,
+      "cspice_max_velocity_difference_m_s": 3.237192800076512e-08,
+      "analytic_cspice_position_difference_m": 1.0318785149205134e-07,
+      "analytic_cspice_velocity_difference_m_s": 3.7453386325166276e-11,
+      "accuracy_status": "supported",
+      "observed_orders": {
+        "position": 4.026933258347423,
+        "velocity": 4.025987296052673
+      },
+      "reason": "Aligned fine/middle position and velocity differences meet the supplied tolerances, with observed fourth-order refinement; this is not a rigorous true-error bound."
+    },
+    {
+      "case": "circle_eight_periods_refined",
+      "steps": 16384,
+      "analytic": {
+        "sample_count": 16385,
+        "max_position_error_m": 0.0008103644271569324,
+        "max_velocity_error_m_s": 8.731578125465237e-07,
+        "final_position_error_m": 0.0008099817487476442,
+        "final_velocity_error_m_s": 8.731578125465237e-07,
+        "max_position_error_time_s": 46292.310365527694,
+        "metric_absolute_errors": {
+          "min_radius_m": 2.1814368665218353e-05,
+          "max_radius_m": 9.313225746154785e-10,
+          "max_speed_m_s": 2.2214408090803772e-08,
+          "final_radius_m": 2.551823854446411e-06,
+          "final_speed_m_s": 1.3633325579576194e-09
+        }
+      },
+      "cspice_max_position_difference_m": 0.0008103139500826224,
+      "cspice_max_velocity_difference_m_s": 8.730984774282326e-07,
+      "analytic_cspice_position_difference_m": 9.718762600483202e-08,
+      "analytic_cspice_velocity_difference_m_s": 9.469779203255222e-11,
+      "accuracy_status": "supported",
+      "observed_orders": {
+        "position": 4.291757250318837,
+        "velocity": 4.291721491495414
+      },
+      "reason": "Aligned fine/middle position and velocity differences meet the supplied tolerances, with observed fourth-order refinement; this is not a rigorous true-error bound."
+    }
+  ]
+}

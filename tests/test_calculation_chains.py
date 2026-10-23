@@ -223,7 +223,7 @@ class CalculationChainTests(unittest.TestCase):
 
     def test_legacy_six_source_reviews_preserve_exact_bytes(self):
         p = example_projects()["attitude_review"]
-        sources = {name: value for name, value in lifecycle._verification_sources().items() if name != "chains.py"}
+        sources = {name: value for name, value in lifecycle._verification_sources().items() if name in lifecycle.ATTITUDE_VERIFICATION_SOURCE_NAMES}
         with patch.object(lifecycle, "_verification_sources", return_value=sources):
             review = lifecycle.review_project(p, engineering.evaluate_models(p))
         saved = json.dumps(review, sort_keys=True)

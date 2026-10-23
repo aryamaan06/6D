@@ -1,8 +1,8 @@
 """Bounded, reproducible 3D point-mass orbit propagation in fixed SI units.
 
 This module propagates declared initial conditions; it does not review a vehicle
-or assign requirement verdicts. Velocity Verlet is second order, with no adaptive
-steps or interpolation. Analytic elements only establish the input domain and
+or assign requirement verdicts. Classical RK4 is fourth order, with no adaptive
+steps or interpolation. Explicit legacy Velocity Verlet remains reproducible. Analytic elements only establish the input domain and
 resolution limit; every returned state is a numerical integration sample.
 """
 
@@ -17,8 +17,8 @@ from typing import Any
 SCENARIO_SCHEMA = "sixd.orbit-scenario.v1"
 RESULT_SCHEMA = "sixd.orbit-simulation.v1"
 FRAME = "body_centered_inertial_3d"
-METHOD_VERSION = "1"
-MAX_STEPS = 4096
+METHOD_VERSION = "2"
+MAX_STEPS = 16384
 MAX_ECCENTRICITY = 0.9
 MAX_PERIODS = 8.0
 MAX_PERICENTER_STEP = 0.02
@@ -191,9 +191,13 @@ def _acceleration(position: list[float]) -> list[float]:
     return [-component / radius ** 3 for component in position]
 
 
-def simulate(spec: Any) -> dict[str, Any]:
+def simulate(spec: Any, *, method="rk4") -> dict[str, Any]:
     """Propagate all three coordinates and return each actual discrete sample."""
+    if method not in {"rk4", "velocity_verlet"}:
+        raise ValueError("Unsupported orbital integration method.")
     canonical = validate_spec(spec)
+    if method == "velocity_verlet" and canonical["steps"] > 4096:
+        raise ValueError("Legacy Velocity Verlet supports at most 4096 steps.")
     orbit = _orbit(canonical)
     radius_scale = orbit["radius_scale_m"]
     speed_scale = orbit["speed_scale_m_s"]
@@ -224,7 +228,7 @@ def simulate(spec: Any) -> dict[str, Any]:
         physical_position = list(canonical["position_m"]) if index == 0 else [component * radius_scale for component in position]
         physical_velocity = list(canonical["velocity_m_s"]) if index == 0 else [component * speed_scale for component in velocity]
         sample = {
-            "time_s": canonical["duration_s"] * index / canonical["steps"],
+            "time_s": (canonical["duration_s"] if method == "rk4" and index == canonical["steps"] else canonical["duration_s"] * index / canonical["steps"]),
             "position_m": physical_position,
             "velocity_m_s": physical_velocity,
             "radius_m": math.hypot(*physical_position),
@@ -240,21 +244,35 @@ def simulate(spec: Any) -> dict[str, Any]:
         samples.append(sample)
         if index == canonical["steps"]:
             break
-        next_position = [coordinate + component * scaled_dt + 0.5 * force * scaled_dt ** 2
-                         for coordinate, component, force in zip(position, velocity, acceleration)]
-        if math.hypot(*next_position) * radius_scale <= canonical["exclusion_radius_m"]:
-            raise ValueError("Propagation reached the exclusion radius; no completed result was produced.")
-        next_acceleration = _acceleration(next_position)
-        velocity = [component + 0.5 * (force + next_force) * scaled_dt
-                    for component, force, next_force in zip(velocity, acceleration, next_acceleration)]
-        position, acceleration = next_position, next_acceleration
+        if method == "rk4":
+            def rhs(r, v):
+                if math.hypot(*r) * radius_scale <= canonical["exclusion_radius_m"]:
+                    raise ValueError("Propagation stage reached the exclusion radius.")
+                return v, _acceleration(r)
+            def shift(y, k, fraction):
+                return [a + fraction * scaled_dt * b for a, b in zip(y, k)]
+            r1, v1 = rhs(position, velocity)
+            r2, v2 = rhs(shift(position, r1, .5), shift(velocity, v1, .5))
+            r3, v3 = rhs(shift(position, r2, .5), shift(velocity, v2, .5))
+            r4, v4 = rhs(shift(position, r3, 1.), shift(velocity, v3, 1.))
+            position = [a + scaled_dt * (b+2*c+2*d+e)/6 for a,b,c,d,e in zip(position,r1,r2,r3,r4)]
+            velocity = [a + scaled_dt * (b+2*c+2*d+e)/6 for a,b,c,d,e in zip(velocity,v1,v2,v3,v4)]
+        else:
+            next_position = [coordinate + component * scaled_dt + 0.5 * force * scaled_dt ** 2
+                             for coordinate, component, force in zip(position, velocity, acceleration)]
+            if math.hypot(*next_position) * radius_scale <= canonical["exclusion_radius_m"]:
+                raise ValueError("Propagation reached the exclusion radius; no completed result was produced.")
+            next_acceleration = _acceleration(next_position)
+            velocity = [component + 0.5 * (force + next_force) * scaled_dt
+                        for component, force, next_force in zip(velocity, acceleration, next_acceleration)]
+            position, acceleration = next_position, next_acceleration
 
     return {
         "schema": RESULT_SCHEMA,
         "spec": canonical,
         "source_fingerprint": source_fingerprint(),
         "method": {
-            "name": "velocity_verlet", "version": METHOD_VERSION, "order": 2,
+            "name": method, "version": METHOD_VERSION if method == "rk4" else "1", "order": 4 if method == "rk4" else 2,
             "time_step_s": dt, "steps": canonical["steps"],
             "force_model": "newtonian_point_mass_two_body",
             "coordinates": "Three-dimensional Cartesian, internally nondimensionalized",
@@ -276,7 +294,7 @@ def simulate(spec: Any) -> dict[str, Any]:
                "pericenter_radius_m", "apocenter_radius_m", "orbital_period_s")},
         },
         "limits": {
-            "max_steps": MAX_STEPS, "max_eccentricity": MAX_ECCENTRICITY,
+            "max_steps": MAX_STEPS if method == "rk4" else 4096, "max_eccentricity": MAX_ECCENTRICITY,
             "max_orbital_periods": MAX_PERIODS,
             "max_pericenter_step_ratio": MAX_PERICENTER_STEP,
             "actual_pericenter_step_ratio": orbit["pericenter_step_ratio"],
@@ -289,7 +307,7 @@ def simulate(spec: Any) -> dict[str, Any]:
             "The exclusion radius is an input domain boundary, not a resolved body shape, atmosphere, terrain or contact model.",
             "No launch, landing, thrust, mass change, attitude, GNC, atmosphere, drag, heating, structural response, oblateness, third-body gravity or relativity.",
             "No measured physical-test or flight validation, uncertainty estimate, engineering requirement verdict or whole-vehicle assurance is produced.",
-            "Velocity Verlet has finite second-order trajectory error; conservation diagnostics do not bound position or phase error.",
+            ("Classical RK4 has finite fourth-order trajectory error and is not symplectic; conservation diagnostics do not bound position or phase error." if method == "rk4" else "Velocity Verlet has finite second-order trajectory error; conservation diagnostics do not bound position or phase error."),
             "Stored samples are discrete numerical states; extrema between samples are not searched or certified.",
         ],
     }

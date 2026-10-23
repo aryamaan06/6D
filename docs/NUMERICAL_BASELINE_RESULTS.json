@@ -1,0 +1,294 @@
+{
+  "solver_source_sha256": "ea303fdd6ef7425f50ec48051443ba3c090f39f0ec329a345e3af4215b7c672d",
+  "reference": "Independent analytic elliptic Kepler equation, bisection, Cartesian rotation and analytic velocity; all stored sample times.",
+  "python_version": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+  "cases": [
+    {
+      "case": {
+        "name": "circle_one_period",
+        "semi_major_axis_m": 7000000.0,
+        "eccentricity": 0.0,
+        "inclination_deg": 55,
+        "ascending_node_deg": 27,
+        "periapsis_argument_deg": 13,
+        "mean_anomaly_rad": 0.0,
+        "periods": 1.0,
+        "steps": 1024,
+        "mu_m3_s2": 398600441800000.0,
+        "exclusion_radius_m": 6371000.0
+      },
+      "method": {
+        "name": "velocity_verlet",
+        "version": "1",
+        "order": 2,
+        "time_step_s": 5.691910778990249,
+        "steps": 1024,
+        "force_model": "newtonian_point_mass_two_body",
+        "coordinates": "Three-dimensional Cartesian, internally nondimensionalized",
+        "sampling": "Every integration step; no interpolation or decimation"
+      },
+      "actual_pericenter_step_ratio": 0.006135923151542565,
+      "sample_count": 1025,
+      "max_position_error_m": 576.7316001394561,
+      "max_velocity_error_m_s": 0.5950192956685523,
+      "final_position_error_m": 551.963352410296,
+      "final_velocity_error_m_s": 0.5950192956685523,
+      "max_position_error_time_s": 5031.64912862738,
+      "metric_absolute_errors": {
+        "min_radius_m": 9.313225746154785e-10,
+        "max_radius_m": 131.77219501882792,
+        "max_speed_m_s": 1.8189894035458565e-12,
+        "final_radius_m": 1.862645149230957e-08,
+        "final_speed_m_s": 8.185452315956354e-12
+      },
+      "max_relative_energy_error": 3.5435387957249986e-10,
+      "max_relative_angular_momentum_error": 2.150654168954271e-15
+    },
+    {
+      "case": {
+        "name": "circle_eight_periods",
+        "semi_major_axis_m": 7000000.0,
+        "eccentricity": 0.0,
+        "inclination_deg": 55,
+        "ascending_node_deg": 27,
+        "periapsis_argument_deg": 13,
+        "mean_anomaly_rad": 0.0,
+        "periods": 8.0,
+        "steps": 4096,
+        "mu_m3_s2": 398600441800000.0,
+        "exclusion_radius_m": 6371000.0
+      },
+      "method": {
+        "name": "velocity_verlet",
+        "version": "1",
+        "order": 2,
+        "time_step_s": 11.383821557980498,
+        "steps": 4096,
+        "force_model": "newtonian_point_mass_two_body",
+        "coordinates": "Three-dimensional Cartesian, internally nondimensionalized",
+        "sampling": "Every integration step; no interpolation or decimation"
+      },
+      "actual_pericenter_step_ratio": 0.01227184630308513,
+      "sample_count": 4097,
+      "max_position_error_m": 17759.60599396297,
+      "max_velocity_error_m_s": 19.039658337742654,
+      "final_position_error_m": 17662.062290622474,
+      "final_velocity_error_m_s": 19.039658337742654,
+      "max_position_error_time_s": 45842.64941398747,
+      "metric_absolute_errors": {
+        "min_radius_m": 9.313225746154785e-10,
+        "max_radius_m": 527.0739008188248,
+        "max_speed_m_s": 1.8189894035458565e-12,
+        "final_radius_m": 5.2386894822120667e-05,
+        "final_speed_m_s": 5.6507815315853804e-08
+      },
+      "max_relative_energy_error": 5.668673419556569e-09,
+      "max_relative_angular_momentum_error": 6.161487731364982e-15
+    },
+    {
+      "case": {
+        "name": "eccentric_four_periods",
+        "semi_major_axis_m": 12000000.0,
+        "eccentricity": 0.25,
+        "inclination_deg": 63,
+        "ascending_node_deg": 41,
+        "periapsis_argument_deg": 22,
+        "mean_anomaly_rad": 0.0,
+        "periods": 4.0,
+        "steps": 4096,
+        "mu_m3_s2": 398600441800000.0,
+        "exclusion_radius_m": 6371000.0
+      },
+      "method": {
+        "name": "velocity_verlet",
+        "version": "1",
+        "order": 2,
+        "time_step_s": 12.775646690771207,
+        "steps": 4096,
+        "force_model": "newtonian_point_mass_two_body",
+        "coordinates": "Three-dimensional Cartesian, internally nondimensionalized",
+        "sampling": "Every integration step; no interpolation or decimation"
+      },
+      "actual_pericenter_step_ratio": 0.01056192363534795,
+      "sample_count": 4097,
+      "max_position_error_m": 10649.09302346887,
+      "max_velocity_error_m_s": 7.469879055571661,
+      "final_position_error_m": 10638.605526875739,
+      "final_velocity_error_m_s": 7.469879055571661,
+      "max_position_error_time_s": 52137.4141450373,
+      "metric_absolute_errors": {
+        "min_radius_m": 0.0,
+        "max_radius_m": 533.6816272456199,
+        "max_speed_m_s": 0.0,
+        "final_radius_m": 0.7137393038719893,
+        "final_speed_m_s": 0.0004720334172816365
+      },
+      "max_relative_energy_error": 1.4231870251180112e-05,
+      "max_relative_angular_momentum_error": 4.9431737314422645e-15
+    },
+    {
+      "case": {
+        "name": "eccentric_one_period",
+        "semi_major_axis_m": 20000000.0,
+        "eccentricity": 0.6,
+        "inclination_deg": 32,
+        "ascending_node_deg": 72,
+        "periapsis_argument_deg": 38,
+        "mean_anomaly_rad": 0.0,
+        "periods": 1.0,
+        "steps": 4096,
+        "mu_m3_s2": 398600441800000.0,
+        "exclusion_radius_m": 6371000.0
+      },
+      "method": {
+        "name": "velocity_verlet",
+        "version": "1",
+        "order": 2,
+        "time_step_s": 6.872203731998164,
+        "steps": 4096,
+        "force_model": "newtonian_point_mass_two_body",
+        "coordinates": "Three-dimensional Cartesian, internally nondimensionalized",
+        "sampling": "Every integration step; no interpolation or decimation"
+      },
+      "actual_pericenter_step_ratio": 0.007669903939428202,
+      "sample_count": 4097,
+      "max_position_error_m": 6428.775037135976,
+      "max_velocity_error_m_s": 4.535209693337013,
+      "final_position_error_m": 6427.970619011922,
+      "final_velocity_error_m_s": 4.535209693337013,
+      "max_position_error_time_s": 28121.057671336486,
+      "metric_absolute_errors": {
+        "min_radius_m": 0.0,
+        "max_radius_m": 719.2612129971385,
+        "max_speed_m_s": 0.0,
+        "final_radius_m": 0.9317229194566607,
+        "final_speed_m_s": 0.0006499044175143354
+      },
+      "max_relative_energy_error": 1.7435820513500532e-05,
+      "max_relative_angular_momentum_error": 6.944477467019568e-15
+    },
+    {
+      "case": {
+        "name": "retrograde_eccentric_partial",
+        "semi_major_axis_m": 30000000.0,
+        "eccentricity": 0.7,
+        "inclination_deg": 137,
+        "ascending_node_deg": 83,
+        "periapsis_argument_deg": 19,
+        "mean_anomaly_rad": 1.2,
+        "periods": 0.75,
+        "steps": 4096,
+        "mu_m3_s2": 398600441800000.0,
+        "exclusion_radius_m": 6371000.0
+      },
+      "method": {
+        "name": "velocity_verlet",
+        "version": "1",
+        "order": 2,
+        "time_step_s": 9.46878331041325,
+        "steps": 4096,
+        "force_model": "newtonian_point_mass_two_body",
+        "coordinates": "Three-dimensional Cartesian, internally nondimensionalized",
+        "sampling": "Every integration step; no interpolation or decimation"
+      },
+      "actual_pericenter_step_ratio": 0.009129011672870908,
+      "sample_count": 4097,
+      "max_position_error_m": 26.98826272962794,
+      "max_velocity_error_m_s": 0.00986376450846481,
+      "final_position_error_m": 26.98826272962794,
+      "final_velocity_error_m_s": 0.00986376450846481,
+      "max_position_error_time_s": 38784.136439452675,
+      "metric_absolute_errors": {
+        "min_radius_m": 7.9202168472111225,
+        "max_radius_m": 4.972016550600529,
+        "max_speed_m_s": 0.0032974061305139912,
+        "final_radius_m": 7.9202168472111225,
+        "final_speed_m_s": 0.0032974061305139912
+      },
+      "max_relative_energy_error": 1.2678535742355195e-06,
+      "max_relative_angular_momentum_error": 6.303500570883713e-15
+    },
+    {
+      "case": {
+        "name": "high_eccentricity_pericenter_passage",
+        "semi_major_axis_m": 70000000.0,
+        "eccentricity": 0.89,
+        "inclination_deg": 82,
+        "ascending_node_deg": 193,
+        "periapsis_argument_deg": 121,
+        "mean_anomaly_rad": -0.025,
+        "periods": 0.035,
+        "steps": 2048,
+        "mu_m3_s2": 398600441800000.0,
+        "exclusion_radius_m": 6371000.0
+      },
+      "method": {
+        "name": "velocity_verlet",
+        "version": "1",
+        "order": 2,
+        "time_step_s": 3.1498954025126813,
+        "steps": 2048,
+        "force_model": "newtonian_point_mass_two_body",
+        "coordinates": "Three-dimensional Cartesian, internally nondimensionalized",
+        "sampling": "Every integration step; no interpolation or decimation"
+      },
+      "actual_pericenter_step_ratio": 0.004046316358240546,
+      "sample_count": 2049,
+      "max_position_error_m": 99.04258301409763,
+      "max_velocity_error_m_s": 0.0225567583328029,
+      "final_position_error_m": 99.04258301409763,
+      "final_velocity_error_m_s": 0.016744412079101722,
+      "max_position_error_time_s": 6450.985784345971,
+      "metric_absolute_errors": {
+        "min_radius_m": 6.9542344603687525,
+        "max_radius_m": 19.487144347280264,
+        "max_speed_m_s": 0.008929512578106369,
+        "final_radius_m": 19.487144347280264,
+        "final_speed_m_s": 0.0005088882035124698
+      },
+      "max_relative_energy_error": 1.4601331373773473e-05,
+      "max_relative_angular_momentum_error": 3.1969082442429906e-15
+    },
+    {
+      "case": {
+        "name": "eccentric_fractional_endpoint",
+        "semi_major_axis_m": 15000000.0,
+        "eccentricity": 0.35,
+        "inclination_deg": 71,
+        "ascending_node_deg": 241,
+        "periapsis_argument_deg": 78,
+        "mean_anomaly_rad": 0.71,
+        "periods": 0.73,
+        "steps": 2048,
+        "mu_m3_s2": 398600441800000.0,
+        "exclusion_radius_m": 6371000.0
+      },
+      "method": {
+        "name": "velocity_verlet",
+        "version": "1",
+        "order": 2,
+        "time_step_s": 6.516895798022437,
+        "steps": 2048,
+        "force_model": "newtonian_point_mass_two_body",
+        "coordinates": "Three-dimensional Cartesian, internally nondimensionalized",
+        "sampling": "Every integration step; no interpolation or decimation"
+      },
+      "actual_pericenter_step_ratio": 0.004965575910139897,
+      "sample_count": 2049,
+      "max_position_error_m": 132.45156971534155,
+      "max_velocity_error_m_s": 0.04442199436331837,
+      "final_position_error_m": 132.45156971534155,
+      "final_velocity_error_m_s": 0.04442199436331837,
+      "max_position_error_time_s": 13346.602594349952,
+      "metric_absolute_errors": {
+        "min_radius_m": 0.0,
+        "max_radius_m": 25.87164131179452,
+        "max_speed_m_s": 0.0,
+        "final_radius_m": 74.11371697112918,
+        "final_speed_m_s": 0.02685770208518079
+      },
+      "max_relative_energy_error": 6.636572454283725e-07,
+      "max_relative_angular_momentum_error": 6.832339249077155e-15
+    }
+  ]
+}

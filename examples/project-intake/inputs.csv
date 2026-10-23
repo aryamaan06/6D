@@ -1,0 +1,6 @@
+id,value,unit,source
+density,1,kg/m^3,Constructed drag example supplied density
+speed,10,m/s,Constructed drag example supplied relative speed
+coefficient,1,1,Constructed drag example supplied coefficient; applicability unverified
+area,2,m^2,Constructed drag example supplied matching reference area
+drag_limit,150,N,Constructed drag example declared maximum force

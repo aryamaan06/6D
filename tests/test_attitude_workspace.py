@@ -109,14 +109,14 @@ class AttitudeWorkspaceTests(unittest.TestCase):
     def test_legacy_orbital_source_set_stays_readable(self):
         p=example_projects()['orbital_review']
         versions={k:v for k,v in engineering.MODEL_VERSIONS.items() if k!='attitude_control'}
-        sources={k:v for k,v in lifecycle._verification_sources().items() if k not in {'attitude.py','chains.py'}}
+        sources={k:v for k,v in lifecycle._verification_sources().items() if k in lifecycle.ORBITAL_VERIFICATION_SOURCE_NAMES}
         with patch.object(lifecycle,'_verification_sources',return_value=sources),patch.dict(engineering.MODEL_VERSIONS,versions,clear=True):
             r=lifecycle.review_project(p,engineering.evaluate_models(p))
         self.assertTrue(lifecycle.verify_review(r))
         self.assertNotIn('attitude.py',r['verification_sources'])
 
     def test_attitude_cannot_omit_new_solver_source(self):
-        sources={k:v for k,v in lifecycle._verification_sources().items() if k not in {'attitude.py','chains.py'}}
+        sources={k:v for k,v in lifecycle._verification_sources().items() if k in lifecycle.ORBITAL_VERIFICATION_SOURCE_NAMES}
         with patch.object(lifecycle,'_verification_sources',return_value=sources),self.assertRaises(ValueError):
             lifecycle.review_project(self.project,engineering.evaluate_models(self.project))
 

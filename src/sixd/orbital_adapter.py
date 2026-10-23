@@ -78,8 +78,8 @@ def sampled_metrics(artifact):
     }
 
 
-def evaluate(parameters):
-    artifact = simulation.simulate(scenario_from_parameters(parameters))
+def evaluate(parameters, *, method="rk4"):
+    artifact = simulation.simulate(scenario_from_parameters(parameters), method=method)
     return sampled_metrics(artifact), artifact
 
 
@@ -151,12 +151,18 @@ def _refinement_order(coarse_difference, fine_difference):
 
 def _accuracy_receipt(finest, criteria, levels, failure):
     """Build the entire verdict from retained evidence, without propagation."""
+    modern = finest["method"]["name"] == "rk4"
+    policy = dict(ACCURACY_METHOD)
+    limitations = list(ACCURACY_LIMITATIONS)
+    if modern:
+        policy.update(expected_order=4, accepted_order_min=3.7, accepted_order_max=4.5)
+        limitations[2] = "Fourth-order refinement and a small fine/middle difference are numerical evidence, not a rigorous bound on the unknown true trajectory error."
     receipt = {
-        "schema": ACCURACY_SCHEMA, "status": "not_assessed", "criteria": criteria,
-        "reason": "", "method": dict(ACCURACY_METHOD),
+        "schema": "sixd.orbit-accuracy.v2" if modern else ACCURACY_SCHEMA, "status": "not_assessed", "criteria": criteria,
+        "reason": "", "method": policy,
         "reference_levels": levels, "reference_failure": failure,
         "comparisons": [], "observed_orders": {"position": None, "velocity": None},
-        "limitations": list(ACCURACY_LIMITATIONS),
+        "limitations": limitations,
     }
     steps = finest["spec"]["steps"]
     if criteria is None:
@@ -180,20 +186,20 @@ def _accuracy_receipt(finest, criteria, levels, failure):
     receipt["observed_orders"] = orders
     if any(value is None for value in orders.values()):
         receipt["reason"] = "The retained grid differences do not establish a measurable refinement order; numerical accuracy is not assessed."
-    elif not all(ACCURACY_METHOD["accepted_order_min"] <= value <= ACCURACY_METHOD["accepted_order_max"] for value in orders.values()):
+    elif not all(policy["accepted_order_min"] <= value <= policy["accepted_order_max"] for value in orders.values()):
         receipt["status"] = "insufficient_accuracy"
-        receipt["reason"] = "The retained position and velocity differences do not both show the required second-order refinement (observed order 1.8 through 2.2)."
+        receipt["reason"] = ("The retained position and velocity differences do not both show the required fourth-order refinement (observed order 3.7 through 4.5)." if modern else "The retained position and velocity differences do not both show the required second-order refinement (observed order 1.8 through 2.2).")
     elif (comparisons[-1]["max_position_difference_m"] > criteria["position_tolerance_m"]
           or comparisons[-1]["max_velocity_difference_m_s"] > criteria["velocity_tolerance_m_s"]):
         receipt["status"] = "insufficient_accuracy"
         receipt["reason"] = "The worst aligned fine/middle position or velocity difference exceeds a supplied accuracy tolerance."
     else:
         receipt["status"] = "supported"
-        receipt["reason"] = "Aligned fine/middle position and velocity differences meet the supplied tolerances, with observed second-order refinement; this is not a rigorous true-error bound."
+        receipt["reason"] = ("Aligned fine/middle position and velocity differences meet the supplied tolerances, with observed fourth-order refinement; this is not a rigorous true-error bound." if modern else "Aligned fine/middle position and velocity differences meet the supplied tolerances, with observed second-order refinement; this is not a rigorous true-error bound.")
     return receipt
 
 
-def evaluate_with_accuracy(parameters, criteria=None):
+def evaluate_with_accuracy(parameters, criteria=None, *, method="rk4"):
     """Keep the declared finest result and assess explicit accuracy criteria.
 
     At most two extra bounded propagations run. Their retained states make the
@@ -201,14 +207,14 @@ def evaluate_with_accuracy(parameters, criteria=None):
     Failure of a coarser grid never discards an already valid finest trajectory.
     """
     criteria = validate_accuracy_criteria(criteria)
-    metrics, finest = evaluate(parameters)
+    metrics, finest = evaluate(parameters, method=method)
     levels, failure = [], None
     steps = finest["spec"]["steps"]
     if criteria is not None and steps >= 64 and steps % 4 == 0:
         for reference_steps in (steps // 4, steps // 2):
             reference_parameters = dict(parameters, steps=reference_steps)
             try:
-                _, artifact = evaluate(reference_parameters)
+                _, artifact = evaluate(reference_parameters, method=method)
             except ValueError as error:
                 failure = {"steps": reference_steps, "message": str(error)}
                 break
@@ -250,7 +256,7 @@ def validate_artifact(artifact, metrics, parameters, retained_source):
     method = artifact["method"]
     _fields(method, {"name", "version", "order", "time_step_s", "steps", "force_model",
                      "coordinates", "sampling"}, "method")
-    if (method["name"] != "velocity_verlet" or method["version"] != "1" or method["order"] != 2
+    if ((method["name"], method["version"], method["order"]) not in {("velocity_verlet", "1", 2), ("rk4", "2", 4)}
             or isinstance(method["order"], bool) or isinstance(method["steps"], bool)
             or not isinstance(method["steps"], int) or method["steps"] != spec["steps"]
             or method["force_model"] != "newtonian_point_mass_two_body"
@@ -259,7 +265,7 @@ def validate_artifact(artifact, metrics, parameters, retained_source):
         raise ValueError("Orbital method does not match the v1 integration contract.")
     _number(method["time_step_s"], "time step")
     # Permanent v1 serialization bounds, independent of later solver policy.
-    if not 16 <= spec["steps"] <= 4096 or spec["duration_s"] <= 0 or spec["mu_m3_s2"] <= 0:
+    if not 16 <= spec["steps"] <= (16384 if method["name"] == "rk4" else 4096) or spec["duration_s"] <= 0 or spec["mu_m3_s2"] <= 0:
         raise ValueError("Orbital retained v1 scenario bounds are inconsistent.")
     if method["time_step_s"] != spec["duration_s"] / spec["steps"]:
         raise ValueError("Orbital time step does not match the bound window.")
@@ -280,7 +286,8 @@ def validate_artifact(artifact, metrics, parameters, retained_source):
                 raise ValueError("Orbital sample vectors must contain three components.")
             for component in row[key]:
                 _number(component, "sample component")
-        if row["time_s"] != spec["duration_s"] * index / spec["steps"]:
+        expected_time = spec["duration_s"] if method["name"] == "rk4" and index == spec["steps"] else spec["duration_s"] * index / spec["steps"]
+        if row["time_s"] != expected_time:
             raise ValueError("Orbital sample times do not match the stored window and grid.")
         if (row["radius_m"] != math.hypot(*row["position_m"])
                 or row["speed_m_s"] != math.hypot(*row["velocity_m_s"])):
@@ -343,6 +350,8 @@ def validate_accuracy(accuracy, finest_artifact, parameters, criteria, source_fi
         reference_parameters = dict(parameters, steps=expected_steps)
         artifact = level["artifact"]
         validate_artifact(artifact, sampled_metrics(artifact), reference_parameters, source_fingerprint)
+        if any(artifact["method"][key] != finest_artifact["method"][key] for key in ("name", "version", "order")):
+            raise ValueError("Refinement grids must use the same retained numerical method.")
     failure = accuracy["reference_failure"]
     if failure is not None:
         _fields(failure, {"steps", "message"}, "accuracy reference failure")

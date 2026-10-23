@@ -37,6 +37,11 @@ _MEANINGS = {
     "not_assessed": "The available evidence does not establish whether this requirement is satisfied. This is an evidence gap, not a finding that the design is physically impossible or has failed.",
 }
 _DOMAIN_REVIEW = {
+    "powered_flight": (
+        "Review the vertical flight assumptions and burnout evidence",
+        "Verify the initial and dry masses, constant thrust and specific impulse, reference area and drag coefficient, exponential atmosphere and gravity inputs against their sources. Inspect the saved burnout event, mass depletion, above-surface coast and sampled pressure and acceleration histories. Review both retained grid comparisons and declared altitude, velocity and relative tolerances; use independent analysis to check the applicable regime. Staging, steering, lateral motion, aeroheating, landing and whole-mission performance require separate evidence.",
+        "Sourced engine and usable-propellant data, atmosphere and coefficient validity, gravity and geometry, justified numerical tolerances and resolution, independent vertical-flight reference evidence, and applicable analyses of effects excluded from this single-axis model.",
+    ),
     "attitude_control": (
         "Review the pointing window, controller and torque authority",
         "Inspect the saved signed error, angular rate, requested versus applied torque and clipped-command samples. Verify the inertia, axis/reference, target, gain signs, disturbance estimate and actuator limit against their sources. Review the explicit assessment window and numerical grid differences; refine the grid and compare an independent analysis before relying on the sampled criterion. Check sensor/delay effects and actuator momentum or bandwidth separately. Do not relax engineering limits to obtain a pass.",
@@ -157,6 +162,15 @@ def build_guidance(project, review, requirement_id, evidence_ids=()):
             else:
                 need("An applicable model, documented input/condition definitions and verified results for the declared metric.",
                      "No maintained adapter supports this model type.", model_path)
+        elif (model["type"] == "attitude_control" and receipt["status"] != "completed"
+                and any(issue.startswith("Attitude grid refinement did not meet the supplied angle/rate numerical tolerances.")
+                        for issue in receipt["issues"])):
+            add("resolve_attitude_accuracy", "Resolve the attitude response's numerical accuracy gap",
+                "The recorded angle or angular-rate refinement comparison exceeds its supplied numerical tolerance. Verify the angle and rate criteria and their engineering sources, then save a revision with a finer supported step count or obtain an independently checked analysis. Keep the assessment window, target, gain signs and actuator assumptions explicit. Do not loosen tolerances to obtain a pass; this stopped calculation supplies no completed pointing or rate result.",
+                model_path + "/issues", model_path + "/model_definition", model_path + "/input_records", finding_path)
+            need("Sourced angle and angular-rate numerical tolerances, a supported grid refinement and independent control-response analysis when needed.",
+                 "The recorded attitude calculation did not meet its numerical comparison criteria and produced no completed metrics.",
+                 model_path + "/issues", finding_path)
         elif receipt["status"] != "completed":
             add("resolve_invalid_inputs", "Resolve the recorded model input issues",
                 "Inspect the model's recorded issues and exact parameter bindings, units and allowed input ranges. Verify each correction against its source, save a new revision and rerun before interpreting a requirement outcome.",
@@ -169,15 +183,22 @@ def build_guidance(project, review, requirement_id, evidence_ids=()):
                 finding_path + "/metric", model_path + "/metrics")
             need("A supported result for the exact required metric.", "The completed calculation omitted this required metric.", finding_path)
         elif accuracy_gap:
-            add("resolve_orbital_accuracy", "Resolve the orbit's numerical accuracy gap",
-                "Inspect the recorded grid comparisons, observed refinement and supplied position/velocity tolerances. "
-                "Declare engineering-justified tolerances with their source when missing. If the current grid does not support them, "
-                "save a revision with a finer supported grid or obtain an independently checked analysis that meets the required accuracy. "
-                "If the declared numerical allowance overlaps the engineering limit, obtain evidence that separates the result from that limit. "
-                "Do not loosen tolerances just to obtain a pass. Grid agreement is an estimate, not a guaranteed error bound or physical validation.",
-                model_path + "/numerical_accuracy", model_path + "/model_definition", finding_path)
-            need("Sourced numerical position and velocity accuracy criteria, a supported refinement comparison and independent analysis when needed.",
-                 accuracy_gap["reason"], model_path + "/numerical_accuracy", finding_path)
+            if model["type"] == "powered_flight":
+                add("resolve_flight_accuracy", "Resolve the vertical flight's numerical accuracy gap",
+                    "Inspect both saved altitude and velocity grid comparisons, the exact burnout event and the supplied absolute and relative numerical tolerances. Verify those tolerances and their engineering sources. Save a revision with a finer supported step count or obtain an independently checked vertical-flight analysis when the current grid does not support the criterion. If the saved metric allowance overlaps its engineering limit, obtain evidence that separates them. Do not loosen tolerances to obtain a pass. Grid agreement is not a guaranteed error bound or physical validation, and sampled extrema do not bound values between samples.",
+                    model_path + "/flight_response/diagnostics", model_path + "/model_definition", finding_path)
+                need("Sourced altitude, velocity and relative numerical tolerances, retained grid comparisons and independent vertical-flight analysis when needed.",
+                     accuracy_gap["reason"], model_path + "/flight_response/diagnostics", finding_path)
+            else:
+                add("resolve_orbital_accuracy", "Resolve the orbit's numerical accuracy gap",
+                    "Inspect the recorded grid comparisons, observed refinement and supplied position/velocity tolerances. "
+                    "Declare engineering-justified tolerances with their source when missing. If the current grid does not support them, "
+                    "save a revision with a finer supported grid or obtain an independently checked analysis that meets the required accuracy. "
+                    "If the declared numerical allowance overlaps the engineering limit, obtain evidence that separates the result from that limit. "
+                    "Do not loosen tolerances just to obtain a pass. Grid agreement is an estimate, not a guaranteed error bound or physical validation.",
+                    model_path + "/numerical_accuracy", model_path + "/model_definition", finding_path)
+                need("Sourced numerical position and velocity accuracy criteria, a supported refinement comparison and independent analysis when needed.",
+                     accuracy_gap["reason"], model_path + "/numerical_accuracy", finding_path)
         else:
             add("resolve_comparison_units", "Resolve the metric and limit units",
                 "Compare the recorded metric unit with the limit's declared unit. Verify and explicitly convert the limit value if justified, save a new revision and rerun. Do not compare unlike units or change only a label.",

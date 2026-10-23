@@ -33,7 +33,7 @@ class AccuracyPlaybackTests(unittest.TestCase):
                 "metrics": metrics, "numerical_accuracy": accuracy, "applicability": engineering.model_applicability("orbital_trajectory")}},
             "review": {"project": {"project_id": "playback-accuracy", "requirements": []},
                 "verification_sources": {"simulation.py": simulation.source_fingerprint()},
-                "digest": "b" * 64, "adapter_versions": {"orbital_trajectory": "2"}, "findings": {}}}
+                "digest": "b" * 64, "adapter_versions": {"orbital_trajectory": "3"}, "findings": {}}}
         cls.viewer = WorkspaceSimulation.__new__(WorkspaceSimulation)
 
     def test_projection_keeps_accuracy_and_applicability_without_duplicating_reference_grids(self):

@@ -81,6 +81,8 @@ def _compact_model(project, requirement, review):
                 result[key] = _accuracy_projection(evidence[key])
             else:
                 result[key] = deepcopy(evidence[key])
+    if evidence is not None and "flight_response" in evidence:
+        result["flight_response"] = {"diagnostics": deepcopy(evidence["flight_response"]["diagnostics"])}
     return result
 
 
@@ -255,7 +257,7 @@ def validate_investigation_context(bundle, view, requirement_id):
                            "status": original_model["status"],
                            "metrics": {original_requirement["metric"]: original_model["selected_metric"]}
                                       if original_model["selected_metric"] is not None else {},
-                           **{key: original_model[key] for key in ("numerical_accuracy",) if key in original_model}}
+                           **{key: original_model[key] for key in ("numerical_accuracy", "flight_response") if key in original_model}}
         accuracy_gap = evidence_accuracy_gap(retained_result)
         if accuracy_gap is None and original_model["selected_metric"] is not None:
             accuracy_gap = requirement_accuracy_gap(retained_result, original_requirement,
@@ -407,7 +409,7 @@ class TestEvidence:
             validate_investigation_context(bundle, view, requirement_id)
             return bundle
 
-    def review_export(self, project_id, revision):
+    def review_export(self, project_id, revision, *, source_library=None, action_queue=None, coverage=None, simulation_imports=None, operating_envelopes=None):
         with self._snapshot(project_id, revision) as (connection, view, selected, sources):
             receipts, truncated = self._rows(connection, project_id, revision)
             summary = self._summary(view, selected, receipts, truncated, sources, draft=False)
@@ -424,6 +426,21 @@ class TestEvidence:
                       "history_truncated": truncated, "launch_authorization": False, "live_model_calls": 0,
                       "execution": "read_only_recorded_engineering_and_test_evidence", "limitations": deepcopy(LIMITATIONS),
                       "sources": deepcopy(sources)}
+            if source_library is not None:
+                result["project_sources"] = source_library.summary_in_snapshot(connection, view)
+                result["limitations"].append("Project source references are supplemental user-supplied annotations captured with this export; links and manual review do not alter the original engineering findings or establish source accuracy.")
+            if action_queue is not None:
+                result["engineering_actions"] = action_queue.summary_in_snapshot(connection, view)
+                result["limitations"].append("Engineering actions are supplemental workflow records. Closing an action does not change a numerical finding or establish that engineering completion criteria have been verified.")
+            if coverage is not None:
+                result["engineering_coverage"] = coverage.summary_in_snapshot(connection, view)
+                result["limitations"].append("Engineering coverage records user-declared scope and model applicability alongside original findings. A met criterion or declared fit is not whole-mission verification.")
+            if simulation_imports is not None:
+                result["simulation_imports"] = simulation_imports.snapshot(connection, view)
+                result["limitations"].append("Imported time histories and declared conditions are supplemental recorded evidence; comparison agreement does not change canonical requirement findings or verify physical validity.")
+            if operating_envelopes is not None:
+                result["operating_envelopes"] = operating_envelopes.envelope_snapshot(connection, view)
+                result["limitations"].append("Operating-envelope studies report only sampled combinations against fixed criteria. Worst observed margins do not bound unsampled conditions or establish a continuous safe operating range.")
             result["export_digest"] = _digest(result)
             if len(_encode(result).encode("utf-8")) > MAX_EXPORT_BYTES:
                 raise WorkspaceError("The combined review exceeds its 64 MiB export bound. Export individual comparisons instead.")

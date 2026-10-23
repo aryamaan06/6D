@@ -1,0 +1,2 @@
+id,title,model_id,metric,operator,limit_input,critical
+drag_limit_req,Declared maximum drag magnitude,drag,drag_force,<=,drag_limit,true

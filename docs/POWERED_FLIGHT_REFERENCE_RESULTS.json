@@ -1,0 +1,51 @@
+{
+  "method": "SciPy DOP853, separately written three-state ODE (including integrated mass)",
+  "conditions": "Constructed vertical-flight cases, not flight or human-reviewed data",
+  "tolerances": {
+    "altitude_m": 0.0002,
+    "velocity_m_s": 2e-06,
+    "mass_kg": 1e-08
+  },
+  "cases": [
+    {
+      "case": "atmospheric_ascent",
+      "max_altitude_difference_m": 6.784830475226045e-10,
+      "max_velocity_difference_m_s": 2.4925839170464315e-11,
+      "max_mass_difference_kg": 3.410605131648481e-13,
+      "reference_final_altitude_m": 9147.375817361011,
+      "reference_final_velocity_m_s": 36.67962033670993,
+      "grid_agreement_met": true,
+      "scipy_version": "1.18.1"
+    },
+    {
+      "case": "descending_coast",
+      "max_altitude_difference_m": 2.562410372775048e-08,
+      "max_velocity_difference_m_s": 1.1725081461300135e-09,
+      "max_mass_difference_kg": 1.4779288903810084e-12,
+      "reference_final_altitude_m": 10372.318000753392,
+      "reference_final_velocity_m_s": -160.8691317541779,
+      "grid_agreement_met": true,
+      "scipy_version": "1.18.1"
+    },
+    {
+      "case": "low_thrust_margin",
+      "max_altitude_difference_m": 2.105480234604329e-10,
+      "max_velocity_difference_m_s": 1.1108658437564145e-09,
+      "max_mass_difference_kg": 1.1368683772161603e-13,
+      "reference_final_altitude_m": 1742.9763769246943,
+      "reference_final_velocity_m_s": -2.0334101836587193,
+      "grid_agreement_met": true,
+      "scipy_version": "1.18.1"
+    },
+    {
+      "case": "thin_atmosphere",
+      "max_altitude_difference_m": 2.422893885523081e-09,
+      "max_velocity_difference_m_s": 2.722799763432704e-11,
+      "max_mass_difference_kg": 9.094947017729282e-13,
+      "reference_final_altitude_m": 42182.71567326352,
+      "reference_final_velocity_m_s": 75.15796702383862,
+      "grid_agreement_met": true,
+      "scipy_version": "1.18.1"
+    }
+  ]
+}

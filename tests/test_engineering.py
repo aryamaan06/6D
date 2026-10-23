@@ -250,8 +250,9 @@ class EngineeringTests(unittest.TestCase):
         self.assertEqual(set(results["candidate"]), {"model_id", "model_type", "model_version", "status",
                                                      "metrics", "assumptions", "not_assessed", "issues", "applicability"})
         self.assertEqual(results["candidate"]["applicability"]["physical_applicability"], "not_assessed")
-        self.assertEqual(MODEL_VERSIONS["orbital_trajectory"], "2")
-        self.assertTrue(all(version == "1" for kind, version in MODEL_VERSIONS.items() if kind != "orbital_trajectory"))
+        self.assertEqual(MODEL_VERSIONS["orbital_trajectory"], "3")
+        self.assertEqual(MODEL_VERSIONS["powered_flight"], "2")
+        self.assertTrue(all(version == "1" for kind, version in MODEL_VERSIONS.items() if kind not in {"orbital_trajectory", "powered_flight"}))
 
     def test_duplicate_ids_and_invalid_top_level_do_not_silently_overwrite(self):
         project = project_for("drag_load", DRAG)

@@ -160,7 +160,11 @@ class WorkspaceSimulation:
             # This frozen v1 structural contract deliberately does not call the
             # current scenario validator: later validators cannot rewrite history.
             samples = result["samples"]
-            if (type(spec["steps"]) is not int or not 1 <= spec["steps"] <= 4096
+            method_identity = tuple(result["method"].get(key) for key in ("name", "version", "order"))
+            if method_identity not in {("velocity_verlet", "1", 2), ("rk4", "2", 4)} or type(result["method"]["order"]) is not int:
+                raise ValueError("Unsupported retained orbital method.")
+            maximum_steps = 16384 if method_identity[0] == "rk4" else 4096
+            if (type(spec["steps"]) is not int or not 16 <= spec["steps"] <= maximum_steps
                     or not isinstance(samples, list) or len(samples) != spec["steps"] + 1
                     or result["summary"]["sample_count"] != len(samples)
                     or samples[0]["time_s"] != 0 or samples[-1]["time_s"] != spec["duration_s"]

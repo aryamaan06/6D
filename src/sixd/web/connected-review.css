@@ -1,0 +1,36 @@
+/* Connected navigation; calculations and evidence retain their original scope. */
+#sixd-workspace .sd-sidebar{padding:20px 13px 14px;gap:3px}
+#sixd-workspace .sd-sidebar>.sd-label{padding:0 5px;margin-top:3px}
+#sixd-workspace .sd-sidebar .sd-select{margin:4px 0 7px;background:white;max-width:100%}
+#sixd-workspace .sd-review-home-link{justify-content:flex-start;margin:10px 0 19px;font-weight:600;background:#edf1f9;border-color:#dfe6f1;color:#35518a}
+#sixd-workspace .sd-nav-group{border-top:1px solid var(--sd-border);padding:15px 0 8px;margin-top:10px}
+#sixd-workspace .sd-nav-group h2{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--sd-soft);font-weight:600;margin:0 7px 7px}
+#sixd-workspace .sd-nav-group .sd-button{display:flex;width:100%;justify-content:flex-start;white-space:normal;border-color:transparent;background:transparent;border-radius:5px;margin:0;min-height:30px;padding:6px 7px;font-size:11.5px}
+#sixd-workspace .sd-nav-group .sd-button:hover{background:#ebede9}
+#sixd-workspace .sd-sidebar [aria-current=page]{background:#e8edf8;color:#294d9a}
+#sixd-workspace .sd-review-home .sd-heading{display:none}
+#sixd-workspace.sd-review-home .sd-heading{display:none}
+#sixd-workspace.sd-review-home .sd-shell{grid-template-columns:200px minmax(0,1fr)}
+#sixd-workspace.sd-review-home .sd-inspector{display:none}
+#sixd-workspace .sd-toolbar{gap:10px;align-items:center;position:relative;z-index:3;flex-wrap:wrap}
+#sixd-workspace .sd-tool-actions{gap:6px;display:flex;flex-wrap:wrap;align-items:center}
+#sixd-workspace .sd-tool-menu{position:relative}
+#sixd-workspace .sd-tool-menu>summary{cursor:pointer;list-style:none;user-select:none}
+#sixd-workspace .sd-tool-menu>summary::-webkit-details-marker{display:none}
+#sixd-workspace .sd-tool-menu>summary:focus-visible{outline:2px solid var(--sd-blue);outline-offset:3px}
+#sixd-workspace .sd-tool-menu[open]>summary{border-color:#a7b8e1;background:#f3f6fc}
+#sixd-workspace .sd-tool-menu>nav{position:absolute;top:calc(100% + 7px);right:0;min-width:216px;background:white;border:1px solid #dde2e9;border-radius:9px;padding:6px;box-shadow:0 9px 30px #18233718;display:grid;z-index:30}
+#sixd-workspace .sd-tool-menu>nav>.sd-button{border-color:transparent;justify-content:flex-start;background:white;min-height:36px;font-size:12px;padding:8px 11px}
+#sixd-workspace .sd-tool-menu>nav>.sd-button:hover,#sixd-workspace .sd-tool-menu>nav>.sd-button[aria-pressed=true]{background:#f0f3f9}
+#sixd-workspace .sd-view-tabs{flex-shrink:0}
+#sixd-workspace .sd-heading{padding-top:23px;padding-bottom:17px}
+#sixd-workspace .sd-heading h1{font-size:25px;letter-spacing:-.6px;font-weight:610}
+#sixd-workspace .sd-page-description{max-width:760px}
+#sixd-workspace .sd-table-wrap:focus-visible{outline:2px solid var(--sd-blue);outline-offset:2px}
+#sixd-workspace .sim-caption,#sixd-workspace .pf-chart figcaption,#sixd-workspace .sc-plot figcaption{line-height:1.7}
+#sixd-workspace .sim-details summary,#sixd-workspace .sc-disclosure summary,#sixd-workspace .sd-source summary{line-height:1.6;padding:3px 0}
+#sixd-workspace .sd-breadcrumb{overflow-wrap:anywhere;min-width:0}
+#sixd-workspace .sd-main,#sixd-workspace #sd-view-content{min-width:0}
+@media(max-width:950px){#sixd-workspace.sd-review-home .sd-shell{grid-template-columns:180px minmax(0,1fr)}#sixd-workspace .sd-sidebar{padding:17px 10px}}
+@media(max-width:570px){#sixd-workspace.sd-review-home .sd-shell{display:block}#sixd-workspace .sd-toolbar{padding:10px 12px;justify-content:flex-start}#sixd-workspace .sd-tool-actions{gap:5px}#sixd-workspace .sd-tool-menu>summary{font-size:11px}#sixd-workspace .sd-tool-menu>nav{left:0;right:auto;max-width:calc(100vw - 28px)}#sixd-workspace .sd-nav-group .sd-button{min-height:36px;font-size:12px}#sixd-workspace .rw-findings-table{min-width:710px}#sixd-workspace .rw-table-scroll{max-width:100%;overflow:auto}#sixd-workspace .sd-top-right .sd-button{min-width:32px}}
+@media print{#sixd-workspace .sd-tool-menu,#sixd-workspace .sd-toolbar{display:none!important}#sixd-workspace.sd-review-home .sd-shell{display:block}#sixd-workspace .rw-workspace{padding:0}}

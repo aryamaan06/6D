@@ -39,23 +39,25 @@ import re
 from fractions import Fraction
 from typing import Any, Callable
 
-from . import orbital_adapter, attitude
+from . import orbital_adapter, attitude, powered_flight
 
 
 STANDARD_GRAVITY = 9.80665
 STEFAN_BOLTZMANN = 5.670374419e-8
 
 MODEL_VERSIONS = {
+    "powered_flight": "2",
     "attitude_control": "1",
     "ideal_propulsion": "1",
     "static_cantilever": "1",
     "radiative_equilibrium": "1",
     "drag_load": "1",
-    "orbital_trajectory": "2",
+    "orbital_trajectory": "3",
     "power_energy_budget": "1",
 }
 
 MODEL_PARAMETERS = {
+    "powered_flight": dict(powered_flight.PARAMETERS),
     "attitude_control": dict(attitude.PARAMETERS),
     "ideal_propulsion": {
         "initial_mass": "kg", "dry_mass": "kg", "delta_v": "m/s",
@@ -82,6 +84,7 @@ MODEL_PARAMETERS = {
 }
 
 _ASSUMPTIONS = {
+    "powered_flight": list(powered_flight.ASSUMPTIONS),
     "attitude_control": list(attitude.ASSUMPTIONS),
     "power_energy_budget": [
         "Explicit sequential operating modes; all listed equipment runs continuously and simultaneously throughout its mode.",
@@ -117,6 +120,7 @@ _ASSUMPTIONS = {
 }
 
 _NOT_ASSESSED = {
+    "powered_flight": list(powered_flight.NOT_ASSESSED),
     "attitude_control": list(attitude.NOT_ASSESSED),
     "power_energy_budget": [
         "Accuracy, completeness, measurement convention and applicability of supplied loads, generation, capacities, reserves and losses.",
@@ -152,6 +156,12 @@ _NOT_ASSESSED = {
 def model_applicability(model_type):
     """Reference context, never a claim of validation for supplied hardware."""
     entries = {
+        "powered_flight": (
+            "Vertical constant-thrust ascent and above-surface coast; analytical mass, radial gravity and exponential-atmosphere drag.",
+            "Immediate liftoff, positive propellant, bounded time/grid/domain and three-grid state agreement; sampled metrics only.",
+            "Engine and atmosphere applicability, coefficient/area convention, winds, steering, staging, aeroheating and landing.",
+            "NASA rocket flight equations and drag", "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/drag-equation/",
+            "Constructed analytical vacuum and separately integrated atmospheric reference cases; no flight qualification."),
         "ideal_propulsion": (
             "Single ideal constant-Isp burn; no flight-loss prediction.",
             "Positive masses, Isp and thrust; nonnegative prescribed delta-v; finite results.",
@@ -178,7 +188,7 @@ def model_applicability(model_type):
             "Rounded Smeaton illustration and an independently evaluated constructed case."),
         "orbital_trajectory": (
             "Unforced elliptic point-mass two-body translation; sampled position/radius/speed only.",
-            "Elliptic domain, clearance, window and step limits; v2 adds explicit three-grid agreement criteria.",
+            "Elliptic domain, clearance, window and step limits; v3 uses RK4 with explicit three-grid agreement criteria; retained v2 uses Velocity Verlet.",
             "Appropriate forces/frame/initial data, perturbations, continuous-time limits and mission accuracy.",
             "NASA NAIF two-body reference", "https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/prop2b_c.html",
             "External CSPICE comparisons and constructed refinement cases; long-run phase errors remain material."),
@@ -206,7 +216,12 @@ def model_applicability(model_type):
 
 def evidence_accuracy_gap(result):
     """Block new orbital evidence without rewriting version-one history."""
-    if result.get("model_type") != "orbital_trajectory" or result.get("model_version") != "2":
+    if result.get("model_type") == "powered_flight" and result.get("status") == "completed":
+        diagnostic = (result.get("flight_response") or {}).get("diagnostics", {})
+        if diagnostic.get("grid_agreement_met") is True:
+            return None
+        return {"status": "insufficient_accuracy", "reason": diagnostic.get("reason") or "Powered-flight grid agreement is unavailable."}
+    if result.get("model_type") != "orbital_trajectory" or result.get("model_version") not in {"2", "3"}:
         return None
     accuracy = result.get("numerical_accuracy") or {}
     if accuracy.get("status") == "supported":
@@ -218,10 +233,17 @@ def evidence_accuracy_gap(result):
 def requirement_accuracy_gap(result, requirement, metric, limit):
     """Apply the supplied allowance to criteria, without calling it an error bound."""
     gap = evidence_accuracy_gap(result)
-    if gap is not None or result.get("model_type") != "orbital_trajectory" or result.get("model_version") != "2":
+    if gap is not None:
         return gap
-    criteria = result["numerical_accuracy"]["criteria"]
-    allowance = criteria["position_tolerance_m" if metric["unit"] == "m" else "velocity_tolerance_m_s"]
+    if result.get("model_type") == "powered_flight":
+        allowance = powered_flight.metric_allowance(result["flight_response"], requirement["metric"])
+        if allowance == 0 and requirement["metric"] in {"burn_duration", "propellant_consumed"}:
+            return None
+    elif result.get("model_type") == "orbital_trajectory" and result.get("model_version") in {"2", "3"}:
+        criteria = result["numerical_accuracy"]["criteria"]
+        allowance = criteria["position_tolerance_m" if metric["unit"] == "m" else "velocity_tolerance_m_s"]
+    else:
+        return None
     value, threshold, operator = metric["value"], limit["value"], requirement["operator"]
     # Exact Fraction comparisons avoid overflow and accidental rounding of a
     # near-limit allowance away from a much larger criterion value.
@@ -632,13 +654,17 @@ def evaluate_model(project: dict[str, Any], model: dict[str, Any], prior_results
         result["issues"] = ["Upstream calculation evidence is unavailable for linked parameter " + role + "." for role in unavailable]
         result["not_assessed"].extend(result["issues"])
         return result
-    if model_type not in _CALCULATORS and model_type not in {"orbital_trajectory", "power_energy_budget", "attitude_control"}:
+    if model_type not in _CALCULATORS and model_type not in {"orbital_trajectory", "power_energy_budget", "attitude_control", "powered_flight"}:
         result["not_assessed"] = [f"No maintained deterministic adapter supports model type {model_type}."]
         result["issues"] = ["Unsupported model type; no quantitative result was produced."]
     else:
         try:
             parameters = _bind_inputs(project, bound_model)
-            if model_type == "attitude_control":
+            if model_type == "powered_flight":
+                metrics, artifact = powered_flight.evaluate(parameters)
+                result["metrics"] = metrics
+                result["flight_response"] = artifact
+            elif model_type == "attitude_control":
                 metrics, artifact = attitude.evaluate(parameters)
                 result["metrics"] = metrics
                 result["attitude_response"] = artifact
@@ -664,6 +690,7 @@ def evaluate_model(project: dict[str, Any], model: dict[str, Any], prior_results
             result.pop("simulation", None)
             result.pop("power_budget", None)
             result.pop("attitude_response", None)
+            result.pop("flight_response", None)
             result.pop("numerical_accuracy", None)
             result["issues"] = [str(exc)]
     return result

@@ -285,7 +285,7 @@ class LifecycleTests(unittest.TestCase):
 
     def test_recorded_sources_are_actual_code_hashes_and_bound_to_receipts(self):
         sources = self.review["verification_sources"]
-        self.assertEqual(set(sources), {"engineering.py", "lifecycle.py", "__init__.py", "orbital_adapter.py", "simulation.py", "attitude.py", "chains.py"})
+        self.assertEqual(set(sources), {"engineering.py", "lifecycle.py", "__init__.py", "orbital_adapter.py", "simulation.py", "attitude.py", "chains.py", "powered_flight.py"})
         for name, fingerprint in sources.items():
             actual = sha256((ROOT / "src" / "sixd" / name).read_bytes()).hexdigest()
             self.assertEqual(fingerprint, actual)

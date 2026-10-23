@@ -3,7 +3,7 @@
   'use strict';
   const $ = s => document.querySelector(s);
   const root = $('#sixd-workspace');
-  const state = {data:null, projects:[], templates:[], draft:null, impact:null, system:'overview', selected:null, view:'canvas', page:'system', panel:'details', busy:false, importing:null, trajectory:null, camera:{x:15,y:35,scale:1}, request:0};
+  const state = {data:null, projects:[], templates:[], draft:null, impact:null, system:'overview', selected:null, view:'canvas', page:'review-home', panel:'details', busy:false, importing:null, trajectory:null, camera:{x:15,y:35,scale:1}, request:0};
   const author = {catalog:null, preflight:null, snapshot:'', serial:0, loading:false, error:'', timer:null, editor:null};
   // Credentials are never assigned to application state or persistent browser storage.
   const ai = {status:null, statusError:'', statusLoading:false, evaluation:null, evaluationError:'', evaluationLoading:false, requirementId:null, question:'', records:[], error:'', loading:false, loadedContext:'', starting:false, connecting:false, context:'', generation:0, timer:null, controller:null};
@@ -12,15 +12,129 @@
   try{reviewGuide.open=localStorage.getItem('sixd.review-guide.dismissed')!=='yes';}catch{}
   const testLinks={key:'',pending:'',profile:null,error:'',serial:0,controller:null,timer:null};
   const interfaceLinks={key:'',pending:'',profile:null,error:'',serial:0,controller:null,timer:null};
+  const sourceLinks={key:'',pending:'',profile:null,error:'',serial:0,controller:null,dispose:null};
+  const actionLinks={key:'',pending:'',profile:null,error:'',serial:0,controller:null,dispose:null,originId:null};
+  const comparisonView={dispose:null};
+  const researchView={dispose:null};
+  const coverageLinks={key:'',pending:'',profile:null,error:'',serial:0,controller:null,dispose:null};
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const copy = value => JSON.parse(JSON.stringify(value));
   const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
   const human = value => String(value ?? '').replace(/_/g,' ').replace(/^./,s=>s.toUpperCase());
   const num = value => typeof value === 'number' && Number.isFinite(value) ? (value !== 0 && (Math.abs(value) < 0.0001 || Math.abs(value) >= 1e7) ? value.toExponential(5) : Number(value.toPrecision(7)).toLocaleString('en-US',{maximumFractionDigits:8})) : '—';
-  const measure = item => item && typeof item.value === 'number' ? num(item.value)+' '+esc(item.unit) : '—';
+  const measure = item => item && typeof item.value === 'number' ? num(item.value)+' '+esc(window.SixDUnits?.format(item.unit)??item.unit) : '—';
   const icon = name => '<i data-lucide="'+name+'" aria-hidden="true"></i>';
   const project = () => state.draft || state.data?.project;
   function testLinkKey(){return state.data?JSON.stringify([state.data.project_id,state.data.revision,currentRun()?.run_id||null,project()]):'';}
+  function sourceLinkKey(){return state.data?JSON.stringify([state.data.project_id,state.data.revision,currentRun()?.run_id||null,!!state.draft]):'';}
+  function actionLinkKey(){return sourceLinkKey();}
+  const seriesLinks={key:'',pending:'',profile:null,error:'',serial:0};
+  function seriesSlot(){queueMicrotask(()=>void refreshSeries());return '<section data-series-slot>Loading imported simulation evidence…</section>';}
+  function hydrateSeries(){
+    const p=seriesLinks.key===testLinkKey()?seriesLinks.profile:null;
+    root.querySelectorAll('[data-series-slot]').forEach(el=>{
+      el.innerHTML='<h3>Imported simulation evidence</h3>'+(p?'<p>Recorded time histories are supplemental evidence. They do not alter requirement findings.</p>'+((p.imports||[]).map(d=>{const r=d.receipt||d;return '<details class="sd-source"><summary>'+esc(r.spec?.name||r.name||r.import_id)+' · R'+esc(r.revision)+(d.freshness?.historical?' · Historical':'')+'</summary><p>'+esc(r.spec?.source||'')+'</p><p>Frame: '+esc(r.spec?.frame||'')+' · time origin: '+esc(r.spec?.time_origin||'')+'</p><p>Configuration: '+esc(r.spec?.configuration||'')+'</p><pre>'+esc(JSON.stringify(r.comparisons||[],null,2))+'</pre><p class="sd-receipt">Import '+esc(r.import_id)+' · '+esc(d.receipt_digest||'')+'</p></details>';}).join('')||'<p>No imported time histories in this context.</p>')+'<p class="sd-small">History limit '+esc(p.history_limit||20)+(p.history_truncated?' · Additional records omitted; export individual imports.':'')+'</p>':'<p class="sd-notice">'+esc(seriesLinks.error||'Loading imported evidence…')+'</p>')+'<button type="button" class="sd-button" data-action="simulation-imports">Open simulation imports</button>';
+    });
+    hydrateTestLinks();
+  }
+  async function refreshSeries(force=false){
+    if(!state.data)return;const key=testLinkKey();
+    if(!force&&(seriesLinks.key===key||seriesLinks.pending===key)){hydrateSeries();return;}
+    const serial=++seriesLinks.serial;seriesLinks.pending=key;seriesLinks.error='';
+    try{const p=await api('/api/simulation-import-summary'+query(state.data.project_id,state.data.revision));if(serial!==seriesLinks.serial||key!==testLinkKey())return;seriesLinks.profile=p;seriesLinks.key=key;}
+    catch(e){if(serial===seriesLinks.serial&&key===testLinkKey()){seriesLinks.profile=null;seriesLinks.key=key;seriesLinks.error=e.message;}}
+    finally{if(serial===seriesLinks.serial){seriesLinks.pending='';hydrateSeries();}}
+  }
+  const envelopeLinks={key:'',pending:'',profile:null,error:'',serial:0};
+  function envelopeSlot(){queueMicrotask(()=>void refreshEnvelopes());return '<section data-envelope-slot>Loading sampled operating studies…</section>';}
+  function hydrateEnvelopes(){
+    const p=envelopeLinks.key===testLinkKey()?envelopeLinks.profile:null;
+    root.querySelectorAll('[data-envelope-slot]').forEach(el=>{
+      el.innerHTML='<h3>Sampled operating studies</h3><p>Only the declared combinations were calculated. Worst observed margins do not establish behavior between samples.</p>'+(p?((p.studies||[]).map(d=>{const r=d.receipt||d;return '<details class="sd-source"><summary>'+esc(r.spec?.name||r.name||r.study_id)+' · R'+esc(r.revision)+(d.freshness?.historical?' · Historical':'')+'</summary><p>'+esc(r.spec?.source||'')+'</p><pre>'+esc(JSON.stringify(r.envelope_summary||{},null,2))+'</pre><p class="sd-receipt">Study '+esc(r.study_id)+' · '+esc(d.receipt_digest||'')+'</p></details>';}).join('')||'<p>No sampled operating studies saved in this context.</p>')+'<p class="sd-small">History limit '+esc(p.history_limit||20)+(p.history_truncated?' · Additional studies omitted; export individual records.':'')+'</p>':'<p class="sd-notice">'+esc(envelopeLinks.error||'Loading recorded studies…')+'</p>')+'<button type="button" class="sd-button" data-action="envelopes">Open envelope studies</button>';
+    });hydrateTestLinks();
+  }
+  async function refreshEnvelopes(force=false){
+    if(!state.data)return;const key=testLinkKey();
+    if(!force&&(envelopeLinks.key===key||envelopeLinks.pending===key)){hydrateEnvelopes();return;}
+    const serial=++envelopeLinks.serial;envelopeLinks.pending=key;envelopeLinks.error='';
+    try{const p=await api('/api/envelopes/summary'+query(state.data.project_id,state.data.revision));if(serial!==envelopeLinks.serial||key!==testLinkKey())return;envelopeLinks.profile=p;envelopeLinks.key=key;}
+    catch(e){if(serial===envelopeLinks.serial&&key===testLinkKey()){envelopeLinks.profile=null;envelopeLinks.key=key;envelopeLinks.error=e.message;}}
+    finally{if(serial===envelopeLinks.serial){envelopeLinks.pending='';hydrateEnvelopes();}}
+  }
+  function coverageSlot(){
+    queueMicrotask(()=>void refreshCoverage());
+    return '<div data-coverage-slot>Reading engineering coverage…</div>';
+  }
+  function hydrateCoverage(){
+    const profile=coverageLinks.key===sourceLinkKey()?coverageLinks.profile:null;
+    root.querySelectorAll('[data-coverage-slot]').forEach(el=>{
+      el.innerHTML=(state.draft?'<p class="sd-notice">Coverage below belongs to saved R'+state.data.revision+'. Draft applicability has not been assessed.</p>':'')+(profile?window.SixDCoverage.render(profile):'<p class="sd-notice">'+esc(coverageLinks.error||'Loading coverage for this saved revision…')+'</p>')+'<button type="button" class="sd-mini-action te-no-print" data-action="coverage">Open engineering coverage</button>';
+    });
+    hydrateTestLinks();
+  }
+  async function refreshCoverage(force=false){
+    if(!state.data)return;const key=sourceLinkKey();
+    if(!force&&(coverageLinks.key===key||coverageLinks.pending===key)){hydrateCoverage();return;}
+    coverageLinks.controller?.abort();const serial=++coverageLinks.serial;coverageLinks.pending=key;coverageLinks.error='';coverageLinks.controller=new AbortController();
+    const id=state.data.project_id,revision=state.data.revision,runId=currentRun()?.run_id||null;
+    try{
+      const profile=await api('/api/coverage'+query(id,revision),undefined,{signal:coverageLinks.controller.signal});
+      if(serial!==coverageLinks.serial||key!==sourceLinkKey())return;
+      if(profile.project_id!==id||profile.revision!==revision||profile.run_id!==runId)throw Error('Coverage context changed. Reload the saved project.');
+      coverageLinks.profile=profile;coverageLinks.key=key;
+    }catch(error){if(error.name!=='AbortError'&&serial===coverageLinks.serial&&key===sourceLinkKey()){coverageLinks.profile=null;coverageLinks.key=key;coverageLinks.error=error.message;}}
+    finally{if(serial===coverageLinks.serial){coverageLinks.pending='';hydrateCoverage();}}
+  }
+  function actionSlot(variant,requirementIds=null,modelIds=null){
+    queueMicrotask(()=>void refreshActionLinks());
+    return '<div data-action-queue-slot="'+variant+'" data-queue-requirements="'+esc(JSON.stringify(requirementIds))+'" data-queue-models="'+esc(JSON.stringify(modelIds))+'">Reading engineering actions…</div>';
+  }
+  function hydrateActionLinks(){
+    const profile=actionLinks.key===actionLinkKey()?actionLinks.profile:null;
+    root.querySelectorAll('[data-action-queue-slot]').forEach(el=>{
+      el.innerHTML=profile?window.SixDActions.render(profile,{variant:el.dataset.actionQueueSlot,requirementIds:JSON.parse(el.dataset.queueRequirements),modelIds:JSON.parse(el.dataset.queueModels),hasDraft:!!state.draft}):'<p class="sd-notice">'+esc(actionLinks.error||'Loading actions for this saved revision…')+'</p>';
+      el.insertAdjacentHTML('beforeend','<button type="button" class="sd-mini-action te-no-print" data-action="actions">Open engineering actions</button>');
+    });
+    hydrateTestLinks();
+  }
+  async function refreshActionLinks(force=false){
+    if(!state.data)return;const key=actionLinkKey();
+    if(!force&&(actionLinks.key===key||actionLinks.pending===key)){hydrateActionLinks();return;}
+    actionLinks.controller?.abort();const serial=++actionLinks.serial;actionLinks.pending=key;actionLinks.error='';actionLinks.controller=new AbortController();
+    const id=state.data.project_id,revision=state.data.revision,runId=currentRun()?.run_id||null;
+    try{
+      const profile=await api('/api/actions'+query(id,revision),undefined,{signal:actionLinks.controller.signal});
+      if(serial!==actionLinks.serial||key!==actionLinkKey())return;
+      if(profile.project_id!==id||profile.revision!==revision||profile.context!=='saved'||profile.run_id!==runId)throw Error('The engineering action context changed. Reload this saved project.');
+      actionLinks.profile=profile;actionLinks.key=key;
+    }catch(error){if(error.name!=='AbortError'&&serial===actionLinks.serial&&key===actionLinkKey()){actionLinks.profile=null;actionLinks.key=key;actionLinks.error=error.message;}}
+    finally{if(serial===actionLinks.serial){actionLinks.pending='';hydrateActionLinks();}}
+  }
+  function sourceSlot(variant,requirementIds=null,modelIds=null){
+    queueMicrotask(()=>void refreshSourceLinks());
+    return '<div data-source-slot="'+variant+'" data-source-requirements="'+esc(JSON.stringify(requirementIds))+'" data-source-models="'+esc(JSON.stringify(modelIds))+'">Reading project references…</div>';
+  }
+  function hydrateSourceLinks(){
+    const profile=sourceLinks.key===sourceLinkKey()?sourceLinks.profile:null;
+    root.querySelectorAll('[data-source-slot]').forEach(el=>{
+      el.innerHTML=profile?window.SixDSources.render(profile,{variant:el.dataset.sourceSlot,requirementIds:JSON.parse(el.dataset.sourceRequirements),modelIds:JSON.parse(el.dataset.sourceModels),hasDraft:!!state.draft}):'<p class="sd-notice">'+esc(sourceLinks.error||'Loading references for this saved revision…')+'</p>';
+      el.insertAdjacentHTML('beforeend','<button type="button" class="sd-mini-action te-no-print" data-action="sources">Open source library</button>');
+    });
+    hydrateTestLinks();
+  }
+  async function refreshSourceLinks(force=false){
+    if(!state.data)return;const key=sourceLinkKey();
+    if(!force&&(sourceLinks.key===key||sourceLinks.pending===key)){hydrateSourceLinks();return;}
+    sourceLinks.controller?.abort();const serial=++sourceLinks.serial;sourceLinks.pending=key;sourceLinks.error='';sourceLinks.controller=new AbortController();
+    const id=state.data.project_id,revision=state.data.revision,runId=currentRun()?.run_id||null;
+    try{
+      const profile=await api('/api/sources'+query(id,revision),undefined,{signal:sourceLinks.controller.signal});
+      if(serial!==sourceLinks.serial||key!==sourceLinkKey())return;
+      if(profile.project_id!==id||profile.revision!==revision||profile.context!=='saved'||profile.run_id!==runId)throw Error('The source-library context changed. Reload the saved project.');
+      sourceLinks.profile=profile;sourceLinks.key=key;
+    }catch(error){if(error.name!=='AbortError'&&serial===sourceLinks.serial&&key===sourceLinkKey()){sourceLinks.profile=null;sourceLinks.key=key;sourceLinks.error=error.message;}}
+    finally{if(serial===sourceLinks.serial){sourceLinks.pending='';hydrateSourceLinks();}}
+  }
   function interfaceSlot(variant,modelIds=null){
     queueMicrotask(()=>void refreshInterfaceLinks());
     return '<div data-interface-slot="'+variant+'" data-interface-models="'+esc(JSON.stringify(modelIds))+'">Reading system interfaces…</div>';
@@ -76,7 +190,9 @@
       if(reviewIds.length&&(!Array.isArray(ids)||ids.some(id=>reviewIds.includes(id))))el.insertAdjacentHTML('afterbegin','<p class="sd-notice">Declared interfaces flag connected requirement evidence for review. The scalar test-applicability labels below still describe their original model and criterion dependencies; they do not resolve this separate interface review.</p>');
     });
     const interfacesReady=interfaceLinks.key===testLinkKey()&&interfaceLinks.profile;
-    root.querySelectorAll('[data-action="export-review"],[data-action="print-report"]').forEach(el=>el.disabled=!current||!interfacesReady||!!state.draft||!currentRun());
+    const sourcesReady=sourceLinks.key===sourceLinkKey()&&sourceLinks.profile;
+    const actionsReady=actionLinks.key===actionLinkKey()&&actionLinks.profile;
+    root.querySelectorAll('[data-action="export-review"],[data-action="print-report"]').forEach(el=>el.disabled=!current||!interfacesReady||!sourcesReady||!actionsReady||envelopeLinks.key!==testLinkKey()||!envelopeLinks.profile||seriesLinks.key!==testLinkKey()||!seriesLinks.profile||coverageLinks.key!==sourceLinkKey()||!coverageLinks.profile||!!state.draft||!currentRun());
   }
   async function refreshTestLinks(force=false){
     if(!state.data)return;const key=testLinkKey();
@@ -139,10 +255,10 @@
   function icons() { if (window.lucide) window.lucide.createIcons(); }
   async function api(url, body, options={}) {
     const response = await fetch(url,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',signal:options.signal});
-    let payload;
-    try { payload=await response.json(); } catch { throw new Error('The local server returned an unreadable response. Reload the application.'); }
+    let payload,raw;
+    try { if(options.raw){raw=await response.text();payload=JSON.parse(raw);}else payload=await response.json(); } catch { throw new Error('The local server returned an unreadable response. Reload the application.'); }
     if (!response.ok) throw new Error(payload.error?.message || payload.error || payload.message || 'The request failed ('+response.status+').');
-    return payload;
+    return options.raw?{payload,raw}:payload;
   }
   function setBusy(busy) {
     state.busy=busy; root.setAttribute('aria-busy',String(busy));
@@ -230,6 +346,7 @@
   function selectionButton(kind,id,title,cls='sd-row-title') { return '<button type="button" class="'+cls+'" data-kind="'+kind+'" data-id="'+esc(id)+'">'+esc(title)+'</button>'; }
   function inputField(id,field,table=false) {
     const input=project().inputs[id];if(!input)return '<span class="sd-muted">No input mapped</span>';
+    if(field==='unit'&&!state.draft)return '<span class="sd-display-unit" data-unit-raw="'+esc(input.unit)+'">'+esc(window.SixDUnits?.format(input.unit)??input.unit)+'</span>';
     return '<input class="'+(table?'sd-table-input ':'sd-input ')+(field==='source'?'sd-input-source':field==='unit'?'sd-input-unit':'')+'" '+(field==='value'?'type="number" step="any"':'type="text"')+' data-input="'+esc(id)+'" data-field="'+field+'" value="'+esc(input[field])+'" aria-label="'+esc(human(id)+' '+field)+'" '+(!state.draft?'disabled':'')+'>';
   }
   const setupKey = () => state.data ? JSON.stringify([state.data.project_id,state.data.revision,project()]) : '';
@@ -344,7 +461,7 @@
   }
   function renderReviewGuide(){
     const host=$('#sd-review-guide');if(!host||!window.SixDReviewGuide)return;
-    host.hidden=!reviewGuide.open;root.querySelector('[data-action="guided-toggle"]')?.setAttribute('aria-expanded',String(reviewGuide.open));
+    host.hidden=!reviewGuide.open||['review-home','ai-quality'].includes(state.page);root.querySelector('[data-action="guided-toggle"]')?.setAttribute('aria-expanded',String(reviewGuide.open));
     if(!reviewGuide.open)return;
     const html=window.SixDReviewGuide.render({view:state.data,draft:state.draft,dirty:dirty(),isLatest:latest(),busy:state.busy,impactVerified:!!state.impact,page:state.page,viewMode:state.view,exportedRun:reviewGuide.exportedRun});
     if(host.dataset.rendered!==html){host.innerHTML=html;host.dataset.rendered=html;}
@@ -352,7 +469,9 @@
   function render() {
     if(!state.data)return; const p=project();
     repairContext();
-    root.classList.toggle('sd-simulation-open',['simulation','scenarios','test-data','systems','power','attitude','chains'].includes(state.page));
+    root.classList.toggle('sd-review-home',state.page==='review-home');
+    root.querySelectorAll('.sd-sidebar [data-action]').forEach(el=>{if(el.dataset.action===state.page)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
+    root.classList.toggle('sd-simulation-open',['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','chains','comparison','coverage','ai-quality'].includes(state.page));
     try{localStorage.setItem('sixd.workspace.last-project',state.data.project_id);}catch{}
     const picker=$('#sd-project-picker');picker.innerHTML=state.projects.map(item=>'<option value="'+esc(item.project_id)+'" '+(item.project_id===state.data.project_id?'selected':'')+'>'+esc(item.name || (item.project_id===p.project_id?p.name:item.project_id))+'</option>').join('');
     $('#sd-revision-picker').innerHTML=state.data.revisions.map(r=>'<option value="'+r.revision+'" '+(r.revision===state.data.revision?'selected':'')+'>R'+r.revision+' · '+(r.has_current_run?'review recorded':'awaiting checks')+'</option>').join('');
@@ -361,10 +480,35 @@
     $('#sd-breadcrumb-current').textContent=state.page==='report'?'Review report':state.page==='changes'?'Revision review':activeSystem()?.title || 'Systems overview';
     $('#sd-page-title').textContent=state.page==='report'?'Engineering review':state.page==='changes'?'Understand the change':activeSystem()?.title || 'Connected systems';
     $('#sd-page-description').textContent=state.page==='report'?'Requirements, calculated evidence and unresolved scope for this saved configuration.':state.page==='changes'?'Explicit dependencies show which evidence needs review after a change.':state.system==='overview'?p.description:'Explore declared inputs, model mappings, requirements and their evidence.';
+    if(state.page==='coverage'){
+      $('#sd-breadcrumb-current').textContent='Engineering coverage';
+      $('#sd-page-title').textContent='See what still needs engineering.';
+      $('#sd-page-description').textContent='Map mission checks to saved requirements and record model applicability alongside calculated findings.';
+    }
+    if(state.page==='comparison'){
+      $('#sd-breadcrumb-current').textContent='Compare designs';
+      $('#sd-page-title').textContent='See the engineering tradeoffs.';
+      $('#sd-page-description').textContent='Compare exact saved records, criterion margins and gaps without recalculating or ranking a winning design.';
+    }
+    if(state.page==='actions'){
+      $('#sd-breadcrumb-current').textContent='Engineering actions';
+      $('#sd-page-title').textContent='Turn findings into next steps.';
+      $('#sd-page-description').textContent='Track engineering follow-up, supporting records and changes that need review.';
+    }
+    if(state.page==='sources'){
+      $('#sd-breadcrumb-current').textContent='Source library';
+      $('#sd-page-title').textContent='Keep references connected.';
+      $('#sd-page-description').textContent='Versioned user-supplied references, explicit links and review flags for this saved project.';
+    }
     if(state.page==='chains'){
       $('#sd-breadcrumb-current').textContent='Calculation chains';
       $('#sd-page-title').textContent='Connect engineering calculations.';
       $('#sd-page-description').textContent='Follow explicit scalar outputs through downstream checks and their saved evidence.';
+    }
+    if(state.page==='powered-flight'){
+      $('#sd-breadcrumb-current').textContent='Powered flight';
+      $('#sd-page-title').textContent='Follow the flight through burnout.';
+      $('#sd-page-description').textContent='Saved vertical ascent and coast with thrust, mass, gravity and drag.';
     }
     if(state.page==='attitude'){
       $('#sd-breadcrumb-current').textContent='Guidance & control';
@@ -391,6 +535,10 @@
       $('#sd-page-description').textContent='Compare explicit hypothetical inputs against a saved baseline, with calculated findings and traceable margins.';
     }
     root.querySelector('[data-action="scenarios"]').setAttribute('aria-pressed',String(state.page==='scenarios'));
+    if(state.page==='ai-quality'){$('#sd-breadcrumb-current').textContent='AI quality & tools';$('#sd-page-title').textContent='Inspect the Assistant’s evidence.';$('#sd-page-description').textContent='Current-model qualification, retained results and explicit optional metrics export.';}
+    if(state.page==='review-home'){$('#sd-breadcrumb-current').textContent='Review overview';$('#sd-page-title').textContent='Review overview';$('#sd-page-description').textContent='Follow current findings, analysis and supplemental evidence in one saved context.';}
+    if(state.page==='envelopes'){$('#sd-breadcrumb-current').textContent='Envelope studies';$('#sd-page-title').textContent='Explore declared operating conditions';$('#sd-page-description').textContent='Calculate explicit combinations and inspect worst observed margins, violations and unresolved cases.';}
+    if(state.page==='simulation-imports'){$('#sd-breadcrumb-current').textContent='Simulation imports';$('#sd-page-title').textContent='Inspect specialist simulation results';$('#sd-page-description').textContent='Import recorded time histories, replay samples and compare compatible saved evidence.';}
     if(state.page==='test-data'){
       $('#sd-breadcrumb-current').textContent='Test data';$('#sd-page-title').textContent='Compare predictions with measurements';
       $('#sd-page-description').textContent='Inspect supplied scalar test data against the exact saved prediction and its declared requirements.';
@@ -400,14 +548,14 @@
       $('#sd-breadcrumb-current').textContent='Author project';$('#sd-page-title').textContent='Define your engineering project';
       $('#sd-page-description').textContent='Supply inputs, connect supported models and declare the criteria you want to assess.';
     }
-    $('#sd-edit-trigger').hidden=['simulation','scenarios','test-data','systems','power','attitude','chains'].includes(state.page);
-    $('#sd-run-trigger').hidden=['simulation','scenarios','test-data','systems','power','attitude','chains'].includes(state.page);
+    $('#sd-edit-trigger').hidden=['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','chains','comparison','coverage'].includes(state.page);
+    $('#sd-run-trigger').hidden=['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','chains','comparison','coverage'].includes(state.page);
     root.querySelector('[data-action="simulation"]').setAttribute('aria-pressed',String(state.page==='simulation'));
     $('#sd-scope-chip').textContent=(state.draft?'Draft from ':'')+'R'+state.data.revision+(currentRun()?' · Reviewed':' · Needs checks');
     $('#sd-save-state').textContent=state.draft?'Unsaved draft · saved revision preserved':'R'+state.data.revision+' saved locally · '+(currentRun()?'calculated evidence recorded':'awaiting checks');
     $('#sd-edit-trigger').disabled=!!state.draft || !latest() || state.busy;
     $('#sd-edit-trigger').title=!latest()?'Select the latest revision to create a draft.':'';
-    $('#sd-run-trigger').disabled=!!state.draft || state.busy || !hasSetup() || (state.page==='authoring'&&(author.snapshot!==setupKey()||!author.preflight?.can_run||author.loading));
+    $('#sd-run-trigger').disabled=!!state.draft || state.busy || !hasSetup() || (state.page==='review-home'&&!latest()) || (state.page==='authoring'&&(author.snapshot!==setupKey()||!author.preflight?.can_run||author.loading));
     $('#sd-run-trigger').title=!hasSetup()?'Open Author project and add a model and requirement before running checks.':state.page==='authoring'?'Validate setup and resolve its errors before running here.':'';
     $('#sd-run-trigger').innerHTML=icon('play')+(currentRun()?'Run checks again':'Run checks');
     root.querySelectorAll('[data-view]').forEach(button=>button.setAttribute('aria-selected',String(button.dataset.view===state.view && state.page==='system')));
@@ -481,7 +629,7 @@
       typeof e.metric.unit==='string' && e.metric.unit.length>0 && e.metric.unit===e.limit.unit &&
       ['<=','>=','=='].includes(e.operator);
   }
-  const plotMeasure = (item,exact=false) => item && Number.isFinite(item.value) ? esc(exact?String(item.value):num(item.value))+' '+esc(item.unit) : '—';
+  const plotMeasure = (item,exact=false) => item && Number.isFinite(item.value) ? esc(exact?String(item.value):num(item.value))+' '+esc(window.SixDUnits?.format(item.unit)??item.unit) : '—';
   function comparisonNeedsExact(e) {
     return Number.isFinite(e?.metric?.value) && Number.isFinite(e?.limit?.value) &&
       (e.operator==='==' || (e.metric.value!==e.limit.value && num(e.metric.value)===num(e.limit.value)));
@@ -546,7 +694,7 @@
   }
   function reader(report=false) {
     const requirements=report?allReqs():selectedReqs();const p=project();
-    return '<article class="sd-reader"><span class="sd-label">'+(report?'Saved project · engineering review':esc(p.lifecycle_stage)+' · system reader')+'</span><h2>'+esc(report?p.name:activeSystem()?.title || p.name)+'</h2><p class="sd-lead">'+esc(p.description)+'</p>'+(!currentRun()||state.draft?'<div class="sd-notice">'+(state.draft?'Draft edits are not calculated. Displayed recorded values still belong to saved R'+state.data.revision+'.':'Awaiting a review of this revision.')+'</div>':'')+'<p class="sd-report-context">Project '+esc(state.data.project_id)+' · '+(state.draft?'Draft based on saved':'Saved')+' revision R'+state.data.revision+'</p>'+stats(requirements)+receiptInfo()+engineeringPlots(requirements)+(report?allModels():selectedModels()).filter(m=>result(m.id)?.simulation).map(m=>'<h3>'+esc(human(m.id))+' trajectory evidence</h3>'+trajectoryContext(m.id)).join('')+'<h3>Requirement findings</h3>'+requirementTable(requirements)+'<h3>Model evidence</h3>'+ (report?allModels():selectedModels()).map(m=>{const r=result(m.id);return '<details class="sd-source"><summary>'+esc(human(m.id))+' · '+(r?esc(human(r.status)):'Not run')+'</summary>'+modelEvidence(m.id)+'</details>';}).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='power_energy_budget').map(m=>powerEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='attitude_control').map(m=>attitudeEvidence(m.id)).join('')+interfaceSlot('report',report?null:selectedModels().map(m=>m.id))+testEvidenceSlot('report',report?null:requirements.map(r=>r.id))+'<h3>Scope of this review</h3><ul class="sd-scope-list">'+(currentRun()?.review?.exclusions || ['Only explicitly bound models and supplied requirements can be assessed.','Physical tests, operational performance and whole-mission readiness are not verified.']).map(item=>'<li>'+esc(item)+'</li>').join('')+'</ul><div class="sd-action-row">'+(report?'<button type="button" class="sd-button sd-primary" data-action="export" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('download')+'Export evidence JSON</button><button type="button" class="sd-button" data-action="export-review" disabled>Export combined review JSON</button><button type="button" class="sd-button" data-action="print-report" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('printer')+'Print report / Save PDF</button>':'<button type="button" class="sd-button" data-action="report">'+icon('file-text')+'Open full report</button>')+'<button type="button" class="sd-button" data-action="export-project">Export project JSON</button></div>'+(currentRun()?'<details class="sd-source"><summary>Receipt identity and verification sources</summary><p class="sd-receipt">Review '+esc(currentRun().review.digest)+'</p>'+Object.entries(currentRun().review.verification_sources || {}).map(([file,digest])=>'<p class="sd-receipt">'+esc(file)+': '+esc(digest)+'</p>').join('')+'</details>':'')+'</article>';
+    return '<article class="sd-reader"><span class="sd-label">'+(report?'Saved project · engineering review':esc(p.lifecycle_stage)+' · system reader')+'</span><h2>'+esc(report?p.name:activeSystem()?.title || p.name)+'</h2><p class="sd-lead">'+esc(p.description)+'</p>'+(!currentRun()||state.draft?'<div class="sd-notice">'+(state.draft?'Draft edits are not calculated. Displayed recorded values still belong to saved R'+state.data.revision+'.':'Awaiting a review of this revision.')+'</div>':'')+'<p class="sd-report-context">Project '+esc(state.data.project_id)+' · '+(state.draft?'Draft based on saved':'Saved')+' revision R'+state.data.revision+'</p>'+stats(requirements)+receiptInfo()+engineeringPlots(requirements)+(report?allModels():selectedModels()).filter(m=>result(m.id)?.simulation).map(m=>'<h3>'+esc(human(m.id))+' trajectory evidence</h3>'+trajectoryContext(m.id)).join('')+'<h3>Requirement findings</h3>'+requirementTable(requirements)+'<h3>Model evidence</h3>'+ (report?allModels():selectedModels()).map(m=>{const r=result(m.id);return '<details class="sd-source"><summary>'+esc(human(m.id))+' · '+(r?esc(human(r.status)):'Not run')+'</summary>'+modelEvidence(m.id)+'</details>';}).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='power_energy_budget').map(m=>powerEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='attitude_control').map(m=>attitudeEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='powered_flight').map(m=>flightEvidence(m.id)).join('')+interfaceSlot('report',report?null:selectedModels().map(m=>m.id))+sourceSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+actionSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+testEvidenceSlot('report',report?null:requirements.map(r=>r.id))+(report?coverageSlot()+seriesSlot()+envelopeSlot():'')+'<h3>Scope of this review</h3><ul class="sd-scope-list">'+(currentRun()?.review?.exclusions || ['Only explicitly bound models and supplied requirements can be assessed.','Physical tests, operational performance and whole-mission readiness are not verified.']).map(item=>'<li>'+esc(item)+'</li>').join('')+'</ul><div class="sd-action-row">'+(report?'<button type="button" class="sd-button sd-primary" data-action="export" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('download')+'Export evidence JSON</button><button type="button" class="sd-button" data-action="export-review" disabled>Export combined review JSON</button><button type="button" class="sd-button" data-action="print-report" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('printer')+'Print report / Save PDF</button>':'<button type="button" class="sd-button" data-action="report">'+icon('file-text')+'Open full report</button>')+'<button type="button" class="sd-button" data-action="export-project">Export project JSON</button></div>'+(currentRun()?'<details class="sd-source"><summary>Receipt identity and verification sources</summary><p class="sd-receipt">Review '+esc(currentRun().review.digest)+'</p>'+Object.entries(currentRun().review.verification_sources || {}).map(([file,digest])=>'<p class="sd-receipt">'+esc(file)+': '+esc(digest)+'</p>').join('')+'</details>':'')+'</article>';
   }
   function changeRecords() {
     const before=state.draft?state.data.project:priorRun()?.review?.project || state.data.configuration_base?.project;
@@ -571,9 +719,104 @@
   }
   function changes() {
     const rows=changeRecords(),info=impact();
-    return '<article class="sd-reader"><span class="sd-label">'+(state.draft?'R'+state.data.revision+' → draft':'Revision R'+state.data.revision)+'</span><h2>Review the difference.</h2><p class="sd-lead">A changed input identifies dependencies needing review. New calculation outcomes appear only after checks run.</p>'+(!state.draft&&priorRun()?'<p class="sd-table-note">Compared with the nearest earlier recorded review: R'+priorRun().revision+'.</p>':!state.draft&&state.data.configuration_base?'<p class="sd-table-note">Compared with saved configuration R'+state.data.configuration_base.revision+'. This comparison describes supplied record changes only.</p>':'')+structuralChanges(info)+(rows.length?rows.map(row=>'<div class="sd-change-card"><strong>'+esc(row.title)+'</strong><div class="sd-change-values"><span class="sd-before">'+measure(row.before)+'</span><span>→</span><span class="sd-after">'+measure(row.after)+'</span></div>'+(row.before?.unit!==row.after?.unit?'<p class="sd-small sd-muted">Unit changed; no implicit conversion.</p>':'')+(!same(row.before?.source,row.after?.source)?'<p class="sd-small sd-muted">Source: '+esc(row.before?.source || '—')+' → '+esc(row.after?.source || '—')+'</p>':'')+'</div>').join(''):'<div class="sd-notice">No changed input records in this comparison. '+(!state.draft?'Create a draft from the latest revision to review a new change.':'Edit any input value, unit or source.')+'</div>')+interfaceSlot('changes')+testEvidenceSlot('changes',[])+'<h3>Calculator dependency impact</h3><p>'+(state.draft?(state.impact?'Server-checked draft preview.':'Local draft preview; use Preview impact to validate with the server.'):'Saved revision dependency comparison.')+'</p><div class="sd-affected-list">'+(info.affected_model_ids||[]).map(id=>'<button type="button" data-kind="model" data-id="'+esc(id)+'">'+esc(human(id))+'<span class="sd-chip sd-pending">Model dependency</span></button>').join('')+(info.affected_requirement_ids||[]).map(id=>'<button type="button" data-kind="requirement" data-id="'+esc(id)+'">'+esc(req(id)?.title || id)+chip(reqStatus(id))+'</button>').join('')+'</div>'+(!(info.affected_requirement_ids||[]).length?'<p>No calculator requirement dependencies are affected by the supplied edits. Interface review flags are shown separately above.</p>':'')+receiptInfo()+'<div class="sd-action-row">'+(state.draft?'<button type="button" class="sd-button sd-primary" data-action="save" '+(!dirty()||editErrors().length?'disabled':'')+'>Save revision</button>':!currentRun()?'<button type="button" class="sd-button sd-primary" data-action="run">Rerun affected checks</button>':'<button type="button" class="sd-button" data-action="report">Open revised report</button>')+'<button type="button" class="sd-button sd-quiet" data-action="back">Return to system</button></div></article>';
+    return '<article class="sd-reader"><span class="sd-label">'+(state.draft?'R'+state.data.revision+' → draft':'Revision R'+state.data.revision)+'</span><h2>Review the difference.</h2><p class="sd-lead">A changed input identifies dependencies needing review. New calculation outcomes appear only after checks run.</p>'+(!state.draft&&priorRun()?'<p class="sd-table-note">Compared with the nearest earlier recorded review: R'+priorRun().revision+'.</p>':!state.draft&&state.data.configuration_base?'<p class="sd-table-note">Compared with saved configuration R'+state.data.configuration_base.revision+'. This comparison describes supplied record changes only.</p>':'')+structuralChanges(info)+(rows.length?rows.map(row=>'<div class="sd-change-card"><strong>'+esc(row.title)+'</strong><div class="sd-change-values"><span class="sd-before">'+measure(row.before)+'</span><span>→</span><span class="sd-after">'+measure(row.after)+'</span></div>'+(row.before?.unit!==row.after?.unit?'<p class="sd-small sd-muted">Unit changed; no implicit conversion.</p>':'')+(!same(row.before?.source,row.after?.source)?'<p class="sd-small sd-muted">Source: '+esc(row.before?.source || '—')+' → '+esc(row.after?.source || '—')+'</p>':'')+'</div>').join(''):'<div class="sd-notice">No changed input records in this comparison. '+(!state.draft?'Create a draft from the latest revision to review a new change.':'Edit any input value, unit or source.')+'</div>')+interfaceSlot('changes')+sourceSlot('changes')+actionSlot('changes')+testEvidenceSlot('changes',[])+'<h3>Calculator dependency impact</h3><p>'+(state.draft?(state.impact?'Server-checked draft preview.':'Local draft preview; use Preview impact to validate with the server.'):'Saved revision dependency comparison.')+'</p><div class="sd-affected-list">'+(info.affected_model_ids||[]).map(id=>'<button type="button" data-kind="model" data-id="'+esc(id)+'">'+esc(human(id))+'<span class="sd-chip sd-pending">Model dependency</span></button>').join('')+(info.affected_requirement_ids||[]).map(id=>'<button type="button" data-kind="requirement" data-id="'+esc(id)+'">'+esc(req(id)?.title || id)+chip(reqStatus(id))+'</button>').join('')+'</div>'+(!(info.affected_requirement_ids||[]).length?'<p>No calculator requirement dependencies are affected by the supplied edits. Interface review flags are shown separately above.</p>':'')+receiptInfo()+'<div class="sd-action-row">'+(state.draft?'<button type="button" class="sd-button sd-primary" data-action="save" '+(!dirty()||editErrors().length?'disabled':'')+'>Save revision</button>':!currentRun()?'<button type="button" class="sd-button sd-primary" data-action="run">Rerun affected checks</button>':'<button type="button" class="sd-button" data-action="report">Open revised report</button>')+'<button type="button" class="sd-button sd-quiet" data-action="back">Return to system</button></div></article>';
   }
   function renderMain() {
+    window.SixDAIQuality?.unmount();
+    if(state.page==='ai-quality'){
+      window.SixDReviewWorkspace?.unmount();window.SixDEnvelopes?.unmount();window.SixDSimulationImports?.unmount();window.SixDPoweredFlight?.unmount();window.SixDSimulation?.unmount();window.SixDTestData?.unmount();window.SixDScenarios?.unmount();
+      coverageLinks.dispose?.();coverageLinks.dispose=null;comparisonView.dispose?.();comparisonView.dispose=null;researchView.dispose?.();researchView.dispose=null;actionLinks.dispose?.();actionLinks.dispose=null;sourceLinks.dispose?.();sourceLinks.dispose=null;
+      window.SixDActions?.unmount();window.SixDSources?.unmount();window.SixDChains?.unmount();window.SixDAttitude?.unmount();window.SixDPowerBudget?.unmount();window.SixDSystems?.unmount();
+      $('#sd-view-content').innerHTML='<div id="sd-ai-quality"></div>';
+      window.SixDAIQuality.mount($('#sd-ai-quality'),{api,onSources:()=>void action('sources')});return;
+    }
+    window.SixDReviewWorkspace?.unmount();
+    if(state.page==='review-home'){
+      window.SixDEnvelopes?.unmount();window.SixDSimulationImports?.unmount();window.SixDPoweredFlight?.unmount();window.SixDSimulation?.unmount();window.SixDTestData?.unmount();window.SixDScenarios?.unmount();
+      coverageLinks.dispose?.();coverageLinks.dispose=null;comparisonView.dispose?.();comparisonView.dispose=null;researchView.dispose?.();researchView.dispose=null;actionLinks.dispose?.();actionLinks.dispose=null;sourceLinks.dispose?.();sourceLinks.dispose=null;
+      window.SixDActions?.unmount();window.SixDSources?.unmount();window.SixDChains?.unmount();window.SixDAttitude?.unmount();window.SixDPowerBudget?.unmount();window.SixDSystems?.unmount();
+      const projectId=state.data.project_id,revision=state.data.revision,runId=currentRun()?.run_id||null,draftKey=JSON.stringify(state.draft);
+      const current=()=>state.data?.project_id===projectId&&state.data?.revision===revision&&(currentRun()?.run_id||null)===runId&&JSON.stringify(state.draft)===draftKey;
+      $('#sd-view-content').innerHTML='<div id="sd-review-workspace"></div>';
+      window.SixDReviewWorkspace.mount($('#sd-review-workspace'),{projectId,revision,currentRunId:runId,hasDraft:!!state.draft,api,
+        onNavigate:name=>{if(current())void action(name);},
+        onSelectRequirement:id=>{if(!current()||state.draft||!req(id))return;state.page='system';state.view='reader';state.system=owningSystem(req(id).model_id)?.id||'overview';state.panel='evidence';select('requirement',id,false);},
+        onRun:latest()&&!state.draft?()=>{if(current())void action('run');}:undefined,
+        onReload:()=>{if(current())void perform(()=>load(projectId,revision));}
+      });return;
+    }
+    window.SixDEnvelopes?.unmount();
+    if(state.page==='envelopes'){
+      window.SixDSimulationImports?.unmount();window.SixDPoweredFlight?.unmount();window.SixDSimulation?.unmount();window.SixDTestData?.unmount();window.SixDScenarios?.unmount();
+      coverageLinks.dispose?.();coverageLinks.dispose=null;comparisonView.dispose?.();comparisonView.dispose=null;researchView.dispose?.();researchView.dispose=null;actionLinks.dispose?.();actionLinks.dispose=null;sourceLinks.dispose?.();sourceLinks.dispose=null;
+      window.SixDActions?.unmount();window.SixDSources?.unmount();window.SixDChains?.unmount();window.SixDAttitude?.unmount();window.SixDPowerBudget?.unmount();window.SixDSystems?.unmount();
+      $('#sd-view-content').innerHTML='<div id="sd-envelopes"></div>';
+      window.SixDEnvelopes.mount($('#sd-envelopes'),{projectId:state.data.project_id,revision:state.data.revision,project:state.data.project,hasDraft:!!state.draft,canEdit:state.data.revision===state.data.latest_revision,currentRunId:currentRun()?.run_id,api,onRun:()=>void action('run'),onReload:()=>void perform(()=>load(state.data.project_id,state.data.revision)),onSaved:()=>{envelopeLinks.key='';}});return;
+    }
+    window.SixDSimulationImports?.unmount();
+    if(state.page==='simulation-imports'){
+      window.SixDPoweredFlight?.unmount();window.SixDSimulation?.unmount();window.SixDTestData?.unmount();window.SixDScenarios?.unmount();
+      coverageLinks.dispose?.();coverageLinks.dispose=null;comparisonView.dispose?.();comparisonView.dispose=null;researchView.dispose?.();researchView.dispose=null;
+      window.SixDActions?.unmount();window.SixDSources?.unmount();window.SixDChains?.unmount();window.SixDAttitude?.unmount();window.SixDPowerBudget?.unmount();window.SixDSystems?.unmount();
+      $('#sd-view-content').innerHTML='<div id="sd-simulation-imports"></div>';
+      window.SixDSimulationImports.mount($('#sd-simulation-imports'),{projectId:state.data.project_id,revision:state.data.revision,project:state.data.project,hasDraft:!!state.draft,canEdit:state.data.revision===state.data.latest_revision,staleServer:!!ai.status?.restart_required,currentRunId:currentRun()?.run_id,api,onRun:()=>void action('run'),onReload:()=>void perform(()=>load(state.data.project_id,state.data.revision)),onSaved:()=>{seriesLinks.key='';}});
+      return;
+    }
+    window.SixDPoweredFlight?.unmount();
+    coverageLinks.dispose?.();coverageLinks.dispose=null;
+    if(state.page==='coverage'){
+      researchView.dispose?.();researchView.dispose=null;comparisonView.dispose?.();comparisonView.dispose=null;actionLinks.dispose?.();actionLinks.dispose=null;
+      window.SixDActions?.unmount();window.SixDSources?.unmount();window.SixDChains?.unmount();window.SixDAttitude?.unmount();window.SixDPowerBudget?.unmount();window.SixDSystems?.unmount();window.SixDSimulation?.unmount();window.SixDScenarios?.unmount();window.SixDTestData?.unmount();
+      $('#sd-view-content').innerHTML='<div id="sd-engineering-coverage"></div>';
+      const projectId=state.data.project_id,revision=state.data.revision;
+      coverageLinks.key='';
+      coverageLinks.dispose=window.SixDCoverage.mount($('#sd-engineering-coverage'),{api,projectId,revision,draft:!!state.draft,onOpenRequirement:id=>{
+        if(state.data?.project_id!==projectId||state.data?.revision!==revision||!req(id))return;
+        state.page='system';state.system='overview';state.view='table';select('requirement',id,false);
+      }});return;
+    }
+    researchView.dispose?.();researchView.dispose=null;
+    comparisonView.dispose?.();comparisonView.dispose=null;
+    if(state.page==='comparison'){
+      window.SixDActions?.unmount();window.SixDSources?.unmount();window.SixDChains?.unmount();window.SixDAttitude?.unmount();window.SixDPowerBudget?.unmount();window.SixDSystems?.unmount();window.SixDSimulation?.unmount();window.SixDScenarios?.unmount();window.SixDTestData?.unmount();
+      $('#sd-view-content').innerHTML='<div id="sd-design-comparison"></div>';
+      const projectId=state.data.project_id,revision=state.data.revision;
+      const current=()=>state.data?.project_id===projectId&&state.data?.revision===revision;
+      comparisonView.dispose=window.SixDComparison.mount($('#sd-design-comparison'),{api,projectId,revision,hasDraft:!!state.draft,
+        compareRaw:(body,options)=>api('/api/design-comparison',body,{...options,raw:true}),
+        onScenarios:()=>{if(current())void action('scenarios');},
+        onRun:()=>{if(!current())return;state.page='system';state.view='table';render();message('Use Run checks on the saved project to create a new recorded result. Draft changes remain separate.');}
+      });return;
+    }
+    actionLinks.dispose?.();actionLinks.dispose=null;
+    if(state.page==='actions'){
+      window.SixDSources?.unmount();window.SixDChains?.unmount();window.SixDAttitude?.unmount();window.SixDPowerBudget?.unmount();window.SixDSystems?.unmount();window.SixDSimulation?.unmount();window.SixDScenarios?.unmount();window.SixDTestData?.unmount();
+      $('#sd-view-content').innerHTML='<div id="sd-action-queue"></div>';
+      const projectId=state.data.project_id,revision=state.data.revision,originId=actionLinks.originId;actionLinks.originId=null;
+      actionLinks.dispose=window.SixDActions.mount($('#sd-action-queue'),{api,projectId,revision,hasDraft:!!state.draft,canEdit:latest(),originId,onChange:profile=>{
+        if(state.data?.project_id!==projectId||state.data?.revision!==revision)return;
+        actionLinks.serial++;actionLinks.controller?.abort();actionLinks.pending='';actionLinks.profile=profile;actionLinks.key=actionLinkKey();actionLinks.error='';hydrateActionLinks();
+      }});return;
+    }
+    sourceLinks.dispose?.();sourceLinks.dispose=null;
+    if(state.page==='sources'){
+      window.SixDChains?.unmount();window.SixDAttitude?.unmount();window.SixDPowerBudget?.unmount();window.SixDSystems?.unmount();window.SixDSimulation?.unmount();window.SixDScenarios?.unmount();window.SixDTestData?.unmount();
+      $('#sd-view-content').innerHTML='<div id="sd-source-library"></div><div id="sd-source-research"></div>';
+      const projectId=state.data.project_id,revision=state.data.revision;
+      sourceLinks.dispose=window.SixDSources.mount($('#sd-source-library'),{api,projectId,revision,hasDraft:!!state.draft,canEdit:latest(),onChange:profile=>{
+        if(state.data?.project_id!==projectId||state.data?.revision!==revision)return;
+        sourceLinks.serial++;sourceLinks.controller?.abort();sourceLinks.pending='';sourceLinks.profile=profile;sourceLinks.key=sourceLinkKey();sourceLinks.error='';hydrateSourceLinks();void refreshActionLinks(true);
+      }});
+      researchView.dispose=window.SixDResearch.mount($('#sd-source-research'),{api,projectId,revision,hasDraft:!!state.draft,canEdit:latest(),
+        onUseReference:(source,context)=>{
+          if(state.data?.project_id!==projectId||state.data?.revision!==revision)return false;
+          const copied=window.SixDSources.prefill(source,context?.target_id);
+          if(copied)$('#sd-source-library').scrollIntoView({block:'start',behavior:'smooth'});
+          else message('The source form is unavailable or busy. Keep the preview and refresh the saved source library before copying.');
+          return copied;
+        }
+      });return;
+    }
     window.SixDChains?.unmount();
     if(state.page==='chains'){
       window.SixDAttitude?.unmount();window.SixDPowerBudget?.unmount();window.SixDSystems?.unmount();window.SixDSimulation?.unmount();window.SixDScenarios?.unmount();window.SixDTestData?.unmount();
@@ -599,6 +842,17 @@
     window.SixDSimulation?.unmount();
     window.SixDScenarios?.unmount();
     window.SixDTestData?.unmount();
+    if(state.page==='powered-flight'){
+      $('#sd-view-content').innerHTML='<div id="sd-powered-flight"></div>';
+      const projectId=state.data.project_id,revision=state.data.revision,draft=state.draft,runId=currentRun()?.run_id;
+      const current=()=>state.data?.project_id===projectId&&state.data?.revision===revision&&state.draft===draft;
+      window.SixDPoweredFlight.mount($('#sd-powered-flight'),{projectId,revision,project:project(),hasDraft:!!draft,runId,reviewDigest:currentRun()?.review?.digest,modelResults:Object.fromEntries(allModels().map(m=>[m.id,powerResult(m.id)])),modelOrigins:currentRun()?.model_origins||{},findings:currentRun()?.review?.findings||{},
+        onReference:()=>{if(current()&&!draft)void showImport('powered_flight_review');},
+        onAuthor:()=>{if(current())void action('author-project');},onRun:()=>{if(current()&&!draft)void action('run');},onReport:()=>{if(current())void action('report');},
+        onInputs:id=>{if(!current()||!model(id))return;state.system=owningSystem(id)?.id||'overview';state.selected={kind:'model',id};state.page='system';state.view='table';state.panel='details';render();},
+        onRequirement:(id,assistant)=>{if(!current()||!req(id)||assistant&&(draft||runId!==currentRun()?.run_id))return;state.system=owningSystem(req(id).model_id)?.id||'overview';state.page='system';state.view='reader';state.panel=assistant?'assistant':'evidence';select('requirement',id,assistant);}
+      });return;
+    }
     if(state.page==='attitude'){
       $('#sd-view-content').innerHTML='<div id="sd-attitude"></div>';
       const projectId=state.data.project_id,revision=state.data.revision,draft=state.draft,runId=currentRun()?.run_id;
@@ -727,6 +981,10 @@
     const saved=result(modelId),receipt=currentRun()?.review?.evidence?.[modelId];
     return saved?{...saved,inputs:receipt?.input_records,verification_sources:receipt?.verification_sources,evidence_fingerprint:receipt?.fingerprint}:null;
   }
+  function flightEvidence(modelId){
+    if(model(modelId)?.type!=='powered_flight')return '';
+    return window.SixDPoweredFlight.report(powerResult(modelId),{projectId:state.data.project_id,revision:state.data.revision,modelId,runId:currentRun()?.run_id,reviewDigest:currentRun()?.review?.digest,hasDraft:!!state.draft,origin:currentRun()?.model_origins?.[modelId]});
+  }
   function attitudeEvidence(modelId){
     if(model(modelId)?.type!=='attitude_control')return '';
     return window.SixDAttitude.report(powerResult(modelId),{projectId:state.data.project_id,revision:state.data.revision,modelId,runId:currentRun()?.run_id,reviewDigest:currentRun()?.review?.digest,hasDraft:!!state.draft,origin:currentRun()?.model_origins?.[modelId]});
@@ -750,7 +1008,7 @@
       const users=allModels().filter(m=>Object.values(m.inputs).includes(selected.id));const limits=allReqs().filter(r=>r.limit_input===selected.id);
       body='<label class="sd-field">Value'+inputField(selected.id,'value')+'</label><label class="sd-field">Explicit unit'+inputField(selected.id,'unit')+'</label><label class="sd-field">Source'+inputField(selected.id,'source')+'</label><p>Sources are supplied provenance labels; their accuracy is not independently established.</p><h3>Declared consumers</h3><div class="sd-affected-list">'+users.map(m=>'<button type="button" data-kind="model" data-id="'+esc(m.id)+'">'+esc(human(m.id))+icon('arrow-up-right')+'</button>').join('')+limits.map(r=>'<button type="button" data-kind="requirement" data-id="'+esc(r.id)+'">'+esc(r.title)+icon('arrow-up-right')+'</button>').join('')+'</div>';
     }else if(selected.kind==='model'){
-      body='<p>'+esc(object.description || human(object.type))+'</p><h3>Input bindings</h3><div class="sd-affected-list">'+Object.entries(object.inputs).map(([name,id])=>'<button type="button" data-kind="input" data-id="'+esc(id)+'"><span>'+esc(human(name))+'<br><small>'+measure(project().inputs[id])+'</small></span>'+icon('arrow-up-right')+'</button>').join('')+'</div>'+modelEvidence(selected.id)+powerEvidence(selected.id)+attitudeEvidence(selected.id);
+      body='<p>'+esc(object.description || human(object.type))+'</p><h3>Input bindings</h3><div class="sd-affected-list">'+Object.entries(object.inputs).map(([name,id])=>'<button type="button" data-kind="input" data-id="'+esc(id)+'"><span>'+esc(human(name))+'<br><small>'+measure(project().inputs[id])+'</small></span>'+icon('arrow-up-right')+'</button>').join('')+'</div>'+modelEvidence(selected.id)+powerEvidence(selected.id)+attitudeEvidence(selected.id)+flightEvidence(selected.id);
     }else{
       const f=finding(selected.id),old=priorFinding(selected.id),limit=project().inputs[object.limit_input];
       if(state.panel==='evidence')body+='<div class="sd-assistant-mode">Recorded calculation evidence · AI interpretation is in Assistant.</div>';
@@ -758,13 +1016,20 @@
       if(state.draft)body+='<label class="sd-field">Comparison operator<select class="sd-input" data-requirement="'+esc(object.id)+'" data-req-field="operator">'+['<=','>=','=='].map(op=>'<option '+(object.operator===op?'selected':'')+' value="'+esc(op)+'">'+esc(op)+'</option>').join('')+'</select></label><label class="sd-field">Critical<select class="sd-input" data-requirement="'+esc(object.id)+'" data-req-field="critical"><option value="true" '+(object.critical?'selected':'')+'>Yes</option><option value="false" '+(!object.critical?'selected':'')+'>No</option></select></label>';
       if(state.panel==='evidence')body+='<h3>What was checked?</h3><p>The maintained adapter’s recorded '+esc(human(object.metric))+' is compared with the declared '+esc(object.operator)+' limit in the same unit. A requirement can remain unassessed when its model or inputs are unsupported.</p>'+modelEvidence(object.model_id);
       if(state.panel!=='evidence')body+=declaredAccuracy(object.model_id)+modelContext(object.model_id,true);
-      body+=trajectoryContext(object.model_id)+powerEvidence(object.model_id)+attitudeEvidence(object.model_id)+interfaceSlot('inspector',[object.model_id])+testEvidenceSlot('inspector',[object.id]);
+      body+=trajectoryContext(object.model_id)+powerEvidence(object.model_id)+attitudeEvidence(object.model_id)+flightEvidence(object.model_id)+interfaceSlot('inspector',[object.model_id])+testEvidenceSlot('inspector',[object.id]);
       body+='<button type="button" class="sd-button" data-investigate="'+esc(object.id)+'">Investigate with AI '+icon('arrow-up-right')+'</button>';
       if(f)body+='<details class="sd-source"><summary>Requirement evidence identity</summary><p class="sd-receipt">Dependency '+esc(f.dependency_fingerprint)+'</p><p>Inputs: '+esc((f.dependencies?.input_ids||[]).join(', '))+'</p></details>';
     }
     if(!state.draft&&latest())body+='<button type="button" class="sd-button" data-action="edit">'+icon('pencil')+'Edit draft</button>';
     if(!currentRun()&&!state.draft)body+='<button type="button" class="sd-button sd-primary" data-action="run">Run supported checks</button>';
-    $('#sd-panel-body').innerHTML=body;hydrateTestLinks();
+    if(selected.kind==='model')body+=sourceSlot('inspector',allReqs().filter(r=>r.model_id===selected.id).map(r=>r.id),[selected.id]);
+    if(selected.kind==='requirement')body+=sourceSlot('inspector',[selected.id],[object.model_id]);
+    if(selected.kind==='model')body+=actionSlot('inspector',allReqs().filter(r=>r.model_id===selected.id).map(r=>r.id),[selected.id]);
+    if(selected.kind==='requirement'){
+      body+=actionSlot('inspector',[selected.id],[object.model_id]);
+      if(!state.draft&&['not_met','not_assessed'].includes(finding(selected.id)?.status))body+='<button type="button" class="sd-button" data-track-action="'+esc('finding:'+selected.id)+'">Track engineering action</button>';
+    }
+    $('#sd-panel-body').innerHTML=body;hydrateSourceLinks();hydrateActionLinks();
   }
   function resetCamera() {state.camera={x:18,y:35,scale:0.9};}
   function applyCamera() {const stage=$('#sd-graph-stage');if(!stage)return;stage.style.transform='translate('+state.camera.x+'px,'+state.camera.y+'px) scale('+state.camera.scale+')';const label=$('#sd-zoom-value');if(label)label.textContent=Math.round(state.camera.scale*100)+'%';}
@@ -890,7 +1155,7 @@
     syncAssistantContext();const r=req(ai.requirementId);
     $('#sd-panel-context').innerHTML='<span class="sd-label">AI investigation · saved R'+state.data.revision+'</span><h2>'+esc(r?.title || 'Choose a requirement')+'</h2>'+(r?'<span class="sd-small sd-muted">'+esc(r.id)+'</span>':'');
     if(!r){$('#sd-panel-body').innerHTML='<p>Select a requirement and choose Investigate to work with its engineering evidence.</p>';return;}
-    $('#sd-panel-body').innerHTML='<div id="sd-ai-status" class="sd-ai-status">'+aiStatusMarkup()+'</div><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings '+icon('plug')+'</button><div class="sd-ai-scope"><span class="sd-label">Investigation scope</span><p>'+esc(r.title)+'<br>Model: '+esc(human(r.model_id))+' · '+chip(reqStatus(r.id))+'</p><p class="sd-small sd-muted">The saved requirement result stays authoritative. AI can inspect records, request a supported recheck and explain findings; its prose cannot change the verdict.</p></div><label class="sd-field" for="sd-ai-question">Your question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="4" maxlength="2000" placeholder="What supports this result, and what remains unassessed?">'+esc(ai.question)+'</textarea></label><span id="sd-ai-question-count" class="sd-small sd-muted"></span><p class="sd-small sd-ai-consent">Starting sends your question and scoped project records, including linked inputs, model and requirement evidence, to <span id="sd-ai-consent-model">'+esc(providerModelLabel(ai.status?.model))+'</span> on Nebius. This consumes the existing approved allowance. Opening this panel and connecting a key make no inference calls.</p><p class="sd-notice" id="sd-ai-blocked" hidden></p><button type="button" class="sd-button sd-primary sd-full-width" data-action="ai-start" id="sd-ai-start">Start live investigation</button><div id="sd-ai-history" class="sd-ai-history" aria-live="polite" aria-relevant="additions text"></div>';
+    $('#sd-panel-body').innerHTML='<div id="sd-ai-status" class="sd-ai-status">'+aiStatusMarkup()+'</div><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings '+icon('plug')+'</button><div class="sd-ai-scope"><span class="sd-label">Investigation scope</span><p>'+esc(r.title)+'<br>Model: '+esc(human(r.model_id))+' · '+chip(reqStatus(r.id))+'</p><p class="sd-small sd-muted">The saved requirement result stays authoritative. AI can inspect records, request a supported recheck and explain findings; its prose cannot change the verdict.</p></div><label class="sd-field" for="sd-ai-question">Your question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="4" maxlength="2000" placeholder="What supports this result, and what remains unassessed?">'+esc(ai.question)+'</textarea></label><span id="sd-ai-question-count" class="sd-small sd-muted"></span><div class="sd-action-row"><button type="button" class="sd-button" data-action="ai-source-question">Ask about linked references</button><button type="button" class="sd-button" data-action="sources">Open source library</button></div><p class="sd-small sd-ai-consent">Starting sends your question and scoped project records, including linked inputs, model and requirement evidence and relevant saved reference excerpts, to <span id="sd-ai-consent-model">'+esc(providerModelLabel(ai.status?.model))+'</span> on Nebius. This consumes the existing approved allowance. Opening this panel and connecting a key make no inference calls.</p><p class="sd-notice" id="sd-ai-blocked" hidden></p><button type="button" class="sd-button sd-primary sd-full-width" data-action="ai-start" id="sd-ai-start">Start live investigation</button><div id="sd-ai-history" class="sd-ai-history" aria-live="polite" aria-relevant="additions text"></div>';
     if(ai.testSelection){
       const scope=$('#sd-panel-body .sd-ai-scope');
       scope.insertAdjacentHTML('beforeend','<p class="sd-small">Selected CSV row '+esc(ai.testSelection.rowNumber)+' from comparison <span class="sd-receipt">'+esc(ai.testSelection.comparisonId)+'</span>. This recorded observation will be sent with its original baseline, conditions and applicability context.</p><button type="button" class="sd-mini-action" data-action="clear-test-selection">Clear selected test row</button>'+testEvidenceSlot('assistant',[r.id]));
@@ -1085,7 +1350,7 @@
     const evidence=Object.entries(record.evidence || {}),identity=investigationId(record);
     const activity=events.map(event=>'<li><strong>'+esc(human(event.action || event.state || 'Recorded update'))+'</strong>'+(Array.isArray(event.evidence_ids)&&event.evidence_ids.length?'<span>'+esc(event.evidence_ids.join(', '))+'</span>':'')+((event.at || event.timestamp)?'<small>'+esc(new Date(event.at || event.timestamp).toLocaleTimeString())+'</small>':'')+'</li>').join('');
     const captured=evidence.map(([id,value])=>'<details class="sd-ai-evidence" data-evidence-id="'+esc(id)+'" data-evidence-record="'+esc(identity)+'"><summary>'+esc(id)+'</summary><pre>'+esc(JSON.stringify(value,null,2))+'</pre></details>').join('');
-    return '<article class="sd-ai-record">'+frozenTestMarkup(record)+
+    return '<article class="sd-ai-record">'+frozenTestMarkup(record)+capturedReferencesMarkup(record)+
       '<div class="sd-section-heading"><strong>'+esc(record.state==='failed'?'Investigation stopped':human(record.state))+'</strong><span class="sd-small sd-muted">'+(record.started_at?esc(new Date(record.started_at).toLocaleString()):'Queued')+'</span></div>'+
       '<p class="sd-ai-record-question">'+esc(record.question)+'</p>'+
       '<p class="sd-small sd-muted">Recorded model: '+esc(record.model?providerModelLabel(record.model):'Not recorded')+'</p>'+
@@ -1104,6 +1369,14 @@
       (events.length?'<details class="sd-source" '+(investigationActive(record)?'open':'')+'><summary>Recorded activity · '+events.length+' events</summary><ol class="sd-ai-events">'+activity+'</ol></details>':'')+
       '<p class="sd-receipt">'+esc(identity)+'<br>Review '+esc(record.review_digest || 'Not available')+'<br>Accepted live responses: '+esc(record.live_model_calls ?? 0)+' · Request attempts: '+esc(record.request_attempts ?? 0)+'</p>'+
       '<button type="button" class="sd-mini-action" data-ai-download="'+esc(identity)+'">Download investigation JSON '+icon('download')+'</button></article>';
+  }
+  function capturedReferencesMarkup(record){
+    const captured=record.project_sources;if(!captured)return '';
+    if(captured.schema!=='sixd.assistant-sources.v1'||captured.project_id!==record.project_id||captured.revision!==record.revision||captured.requirement_id!==record.requirement_id||captured.review_digest!==record.review_digest||!Array.isArray(captured.links))return '<p class="sd-notice">The captured reference scope is inconsistent. No current references were substituted.</p>';
+    const modelId=record.canonical_finding?.model_id;
+    const current=record.review_digest===currentRun()?.review?.digest&&record.run_id===currentRun()?.run_id&&!state.draft&&latest()&&!investigationActive(record);
+    const track=current&&['not_met','not_assessed'].includes(record.canonical_finding?.status)?'<button type="button" class="sd-mini-action" data-track-action="'+esc('finding:'+record.requirement_id)+'">Track follow-up for this finding</button>':'';
+    return '<details class="sd-source sd-ai-reference-snapshot"><summary>References captured for this investigation ('+captured.links.length+')</summary><p class="sd-small">These are pinned supplemental references. Later library edits do not replace them, and their contents do not change the numerical finding.</p>'+window.SixDSources.render({...captured,context:'saved'},{requirementIds:[record.requirement_id],modelIds:modelId?[modelId]:[captured.model_id]})+(captured.omitted_links?'<p class="sd-notice">'+esc(captured.omitted_links)+' relevant links were omitted by the captured context bound.</p>':'')+'<p class="sd-receipt">Original library '+esc(captured.library_digest)+'<br>Captured context '+esc(captured.digest)+'</p>'+track+'</details>';
   }
   function renderAiHistory() {
     const container=$('#sd-ai-history');if(!container)return;
@@ -1193,6 +1466,16 @@
     try{const payload=await api('/api/templates');state.templates=payload.templates || [];$('#sd-template-list').innerHTML=state.templates.map((item,i)=>'<button type="button" class="sd-button" data-template="'+i+'"><span>'+esc(item.name || item.id)+'</span>'+icon('arrow-up-right')+'</button>').join('');if(preferredTemplate){const template=state.templates.find(item=>item.id===preferredTemplate);if(template)stageImport(template.project,true);}icons();}catch(error){importError(error);}
   }
   function importError(error) {$('#sd-import-error').textContent=error.message || String(error);$('#sd-import-error').hidden=false;}
+  function showSpreadsheetImport() {
+    if(state.draft){message('Save or discard the current draft before importing another project.');return;}
+    $('#sd-import-dialog').close();
+    window.SixDSpreadsheetIntake.open({api,onCreated:async view=>{
+      state.data=view;state.request++;state.draft=null;state.impact=null;invalidatePreflight();
+      state.system='overview';state.selected=defaultSelection();state.page='system';state.panel='details';
+      await refreshProjects();resetCamera();render();
+      message('Spreadsheet project saved locally. Run checks to calculate its engineering evidence.');
+    }});
+  }
   function stageImport(candidate,fromTemplate=false) {
     if(!candidate || candidate.schema!=='sixd.project.v1')throw new Error('Select a sixd.project.v1 project JSON file.');
     state.importing=copy(candidate);$('#sd-import-staging').hidden=false;
@@ -1225,10 +1508,14 @@
     },'Empty R1 saved locally. Choose Edit draft to add your explicit engineering setup.');
   }
   async function action(name) {
+    root.querySelectorAll('details.sd-tool-menu[open]').forEach(el=>el.open=false);
+    if(name==='ai-quality'){state.page='ai-quality';stopInvestigationPolling();render();return;}
+    if(name==='review-home'){state.page='review-home';stopInvestigationPolling();render();return;}
+    if(name==='guided-toggle'&&['review-home','ai-quality'].includes(state.page)){state.page='system';reviewGuide.open=false;}
     if(name==='guided-toggle'||name==='guided-close'){
       reviewGuide.open=name==='guided-close'?false:!reviewGuide.open;
       try{localStorage.setItem('sixd.review-guide.dismissed',reviewGuide.open?'no':'yes');}catch{}
-      renderReviewGuide();if(reviewGuide.open)$('#sd-review-guide').scrollIntoView({block:'nearest'});return;
+      render();if(reviewGuide.open)$('#sd-review-guide').scrollIntoView({block:'nearest'});return;
     }
     if(name==='guided-reference'){await showImport('baseline');return;}
     if(name==='guided-inputs'){state.page='system';state.system='overview';state.view='table';state.panel='details';stopInvestigationPolling();render();$('#sd-view-content').scrollIntoView({block:'start'});return;}
@@ -1240,11 +1527,20 @@
     if(name==='close-author-editor'){$('#sd-author-dialog').close();author.editor=null;return;}
     if(name==='close-import'){$('#sd-import-dialog').close();return;}
     if(name==='ai-settings'){await showAiSettings();return;}
+    if(name==='ai-source-question'){
+      syncAssistantContext();if(!req(ai.requirementId))return;
+      ai.question='Explain this saved finding and how its linked references relate to the declared requirement and model assumptions. Identify stale links, missing support and a concrete next engineering check. Treat references as unverified supplemental context; preserve the recorded finding.';
+      const input=$('#sd-ai-question');if(input){input.value=ai.question;input.focus();}updateAiControls();return;
+    }
     if(name==='workflow-evaluation-refresh'){await refreshEvaluationStatus();return;}
     if(name==='ai-close-settings'){$('#sd-ai-key').value='';$('#sd-ai-connect-dialog').close();return;}
     if(name==='ai-connect'||name==='ai-disconnect'||name==='ai-forget'){await connectAi(name==='ai-disconnect',name==='ai-forget');return;}
     if(name==='refresh-test-evidence'){await refreshTestLinks(true);return;}
     if(name==='refresh-interfaces'){await refreshInterfaceLinks(true);return;}
+    if(name==='sources'){state.page='sources';state.panel='details';stopInvestigationPolling();render();return;}
+    if(name==='actions'){state.page='actions';state.panel='details';stopInvestigationPolling();render();return;}
+    if(name==='coverage'){state.page='coverage';state.panel='details';stopInvestigationPolling();render();return;}
+    if(name==='comparison'){state.page='comparison';state.panel='details';stopInvestigationPolling();render();return;}
     if(name==='systems'){state.page='systems';state.panel='details';stopInvestigationPolling();render();return;}
     if(name==='chains'){
       if($('#sd-author-dialog').open){$('#sd-author-dialog').close();author.editor=null;}
@@ -1253,17 +1549,19 @@
       return;
     }
     if(name==='attitude'){if($('#sd-author-dialog').open){$('#sd-author-dialog').close();author.editor=null;}state.page='attitude';state.panel='details';stopInvestigationPolling();render();return;}
+    if(name==='powered-flight'){if($('#sd-author-dialog').open){$('#sd-author-dialog').close();author.editor=null;}state.page='powered-flight';state.panel='details';stopInvestigationPolling();render();return;}
     if(name==='power'){if($('#sd-author-dialog').open){$('#sd-author-dialog').close();author.editor=null;}state.page='power';state.panel='details';stopInvestigationPolling();render();return;}
     if(name==='clear-test-selection'){ai.testSelection=null;syncAssistantContext();renderPanel();return;}
     if(name==='export-review'){
-      if(state.draft||!currentRun()||testLinks.key!==testLinkKey()||!testLinks.profile||interfaceLinks.key!==testLinkKey()||!interfaceLinks.profile){showError(Error('Wait for current linked and interface evidence before exporting the combined review.'));return;}
+      if(state.draft||!currentRun()||testLinks.key!==testLinkKey()||!testLinks.profile||interfaceLinks.key!==testLinkKey()||!interfaceLinks.profile||sourceLinks.key!==sourceLinkKey()||!sourceLinks.profile||actionLinks.key!==actionLinkKey()||!actionLinks.profile||envelopeLinks.key!==testLinkKey()||!envelopeLinks.profile||seriesLinks.key!==testLinkKey()||!seriesLinks.profile||coverageLinks.key!==sourceLinkKey()||!coverageLinks.profile){showError(Error('Wait for current coverage and evidence, references and actions before exporting the combined review.'));return;}
       const key=testLinkKey(),projectId=state.data.project_id,revision=state.data.revision,profile=testLinks.profile;
-      const interfaceProfile=interfaceLinks.profile;
-      await perform(async()=>{const snapshot=await api('/api/engineering-review-export'+query(projectId,revision));if(key!==testLinkKey()||!same(snapshot.test_evidence,profile)||(snapshot.workspace.system_interfaces&&snapshot.workspace.system_interfaces.digest!==interfaceProfile.digest))throw Error('Linked or interface evidence changed. Refresh the report before exporting.');saveBlob(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),'6d-combined-review-r'+revision+'.json');});return;
+      const interfaceProfile=interfaceLinks.profile,sourceProfile=sourceLinks.profile,actionProfile=actionLinks.profile,coverageProfile=coverageLinks.profile,seriesProfile=seriesLinks.profile,envelopeProfile=envelopeLinks.profile;
+      await perform(async()=>{const snapshot=await api('/api/engineering-review-export'+query(projectId,revision));if(key!==testLinkKey()||!same(snapshot.test_evidence,profile)||(snapshot.workspace.system_interfaces&&snapshot.workspace.system_interfaces.digest!==interfaceProfile.digest)||snapshot.project_sources?.digest!==sourceProfile.digest||snapshot.engineering_actions?.digest!==actionProfile.digest||snapshot.engineering_coverage?.digest!==coverageProfile.digest||snapshot.simulation_imports?.digest!==seriesProfile.digest||snapshot.operating_envelopes?.digest!==envelopeProfile.digest){void refreshEnvelopes(true);void refreshSeries(true);void refreshCoverage(true);void refreshSourceLinks(true);void refreshActionLinks(true);throw Error('Evidence, references or actions changed. Refresh the report before exporting.');}saveBlob(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),'6d-combined-review-r'+revision+'.json');});return;
     }
     if(name==='ai-start'){await startInvestigation();return;}
     if(name==='ai-refresh'){await Promise.allSettled([refreshAiStatus(),loadInvestigations()]);return;}
     if(name==='import'){await showImport();return;}
+    if(name==='spreadsheet-import'){showSpreadsheetImport();return;}
     if(name==='create-project'){
       if(!state.importing)return;const candidate=copy(state.importing);candidate.project_id=$('#sd-import-id').value.trim();candidate.name=$('#sd-import-name').value.trim();
       if(!candidate.project_id||!candidate.name){importError(new Error('Provide a project ID and name.'));return;}
@@ -1282,12 +1580,14 @@
       if(author.snapshot!==setupKey()||!author.preflight?.can_run){await refreshPreflight();message('Resolve setup errors before running from Author project.');return;}
       await action('run');return;
     }
+    if(name==='envelopes'){state.page='envelopes';stopInvestigationPolling();render();return;}
+    if(name==='simulation-imports'){state.page='simulation-imports';stopInvestigationPolling();render();return;}
     if(name==='test-data'){state.testEvidenceTarget=null;invalidateTestLinks();state.page='test-data';stopInvestigationPolling();render();return;}
     if(name==='scenarios'){state.page='scenarios';stopInvestigationPolling();render();return;}
     if(name==='simulation'){state.trajectory=null;state.page='simulation';stopInvestigationPolling();render();return;}
-    if(name==='report'){state.page='report';render();return;}
+    if(name==='report'){envelopeLinks.key='';seriesLinks.key='';sourceLinks.key='';actionLinks.key='';coverageLinks.key='';state.page='report';render();return;}
     if(name==='print-report'){
-      if(state.draft || !currentRun() || currentRun().stale || testLinks.key!==testLinkKey() || !testLinks.profile || interfaceLinks.key!==testLinkKey() || !interfaceLinks.profile){showError(Error('Load current test and interface evidence before printing the report.'));return;}
+      if(state.draft || !currentRun() || currentRun().stale || testLinks.key!==testLinkKey() || !testLinks.profile || interfaceLinks.key!==testLinkKey() || !interfaceLinks.profile || sourceLinks.key!==sourceLinkKey() || !sourceLinks.profile || actionLinks.key!==actionLinkKey() || !actionLinks.profile || envelopeLinks.key!==testLinkKey() || !envelopeLinks.profile || seriesLinks.key!==testLinkKey() || !seriesLinks.profile || coverageLinks.key!==sourceLinkKey() || !coverageLinks.profile){showError(Error('Load current coverage and evidence, references and actions before printing the report.'));return;}
       if(state.page!=='report'){state.page='report';render();}
       window.print();return;
     }
@@ -1349,6 +1649,7 @@
       state.selected={kind:'requirement',id:requirementId};state.page='system';state.panel='assistant';ai.testSelection={projectId:state.data.project_id,revision:state.data.revision,requirementId,comparisonId,rowNumber};syncAssistantContext();ai.question='Review this test comparison, distinguish its measured requirement result from prediction agreement, and explain any applicability gaps.';render();void refreshAiStatus();return;
     }
     if(button.dataset.trajectoryModel){state.trajectory={modelId:button.dataset.trajectoryModel,runId:button.dataset.trajectoryRun};state.page='simulation';stopInvestigationPolling();render();return;}
+    if(button.dataset.trackAction){actionLinks.originId=button.dataset.trackAction;void action('actions');return;}
     if(button.dataset.action){void action(button.dataset.action);return;}
     if(button.dataset.evidenceFact){const record=ai.records.find(item=>investigationId(item)===button.dataset.investigationRecord);if(record)showFactSource(record,button.dataset.evidenceFact);return;}
     if(button.dataset.citation){openCitation(button.dataset.citation,button.dataset.investigationRecord);return;}
@@ -1413,5 +1714,8 @@
     await refreshAiStatus();
     try{const status=await api('/api/status');$('#sd-build').textContent='Build '+status.build_id+' · Updated '+new Date(status.updated_at).toLocaleString();}catch{$('#sd-build').textContent='Build identity unavailable';}
   }
+  root.addEventListener('keydown',event=>{if(event.key==='Escape'){const menu=event.target.closest('details.sd-tool-menu[open]');if(menu){menu.open=false;menu.querySelector('summary').focus();}}});
+  document.addEventListener('click',event=>{root.querySelectorAll('details.sd-tool-menu[open]').forEach(menu=>{if(!menu.contains(event.target))menu.open=false;});});
+  window.SixDUnits?.observe(root);
   void init();
 })();

@@ -85,7 +85,8 @@ class SimulationReferenceTests(unittest.TestCase):
         self.assertGreater(result["samples"][256]["position_m"][2], .8 * radius)
         self.assertLess(result["samples"][768]["position_m"][2], -.8 * radius)
         self.assertLess(result["summary"]["max_relative_energy_error"], 4e-10)
-        self.assertLess(result["summary"]["max_relative_angular_momentum_error"], 2e-14)
+        # RK4 is not symplectic; conservation is a diagnostic, not exact.
+        self.assertLess(result["summary"]["max_relative_angular_momentum_error"], 1e-11)
 
     def test_eccentric_oblique_history_matches_independent_kepler_solution(self):
         spec, a, e, anomaly = eccentric_spec()
@@ -102,7 +103,7 @@ class SimulationReferenceTests(unittest.TestCase):
         self.assertLess(abs(result["summary"]["min_radius_m"] / (a * (1 - e)) - 1), 2e-5)
         self.assertLess(abs(result["summary"]["max_radius_m"] / (a * (1 + e)) - 1), 2e-5)
 
-    def test_state_error_converges_at_second_order_under_time_step_refinement(self):
+    def test_state_error_converges_at_fourth_order_under_time_step_refinement(self):
         errors = []
         for steps in (512, 1024, 2048):
             spec, a, e, anomaly = eccentric_spec(eccentricity=.3, periods=.7, steps=steps)
@@ -111,8 +112,8 @@ class SimulationReferenceTests(unittest.TestCase):
             errors.append(math.hypot(distance(sample["position_m"], expected_position) / a,
                                      distance(sample["velocity_m_s"], expected_velocity) / math.sqrt(spec["mu_m3_s2"] / a)))
         for coarse, fine in zip(errors, errors[1:]):
-            self.assertGreater(coarse / fine, 3.9)
-            self.assertLess(coarse / fine, 4.1)
+            self.assertGreater(coarse / fine, 15)
+            self.assertLess(coarse / fine, 17)
 
     def test_arbitrary_rotation_covariance_of_full_state_history(self):
         spec, *_ = eccentric_spec(periods=.6, steps=2048)
@@ -163,7 +164,7 @@ class SimulationContractTests(unittest.TestCase):
         self.assertEqual(result["samples"][0]["position_m"], spec["position_m"])
         self.assertEqual(result["samples"][0]["velocity_m_s"], spec["velocity_m_s"])
         self.assertEqual(result["samples"][-1]["time_s"], spec["duration_s"])
-        self.assertEqual(result["method"]["name"], "velocity_verlet")
+        self.assertEqual(result["method"]["name"], "rk4")
         for index, sample in enumerate(result["samples"]):
             self.assertEqual(sample["time_s"], spec["duration_s"] * index / spec["steps"])
             self.assertEqual(sample["radius_m"], math.hypot(*sample["position_m"]))
@@ -245,7 +246,7 @@ class SimulationContractTests(unittest.TestCase):
     def test_rejects_malformed_vectors_and_unbounded_work(self):
         for vector in ([1, 2], [1, 2, 3, 4], "1,2,3", (1, 2, 3), None):
             self.assert_invalid({"position_m": vector}, "JSON array")
-        for steps in (True, 15, 4097, 1024.0, "1024", 10 ** 1000):
+        for steps in (True, 15, simulation.MAX_STEPS + 1, 1024.0, "1024", 10 ** 1000):
             self.assert_invalid({"steps": steps}, "steps")
         self.assert_invalid({"position_m": [0, 0, 0]}, "radius")
         self.assert_invalid({"duration_s": 31_557_601}, "duration_s")

@@ -1,0 +1,36 @@
+#sixd-workspace .en-workspace{padding:26px 30px;max-width:1280px;margin:auto;line-height:1.7;font-size:13px;overflow-wrap:anywhere}
+#sixd-workspace .en-workspace h2{font-size:20px;font-weight:600;letter-spacing:-.3px;margin:0 0 12px}
+#sixd-workspace .en-workspace h3{font-size:16px;margin:24px 0 12px}
+#sixd-workspace .en-workspace h4{font-size:13px;margin:18px 0 9px}
+#sixd-workspace .en-builder,#sixd-workspace .en-history,#sixd-workspace .en-report,#sixd-workspace .en-empty{border:1px solid #dfe5ed;border-radius:12px;background:white;padding:22px;margin-bottom:22px;min-width:0}
+#sixd-workspace .en-builder{background:#fcfdff}
+#sixd-workspace .en-axis{border:1px solid #dfe5ed;border-radius:8px;padding:15px;margin:18px 0;min-width:0}
+#sixd-workspace .en-axis legend{font-weight:600;padding:0 5px}
+#sixd-workspace .en-axis-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr .8fr;gap:14px;align-items:end}
+#sixd-workspace .en-axis-grid .sd-field{margin:0}
+#sixd-workspace .en-context{padding:10px 12px;background:#f0f3f8;border-radius:6px}
+#sixd-workspace .en-preview{margin-top:22px;padding-top:4px;border-top:1px solid #dfe5ed}
+#sixd-workspace .en-history-items{display:flex;gap:10px;flex-wrap:wrap}
+#sixd-workspace .en-history-item{display:grid;gap:5px;text-align:left;max-width:100%;white-space:normal}
+#sixd-workspace .en-history-item span{font-size:11px;font-weight:400;color:#657286}
+#sixd-workspace .en-history-item[aria-pressed="true"]{background:#edf3fe;border-color:#9bb6ed}
+#sixd-workspace .en-table-wrap{max-width:100%;overflow-x:auto;margin:18px 0}
+#sixd-workspace .en-workspace .sd-table{min-width:660px}
+#sixd-workspace .en-workspace .sd-table td,#sixd-workspace .en-workspace .sd-table th{white-space:normal;vertical-align:top;font-size:11px;padding:12px 10px;overflow-wrap:anywhere}
+#sixd-workspace .en-matrix .sd-button{white-space:normal;text-align:left;font-size:11px}
+#sixd-workspace .en-selected td{background:#f0f5ff}
+#sixd-workspace .en-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px}
+#sixd-workspace .en-met,#sixd-workspace .en-all_sampled_met{background:#eaf6ef;color:#25774e}
+#sixd-workspace .en-not_met,#sixd-workspace .en-sampled_violation{background:#fceeee;color:#a53f3f}
+#sixd-workspace .en-not_assessed,#sixd-workspace .en-unresolved{background:#f1f2f5;color:#667182}
+#sixd-workspace .en-identity,#sixd-workspace .en-workspace pre{font-family:ui-monospace,monospace;font-size:10px;color:#657286;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+#sixd-workspace .en-chart{display:block;width:100%;max-height:330px;margin:20px 0 5px;background:#fafbfe;border-radius:9px}
+#sixd-workspace .en-chart text{font-family:inherit;font-size:11px;fill:#657286}
+#sixd-workspace .en-case-detail{border:1px solid #dfe5ed;border-radius:8px;padding:0 18px 18px;margin-top:24px}
+#sixd-workspace .en-workspace details{margin:14px 0;font-size:11px}
+#sixd-workspace .en-workspace summary{cursor:pointer;font-weight:550}
+#sixd-workspace .en-finding{border-top:1px solid #e7ebf2;padding-top:12px}
+#sixd-workspace .en-provenance pre{padding:14px;background:#f6f8fb;border-radius:7px;max-height:380px;overflow-y:auto}
+@media(max-width:1000px){#sixd-workspace .en-axis-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){#sixd-workspace .en-workspace{padding:16px 10px}#sixd-workspace .en-axis-grid{grid-template-columns:1fr}#sixd-workspace .en-builder,#sixd-workspace .en-history,#sixd-workspace .en-report{padding:15px}#sixd-workspace .en-workspace .sd-section-heading{align-items:flex-start;flex-wrap:wrap;gap:8px}}
+@media print{#sixd-workspace .en-workspace{padding:0;max-width:none;font-size:9pt}#sixd-workspace .en-builder,#sixd-workspace .en-history,#sixd-workspace .en-no-print,#sixd-workspace .en-error{display:none!important}#sixd-workspace .en-report{padding:0;border:0}#sixd-workspace .en-table-wrap{overflow:visible}#sixd-workspace .en-workspace .sd-table{min-width:0;width:100%;table-layout:fixed}#sixd-workspace .en-workspace .sd-table td,#sixd-workspace .en-workspace .sd-table th{font-size:7pt;padding:5px}#sixd-workspace .en-chart{break-inside:avoid}#sixd-workspace .en-provenance pre{max-height:none;overflow:visible}#sixd-workspace .en-workspace h3,#sixd-workspace .en-workspace h4{break-after:avoid}#sixd-workspace .en-matrix button{border:0;padding:0;color:inherit;background:none}}

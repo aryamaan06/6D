@@ -184,7 +184,7 @@ class WorkspaceSimulationTests(unittest.TestCase):
         for identity, revision in ((None, 1), ([], 1), (self.identity, True), (self.identity, 2), ("missing", 1)):
             with self.subTest(identity=identity, revision=revision), self.assertRaises(WorkspaceError):
                 self.scenarios.run(identity, revision, self.spec)
-        for spec in ({**self.spec, "steps": 4097}, {**self.spec, "provider": "live"}):
+        for spec in ({**self.spec, "steps": 16385}, {**self.spec, "provider": "live"}):
             with self.assertRaises(ValueError):
                 self.run_scenario(spec=spec)
         self.scenarios._run_lock.acquire()

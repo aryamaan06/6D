@@ -25,6 +25,7 @@ def blank_project():
 class AuthoringCatalogTests(unittest.TestCase):
     def test_catalog_exposes_maintained_binding_and_metric_contracts_without_calculation(self):
         expected_metrics = {
+            "powered_flight": {"final_altitude":"m", "final_velocity":"m/s", "max_sampled_altitude":"m", "max_sampled_speed":"m/s", "max_sampled_dynamic_pressure":"Pa", "max_sampled_drag":"N", "max_sampled_upward_acceleration":"m/s^2", "burnout_altitude":"m", "burnout_velocity":"m/s", "burn_duration":"s", "propellant_consumed":"kg"},
             "attitude_control": {"final_error":"rad", "final_rate":"rad/s", "max_sampled_error":"rad", "max_sampled_rate":"rad/s", "max_assessed_error":"rad", "max_assessed_rate":"rad/s", "max_sampled_command_torque":"N*m", "max_sampled_applied_torque":"N*m", "sampled_saturation_fraction":"1"},
             "ideal_propulsion": {"propellant_required": "kg", "propellant_available": "kg",
                 "propellant_margin": "kg", "mass_flow": "kg/s", "burn_duration": "s"},
@@ -46,7 +47,7 @@ class AuthoringCatalogTests(unittest.TestCase):
         self.assertEqual(catalog["operators"], ["<=", ">=", "=="])
         self.assertEqual(set(catalog["lifecycle_stages"]), lifecycle.STAGES)
         self.assertEqual([item["type"] for item in catalog["models"]], list(engineering.MODEL_PARAMETERS))
-        self.assertEqual(len(catalog["models"]), 7)
+        self.assertEqual(len(catalog["models"]), 8)
         for model in catalog["models"]:
             model_type = model["type"]
             self.assertEqual(set(model), {"type", "title", "description", "version", "parameters",

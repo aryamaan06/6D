@@ -111,12 +111,12 @@ class ChainIntegrationTests(unittest.TestCase):
         orbit["links"] = {"steps": {"model_id": "placeholder", "metric": "scalar", "unit": "1", "rationale": "Budget-only fixture"}}
         cases = [{"name": str(index), "changes": {"duration_s": index + 1}} for index in range(8)]
         with patch("sixd.engineering.evaluate_models", side_effect=AssertionError("Budget preflight must not calculate")):
-            with self.assertRaisesRegex(WorkspaceError, "retained orbital/control samples"):
+            with self.assertRaisesRegex(WorkspaceError, "retained orbital/control/flight samples"):
                 WorkspaceScenarios._budget(project, cases, "Synthetic work-bound inputs")
         control = example_projects()["attitude_review"]
         control["inputs"]["steps"]["value"] = 2048
         cases = [{"name": str(index), "changes": {"duration": index + 1}} for index in range(8)]
-        with self.assertRaisesRegex(WorkspaceError, "retained orbital/control samples"):
+        with self.assertRaisesRegex(WorkspaceError, "retained orbital/control/flight samples"):
             WorkspaceScenarios._budget(control, cases, "Synthetic work-bound inputs")
 
     def test_test_applicability_tracks_upstream_assumptions_without_changing_observation(self):
