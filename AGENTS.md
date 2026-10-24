@@ -6,6 +6,8 @@ Arya approved the A-F functional backlog on October 24: A integrated rocket refe
 
 Historical checkpoints are in docs/development/CHECKPOINTS.md and docs/CHANGELOG.md. They do not override current scope.
 
+Arya expects completed authorized milestones to stay documented and synchronized to GitHub. After an appropriate privacy check, commit/push the completed source, tests, reproducible reference results and accurate status documents; verify the remote commit and report it. Keep private credentials, workspace databases, raw private logs and personal email screenshots local. Never describe pending work or an unverified push as complete.
+
 The October 22 judge-email guidance supplied by Arya is tracked in docs/JUDGE_GUIDANCE_ACTIONS.md. Preserve the A–F scope: prioritize a clear change/evidence outcome, visible model roles, documented limitations, real user evidence and adequate packaging time. More tools or consumed credits do not establish value. The guidance is not a new build authorization or proof of customer validation.
 
 6D is strictly space-only. Arya's October 13 decision is to build toward the complete future startup platform now, using one expandable codebase. October 21, 2026, Asia/Calcutta, is an internal hackathon checkpoint, not a ceiling on the startup's scope. Submit the working, validated capabilities available at the checkpoint; do not promise complete launch-to-landing coverage by that date. Build coherent supported workflows and add disciplines as their models and evidence pass validation.
