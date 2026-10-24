@@ -1,10 +1,12 @@
 # 6D working instructions
 
-Current code: eight bounded engineering models and connected evidence workflows; Super is the selected project Assistant. Live Super, LangSmith and Tavily qualification receipts are recorded in docs/AI_QUALIFICATION_RESULTS.md and docs/TAVILY_LIVE_RESULTS.md.
+Current code: ten bounded engineering models (including prescribed planar ascent; not closed-loop launch GNC) and connected evidence workflows; Super is the selected project Assistant. Live Super, LangSmith and Tavily qualification receipts are recorded in docs/AI_QUALIFICATION_RESULTS.md and docs/TAVILY_LIVE_RESULTS.md.
 
-Arya approved the A-F functional backlog on October 24: A integrated rocket reference; B guided ascent; C variable thrust/staging; D project-wide investigations; E remembered connections; F hosted access/isolation. UI refinement and walkthrough are separately acknowledged. No G/H additions without explicit scope approval. Part1 review corrections are authorized before Build A; A has not started. Submission deadline is October 30, 2026 at22:30 IST.
+Arya approved the A-F functional backlog on October 24: A integrated rocket reference; B guided ascent; C variable thrust/staging; D project-wide investigations; E remembered connections; F hosted access/isolation. UI refinement and walkthrough are separately acknowledged. No G/H additions without explicit scope approval. Part1 review corrections are complete. Build A adds a constructed integrated rocket reference and a guarded baseline/change/correction journey; see docs/BUILD_A_ACCEPTANCE.md and docs/BUILD_A_RESULTS.md. Build B adds prescribed planar ascent and connected saved playback; see docs/BUILD_B_RESULTS.md. Build C adds variable-thrust serial staging, analytical fuel/mass events, forms and saved playback; see docs/BUILD_C_RESULTS.md. D project-wide AI, E remembered optional connections and F hosting remain planned. Submission deadline is October 30, 2026 at22:30 IST.
 
 Historical checkpoints are in docs/development/CHECKPOINTS.md and docs/CHANGELOG.md. They do not override current scope.
+
+The October 22 judge-email guidance supplied by Arya is tracked in docs/JUDGE_GUIDANCE_ACTIONS.md. Preserve the A–F scope: prioritize a clear change/evidence outcome, visible model roles, documented limitations, real user evidence and adequate packaging time. More tools or consumed credits do not establish value. The guidance is not a new build authorization or proof of customer validation.
 
 6D is strictly space-only. Arya's October 13 decision is to build toward the complete future startup platform now, using one expandable codebase. October 21, 2026, Asia/Calcutta, is an internal hackathon checkpoint, not a ceiling on the startup's scope. Submit the working, validated capabilities available at the checkpoint; do not promise complete launch-to-landing coverage by that date. Build coherent supported workflows and add disciplines as their models and evidence pass validation.
 

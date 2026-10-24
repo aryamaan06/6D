@@ -448,6 +448,19 @@ def _upstream_evidence(project, review, model_id):
             if key in source:
                 records[model["id"]][key] = (_accuracy_projection(source[key]) if key == "numerical_accuracy"
                                             else deepcopy(source[key]))
+        if "guided_response" in source:
+            records[model["id"]]["guided_response"] = {
+                "diagnostics": deepcopy(source["guided_response"]["diagnostics"]),
+                "frame": deepcopy(source["guided_response"]["frame"]),
+                "source_fingerprint": source["guided_response"]["source_fingerprint"],
+                "projection_note": "Recorded scalar accuracy and frame only; full guided-ascent grids remain in the saved review."}
+        if "staged_response" in source:
+            records[model["id"]]["staged_response"] = {
+                "diagnostics":deepcopy(source["staged_response"]["diagnostics"]),
+                "frame":deepcopy(source["staged_response"]["frame"]),
+                "stage_plan":deepcopy(source["staged_response"]["solver"]["stage_plan"]),
+                "source_fingerprint":source["staged_response"]["source_fingerprint"],
+                "projection_note":"Recorded stage/mass and scalar numerical evidence only; full histories remain in the saved review. Separation is ideal with no impulse."}
         records[model["id"]]["input_records"] = {identity: deepcopy(project["inputs"][identity])
             for identity in sorted(set(model["inputs"].values()))}
         records[model["id"]]["result_digest"] = lifecycle._digest(_saved_result(source))
@@ -565,6 +578,50 @@ def _provider_evidence(payload):
             "values": deepcopy(full["values"]), "links": deepcopy(full["links"]),
             "ancestor_count": len(full["ancestors"]),
             "projection_note": "Resolved scalar roles and direct transfer records are copied from captured evidence. Full ancestor provenance remains in the saved calculation inputs; no physics is inferred."}
+    for field in ("recorded_evidence", "fresh_result"):
+        result = projected.get(field)
+        if not isinstance(result,dict) or "staged_response" not in result:
+            continue
+        artifact = result.pop("staged_response")
+        samples = artifact["samples"]
+        witnesses = {0,len(samples)-1}
+        critical = {"stage_burnout_before","stage_burnout_after","separation_before","separation_after","ignition_before","ignition_after"}
+        witnesses.update(item["sample_index"] for item in artifact["events"] if item["event"] in critical)
+        for key in ("altitude_m","downrange_m","speed_m_s","dynamic_pressure_pa","drag_n","acceleration_m_s2"):
+            witnesses.add(max(range(len(samples)),key=lambda i:abs(samples[i][key])))
+        for item in artifact["events"]:
+            if len(witnesses) >= 32:
+                break
+            witnesses.add(item["sample_index"])
+        selected = sorted(witnesses)[:32]
+        result["staged_summary_projection"] = {
+            "artifact_schema":artifact["schema"], "artifact_digest":lifecycle._digest(artifact),
+            "source_fingerprint":artifact["source_fingerprint"],
+            "parameters":deepcopy(artifact["parameters"]), "solver":deepcopy(artifact["solver"]),
+            "frame":deepcopy(artifact["frame"]), "diagnostics":deepcopy(artifact["diagnostics"]),
+            "witness_samples":[{"sample_index":i,**deepcopy(samples[i])} for i in selected],
+            "witnesses_omitted":len(witnesses)-len(selected),
+            "assumptions":deepcopy(artifact["assumptions"]), "not_assessed":deepcopy(artifact["not_assessed"]),
+            "projection_note":"Bounded saved endpoint/event/extremum witnesses only; full grids remain captured. Thrust profiles and steering are supplied. Stage dry-mass removal assumes no separation impulse, and does not establish hardware separation, ignition reliability, guidance tracking or mission readiness."}
+    for field in ("recorded_evidence", "fresh_result"):
+        result = projected.get(field)
+        if not isinstance(result, dict) or "guided_response" not in result:
+            continue
+        artifact = result.pop("guided_response")
+        samples = artifact["samples"]
+        witnesses = {0, len(samples)-1, *(item["sample_index"] for item in artifact["events"])}
+        for key in ("altitude_m", "downrange_m", "speed_m_s", "dynamic_pressure_pa", "drag_n", "acceleration_m_s2"):
+            witnesses.add(max(range(len(samples)), key=lambda i: abs(samples[i][key])))
+        diagnostics = deepcopy(artifact["diagnostics"])
+        # Grid diagnostics contain scalar comparisons, not retained trajectories.
+        result["guided_summary_projection"] = {
+            "artifact_schema": artifact["schema"], "artifact_digest": lifecycle._digest(artifact),
+            "source_fingerprint": artifact["source_fingerprint"],
+            "parameters": deepcopy(artifact["parameters"]), "solver": deepcopy(artifact["solver"]),
+            "frame": deepcopy(artifact["frame"]), "diagnostics": diagnostics,
+            "witness_samples": [{"sample_index": i, **deepcopy(samples[i])} for i in sorted(witnesses)],
+            "assumptions": deepcopy(artifact["assumptions"]), "not_assessed": deepcopy(artifact["not_assessed"]),
+            "projection_note": "Saved endpoints, pitch boundaries, cutoff and sampled-extremum witnesses only; full grids remain captured. The pitch programme is prescribed, not closed-loop guidance. Grid agreement is not an error bound; launch GNC, staging, aeroheating and landing remain unassessed."}
     for field in ("recorded_evidence", "fresh_result"):
         result = projected.get(field)
         if not isinstance(result, dict) or "flight_response" not in result:

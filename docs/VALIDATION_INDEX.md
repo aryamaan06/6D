@@ -15,7 +15,15 @@ After these test-fixture changes, the two affected modules passed **11 tests**, 
 
 Logs/summaries: `work/claude-part2-review/02-full-test-output.txt`, `test-summary.json`, `02b-corrected-tests.txt`, `correction-summary.json` and `09-test-fixture-corrections.diff.txt`. These are included in the local Claude packet. Full test output is not itself independent engineering validation.
 
+## Build B affected verification
+
+The guided-ascent regression ran 293 methods: 292 passed; one catalog-count fixture needed eight changed to nine. Its corrected 12-method authoring module passed. These runs cover 293 distinct passing methods, not 305. Four separately integrated DOP853 cases also passed, including the interactive reference grid. This is not a full-suite count. See [BUILD_B_RESULTS.md](BUILD_B_RESULTS.md) for logs, browser evidence and scope.
+
 ## Earlier checkpoints
+
+Build C covers **320 distinct affected Python methods** across the solver (14), adapter/contracts (84) and remaining regressions (222). One initial authoring-fixture expectation of catalog fields was corrected and its 12-method module passed; overlaps are not added. Four separate staged DOP853 cases and eight actual-solver browser groups passed. See [BUILD_C_RESULTS.md](BUILD_C_RESULTS.md) for boundaries and preserved initial/follow-up results. This remains targeted verification, not a new full-suite total.
+
+Build A's integrated rocket reference passed **55 affected Python tests**, including 14 new reference/profile/API methods and 41 existing regressions. Targeted and full recomputation matched for the constructed thrust reduction and restoration. This targeted result is separate from the earlier 1,225-method full discovery. Browser acceptance and the exact constructed scope are recorded in [BUILD_A_RESULTS.md](BUILD_A_RESULTS.md).
 
 | Evidence | Date/scope | Interpretation |
 | --- | --- | --- |

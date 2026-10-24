@@ -4,9 +4,9 @@
 
 6D connects requirements, bounded calculations, saved revisions and supporting references. It identifies affected checks after a change, reuses eligible unchanged results, and keeps unmet criteria separate from missing evidence. NVIDIA Nemotron, running through Nebius Token Factory, investigates the recorded evidence and explains what to check next.
 
-![6D showing calculated findings for a constructed engineering change](docs/images/6d-review.png)
+![6D showing an integrated constructed rocket change review](docs/images/6d-review.png)
 
-*Actual application UI, calculated constructed reference: a changed heat input produces an unmet thermal criterion while unsupported control remains unassessed. This is not NASA/ISRO/SpaceX flight data. The screenshot was captured in an isolated reference workspace.*
+*Actual application UI, calculated constructed rocket reference: reducing thrust makes the burnout-altitude criterion unmet while launch guidance remains unassessed. This is not NASA/ISRO/SpaceX flight data. The screenshot was captured in an isolated reference workspace.*
 
 ## Try it
 
@@ -30,9 +30,17 @@ Python **3.10+** is required; the application runtime uses the standard library.
 
 On Windows, `Setup-6D.cmd`, `Open-6D.cmd` and `Stop-6D.cmd` provide the same workflow; `py -3` may be used in place of `python`. On Linux/macOS, use `python3`. Windows has native launcher verification; the other platforms still need native qualification. [Setup, backup and recovery details](docs/RELEASE_HANDOVER.md).
 
+For a connected rocket example, choose **Rocket reference** in the sidebar, create the project and calculate its baseline. Review overview stages a thrust reduction and correction through the normal preview/save/rerun controls. Five bounded calculations share explicit inputs and scalar links; launch guidance stays unassessed. [Reference walkthrough and verification](docs/BUILD_A_RESULTS.md).
+
 A fresh checkout opens without saved private project data or provider credentials. Use **Import project** to choose a constructed reference, explicitly create it, and **Run checks**. **Guided review** follows a design change; **Powered flight** offers its existing vertical-ascent reference. Loading a page never silently calculates a new verdict. [Powered-flight walkthrough](docs/POWERED_FLIGHT.md).
 
+For horizontal motion, open **Powered flight → Planar ascent & steering** and use its constructed reference. A declared pitch programme drives saved downrange/altitude playback and engineering findings; controller tracking remains unassessed. [Build B walkthrough and checks](docs/BUILD_B_RESULTS.md).
+
+For serial stages and variable thrust, select **Powered flight → Variable thrust & staging**. Its constructed reference includes editable stage/thrust forms, exact fuel/separation/ignition events, mass accounting and saved reports. [Build C walkthrough and checks](docs/BUILD_C_RESULTS.md).
+
 ## The engineering workflow
+
+Judge-email recommendations and their concrete 6D actions, evidence and remaining gaps are tracked in [Judge guidance and remaining outcomes](docs/JUDGE_GUIDANCE_ACTIONS.md).
 
 1. Supply project inputs, units, sources, model mappings and requirements using forms, CSV, values-only Excel or supported project JSON.
 2. Calculate a saved baseline and inspect its findings, assumptions, numerical support and exclusions.

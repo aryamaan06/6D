@@ -333,16 +333,16 @@ class WorkspaceScenarios:
         total = 0
         for variant in [project] + [_variant(project, case, source)[0] for case in cases]:
             for model in variant["models"]:
-                if model["type"] not in {"orbital_trajectory", "attitude_control", "powered_flight"}:
+                if model["type"] not in {"orbital_trajectory", "attitude_control", "powered_flight", "guided_ascent", "staged_ascent"}:
                     continue
                 record = variant["inputs"].get(model["inputs"].get("steps"))
-                minimum, maximum, multiplier = ((8, 512, 14) if model["type"] == "powered_flight" else (16, 16384, 2) if model["type"] == "orbital_trajectory" else (32, 2048, 2))
+                minimum, maximum, multiplier = ((8, 128, 210) if model["type"] == "staged_ascent" else (8, 512, 28) if model["type"] == "guided_ascent" else (8, 512, 14) if model["type"] == "powered_flight" else (16, 16384, 2) if model["type"] == "orbital_trajectory" else (32, 2048, 2))
                 # Work allocation can itself be linked. Bound the retained
                 # samples before executing its upstream calculation; never
                 # treat an uncomputed step count as zero work.
                 steps = maximum if "steps" in model.get("links", {}) else record["value"] if record else 0
                 if isinstance(steps, (int, float)) and minimum <= steps <= maximum and float(steps).is_integer():
-                    total += multiplier * int(steps) + (6 if model["type"] == "powered_flight" else 1)
+                    total += multiplier * int(steps) + (200 if model["type"] == "staged_ascent" else 10 if model["type"] == "guided_ascent" else 6 if model["type"] == "powered_flight" else 1)
         if total > MAX_SAMPLES:
             raise WorkspaceError(f"This study exceeds {MAX_SAMPLES} retained orbital/control/flight samples. Use fewer cases or a suitable smaller grid.")
 

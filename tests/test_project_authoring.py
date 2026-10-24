@@ -25,6 +25,8 @@ def blank_project():
 class AuthoringCatalogTests(unittest.TestCase):
     def test_catalog_exposes_maintained_binding_and_metric_contracts_without_calculation(self):
         expected_metrics = {
+            "staged_ascent": {"burnout_altitude":"m", "burnout_speed":"m/s", "burnout_downrange":"m", "final_altitude":"m", "final_speed":"m/s", "final_downrange":"m", "max_sampled_altitude":"m", "max_sampled_speed":"m/s", "max_sampled_dynamic_pressure":"Pa", "max_sampled_drag":"N", "max_sampled_acceleration":"m/s^2", "burn_duration":"s", "propellant_consumed":"kg", "initial_mass":"kg", "final_mass":"kg", "total_duration":"s", "jettisoned_mass":"kg"},
+            "guided_ascent": {"burnout_altitude":"m", "burnout_speed":"m/s", "burnout_downrange":"m", "final_altitude":"m", "final_speed":"m/s", "final_downrange":"m", "max_sampled_altitude":"m", "max_sampled_speed":"m/s", "max_sampled_dynamic_pressure":"Pa", "max_sampled_drag":"N", "max_sampled_acceleration":"m/s^2", "burn_duration":"s", "propellant_consumed":"kg"},
             "powered_flight": {"final_altitude":"m", "final_velocity":"m/s", "max_sampled_altitude":"m", "max_sampled_speed":"m/s", "max_sampled_dynamic_pressure":"Pa", "max_sampled_drag":"N", "max_sampled_upward_acceleration":"m/s^2", "burnout_altitude":"m", "burnout_velocity":"m/s", "burn_duration":"s", "propellant_consumed":"kg"},
             "attitude_control": {"final_error":"rad", "final_rate":"rad/s", "max_sampled_error":"rad", "max_sampled_rate":"rad/s", "max_assessed_error":"rad", "max_assessed_rate":"rad/s", "max_sampled_command_torque":"N*m", "max_sampled_applied_torque":"N*m", "sampled_saturation_fraction":"1"},
             "ideal_propulsion": {"propellant_required": "kg", "propellant_available": "kg",
@@ -47,11 +49,11 @@ class AuthoringCatalogTests(unittest.TestCase):
         self.assertEqual(catalog["operators"], ["<=", ">=", "=="])
         self.assertEqual(set(catalog["lifecycle_stages"]), lifecycle.STAGES)
         self.assertEqual([item["type"] for item in catalog["models"]], list(engineering.MODEL_PARAMETERS))
-        self.assertEqual(len(catalog["models"]), 8)
+        self.assertEqual(len(catalog["models"]), 10)
         for model in catalog["models"]:
             model_type = model["type"]
             self.assertEqual(set(model), {"type", "title", "description", "version", "parameters",
-                                          "metrics", "assumptions", "not_assessed", "applicability"} | ({"profile"} if model_type == "power_energy_budget" else set()))
+                                          "metrics", "assumptions", "not_assessed", "applicability"} | ({"profile"} if model_type in {"power_energy_budget", "staged_ascent"} else set()))
             self.assertEqual(model["applicability"]["physical_applicability"], "not_assessed")
             self.assertTrue(model["applicability"]["references"])
             if model_type == "power_energy_budget":

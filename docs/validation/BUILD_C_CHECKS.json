@@ -1,0 +1,79 @@
+{
+  "scope": "Build C affected checks on October 24, 2026; targeted runs, not full-suite discovery or independent human/flight validation.",
+  "solver": {
+    "tests": 14,
+    "failures": 0,
+    "errors": 0,
+    "module": "test_staged_ascent",
+    "evidence": "Observed final solver run after exact fuel-at-thrust-knot correction."
+  },
+  "adapter_regression": {
+    "tests": 84,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "modules": [
+      "test_engineering",
+      "test_lifecycle",
+      "test_calculation_chains",
+      "test_staged_ascent_workspace"
+    ]
+  },
+  "remaining_regression_initial": {
+    "tests": 222,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "modules": [
+      "test_staged_ascent_api",
+      "test_rocket_reference_example",
+      "test_rocket_reference_profile",
+      "test_rocket_reference_workflow",
+      "test_guided_ascent",
+      "test_guided_ascent_workspace",
+      "test_guided_ascent_api",
+      "test_powered_flight",
+      "test_powered_flight_workspace",
+      "test_project_authoring",
+      "test_project_authoring_api",
+      "test_connected_review",
+      "test_workspace_scenarios",
+      "test_project_investigation",
+      "test_explanation_quality",
+      "test_evidence_facts",
+      "test_evidence_roles",
+      "test_test_evidence",
+      "test_test_evidence_investigation"
+    ]
+  },
+  "follow_up": {
+    "module": "test_project_authoring",
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "correction": "Expected catalog fields now include profile for staged_ascent as well as power_energy_budget. Numerical acceptance criteria were unchanged."
+  },
+  "distinct_affected_methods_covered": 320,
+  "count_note": "The corrected authoring module overlaps the initial run; its 12 methods are not added. All 320 distinct affected methods passed across the scoped runs and correction.",
+  "actual_solver_browser": {
+    "checks": 8,
+    "groups": [
+      "Explicit staged reference calculates variable thrust with two retained stage plans, eight charts and visible engineering gaps",
+      "Event picker preserves mass drop, continuous position/velocity, delayed upper ignition, final dry retention and keyboard playback",
+      "Stage/thrust forms add blank rows, preserve saved evidence and apply validated edits only to the shared draft",
+      "Preview/save/rerun changes the actual height finding, updates downstream screens, reuses thermal and preserves the baseline receipt",
+      "Inspector, complete report and combined export agree on the exact staged result",
+      "Historical playback is bound to its receipt with editing disabled; refresh retains the selected saved project",
+      "Mobile path, event controls and stage/profile fields remain within the viewport",
+      "Unresolved numerical accuracy stays diagnostic and blocks downstream engineering passes"
+    ],
+    "browser_errors": [],
+    "external_requests": [],
+    "paid_calls": 0
+  },
+  "separate_numeric_reference": "../STAGED_ASCENT_REFERENCE_RESULTS.json",
+  "source_and_limits": "../STAGED_ASCENT_REFERENCES.md",
+  "paid_service_calls_for_build": 0,
+  "outstanding_validation": "Customer/user evidence, independent human engineering review and physical/flight validation remain unestablished."
+}

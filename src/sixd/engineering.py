@@ -39,13 +39,15 @@ import re
 from fractions import Fraction
 from typing import Any, Callable
 
-from . import orbital_adapter, attitude, powered_flight
+from . import orbital_adapter, attitude, powered_flight, guided_ascent, staged_ascent
 
 
 STANDARD_GRAVITY = 9.80665
 STEFAN_BOLTZMANN = 5.670374419e-8
 
 MODEL_VERSIONS = {
+    "staged_ascent": "1",
+    "guided_ascent": "1",
     "powered_flight": "2",
     "attitude_control": "1",
     "ideal_propulsion": "1",
@@ -57,6 +59,8 @@ MODEL_VERSIONS = {
 }
 
 MODEL_PARAMETERS = {
+    "staged_ascent": dict(staged_ascent.PARAMETERS),
+    "guided_ascent": dict(guided_ascent.PARAMETERS),
     "powered_flight": dict(powered_flight.PARAMETERS),
     "attitude_control": dict(attitude.PARAMETERS),
     "ideal_propulsion": {
@@ -84,6 +88,8 @@ MODEL_PARAMETERS = {
 }
 
 _ASSUMPTIONS = {
+    "staged_ascent": list(staged_ascent.ASSUMPTIONS),
+    "guided_ascent": list(guided_ascent.ASSUMPTIONS),
     "powered_flight": list(powered_flight.ASSUMPTIONS),
     "attitude_control": list(attitude.ASSUMPTIONS),
     "power_energy_budget": [
@@ -120,6 +126,8 @@ _ASSUMPTIONS = {
 }
 
 _NOT_ASSESSED = {
+    "staged_ascent": list(staged_ascent.NOT_ASSESSED),
+    "guided_ascent": list(guided_ascent.NOT_ASSESSED),
     "powered_flight": list(powered_flight.NOT_ASSESSED),
     "attitude_control": list(attitude.NOT_ASSESSED),
     "power_energy_budget": [
@@ -156,6 +164,18 @@ _NOT_ASSESSED = {
 def model_applicability(model_type):
     """Reference context, never a claim of validation for supplied hardware."""
     entries = {
+        "staged_ascent": (
+            "Planar ascent with declared piecewise-linear thrust profiles and serial stages, analytical propellant depletion and ideal dry-mass jettison.",
+            "Contiguous bounded stage/profile layouts, immediate liftoff, exact fuel/schedule/separation/ignition boundaries and three-grid vector-state agreement; sampled criteria only.",
+            "Engine/profile applicability, separation dynamics or impulse, upper-stage ignition reliability, attitude, closed-loop guidance, variable aerodynamic geometry, aeroheating and landing.",
+            "NASA specific impulse and ideal rocket equation", "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/specific-impulse/",
+            "Constructed constant-engine reductions, ideal multi-stage velocity increments and separately integrated profile cases. Ideal mass jettison does not validate real separation."),
+        "guided_ascent": (
+            "Planar constant-thrust ascent and above-surface coast with an explicit local-radial pitch programme, analytical mass, central gravity and vector drag.",
+            "Immediate radial liftoff, bounded pitch/time/grid/domain, exact schedule/cutoff segmentation and three-grid vector-state agreement; sampled metrics only.",
+            "Steering programme and thrust/atmosphere applicability, closed-loop guidance, navigation, stability, winds, lift, staging, aeroheating and landing.",
+            "NASA rocket flight and drag equations", "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/drag-equation/",
+            "Constructed analytical vertical-vacuum reduction and separately integrated planar reference cases; a prescribed pitch programme does not validate launch GNC."),
         "powered_flight": (
             "Vertical constant-thrust ascent and above-surface coast; analytical mass, radial gravity and exponential-atmosphere drag.",
             "Immediate liftoff, positive propellant, bounded time/grid/domain and three-grid state agreement; sampled metrics only.",
@@ -216,8 +236,9 @@ def model_applicability(model_type):
 
 def evidence_accuracy_gap(result):
     """Block new orbital evidence without rewriting version-one history."""
-    if result.get("model_type") == "powered_flight" and result.get("status") == "completed":
-        diagnostic = (result.get("flight_response") or {}).get("diagnostics", {})
+    if result.get("model_type") in {"powered_flight", "guided_ascent", "staged_ascent"} and result.get("status") == "completed":
+        key = {"staged_ascent":"staged_response", "guided_ascent":"guided_response", "powered_flight":"flight_response"}[result["model_type"]]
+        diagnostic = (result.get(key) or {}).get("diagnostics", {})
         if diagnostic.get("grid_agreement_met") is True:
             return None
         return {"status": "insufficient_accuracy", "reason": diagnostic.get("reason") or "Powered-flight grid agreement is unavailable."}
@@ -235,9 +256,10 @@ def requirement_accuracy_gap(result, requirement, metric, limit):
     gap = evidence_accuracy_gap(result)
     if gap is not None:
         return gap
-    if result.get("model_type") == "powered_flight":
-        allowance = powered_flight.metric_allowance(result["flight_response"], requirement["metric"])
-        if allowance == 0 and requirement["metric"] in {"burn_duration", "propellant_consumed"}:
+    if result.get("model_type") in {"powered_flight", "guided_ascent", "staged_ascent"}:
+        adapter, key = {"staged_ascent":(staged_ascent,"staged_response"), "guided_ascent":(guided_ascent,"guided_response"), "powered_flight":(powered_flight,"flight_response")}[result["model_type"]]
+        allowance = adapter.metric_allowance(result[key], requirement["metric"])
+        if allowance == 0 and requirement["metric"] in {"burn_duration", "propellant_consumed", "initial_mass", "final_mass", "total_duration", "jettisoned_mass"}:
             return None
     elif result.get("model_type") == "orbital_trajectory" and result.get("model_version") in {"2", "3"}:
         criteria = result["numerical_accuracy"]["criteria"]
@@ -598,8 +620,8 @@ def _bind_inputs(project: dict[str, Any], model: dict[str, Any]) -> dict[str, fl
     bindings = model.get("inputs")
     if not isinstance(bindings, dict):
         raise ValueError("Model input bindings must be an object.")
-    expected = (power_parameters(bindings) if model["type"] == "power_energy_budget"
-                else MODEL_PARAMETERS[model["type"]])
+    expected = (power_parameters(bindings) if model["type"] == "power_energy_budget" else
+                staged_ascent.parameter_units(bindings) if model["type"] == "staged_ascent" else MODEL_PARAMETERS[model["type"]])
     if set(bindings) != set(expected):
         missing = sorted(set(expected) - set(bindings))
         extra = sorted(str(key) for key in set(bindings) - set(expected))
@@ -654,13 +676,21 @@ def evaluate_model(project: dict[str, Any], model: dict[str, Any], prior_results
         result["issues"] = ["Upstream calculation evidence is unavailable for linked parameter " + role + "." for role in unavailable]
         result["not_assessed"].extend(result["issues"])
         return result
-    if model_type not in _CALCULATORS and model_type not in {"orbital_trajectory", "power_energy_budget", "attitude_control", "powered_flight"}:
+    if model_type not in _CALCULATORS and model_type not in {"orbital_trajectory", "power_energy_budget", "attitude_control", "powered_flight", "guided_ascent", "staged_ascent"}:
         result["not_assessed"] = [f"No maintained deterministic adapter supports model type {model_type}."]
         result["issues"] = ["Unsupported model type; no quantitative result was produced."]
     else:
         try:
             parameters = _bind_inputs(project, bound_model)
-            if model_type == "powered_flight":
+            if model_type == "staged_ascent":
+                metrics, artifact = staged_ascent.evaluate(parameters)
+                result["metrics"] = metrics
+                result["staged_response"] = artifact
+            elif model_type == "guided_ascent":
+                metrics, artifact = guided_ascent.evaluate(parameters)
+                result["metrics"] = metrics
+                result["guided_response"] = artifact
+            elif model_type == "powered_flight":
                 metrics, artifact = powered_flight.evaluate(parameters)
                 result["metrics"] = metrics
                 result["flight_response"] = artifact
@@ -691,6 +721,8 @@ def evaluate_model(project: dict[str, Any], model: dict[str, Any], prior_results
             result.pop("power_budget", None)
             result.pop("attitude_response", None)
             result.pop("flight_response", None)
+            result.pop("guided_response", None)
+            result.pop("staged_response", None)
             result.pop("numerical_accuracy", None)
             result["issues"] = [str(exc)]
     return result

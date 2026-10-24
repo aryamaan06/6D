@@ -54,6 +54,11 @@ CODE_FILES = [Path(__file__).with_name(name) for name in (
 BUILD_FILES += [WEB / name for name in ("simulation-imports.js", "simulation-imports.css", "envelopes.js", "envelopes.css")]
 BUILD_FILES += [WEB / name for name in ("review-workspace.js", "review-workspace.css", "units.js", "connected-review.css")]
 CODE_FILES += [Path(__file__).with_name("workspace_review.py")]
+CODE_FILES += [Path(__file__).with_name("rocket_reference.py")]
+CODE_FILES += [Path(__file__).with_name("guided_ascent.py")]
+CODE_FILES += [Path(__file__).with_name("staged_ascent.py")]
+BUILD_FILES += [WEB / name for name in ("guided-ascent.js", "guided-ascent.css")]
+BUILD_FILES += [WEB / name for name in ("staged-ascent.js", "staged-ascent.css")]
 CODE_FILES += [Path(__file__).with_name("workspace_series.py")]
 CODE_FILES += [Path(__file__).with_name(name) for name in ("ai_qualification.py", "workspace_qualification.py", "workspace_observability.py")]
 BUILD_FILES += [WEB / name for name in ("ai-quality.js", "ai-quality.css")]
@@ -273,7 +278,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 if _code_fingerprint() != RUNTIME_ID:
                     raise ConflictError("Application code changed. Restart 6D before loading the connected review.")
                 self._reply(200, self.server.review_workspace.summary(self._one(query, "project_id"), self._revision(self._one(query, "revision"))))
-            elif route in {"/review-workspace.js", "/review-workspace.css", "/units.js", "/connected-review.css"}:
+            elif route in {"/review-workspace.js", "/review-workspace.css", "/units.js", "/connected-review.css", "/guided-ascent.js", "/guided-ascent.css", "/staged-ascent.js", "/staged-ascent.css"}:
                 path = WEB / route[1:]
                 self._reply(200, path.read_bytes(), "application/javascript; charset=utf-8" if path.suffix == ".js" else "text/css; charset=utf-8")
             elif route == "/api/envelopes/summary":
@@ -345,7 +350,10 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
             elif route == "/api/templates":
                 projects = example_projects()
                 self._reply(200, {"templates": [{"id": identity, "name": title, "project": projects[identity]}
-                            for identity, title in (("baseline", "Four bounded component checks"),
+                            for identity, title in (("rocket_review", "Rocket review: baseline, change and correction"),
+                                                    ("guided_ascent_review", "Rocket ascent with prescribed steering"),
+                                                    ("staged_ascent_review", "Rocket ascent with variable thrust and staging"),
+                                                    ("baseline", "Four bounded component checks"),
                                                     ("missing_evidence", "Changed inputs with a control evidence gap"),
                                                     ("power_budget", "Operating-mode power and energy budget"),
                                                     ("attitude_review", "Single-axis spacecraft pointing review"),

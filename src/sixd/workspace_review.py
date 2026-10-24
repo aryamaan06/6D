@@ -1,6 +1,7 @@
 """Read-only connected review. Counts never replace canonical findings."""
 from copy import deepcopy
 from .workspace import WorkspaceError, _digest, _encode, _revision
+from .rocket_reference import profile_from_view as rocket_profile
 
 HISTORY_LIMIT = 20
 HISTORY_BYTES = 8 * 1024 * 1024
@@ -73,7 +74,8 @@ class WorkspaceReview:
                 record = results.get(model['id']) or {}
                 model_rows.append(dict(model_id=model['id'],type=model['type'],name=model.get('name') or model['id'],
                     status=record.get('status','not_run'),has_orbit=bool(record.get('simulation')),
-                    has_flight=bool(record.get('flight_response')),has_attitude=bool(record.get('attitude_response')),
+                    has_flight=bool(record.get('flight_response') or record.get('guided_response') or record.get('staged_response')),
+                    has_guided=bool(record.get('guided_response')),has_staged=bool(record.get('staged_response')),has_attitude=bool(record.get('attitude_response')),
                     has_power=model['type']=='power_energy_budget' and record.get('status')=='completed'))
             coverage = self.coverage.summary_in_snapshot(connection,view)
             actions = self.actions.summary_in_snapshot(connection,view)
@@ -96,7 +98,7 @@ class WorkspaceReview:
                 prior_review=_pick(prior,('revision','run_id','stale_reasons')) if prior else None,
                 counts={status:sum(x['status']==status for x in findings) for status in ('met','not_met','not_assessed','not_run')},
                 findings=findings,models=model_rows,coverage=coverage,actions=actions,sources=sources,simulations=histories,
-                limitations=deepcopy(LIMITATIONS))
+                limitations=deepcopy(LIMITATIONS),rocket_reference=rocket_profile(view))
             result['digest'] = _digest(result)
             if len(_encode(result).encode('utf-8')) > MAX_RESPONSE_BYTES:
                 raise WorkspaceError('The overview exceeds its 4 MiB display bound. Use the dedicated evidence and report views.')

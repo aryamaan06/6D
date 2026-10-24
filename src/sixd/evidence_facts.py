@@ -146,6 +146,35 @@ def build_fact_catalog(record):
                                          ("max_velocity_difference_m_s", "Maximum aligned velocity difference", "m/s")):
                     add(eid, payload, f"/recorded_evidence/numerical_accuracy/comparisons/{index}/{key}",
                         label + " · " + pair, unit, context)
+            guided = result.get("guided_response")
+            if result.get("model_type") == "guided_ascent" and isinstance(guided, dict):
+                for key, unit in (("altitude_numerical_tolerance", "m"), ("velocity_numerical_tolerance", "m/s")):
+                    if type(guided.get("parameters", {}).get(key)) in (int, float):
+                        add(eid, payload, "/recorded_evidence/guided_response/parameters/" + key,
+                            "Declared planar grid-agreement tolerance · " + key, unit)
+                for index, row in enumerate(guided.get("diagnostics", {}).get("level_differences", [])):
+                    context = {key: row[key] for key in ("coarse_steps", "fine_steps")}
+                    for key, unit in (("max_position_difference_m", "m"), ("max_velocity_difference_m_s", "m/s")):
+                        if type(row.get(key)) in (int, float):
+                            add(eid, payload, f"/recorded_evidence/guided_response/diagnostics/level_differences/{index}/{key}",
+                                "Saved planar grid comparison · " + key, unit, context)
+            staged = result.get("staged_response")
+            if result.get("model_type") == "staged_ascent" and isinstance(staged,dict):
+                prefix = "/recorded_evidence/staged_response/"
+                for key,unit in (("position_numerical_tolerance","m"),("velocity_numerical_tolerance","m/s")):
+                    if type(staged.get("parameters",{}).get(key)) in (int,float):
+                        add(eid,payload,prefix+"parameters/"+key,"Declared staged grid tolerance · "+key,unit)
+                for index,row in enumerate(staged.get("diagnostics",{}).get("level_differences",[])):
+                    context = {key:row[key] for key in ("coarse_steps","fine_steps")}
+                    for key,unit in (("max_position_difference_m","m"),("max_velocity_difference_m_s","m/s")):
+                        if type(row.get(key)) in (int,float):
+                            add(eid,payload,f"{prefix}diagnostics/level_differences/{index}/{key}","Saved staged grid comparison · "+key,unit,context)
+                for index,stage in enumerate(staged.get("solver",{}).get("stage_plan",[])):
+                    for key,unit in (("initial_mass_kg","kg"),("burnout_mass_kg","kg"),("post_separation_mass_kg","kg"),
+                                     ("dry_mass_kg","kg"),("propellant_mass_kg","kg"),("consumed_impulse_n_s","N*s"),
+                                     ("ignition_time_s","s"),("burnout_time_s","s")):
+                        if type(stage.get(key)) in (int,float):
+                            add(eid,payload,f"{prefix}solver/stage_plan/{index}/{key}","Saved stage mass/event plan · "+key,unit,{"stage":index+1})
             quantities(eid, payload, "/recorded_evidence/input_records", result.get("input_records", {}),
                        "Saved input")
         elif kind == "recheck":

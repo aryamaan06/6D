@@ -11,7 +11,7 @@
   const badge = status => '<span class="rw-badge rw-' + esc(status) + '">' + esc(statusLabel(status)) + '</span>';
   const button = (action, text, primary = false, disabled = false) => '<button type="button" class="sd-button' + (primary ? ' sd-primary' : '') + '" data-rw="' + esc(action) + '"' + (disabled ? ' disabled' : '') + '>' + esc(text) + '</button>';
   const navButton = (action, text) => '<button type="button" class="rw-text-link" data-rw-nav="' + esc(action) + '">' + esc(text) + '<span aria-hidden="true"> ↗</span></button>';
-  const routes = new Set(['author-project','coverage','systems','simulation','powered-flight','attitude','power','chains','envelopes','simulation-imports','scenarios','comparison','actions','sources','report','changes']);
+  const routes = new Set(['author-project','coverage','systems','simulation','powered-flight','guided-ascent','staged-ascent','attitude','power','chains','envelopes','simulation-imports','scenarios','comparison','actions','sources','report','changes']);
 
   function unmount() {
     if (!mounted) return;
@@ -52,6 +52,25 @@
       return '<div class="rw-next"><div><span class="rw-eyebrow">Next step</span><h2>Review the coverage behind these results.</h2><p>The calculated criteria meet their declared limits. Check scope, assumptions and missing analyses before sharing the report.</p></div>' + button('coverage','Open engineering coverage',true) + '</div>';
     }
 
+    function rocketReference(data) {
+      const ref = data.rocket_reference;
+      if (!ref?.recognized) return '<section class="rw-reference-entry" aria-label="Rocket reference"><div><strong>Explore a rocket change review</strong><p>Five supported calculations, one saved design. Follow a baseline, a thrust reduction and a correction.</p></div>' + button('rocket-open','Create rocket reference',false,isDraft()) + '</section>';
+      const burnout = list(data.findings).find(row => row.requirement_id === 'burnout_height');
+      const stage = ['baseline','reduced','corrected'].indexOf(ref.stage);
+      const stages = ['Baseline · 20,000 N','Reduced thrust · 11,000 N','Correction · 20,000 N'];
+      const names = {propulsion:'Ideal propulsion',vertical_flight:'Vertical flight',atmospheric_load:'Atmospheric load screen',mount:'Static structure',thermal:'Steady thermal'};
+      const describe = ids => list(ids).map(id => names[id] || id).join(', ') || 'None';
+      const shownQuantity = value => value && Number.isFinite(value.value) ? '<span title="' + esc(String(value.value) + ' ' + (value.unit || '')) + '">' + esc(value.value.toLocaleString(undefined,{maximumFractionDigits:2}) + (value.unit ? ' ' + unit(value.unit) : '')) + '</span>' : quantity(value);
+      const provenance = hasRun(data) ? '<p class="rw-caption"><strong>Recalculated:</strong> ' + esc(describe(ref.executed_model_ids)) + '. <strong>Reused:</strong> ' + esc(describe(ref.reused_model_ids)) + '. Original execution origins remain in the saved receipt.</p>' : '';
+      let controls = '';
+      if (isDraft()) controls = button('draft','Review staged changes',true);
+      else if (historical(data)) controls = '<p class="rw-caption">Historical revision: select the latest saved revision to stage another change.</p>';
+      else if (!hasRun(data)) controls = button('run','Calculate this revision',true,!ctx.onRun);
+      else if (ref.can_stage) controls = button('rocket-stage',ref.action_label || 'Stage the next thrust change',true,!!state.error || state.loading);
+      else if (ref.stage === 'corrected') controls = navButton('comparison','Compare saved revisions') + navButton('report','Open evidence report');
+      return '<section class="rw-rocket" aria-labelledby="rw-rocket-title"><span class="rw-eyebrow">Constructed rocket review · five supported calculations</span><h2 id="rw-rocket-title">' + esc(ref.title) + '</h2><ol class="rw-rocket-stages" aria-label="Rocket review stages">' + stages.map((label,index) => '<li' + (index === stage ? ' aria-current="step"' : '') + '><span>' + (index + 1) + '</span>' + esc(label) + '</li>').join('') + '</ol><p>' + esc(ref.reason) + '</p>' + (isDraft() ? '<p class="sd-notice" role="status">These results assess saved revision R' + esc(data.revision) + '; unsaved draft changes have not been calculated.</p>' : '') + (burnout && hasRun(data) ? '<div class="rw-rocket-result"><strong>Burnout altitude</strong><span>' + shownQuantity(burnout.metric) + ' <span aria-hidden="true">/</span> minimum ' + shownQuantity(burnout.limit) + '</span>' + badge(burnout.status) + '</div>' : '') + provenance + '<div class="rw-rocket-actions">' + controls + navButton('powered-flight','Flight graphs & playback') + navButton('chains','Inspect calculation links') + '</div><details><summary>What this reference covers</summary><p>Shared mass, thrust and specific impulse feed ideal propulsion and vertical flight. The maximum sampled speed feeds a separate reference-density drag screen, then a declared transverse static cantilever load. The steady radiator is independent and can be reused after thrust changes.</p><p>The ideal required-burn duration differs from full-propellant flight burnout. The load screen is not actual flight maximum drag. These one-way scalar links do not provide simultaneous physics or feedback. The beam does not verify the rocket body, and the radiator does not predict ascent aeroheating.</p><p>Launch guidance stays unassessed. Navigation, stability, staging, reentry and landing remain outside this constructed case. This is not a historical launch or mission approval.</p></details></section>';
+    }
+
     function countCard(data, key, title, note) {
       const value = hasRun(data) ? integer(data.counts?.[key]) : '—';
       return '<button type="button" class="rw-count rw-count-' + key + '" data-rw-filter="' + key + '"' + (!hasRun(data) ? ' disabled' : '') + '><span class="rw-count-value">' + value + '</span><span><strong>' + esc(title) + '</strong><small>' + esc(note) + '</small></span></button>';
@@ -67,7 +86,9 @@
       const entry = (number, title, text, linksHtml) => '<section class="rw-map-step"><span class="rw-step-number">' + number + '</span><h3>' + title + '</h3><p>' + esc(text) + '</p><div class="rw-step-links">' + linksHtml + '</div></section>';
       let playbackLinks = '';
       if (models.some(m => m.has_orbit)) playbackLinks += navButton('simulation','Orbit playback');
-      if (models.some(m => m.has_flight)) playbackLinks += navButton('powered-flight','Vertical flight');
+      if (models.some(m => m.has_flight && !m.has_guided && !m.has_staged)) playbackLinks += navButton('powered-flight','Vertical flight');
+      if (models.some(m => m.has_guided)) playbackLinks += navButton('guided-ascent','Ascent & steering');
+      if (models.some(m => m.has_staged)) playbackLinks += navButton('staged-ascent','Variable thrust & staging');
       if (models.some(m => m.has_attitude)) playbackLinks += navButton('attitude','Attitude history');
       if (models.some(m => m.has_power)) playbackLinks += navButton('power','Power history');
       playbackLinks += navButton('simulation-imports', 'Simulation imports');
@@ -125,7 +146,7 @@
       const data = state.data;
       host.innerHTML = '<article class="rw-workspace" aria-label="Review workspace" aria-busy="' + String(state.loading) + '"><header class="rw-header"><div><span class="rw-eyebrow">Review workspace</span><h1>' + esc(data?.project_name || 'Project review') + '</h1><p>Understand the saved design, examine its evidence and follow the unresolved work.</p></div><div>' + button('refresh',state.loading ? 'Refreshing…' : 'Refresh snapshot',false,state.loading) + '</div></header>' +
         (state.error ? '<div class="rw-error" role="alert"><strong>Review snapshot unavailable.</strong><p>' + esc(state.error) + '</p>' + (data ? '<p>The previously captured snapshot remains below. Refresh to check for newer evidence.</p>' : '') + button('refresh','Try again') + button('reload','Reload saved context') + '</div>' : '') +
-        (!data ? (state.loading ? '<div class="rw-loading" role="status"><span class="rw-loading-mark" aria-hidden="true"></span><strong>Reading the saved revision…</strong><p>Collecting calculations, coverage and supplemental evidence in one snapshot.</p></div>' : '') : context(data) + nextStep(data) +
+        (!data ? (state.loading ? '<div class="rw-loading" role="status"><span class="rw-loading-mark" aria-hidden="true"></span><strong>Reading the saved revision…</strong><p>Collecting calculations, coverage and supplemental evidence in one snapshot.</p></div>' : '') : context(data) + rocketReference(data) + (data.rocket_reference?.recognized ? '' : nextStep(data)) +
           '<section class="rw-counts" aria-label="Canonical requirement findings">' + countCard(data,'met','Meet their criteria','Within declared model and limits') + countCard(data,'not_met','Criteria unmet','Calculated limits exceeded') + countCard(data,'not_assessed','Not assessed','Evidence or model gaps') + '</section>' +
           '<p class="rw-caption rw-count-caption">' + (hasRun(data) ? 'These findings concern the saved configuration and declared criteria. They are not launch approval or a whole-system safety assessment.' : integer(data.counts?.not_run) + ' requirements not calculated. No results are counted until this saved revision has a current calculation.') + '</p>' +
           map(data) +
@@ -181,6 +202,8 @@
       }
       const action = element.dataset.rw;
       if (action === 'reload') { ctx.onReload?.();return; }
+      if (action === 'rocket-open' && !isDraft()) { ctx.onRocketOpen?.();return; }
+      if (action === 'rocket-stage' && !isDraft() && state.data?.rocket_reference?.can_stage && !state.error && !state.loading) { ctx.onRocketStage?.();return; }
       if (action === 'refresh') { void refresh();return; }
       if (action === 'run' && !isDraft() && state.data && !hasRun(state.data)) { ctx.onRun?.();return; }
       if (action === 'draft') { ctx.onNavigate?.('changes');return; }

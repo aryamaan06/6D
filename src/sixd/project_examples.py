@@ -67,7 +67,10 @@ def example_projects():
     return {"baseline": baseline, "revised": revised, "missing_evidence": missing,
             "orbital_review": _orbital_review(baseline), "power_budget": _power_review(baseline),
             "attitude_review": _attitude_review(baseline), "chain_review": _chain_review(baseline),
-            "powered_flight_review": powered_flight_review()}
+            "powered_flight_review": powered_flight_review(),
+            "rocket_review": integrated_rocket_review(),
+            "guided_ascent_review": guided_ascent_review(),
+            "staged_ascent_review": staged_ascent_review()}
 
 
 def powered_flight_review():
@@ -96,6 +99,203 @@ def powered_flight_review():
                 description='Synthetic vertical ascent through burnout and above-surface coast. Constant engine and drag inputs in an exponential atmosphere; no staging, steering, aeroheating or landing. Inputs and criteria are illustrative, not flight data.',
                 inputs=inputs, models=[dict(id='vertical_flight', type='powered_flight', inputs={key:key for key in PARAMETERS})],
                 requirements=requirements)
+
+
+def integrated_rocket_review():
+    """Five bounded rocket-review calculations and one explicit coverage gap.
+
+    The speed/drag/beam assignments declare screening load cases. They do not
+    introduce simultaneous physics, feedback or a complete launch assessment.
+    """
+    project = powered_flight_review()
+    project.update(
+        project_id="constructed-rocket-review", name="Constructed rocket review", revision="1",
+        description=(
+            "Synthetic rocket review, not a NASA, ISRO, SpaceX or customer mission. "
+            "Shared mass, thrust and Isp inputs connect an ideal delta-v budget and a vertical powered-flight case. "
+            "One-way scalar links use maximum retained flight speed in a separate reference-density drag screen, "
+            "then declare that drag magnitude as a transverse static cantilever load. No simultaneous coupling, "
+            "load feedback, structural mass reconstruction or whole-vehicle validity is established. "
+            "The independent steady radiator case is not ascent aeroheating. Launch GNC remains unassessed. "
+            "Flight uses altitude above the supplied launch surface and signed radial vertical velocity in a "
+            "nonrotating body-centered radial frame; there is no horizontal motion, steering, staging or landing."))
+    inputs = project["inputs"]
+    for key in ("initial_mass", "dry_mass", "thrust", "specific_impulse"):
+        inputs[key]["source"] = (
+            "Constructed shared design input for ideal propulsion and vertical flight; not measured hardware data. "
+            "The ideal prescribed delta-v budget is distinct from flight's full-propellant burn.")
+    inputs["reference_density"]["source"] = (
+        "Constructed density at the launch surface for the exponential flight atmosphere and separate "
+        "reference-density screening case; no atmosphere measurement or applicability is established.")
+    for key in ("reference_area", "drag_coefficient"):
+        inputs[key]["source"] = (
+            "Constructed constant drag coefficient/reference-area convention shared by vertical flight and "
+            "the separate screening load case; flow-regime validity is not established.")
+    added = {
+        "delta_v": (500, "m/s", "Prescribed ideal delta-v allocation; excludes gravity, drag and steering losses."),
+        "minimum_propellant_margin": (0, "kg", "Illustrative ideal-budget acceptance criterion; no reserve is inferred."),
+        "maximum_burn_duration": (50, "s", "Illustrative limit on required ideal 500 m/s burn, not full-propellant flight duration."),
+        "mount_length": (2, "m", "Constructed transverse cantilever screening article length; no whole-rocket structural mapping."),
+        "young_modulus": (70e9, "Pa", "Constructed linear-elastic modulus; no material qualification is established."),
+        "second_moment": (2.5e-5, "m^4", "Declared rectangular section 0.3 m wide by 0.1 m deep about the bending axis: b*h^3/12."),
+        "outer_fiber": (0.05, "m", "Half the declared 0.1 m rectangular section depth; load-axis convention is supplied."),
+        "maximum_bending_stress": (100e6, "Pa", "Illustrative screening stress criterion; not a certified material allowable."),
+        "maximum_tip_deflection": (0.04, "m", "Illustrative static tip-deflection criterion, not vehicle deformation qualification."),
+        "maximum_drag_force": (20000, "N", "Illustrative limit for the separate reference-density screening force, not actual flight maximum drag."),
+        "heat_input": (200, "W", "Independent supplied steady radiator heat input; thrust and ascent aeroheating are not converted into heat."),
+        "radiator_area": (1, "m^2", "Constructed isothermal radiating area for the independent thermal screening case."),
+        "emissivity": (0.8, "1", "Constructed constant grey-surface emissivity; coating behavior is not validated."),
+        "background_temperature": (3, "K", "Independent ideal black-background radiator test condition, not the ascent atmosphere temperature."),
+        "maximum_temperature": (320, "K", "Illustrative steady radiator temperature criterion; transient launch thermal limits are unassessed."),
+        "maximum_launch_tracking_error": (10, "m", "Illustrative launch-path tracking criterion requiring unavailable launch GNC evidence."),
+    }
+    for key, (value, unit, rationale) in added.items():
+        inputs[key] = {"value": value, "unit": unit,
+                       "source": "Constructed demonstration input; not measured hardware data. " + rationale}
+    flight = project["models"][0]
+    flight["description"] = (
+        "Constant-thrust radial vertical ascent through full-propellant burnout and 20 s above-surface coast. "
+        "Altitude is measured from the launch surface; velocity is signed upward radial velocity. "
+        "Three-grid agreement and sampled extrema only; no launch GNC, staging, aeroheating or landing.")
+    project["models"] = [
+        {"id": "propulsion", "type": "ideal_propulsion", "description":
+            "Ideal 500 m/s allocation with shared design inputs; its required fuel and burn duration are not the flight case's full-propellant depletion values.",
+         "inputs": {key: key for key in ("initial_mass", "dry_mass", "delta_v", "specific_impulse", "thrust")}},
+        flight,
+        {"id": "atmospheric_load", "type": "drag_load", "description":
+            "Separate reference-density screening condition at maximum retained flight speed. This is not actual flight maximum dynamic pressure or drag, nor a continuous-time bound.",
+         "inputs": {"density": "reference_density", "drag_coefficient": "drag_coefficient", "reference_area": "reference_area"},
+         "links": {"relative_speed": {"model_id": "vertical_flight", "metric": "max_sampled_speed", "unit": "m/s",
+             "rationale": "Use the maximum retained vertical speed with the supplied launch-reference density as a separate constructed screening condition. Density and maximum speed need not coincide in flight. No actual flight peak drag, continuous-time bound or feedback is inferred."}}},
+        {"id": "mount", "type": "static_cantilever", "description":
+            "Constructed slender rectangular cantilever screening article: 2 m span, 0.3 m width, 0.1 m depth. The full drag screen is declared transverse at its free end, not an axial rocket-body load or whole-vehicle structural assessment.",
+         "inputs": {"length": "mount_length", "young_modulus": "young_modulus", "second_moment": "second_moment", "outer_fiber": "outer_fiber"},
+         "links": {"tip_force": {"model_id": "atmospheric_load", "metric": "drag_force", "unit": "N",
+             "rationale": "For this hypothetical static screening article, declare the entire separate screening drag magnitude as a transverse free-end point load on the supplied cantilever. Load direction, location, geometry and clamp are assumptions; no distributed loading, structural mass or trajectory feedback is computed."}}},
+        {"id": "thermal", "type": "radiative_equilibrium", "description":
+            "Independent steady grey-radiator screening case with supplied 200 W heat and ideal black background. It does not predict ascent aeroheating, atmosphere convection, transient temperatures or engine thermal behavior.",
+         "inputs": {"heat_input": "heat_input", "area": "radiator_area", "emissivity": "emissivity", "background_temperature": "background_temperature"}},
+        {"id": "launch_gnc", "type": "unsupported_launch_gnc", "description":
+            "Explicit missing launch-path guidance, navigation and control evidence. A vertical open-loop flight calculation or spacecraft attitude model cannot assess this requirement.",
+         "inputs": {}},
+    ]
+    for identity, title, model, metric, operator, limit in (
+        ("fuel_margin", "Nonnegative ideal delta-v propellant margin", "propulsion", "propellant_margin", ">=", "minimum_propellant_margin"),
+        ("burn_duration", "Declared required ideal delta-v burn-duration limit", "propulsion", "burn_duration", "<=", "maximum_burn_duration"),
+        ("drag_limit", "Declared reference-density screening drag-force limit", "atmospheric_load", "drag_force", "<=", "maximum_drag_force"),
+        ("mount_stress", "Declared transverse static screening stress limit", "mount", "bending_stress", "<=", "maximum_bending_stress"),
+        ("mount_deflection", "Declared transverse static screening deflection limit", "mount", "tip_deflection", "<=", "maximum_tip_deflection"),
+        ("thermal_limit", "Declared independent steady radiator temperature limit", "thermal", "equilibrium_temperature", "<=", "maximum_temperature"),
+        ("launch_guidance", "Unassessed launch-path tracking requirement", "launch_gnc", "tracking_error", "<=", "maximum_launch_tracking_error"),
+    ):
+        project["requirements"].append({"id": identity, "title": title, "model_id": model,
+            "metric": metric, "operator": operator, "limit_input": limit, "critical": True})
+    project["systems"] = [
+        {"id": "rocket", "title": "Constructed rocket review", "description": "Five supported screening calculations plus an explicit launch GNC gap; not a complete rocket assessment.", "parent_id": None, "model_ids": []},
+    ]
+    for identity, title, model_id, description in (
+        ("propulsion", "Propulsion budget", "propulsion", "Ideal prescribed delta-v accounting; excludes flight losses and reserves."),
+        ("powered_flight", "Powered vertical flight", "vertical_flight", "Radial constant-thrust ascent and above-surface coast; sampled numerical evidence only."),
+        ("atmospheric_loads", "Atmospheric load screening", "atmospheric_load", "Reference-density screening at maximum retained speed; distinct from actual trajectory maxima."),
+        ("structures", "Static structure screening", "mount", "Declared transverse cantilever load case; not complete vehicle structures."),
+        ("thermal", "Independent thermal screening", "thermal", "Steady radiator heat balance; ascent aeroheating remains unassessed."),
+        ("launch_gnc", "Launch guidance and control — unassessed", "launch_gnc", "No maintained launch GNC adapter or tracking evidence is supplied."),
+    ):
+        project["systems"].append({"id": identity, "title": title, "description": description,
+                                   "parent_id": "rocket", "model_ids": [model_id]})
+    return project
+
+
+def guided_ascent_review():
+    """Integrated constructed planar steering case; not a historical launch."""
+    from .guided_ascent import PARAMETERS
+    project = integrated_rocket_review()
+    project.update(project_id='constructed-guided-ascent-review', name='Constructed rocket steering review',
+        description='Constructed planar rocket ascent, not flight data. A supplied pitch programme turns constant thrust away from the local outward vertical toward positive downrange in a nonrotating body-centered inertial plane. This is prescribed steering, not a closed-loop guidance or attitude controller. Shared propulsion inputs, a separate scalar drag/beam load screen and an independent steady radiator retain their stated assumptions. Launch tracking remains unassessed; no staging, throttle variation, aeroheating, reentry or landing.')
+    programme = dict(pitch_start_time=(5.,'s'),pitch_end_time=(25.,'s'),
+                     initial_pitch_angle=(0.,'rad'),final_pitch_angle=(.45,'rad'))
+    for key,(value,unit) in programme.items():
+        project['inputs'][key] = dict(value=value,unit=unit,
+            source='Constructed prescribed steering input; angles are measured from the local outward radial direction toward the positive counterclockwise tangent. The angle varies linearly between the supplied times, then holds; no controller or ability to track it is validated.')
+    project['inputs']['steps']['value'] = 32
+    project['inputs']['steps']['source'] = 'Constructed interactive reference grid: 32 coarse steps per nonzero segment, 64 middle and 128 fine; adequacy is checked from the retained three-grid agreement, not assumed from step count.'
+    project['inputs']['maximum_acceleration'] = project['inputs'].pop('maximum_upward_acceleration')
+    project['inputs']['minimum_burnout_downrange'] = dict(value=500.,unit='m',
+        source='Illustrative minimum signed launch-surface arc distance at burnout, R*atan2(y,x); not a target orbit or measured launch requirement.')
+    project['inputs']['altitude_numerical_tolerance']['source'] = 'Constructed absolute vector-position grid-agreement allowance in metres for planar ascent. The inherited parameter token is altitude_numerical_tolerance; the gate covers both inertial position components, not only altitude. Not a rigorous error bound.'
+    for model in project['models']:
+        if model['id'] == 'vertical_flight':
+            model.update(id='guided_flight',type='guided_ascent',
+                         description='Planar point-mass ascent with a prescribed local-radial pitch programme. Constant engine, central gravity and vector drag in a stationary exponential atmosphere; exact pitch boundaries and fuel cutoff, sampled grid checks. No attitude, stability or closed-loop guidance is computed.',
+                         inputs={key:key for key in PARAMETERS})
+        for link in model.get('links',{}).values():
+            if link['model_id'] == 'vertical_flight':
+                link['model_id'] = 'guided_flight'
+                link['rationale'] = 'Use the maximum retained planar speed with the supplied reference density as a separate screening condition. Density and maximum speed need not coincide. No actual trajectory peak drag, distributed load or flight/structure feedback is inferred.'
+    for requirement in project['requirements']:
+        if requirement['model_id'] == 'vertical_flight':
+            requirement['model_id'] = 'guided_flight'
+        if requirement['id'] == 'upward_acceleration':
+            requirement.update(id='acceleration_limit',title='Declared maximum sampled net acceleration magnitude',
+                               metric='max_sampled_acceleration',limit_input='maximum_acceleration')
+    project['requirements'].append(dict(id='burnout_downrange',title='Declared minimum downrange at burnout',
+        model_id='guided_flight',metric='burnout_downrange',operator='>=',limit_input='minimum_burnout_downrange',critical=True))
+    for system in project['systems']:
+        if system['id'] == 'rocket':
+            system.update(title='Constructed rocket steering review',description='Five supported screening calculations, including prescribed planar steering; launch-path tracking remains unassessed.')
+        if system['id'] == 'powered_flight':
+            system.update(title='Planar ascent and steering',description='Supplied pitch programme with sampled horizontal and vertical trajectory evidence; not a guidance controller.',model_ids=['guided_flight'])
+    return project
+
+
+def staged_ascent_review():
+    """Constructed serial two-stage reference with explicit thrust ramps."""
+    from .staged_ascent import PARAMETERS
+    project = guided_ascent_review()
+    project.update(project_id='constructed-staged-ascent-review',name='Constructed staged rocket review',
+        description='Constructed serial two-stage point-mass ascent with supplied linear thrust segments and per-stage specific impulse. Propellant is consumed from integrated thrust; only empty nonfinal dry mass is discarded, with ideal zero-impulse separation and an interstage coast before ignition. Global drag coefficient/area remain supplied constants. Steering is prescribed; launch controller tracking, stage separation hardware, booster recovery, aeroheating and complete mission validity remain unassessed.')
+    values = dict(payload_mass=(100,'kg'),position_numerical_tolerance=(.5,'m'),
+                  maximum_acceleration=(35,'m/s^2'),minimum_burnout_altitude=(50000,'m'),
+                  maximum_powered_duration=(200,'s'),maximum_final_mass=(200,'kg'),
+                  maximum_discarded_mass=(200,'kg'))
+    for key,(value,unit) in values.items():
+        project['inputs'][key] = _input(value,unit)
+    project['inputs']['steps'] = dict(value=16,unit='1',source='Constructed interactive staged reference: 16 coarse steps per resolved interval, 32 middle and 64 fine. Adequacy is checked from actual three-grid agreement.')
+    flight_inputs = {key:key for key in PARAMETERS}
+    stages = [(150,500,250,2,[(30,22000,18000),(45,18000,16000)]),
+              (80,200,280,0,[(20,6000,4500),(100,4500,5500)])]
+    for stage,(dry,propellant,isp,delay,segments) in enumerate(stages,1):
+        for role,value,unit in [('dry_mass',dry,'kg'),('propellant_mass',propellant,'kg'),('specific_impulse',isp,'s'),('separation_delay',delay,'s')]:
+            identity=f's{stage}_{role}'
+            project['inputs'][identity]=dict(value=value,unit=unit,source='Constructed stage input; dry mass excludes payload and other stages. Only empty nonfinal dry mass is discarded. No separation impulse or hardware validity is supplied.')
+            flight_inputs[f'stage.{stage}.{role}']=identity
+        for segment,(duration,start,end) in enumerate(segments,1):
+            for role,value,unit in [('duration',duration,'s'),('thrust_start',start,'N'),('thrust_end',end,'N')]:
+                identity=f's{stage}_segment{segment}_{role}'
+                project['inputs'][identity]=dict(value=value,unit=unit,source='Constructed stage-local linear thrust segment. Duration and thrust endpoints are supplied; exact integrated propellant exhaustion can truncate the programme before its declared end.')
+                flight_inputs[f'stage.{stage}.segment.{segment}.{role}']=identity
+    project['models'] = [model for model in project['models'] if model['id']!='propulsion']
+    for model in project['models']:
+        if model['id']=='guided_flight':
+            model.update(id='staged_flight',type='staged_ascent',inputs=flight_inputs,
+                         description='Declared serial stages, linear thrust ramps and constant per-stage Isp. Analytical fuel depletion, empty-stage dry-mass discard, exact event sides and retained vector-grid checks; prescribed steering and ideal zero-impulse separation only.')
+        for link in model.get('links',{}).values():
+            if link['model_id']=='guided_flight':
+                link['model_id']='staged_flight'
+    project['requirements']=[r for r in project['requirements'] if r['model_id']!='propulsion']
+    for requirement in project['requirements']:
+        if requirement['model_id']=='guided_flight':requirement['model_id']='staged_flight'
+    for identity,title,metric,limit in [('powered_duration','Declared total powered-duration limit','burn_duration','maximum_powered_duration'),
+                                      ('retained_mass','Declared final retained-mass limit','final_mass','maximum_final_mass'),
+                                      ('discarded_mass','Declared discarded dry-mass limit','jettisoned_mass','maximum_discarded_mass')]:
+        project['requirements'].append(dict(id=identity,title=title,model_id='staged_flight',metric=metric,operator='<=',limit_input=limit,critical=True))
+    project['systems']=[system for system in project['systems'] if system['id']!='propulsion']
+    for system in project['systems']:
+        if system['id']=='rocket':system.update(title='Constructed staged rocket review',description='Declared propulsion, serial staging and ascent with separate load/structure screens and an independent radiator; not a complete launch assessment.')
+        if system['id']=='powered_flight':system.update(title='Propulsion, staging and ascent',description='Supplied stage masses and thrust profiles drive ideal serial staging and prescribed planar motion.',model_ids=['staged_flight'])
+    used={identity for model in project['models'] for identity in model['inputs'].values()} | {r['limit_input'] for r in project['requirements']}
+    project['inputs']={key:value for key,value in project['inputs'].items() if key in used}
+    return project
 
 
 def _chain_review(baseline):

@@ -37,6 +37,16 @@ _MEANINGS = {
     "not_assessed": "The available evidence does not establish whether this requirement is satisfied. This is an evidence gap, not a finding that the design is physically impossible or has failed.",
 }
 _DOMAIN_REVIEW = {
+    "staged_ascent": (
+        "Review the supplied thrust profiles, stage masses and exact events",
+        "Verify payload, attached stage dry/propellant masses, per-stage Isp and every thrust endpoint/duration against their sources. Inspect analytic impulse and fuel exhaustion, outgoing dry-mass removal, interstage coast and upper-stage ignition. Position and velocity must stay continuous across ideal zero-impulse separation while mass changes explicitly. Review the retained vector-state grids, numerical allowances and prescribed pitch convention. Obtain independent staged-trajectory and hardware separation/ignition evidence. This model does not establish separation dynamics, ignition reliability, attitude, closed-loop guidance, variable aerodynamic geometry, aeroheating or landing.",
+        "Sourced stage/engine/thrust profile and atmosphere data, exact event and mass accounting, justified numerical tolerances, independent trajectory comparison, and separate hardware separation, ignition and launch-GNC evidence.",
+    ),
+    "guided_ascent": (
+        "Review the declared steering programme and planar ascent evidence",
+        "Verify shared masses, thrust, specific impulse, central gravity, atmosphere and coefficient inputs against their sources. Check the pitch convention, start/end times and angles, retained planar position/velocity, downrange and burnout witnesses. Inspect both vector-state grid comparisons and declared position, velocity and relative tolerances. Obtain an independent trajectory analysis for the intended regime. The programme prescribes thrust direction; it does not prove closed-loop guidance, navigation, stability or actuator tracking. Staging, aeroheating, landing and whole-mission performance remain unassessed.",
+        "Sourced engine, usable mass, atmosphere and aerodynamic data, frame and steering convention, justified schedule and numerical tolerances, independent planar ascent analysis, and separate launch GNC and excluded-domain evidence.",
+    ),
     "powered_flight": (
         "Review the vertical flight assumptions and burnout evidence",
         "Verify the initial and dry masses, constant thrust and specific impulse, reference area and drag coefficient, exponential atmosphere and gravity inputs against their sources. Inspect the saved burnout event, mass depletion, above-surface coast and sampled pressure and acceleration histories. Review both retained grid comparisons and declared altitude, velocity and relative tolerances; use independent analysis to check the applicable regime. Staging, steering, lateral motion, aeroheating, landing and whole-mission performance require separate evidence.",
@@ -138,6 +148,12 @@ def build_guidance(project, review, requirement_id, evidence_ids=()):
         if accuracy_gap is None and selected_metric is not None and selected_metric["unit"] == selected_limit["unit"]:
             accuracy_gap = requirement_accuracy_gap(receipt, requirement, selected_metric, selected_limit)
         expected = MODEL_PARAMETERS.get(model["type"], {})
+        if model["type"] == "staged_ascent":
+            from .staged_ascent import parameter_units
+            try:
+                expected = parameter_units({**model["inputs"],**model.get("links",{})})
+            except (ValueError,TypeError,OverflowError):
+                pass  # The adapter's recorded profile issue remains the evidence.
         mismatches = [(parameter, input_id, unit, project["inputs"][input_id]["unit"])
                       for parameter, unit in expected.items()
                       if (input_id := model["inputs"].get(parameter)) in project["inputs"]
@@ -183,7 +199,19 @@ def build_guidance(project, review, requirement_id, evidence_ids=()):
                 finding_path + "/metric", model_path + "/metrics")
             need("A supported result for the exact required metric.", "The completed calculation omitted this required metric.", finding_path)
         elif accuracy_gap:
-            if model["type"] == "powered_flight":
+            if model["type"] == "staged_ascent":
+                add("resolve_staged_accuracy", "Resolve the staged ascent's numerical accuracy gap",
+                    "Inspect both retained vector-position and vector-velocity comparisons, thrust/steering knots, analytical fuel cutoff, mass removal and ignition event sides. Verify the supplied position, velocity and relative tolerances against their engineering sources. Refine the supported grid or obtain independently checked staged-flight evidence when the metric allowance overlaps its criterion. Do not loosen tolerances to obtain a pass. Sampled grid agreement is not a rigorous error bound or physical qualification.",
+                    model_path+"/staged_response/diagnostics",model_path+"/model_definition",finding_path)
+                need("Sourced position/velocity numerical tolerances, retained event-aligned comparisons and independent staged-flight analysis when needed.",
+                     accuracy_gap["reason"],model_path+"/staged_response/diagnostics",finding_path)
+            elif model["type"] == "guided_ascent":
+                add("resolve_guided_accuracy", "Resolve the planar ascent's numerical accuracy gap",
+                    "Inspect both saved planar position and velocity grid comparisons, pitch boundaries, exact burnout event and supplied absolute and relative numerical tolerances. Verify tolerance sources, refine the supported grid or obtain an independently checked trajectory when resolution is inadequate. If a numerical allowance overlaps the engineering limit, obtain evidence that separates them. Do not loosen tolerances or criteria to obtain a pass. Grid agreement is not a guaranteed error bound, continuous-time extrema bound, closed-loop guidance assessment or physical validation.",
+                    model_path + "/guided_response/diagnostics", model_path + "/model_definition", finding_path)
+                need("Sourced planar position, velocity and relative tolerances, retained schedule/cutoff comparisons and independent guided-ascent analysis when needed.",
+                     accuracy_gap["reason"], model_path + "/guided_response/diagnostics", finding_path)
+            elif model["type"] == "powered_flight":
                 add("resolve_flight_accuracy", "Resolve the vertical flight's numerical accuracy gap",
                     "Inspect both saved altitude and velocity grid comparisons, the exact burnout event and the supplied absolute and relative numerical tolerances. Verify those tolerances and their engineering sources. Save a revision with a finer supported step count or obtain an independently checked vertical-flight analysis when the current grid does not support the criterion. If the saved metric allowance overlaps its engineering limit, obtain evidence that separates them. Do not loosen tolerances to obtain a pass. Grid agreement is not a guaranteed error bound or physical validation, and sampled extrema do not bound values between samples.",
                     model_path + "/flight_response/diagnostics", model_path + "/model_definition", finding_path)

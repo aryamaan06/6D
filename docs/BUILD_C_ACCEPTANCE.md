@@ -1,0 +1,15 @@
+# Build C — variable thrust and serial staging
+
+Authorized October 24, 2026 with Sol 6.1 Ultra. A reviewer must be able to declare a staged rocket's masses and thrust programme, calculate the bounded ascent, inspect exact fuel/cutoff/separation/ignition events, change the programme, and compare saved engineering evidence without hand-written JSON.
+
+Acceptance:
+
+1. Preserve the nine existing adapters, A/B references, original projects, receipts and credit ledger. Add a separate bounded `staged_ascent` adapter and a loadable two-stage constructed reference.
+2. Declare one to four serial stages with positive dry/propellant masses, constant per-stage specific impulse, interstage delay and up to six linear thrust segments per stage. Inputs have explicit SI units. Initial mass is payload plus all declared wet stages. Segment impulse determines fuel depletion analytically; fuel exhaustion truncates a sufficiently long programme. Insufficient impulse, unresolved schedules and invalid domains remain input/model gaps.
+3. Retain B's planar, nonrotating, point-mass motion and prescribed local-radial steering. Drop only the empty nonfinal stage's declared dry mass. Retain final-stage dry mass. Ideal separation changes mass without an imposed velocity impulse; no stage collision, plume, attitude or hardware validity is inferred. Supplied global drag coefficient and area do not automatically change with staging.
+4. Segment integration at thrust knots, steering knots, exact fuel cutoff, separation and ignition. Preserve event order and both sides, including coincident zero-delay events. Before/after mass/force changes have continuous position and velocity; burned propellant and discarded dry mass are separately accountable.
+5. Three aligned grids support vector-state and sampled metric checks. Unresolved numerical evidence blocks requirement passes and downstream scalar use. Stage programmes and mass/event records belong to immutable saved revisions and source identities.
+6. The app offers stage/thrust authoring, saved path/event playback, mass/thrust plots, requirements, linked recalculation, reports and exports. Draft and historical states are explicit. Form changes use the existing preview/save/run workflow; opening a page never runs a calculation.
+7. Check closed-form one/two-stage vacuum reductions, variable-thrust integrals and exhaustion roots, exact mass drops, zero/nonzero delays, coasts, malformed profiles, receipt tampering, numerical gaps and legacy receipt readability. Separately written adaptive integration should compare representative variable/staged trajectories. Verify the complete browser workflow and affected existing regressions.
+
+Boundaries: serial staging only, constant per-stage Isp, supplied open-loop steering, fixed global coefficient/area, ideal zero-impulse separation, simple stationary atmosphere. Parallel boosters, crossfeed, slosh, flexible dynamics, closed-loop launch GNC, recovery and landing remain unassessed. No paid AI, search, metrics upload, deployment or additional A–F scope is part of C.

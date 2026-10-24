@@ -83,6 +83,10 @@ def _compact_model(project, requirement, review):
                 result[key] = deepcopy(evidence[key])
     if evidence is not None and "flight_response" in evidence:
         result["flight_response"] = {"diagnostics": deepcopy(evidence["flight_response"]["diagnostics"])}
+    if evidence is not None and "guided_response" in evidence:
+        result["guided_response"] = {"diagnostics": deepcopy(evidence["guided_response"]["diagnostics"])}
+    if evidence is not None and "staged_response" in evidence:
+        result["staged_response"] = {"diagnostics":deepcopy(evidence["staged_response"]["diagnostics"])}
     return result
 
 
@@ -257,7 +261,7 @@ def validate_investigation_context(bundle, view, requirement_id):
                            "status": original_model["status"],
                            "metrics": {original_requirement["metric"]: original_model["selected_metric"]}
                                       if original_model["selected_metric"] is not None else {},
-                           **{key: original_model[key] for key in ("numerical_accuracy", "flight_response") if key in original_model}}
+                           **{key: original_model[key] for key in ("numerical_accuracy", "flight_response", "guided_response", "staged_response") if key in original_model}}
         accuracy_gap = evidence_accuracy_gap(retained_result)
         if accuracy_gap is None and original_model["selected_metric"] is not None:
             accuracy_gap = requirement_accuracy_gap(retained_result, original_requirement,

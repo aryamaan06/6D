@@ -21,7 +21,7 @@ STATUSES = ('excluded', 'undecided', 'needs_review', 'missing_analysis',
             'outside_assumptions', 'applicability_unknown', 'unassessed',
             'criterion_unmet', 'criterion_met')
 DISCIPLINES = {'ideal_propulsion': 'Propulsion', 'static_cantilever': 'Structures',
-              'powered_flight': 'Flight dynamics',
+              'powered_flight': 'Flight dynamics', 'guided_ascent': 'Flight dynamics', 'staged_ascent': 'Flight dynamics',
               'radiative_equilibrium': 'Thermal', 'drag_load': 'Atmospheric loads',
               'orbital_trajectory': 'Flight dynamics', 'power_energy_budget': 'Power and energy',
               'attitude_control': 'Guidance and control'}

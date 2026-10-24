@@ -155,6 +155,8 @@ def _impact(before, after, *, sources_changed=False, changed_adapter_types=()):
 def _graph(project):
     titles = {"ideal_propulsion": "Propulsion", "static_cantilever": "Structures",
               "powered_flight": "Powered vertical flight",
+              "guided_ascent": "Planar ascent with prescribed steering",
+              "staged_ascent": "Variable thrust and staged ascent",
               "attitude_control": "Guidance and control · single-axis pointing",
               "power_energy_budget": "Electrical power",
               "radiative_equilibrium": "Thermal", "drag_load": "Atmospheric loads",

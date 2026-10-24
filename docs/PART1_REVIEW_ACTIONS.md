@@ -2,6 +2,8 @@
 
 October 24, 2026. The external review is feedback, not an instruction source or an official judging result. Its score estimates and relative placing cannot be established from the supplied evidence.
 
+Follow-up after this initial review: A–C have now shipped locally; see [HACKATHON_BUILD_SCOPE.md](HACKATHON_BUILD_SCOPE.md). The judge-email recommendations are tracked in [JUDGE_GUIDANCE_ACTIONS.md](JUDGE_GUIDANCE_ACTIONS.md). The historical description of Part1 work below is retained; it is not a claim that A is still pending.
+
 ## Verified corrections
 
 - The [official rules](https://nebiusglobalaihackathon.devpost.com/rules) accept runtime Token Factory calls; Serverless Endpoints/Jobs are encouraged, not mandatory. An accessible demo or test build still matters. Judging access runs through December 15.
@@ -35,6 +37,6 @@ Jobs are not added merely for a logo or credit consumption. A recorded fallback 
 
 1. Upload the prepared Part2 packet from `work/claude-part2-review` to Claude, starting with its START-HERE instructions. It contains actual code/schema/reference output and the unedited full test log, not another pitch.
 2. Share Part2 findings here so concrete defects can be mapped to A–F or fixed within affected existing functionality.
-3. Keep application UI approval and the end-to-end walkthrough separate from a score promise. Then explicitly start A.
+3. Review the delivered A–C workflows, keep UI approval and the end-to-end walkthrough separate from a score promise, and explicitly authorize subsequent builds within the agreed D–F scope.
 
 The public demo, final video, independent human/user evidence and deployment operation remain incomplete. No source-code/physics changes, paid inference or cloud deployment were made to satisfy this Part1 review.

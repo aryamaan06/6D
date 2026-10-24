@@ -4,9 +4,9 @@ Updated October 24, 2026 from Arya's explicit A–F agreement. This is the compl
 
 | ID | Accepted build | Current position |
 | --- | --- | --- |
-| A | Integrated rocket reference: coherent existing propulsion, structural, thermal, atmospheric and vertical-flight checks; baseline, flawed revision, correction. | Not started. Part1 repository/review corrections happen first. Existing component references remain available. |
-| B | Bounded guided ascent with horizontal motion and an explicit steering programme. | Planned; current flight model is vertical only. |
-| C | Variable thrust and staging with mass/event handling. | Planned after B. |
+| A | Integrated rocket reference: coherent existing propulsion, structural, thermal, atmospheric and vertical-flight checks; baseline, flawed revision, correction. | Implemented: visible rocket reference, five supported calculations and an explicit launch-GNC gap; staged baseline/change/correction workflow. See BUILD_A_RESULTS.md. Existing references remain available. |
+| B | Bounded guided ascent with horizontal motion and an explicit steering programme. | Implemented: separate bounded planar-ascent adapter, supplied pitch programme, horizontal/vertical histories and connected review. Closed-loop launch GNC remains unassessed. See BUILD_B_RESULTS.md. |
+| C | Variable thrust and staging with mass/event handling. | Implemented: serial stages, linear thrust segments, analytical fuel exhaustion, dry-mass separation, ignition delays, profile forms and saved event playback. See BUILD_C_RESULTS.md. |
 | D | Whole-project AI investigations across related requirements/evidence gaps. | Planned; current Assistant is requirement-scoped. Any Quick/Deep choice needs current task evidence before enabling another model. |
 | E | Encrypted remembered Tavily/LangSmith connections. | Planned; their current keys remain session-only. Nebius has optional Windows remembering. |
 | F | Hosted access, project/credential isolation and protected judge access. | Planned. Hosting target, persistent storage, endpoint compatibility, per-session/daily limits, operational budget and testing access need verification before deployment. |

@@ -24,6 +24,9 @@ def parameter_units(model):
     bindings = {**model.get("inputs", {}), **model.get("links", {})}
     if model["type"] == "power_energy_budget":
         return power_parameters(bindings)
+    if model["type"] == "staged_ascent":
+        from .staged_ascent import parameter_units as staged_units
+        return staged_units(bindings)
     return MODEL_PARAMETERS.get(model["type"], {})
 
 

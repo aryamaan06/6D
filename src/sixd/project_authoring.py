@@ -7,11 +7,21 @@ domains and model applicability remain the maintained adapters' responsibility.
 from copy import deepcopy
 
 from . import lifecycle
-from . import attitude, powered_flight
+from . import attitude, powered_flight, guided_ascent, staged_ascent
 from .engineering import MODEL_PARAMETERS, MODEL_VERSIONS, _ASSUMPTIONS, _NOT_ASSESSED, model_applicability
 
 
 _MODEL_DETAILS = {
+    "staged_ascent": (
+        "Variable-thrust staged ascent",
+        "Planar ascent with explicit stage dry/propellant masses, linear thrust segments and ideal serial separation. Prescribed steering and constant aerodynamic coefficients; no closed-loop guidance or separation dynamics.",
+        list(staged_ascent.METRICS),
+    ),
+    "guided_ascent": (
+        "Guided planar ascent",
+        "Planar ascent with a declared pitch programme relative to local radial vertical, central gravity, vector drag and analytical mass. Steering is prescribed; closed-loop launch GNC is unassessed.",
+        list(guided_ascent.METRICS),
+    ),
     "powered_flight": (
         "Powered vertical flight",
         "Constant-thrust vertical ascent through burnout and above-surface coast, with gravity, exponential-atmosphere drag and analytical mass depletion. Sampled checks with declared grid tolerances.",
@@ -90,6 +100,14 @@ def catalog():
             "not_assessed": deepcopy(_NOT_ASSESSED[model_type]),
             "applicability": model_applicability(model_type),
         })
+        if model_type == "staged_ascent":
+            models[-1]["profile"] = {"schema":"sixd.staged-ascent-bindings.v1", "editor":"staged_ascent",
+                "stage_limit":4, "segments_per_stage_limit":6,
+                "description":"Bind contiguous numbered stages and linear thrust segments to explicit inputs. Supply masses, Isp, durations, thrust endpoints and separation delays. Final-stage separation delay must be zero.",
+                "roles":{"stage.<index>.dry_mass":"kg", "stage.<index>.propellant_mass":"kg",
+                         "stage.<index>.specific_impulse":"s", "stage.<index>.separation_delay":"s",
+                         "stage.<index>.segment.<index>.duration":"s",
+                         "stage.<index>.segment.<index>.thrust_start":"N", "stage.<index>.segment.<index>.thrust_end":"N"}}
         if model_type == "power_energy_budget":
             models[-1]["profile"] = {"schema": "sixd.power-mode-bindings.v1", "editor": "power_energy",
                 "mode_limit": 16, "total_load_limit": 128,
@@ -155,6 +173,13 @@ def preflight(project):
             expected = MODEL_PARAMETERS[model_type]
             links = model.get("links", {})
             all_bindings = {**bindings, **links}
+            if model_type == "staged_ascent":
+                try:
+                    expected = staged_ascent.parameter_units(all_bindings)
+                except (ValueError, TypeError, OverflowError) as exc:
+                    issue("error", "invalid_staged_profile", path + ".inputs", str(exc))
+                    expected = {**expected, **{name:snapshot["inputs"][identity]["unit"]
+                                               for name,identity in bindings.items() if name not in expected}}
             if model_type == "power_energy_budget":
                 from .engineering import power_parameters
                 try:

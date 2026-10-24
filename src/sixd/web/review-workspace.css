@@ -1,4 +1,20 @@
 /* Quiet review surface; the graph, inspector and detailed tools remain in place. */
+#sixd-workspace .rw-reference-entry{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:20px 0;padding:15px 18px;border:1px solid var(--sd-border);border-radius:10px;background:#fbfcfa;font-size:12px}
+#sixd-workspace .rw-reference-entry p{font-size:11px;color:var(--sd-soft);margin-top:4px}
+#sixd-workspace .rw-rocket{margin:23px 0 20px;padding:23px;border:1px solid #dce4f2;border-radius:12px;background:linear-gradient(115deg,#f5f8ff,#fcfdfb);font-size:12px}
+#sixd-workspace .rw-rocket h2{font-size:21px;font-weight:600;letter-spacing:-.4px}
+#sixd-workspace .rw-rocket>p{color:var(--sd-soft);margin:12px 0;line-height:1.7}
+#sixd-workspace .rw-rocket-stages{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;list-style:none;padding:0;margin:18px 0}
+#sixd-workspace .rw-rocket-stages li{display:flex;gap:8px;align-items:center;border:1px solid var(--sd-border);background:#ffffffb3;padding:10px;border-radius:7px;font-size:11px;color:var(--sd-soft)}
+#sixd-workspace .rw-rocket-stages li span{border:1px solid currentColor;border-radius:50%;width:20px;height:20px;display:grid;place-items:center;flex-shrink:0;font-size:10px}
+#sixd-workspace .rw-rocket-stages li[aria-current=step]{border-color:#9eafd0;color:var(--sd-blue);background:#fff;font-weight:600}
+#sixd-workspace .rw-rocket-result{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-top:1px solid #e1e7f1;border-bottom:1px solid #e1e7f1;font-variant-numeric:tabular-nums}
+#sixd-workspace .rw-rocket-result>span:nth-child(2){overflow-wrap:anywhere;min-width:0}
+#sixd-workspace .rw-rocket-actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:15px 0}
+#sixd-workspace .rw-rocket details{font-size:11px;color:var(--sd-soft)}
+#sixd-workspace .rw-rocket details p{margin:10px 0;max-width:1000px;line-height:1.7}
+#sixd-workspace .rw-rocket summary{cursor:pointer;color:var(--sd-ink)}
+@media(max-width:700px){#sixd-workspace .rw-reference-entry{align-items:stretch;flex-direction:column}#sixd-workspace .rw-rocket{padding:17px}#sixd-workspace .rw-rocket-stages{grid-template-columns:1fr}#sixd-workspace .rw-rocket-result{align-items:flex-start;flex-direction:column}}
 #sixd-workspace .rw-workspace{max-width:1440px;margin:0 auto;padding:32px 34px 38px;color:var(--sd-ink);line-height:1.55}
 #sixd-workspace .rw-header{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:21px}
 #sixd-workspace .rw-eyebrow{display:block;font-size:10px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;color:var(--sd-soft);margin-bottom:7px}

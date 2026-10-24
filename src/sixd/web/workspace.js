@@ -412,9 +412,9 @@
       if(c)body+='<p>'+esc(c.description)+' <span class="sd-small sd-muted">Adapter '+esc(c.version)+'</span></p><h3>Parameter bindings</h3><p class="sd-small sd-muted">Only inputs with the exact required unit can be selected. Leave a parameter unbound to complete it later.</p>'+c.parameters.map(parameter=>v.links?.[parameter.name]?'<div class="sd-field"><strong>'+esc(human(parameter.name))+' · '+esc(parameter.unit)+'</strong><p>Calculated from '+esc(v.links[parameter.name].model_id+'.'+v.links[parameter.name].metric)+'</p></div>':'<label class="sd-field">'+esc(human(parameter.name))+' · '+esc(parameter.unit)+'<select class="sd-input" name="binding:'+esc(parameter.name)+'">'+inputOptions(parameter.unit,v.inputs?.[parameter.name])+'</select></label>').join('')+'<h3>Assumptions</h3><ul class="sd-scope-list">'+c.assumptions.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul><h3>Not assessed</h3><ul class="sd-scope-list">'+c.not_assessed.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul>';
       if(type==='orbital_trajectory')body+='<fieldset class="sd-accuracy-editor"><legend>Declared orbital numerical accuracy</legend><p class="sd-small sd-muted">Optional, user-supplied accuracy criteria. Enter both positive tolerances and their source, or leave all three blank. No default tolerance is inferred. Grid agreement is checked at aligned saved samples; it is not a true error bound or physical validation.</p>'+editorField('Position tolerance · m','accuracy_position_m',values.accuracy_position_m??v.accuracy?.position_tolerance_m??'','type="number" step="any" min="0"')+editorField('Velocity tolerance · m/s','accuracy_velocity_m_s',values.accuracy_velocity_m_s??v.accuracy?.velocity_tolerance_m_s??'','type="number" step="any" min="0"')+editorField('Accuracy criteria source / rationale','accuracy_source',values.accuracy_source??v.accuracy?.source??'')+'</fieldset>';
       if(c?.applicability)body+=applicabilityMarkup(c.applicability,'Current model catalog context; no run is being validated in this editor.');
-      body+='<p class="sd-small">Named power modes and equipment rows are authored in <button type="button" class="sd-mini-action" data-action="power">Power &amp; energy</button>.</p>';
+      body+=c?.profile?.editor==='staged_ascent'?'<p class="sd-small">Stage masses and thrust rows are authored in <button type="button" class="sd-mini-action" data-action="staged-ascent">Variable thrust &amp; staging</button>.</p>':'<p class="sd-small">Named power modes and equipment rows are authored in <button type="button" class="sd-mini-action" data-action="power">Power &amp; energy</button>.</p>';
       const extras=Object.entries(v.inputs || {}).filter(([name])=>!c?.parameters.some(p=>p.name===name));
-      body+=extras.map(([name,inputId])=>'<label class="sd-field">'+esc(name)+' · '+(c?.profile?'Operating mode binding':c?'unrecognized parameter':'imported binding')+'<select class="sd-input" name="binding:'+esc(name)+'">'+inputOptions(null,inputId)+'</select></label>').join('');
+      body+=extras.map(([name,inputId])=>'<label class="sd-field">'+esc(name)+' · '+(c?.profile?(c.profile.editor==='staged_ascent'?'Stage profile binding':'Operating mode binding'):c?'unrecognized parameter':'imported binding')+'<select class="sd-input" name="binding:'+esc(name)+'">'+inputOptions(null,inputId)+'</select></label>').join('');
     }
     if(kind==='requirement'){
       const modelId=v.model_id || '',c=catalogModel(model(modelId)?.type),metric=v.metric || '',known=c?.metrics.find(m=>m.name===metric);
@@ -471,7 +471,7 @@
     repairContext();
     root.classList.toggle('sd-review-home',state.page==='review-home');
     root.querySelectorAll('.sd-sidebar [data-action]').forEach(el=>{if(el.dataset.action===state.page)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
-    root.classList.toggle('sd-simulation-open',['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','chains','comparison','coverage','ai-quality'].includes(state.page));
+    root.classList.toggle('sd-simulation-open',['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','guided-ascent','staged-ascent','chains','comparison','coverage','ai-quality'].includes(state.page));
     try{localStorage.setItem('sixd.workspace.last-project',state.data.project_id);}catch{}
     const picker=$('#sd-project-picker');picker.innerHTML=state.projects.map(item=>'<option value="'+esc(item.project_id)+'" '+(item.project_id===state.data.project_id?'selected':'')+'>'+esc(item.name || (item.project_id===p.project_id?p.name:item.project_id))+'</option>').join('');
     $('#sd-revision-picker').innerHTML=state.data.revisions.map(r=>'<option value="'+r.revision+'" '+(r.revision===state.data.revision?'selected':'')+'>R'+r.revision+' · '+(r.has_current_run?'review recorded':'awaiting checks')+'</option>').join('');
@@ -505,10 +505,11 @@
       $('#sd-page-title').textContent='Connect engineering calculations.';
       $('#sd-page-description').textContent='Follow explicit scalar outputs through downstream checks and their saved evidence.';
     }
-    if(state.page==='powered-flight'){
-      $('#sd-breadcrumb-current').textContent='Powered flight';
-      $('#sd-page-title').textContent='Follow the flight through burnout.';
-      $('#sd-page-description').textContent='Saved vertical ascent and coast with thrust, mass, gravity and drag.';
+    if(['powered-flight','guided-ascent','staged-ascent'].includes(state.page)){
+      const guided=state.page==='guided-ascent',staged=state.page==='staged-ascent';
+      $('#sd-breadcrumb-current').textContent=staged?'Variable thrust & staging':guided?'Ascent & steering':'Powered flight';
+      $('#sd-page-title').textContent=staged?'Follow thrust, fuel and stage events.':guided?'Follow the declared steering programme.':'Follow the flight through burnout.';
+      $('#sd-page-description').textContent=staged?'Saved serial-stage ascent with explicit thrust profiles, propellant accounting and event-side mass changes.':guided?'Saved planar ascent with horizontal motion, supplied thrust direction and explicit numerical support.':'Saved vertical ascent and coast with thrust, mass, gravity and drag.';
     }
     if(state.page==='attitude'){
       $('#sd-breadcrumb-current').textContent='Guidance & control';
@@ -548,8 +549,8 @@
       $('#sd-breadcrumb-current').textContent='Author project';$('#sd-page-title').textContent='Define your engineering project';
       $('#sd-page-description').textContent='Supply inputs, connect supported models and declare the criteria you want to assess.';
     }
-    $('#sd-edit-trigger').hidden=['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','chains','comparison','coverage'].includes(state.page);
-    $('#sd-run-trigger').hidden=['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','chains','comparison','coverage'].includes(state.page);
+    $('#sd-edit-trigger').hidden=['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','guided-ascent','staged-ascent','chains','comparison','coverage'].includes(state.page);
+    $('#sd-run-trigger').hidden=['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','guided-ascent','staged-ascent','chains','comparison','coverage'].includes(state.page);
     root.querySelector('[data-action="simulation"]').setAttribute('aria-pressed',String(state.page==='simulation'));
     $('#sd-scope-chip').textContent=(state.draft?'Draft from ':'')+'R'+state.data.revision+(currentRun()?' · Reviewed':' · Needs checks');
     $('#sd-save-state').textContent=state.draft?'Unsaved draft · saved revision preserved':'R'+state.data.revision+' saved locally · '+(currentRun()?'calculated evidence recorded':'awaiting checks');
@@ -694,7 +695,7 @@
   }
   function reader(report=false) {
     const requirements=report?allReqs():selectedReqs();const p=project();
-    return '<article class="sd-reader"><span class="sd-label">'+(report?'Saved project · engineering review':esc(p.lifecycle_stage)+' · system reader')+'</span><h2>'+esc(report?p.name:activeSystem()?.title || p.name)+'</h2><p class="sd-lead">'+esc(p.description)+'</p>'+(!currentRun()||state.draft?'<div class="sd-notice">'+(state.draft?'Draft edits are not calculated. Displayed recorded values still belong to saved R'+state.data.revision+'.':'Awaiting a review of this revision.')+'</div>':'')+'<p class="sd-report-context">Project '+esc(state.data.project_id)+' · '+(state.draft?'Draft based on saved':'Saved')+' revision R'+state.data.revision+'</p>'+stats(requirements)+receiptInfo()+engineeringPlots(requirements)+(report?allModels():selectedModels()).filter(m=>result(m.id)?.simulation).map(m=>'<h3>'+esc(human(m.id))+' trajectory evidence</h3>'+trajectoryContext(m.id)).join('')+'<h3>Requirement findings</h3>'+requirementTable(requirements)+'<h3>Model evidence</h3>'+ (report?allModels():selectedModels()).map(m=>{const r=result(m.id);return '<details class="sd-source"><summary>'+esc(human(m.id))+' · '+(r?esc(human(r.status)):'Not run')+'</summary>'+modelEvidence(m.id)+'</details>';}).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='power_energy_budget').map(m=>powerEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='attitude_control').map(m=>attitudeEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='powered_flight').map(m=>flightEvidence(m.id)).join('')+interfaceSlot('report',report?null:selectedModels().map(m=>m.id))+sourceSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+actionSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+testEvidenceSlot('report',report?null:requirements.map(r=>r.id))+(report?coverageSlot()+seriesSlot()+envelopeSlot():'')+'<h3>Scope of this review</h3><ul class="sd-scope-list">'+(currentRun()?.review?.exclusions || ['Only explicitly bound models and supplied requirements can be assessed.','Physical tests, operational performance and whole-mission readiness are not verified.']).map(item=>'<li>'+esc(item)+'</li>').join('')+'</ul><div class="sd-action-row">'+(report?'<button type="button" class="sd-button sd-primary" data-action="export" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('download')+'Export evidence JSON</button><button type="button" class="sd-button" data-action="export-review" disabled>Export combined review JSON</button><button type="button" class="sd-button" data-action="print-report" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('printer')+'Print report / Save PDF</button>':'<button type="button" class="sd-button" data-action="report">'+icon('file-text')+'Open full report</button>')+'<button type="button" class="sd-button" data-action="export-project">Export project JSON</button></div>'+(currentRun()?'<details class="sd-source"><summary>Receipt identity and verification sources</summary><p class="sd-receipt">Review '+esc(currentRun().review.digest)+'</p>'+Object.entries(currentRun().review.verification_sources || {}).map(([file,digest])=>'<p class="sd-receipt">'+esc(file)+': '+esc(digest)+'</p>').join('')+'</details>':'')+'</article>';
+    return '<article class="sd-reader"><span class="sd-label">'+(report?'Saved project · engineering review':esc(p.lifecycle_stage)+' · system reader')+'</span><h2>'+esc(report?p.name:activeSystem()?.title || p.name)+'</h2><p class="sd-lead">'+esc(p.description)+'</p>'+(!currentRun()||state.draft?'<div class="sd-notice">'+(state.draft?'Draft edits are not calculated. Displayed recorded values still belong to saved R'+state.data.revision+'.':'Awaiting a review of this revision.')+'</div>':'')+'<p class="sd-report-context">Project '+esc(state.data.project_id)+' · '+(state.draft?'Draft based on saved':'Saved')+' revision R'+state.data.revision+'</p>'+stats(requirements)+receiptInfo()+engineeringPlots(requirements)+(report?allModels():selectedModels()).filter(m=>result(m.id)?.simulation).map(m=>'<h3>'+esc(human(m.id))+' trajectory evidence</h3>'+trajectoryContext(m.id)).join('')+'<h3>Requirement findings</h3>'+requirementTable(requirements)+'<h3>Model evidence</h3>'+ (report?allModels():selectedModels()).map(m=>{const r=result(m.id);return '<details class="sd-source"><summary>'+esc(human(m.id))+' · '+(r?esc(human(r.status)):'Not run')+'</summary>'+modelEvidence(m.id)+'</details>';}).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='power_energy_budget').map(m=>powerEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='attitude_control').map(m=>attitudeEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>['powered_flight','guided_ascent','staged_ascent'].includes(m.type)).map(m=>flightEvidence(m.id)).join('')+interfaceSlot('report',report?null:selectedModels().map(m=>m.id))+sourceSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+actionSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+testEvidenceSlot('report',report?null:requirements.map(r=>r.id))+(report?coverageSlot()+seriesSlot()+envelopeSlot():'')+'<h3>Scope of this review</h3><ul class="sd-scope-list">'+(currentRun()?.review?.exclusions || ['Only explicitly bound models and supplied requirements can be assessed.','Physical tests, operational performance and whole-mission readiness are not verified.']).map(item=>'<li>'+esc(item)+'</li>').join('')+'</ul><div class="sd-action-row">'+(report?'<button type="button" class="sd-button sd-primary" data-action="export" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('download')+'Export evidence JSON</button><button type="button" class="sd-button" data-action="export-review" disabled>Export combined review JSON</button><button type="button" class="sd-button" data-action="print-report" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('printer')+'Print report / Save PDF</button>':'<button type="button" class="sd-button" data-action="report">'+icon('file-text')+'Open full report</button>')+'<button type="button" class="sd-button" data-action="export-project">Export project JSON</button></div>'+(currentRun()?'<details class="sd-source"><summary>Receipt identity and verification sources</summary><p class="sd-receipt">Review '+esc(currentRun().review.digest)+'</p>'+Object.entries(currentRun().review.verification_sources || {}).map(([file,digest])=>'<p class="sd-receipt">'+esc(file)+': '+esc(digest)+'</p>').join('')+'</details>':'')+'</article>';
   }
   function changeRecords() {
     const before=state.draft?state.data.project:priorRun()?.review?.project || state.data.configuration_base?.project;
@@ -722,6 +723,7 @@
     return '<article class="sd-reader"><span class="sd-label">'+(state.draft?'R'+state.data.revision+' → draft':'Revision R'+state.data.revision)+'</span><h2>Review the difference.</h2><p class="sd-lead">A changed input identifies dependencies needing review. New calculation outcomes appear only after checks run.</p>'+(!state.draft&&priorRun()?'<p class="sd-table-note">Compared with the nearest earlier recorded review: R'+priorRun().revision+'.</p>':!state.draft&&state.data.configuration_base?'<p class="sd-table-note">Compared with saved configuration R'+state.data.configuration_base.revision+'. This comparison describes supplied record changes only.</p>':'')+structuralChanges(info)+(rows.length?rows.map(row=>'<div class="sd-change-card"><strong>'+esc(row.title)+'</strong><div class="sd-change-values"><span class="sd-before">'+measure(row.before)+'</span><span>→</span><span class="sd-after">'+measure(row.after)+'</span></div>'+(row.before?.unit!==row.after?.unit?'<p class="sd-small sd-muted">Unit changed; no implicit conversion.</p>':'')+(!same(row.before?.source,row.after?.source)?'<p class="sd-small sd-muted">Source: '+esc(row.before?.source || '—')+' → '+esc(row.after?.source || '—')+'</p>':'')+'</div>').join(''):'<div class="sd-notice">No changed input records in this comparison. '+(!state.draft?'Create a draft from the latest revision to review a new change.':'Edit any input value, unit or source.')+'</div>')+interfaceSlot('changes')+sourceSlot('changes')+actionSlot('changes')+testEvidenceSlot('changes',[])+'<h3>Calculator dependency impact</h3><p>'+(state.draft?(state.impact?'Server-checked draft preview.':'Local draft preview; use Preview impact to validate with the server.'):'Saved revision dependency comparison.')+'</p><div class="sd-affected-list">'+(info.affected_model_ids||[]).map(id=>'<button type="button" data-kind="model" data-id="'+esc(id)+'">'+esc(human(id))+'<span class="sd-chip sd-pending">Model dependency</span></button>').join('')+(info.affected_requirement_ids||[]).map(id=>'<button type="button" data-kind="requirement" data-id="'+esc(id)+'">'+esc(req(id)?.title || id)+chip(reqStatus(id))+'</button>').join('')+'</div>'+(!(info.affected_requirement_ids||[]).length?'<p>No calculator requirement dependencies are affected by the supplied edits. Interface review flags are shown separately above.</p>':'')+receiptInfo()+'<div class="sd-action-row">'+(state.draft?'<button type="button" class="sd-button sd-primary" data-action="save" '+(!dirty()||editErrors().length?'disabled':'')+'>Save revision</button>':!currentRun()?'<button type="button" class="sd-button sd-primary" data-action="run">Rerun affected checks</button>':'<button type="button" class="sd-button" data-action="report">Open revised report</button>')+'<button type="button" class="sd-button sd-quiet" data-action="back">Return to system</button></div></article>';
   }
   function renderMain() {
+    window.SixDGuidedAscent?.unmount();window.SixDStagedAscent?.unmount();
     window.SixDAIQuality?.unmount();
     if(state.page==='ai-quality'){
       window.SixDReviewWorkspace?.unmount();window.SixDEnvelopes?.unmount();window.SixDSimulationImports?.unmount();window.SixDPoweredFlight?.unmount();window.SixDSimulation?.unmount();window.SixDTestData?.unmount();window.SixDScenarios?.unmount();
@@ -740,6 +742,8 @@
       $('#sd-view-content').innerHTML='<div id="sd-review-workspace"></div>';
       window.SixDReviewWorkspace.mount($('#sd-review-workspace'),{projectId,revision,currentRunId:runId,hasDraft:!!state.draft,api,
         onNavigate:name=>{if(current())void action(name);},
+        onRocketOpen:()=>{if(current()&&!state.draft)void action('rocket-reference');},
+        onRocketStage:()=>{if(current()&&!state.draft)void action('rocket-stage');},
         onSelectRequirement:id=>{if(!current()||state.draft||!req(id))return;state.page='system';state.view='reader';state.system=owningSystem(req(id).model_id)?.id||'overview';state.panel='evidence';select('requirement',id,false);},
         onRun:latest()&&!state.draft?()=>{if(current())void action('run');}:undefined,
         onReload:()=>{if(current())void perform(()=>load(projectId,revision));}
@@ -842,12 +846,24 @@
     window.SixDSimulation?.unmount();
     window.SixDScenarios?.unmount();
     window.SixDTestData?.unmount();
-    if(state.page==='powered-flight'){
-      $('#sd-view-content').innerHTML='<div id="sd-powered-flight"></div>';
+    if(['powered-flight','guided-ascent','staged-ascent'].includes(state.page)){
+      const guided=state.page==='guided-ascent',staged=state.page==='staged-ascent';
+      const hostId=staged?'sd-staged-ascent':guided?'sd-guided-ascent':'sd-powered-flight';
+      $('#sd-view-content').innerHTML='<div class="sd-flight-modes" role="group" aria-label="Flight model mode"><button type="button" class="sd-button" data-action="vertical-mode" aria-pressed="'+(!guided&&!staged)+'">Vertical ascent</button><button type="button" class="sd-button" data-action="guided-ascent" aria-pressed="'+guided+'">Planar ascent & steering</button><button type="button" class="sd-button" data-action="staged-ascent" aria-pressed="'+staged+'">Variable thrust & staging</button></div><div id="'+hostId+'"></div>';
       const projectId=state.data.project_id,revision=state.data.revision,draft=state.draft,runId=currentRun()?.run_id;
       const current=()=>state.data?.project_id===projectId&&state.data?.revision===revision&&state.draft===draft;
-      window.SixDPoweredFlight.mount($('#sd-powered-flight'),{projectId,revision,project:project(),hasDraft:!!draft,runId,reviewDigest:currentRun()?.review?.digest,modelResults:Object.fromEntries(allModels().map(m=>[m.id,powerResult(m.id)])),modelOrigins:currentRun()?.model_origins||{},findings:currentRun()?.review?.findings||{},
-        onReference:()=>{if(current()&&!draft)void showImport('powered_flight_review');},
+      (staged?window.SixDStagedAscent:guided?window.SixDGuidedAscent:window.SixDPoweredFlight).mount($('#'+hostId),{projectId,revision,isLatest:latest(),initialModelId:state.stagedProfileEdit,editProfile:staged&&!!state.stagedProfileEdit,project:project(),hasDraft:!!draft,runId,reviewDigest:currentRun()?.review?.digest,modelResults:Object.fromEntries(allModels().map(m=>[m.id,powerResult(m.id)])),modelOrigins:currentRun()?.model_origins||{},findings:currentRun()?.review?.findings||{},
+        onReference:()=>{if(current()&&!draft)void showImport(staged?'staged_ascent_review':guided?'guided_ascent_review':'powered_flight_review');},
+        onEditProfile:id=>{if(!current()||!latest()||!model(id)||!beginDraft())return;state.stagedProfileEdit=id;state.page='staged-ascent';render();},
+        onCloseProfile:()=>{if(current())state.stagedProfileEdit=null;},
+        onProfileChange:async candidate=>{
+          if(!current()||!draft)throw Error('This stage-profile draft changed. Reopen the current saved project.');
+          const submitted=JSON.stringify(draft),validation=await api('/api/authoring/preflight',{project:candidate});
+          if(!current()||JSON.stringify(state.draft)!==submitted)throw Error('The shared draft changed during profile validation. Newer edits are preserved.');
+          const error=validation.issues.find(item=>item.severity==='error');if(error)throw Error(error.message);
+          state.draft=copy(candidate);state.impact=null;state.stagedProfileEdit=null;invalidatePreflight();render();message('Stage profile applied to the shared draft. Preview, save and rerun before using a new result.');
+        },
+        onPreview:()=>{if(current()&&draft)void action('impact');},onSave:()=>{if(current()&&draft)void action('save');},
         onAuthor:()=>{if(current())void action('author-project');},onRun:()=>{if(current()&&!draft)void action('run');},onReport:()=>{if(current())void action('report');},
         onInputs:id=>{if(!current()||!model(id))return;state.system=owningSystem(id)?.id||'overview';state.selected={kind:'model',id};state.page='system';state.view='table';state.panel='details';render();},
         onRequirement:(id,assistant)=>{if(!current()||!req(id)||assistant&&(draft||runId!==currentRun()?.run_id))return;state.system=owningSystem(req(id).model_id)?.id||'overview';state.page='system';state.view='reader';state.panel=assistant?'assistant':'evidence';select('requirement',id,assistant);}
@@ -982,6 +998,8 @@
     return saved?{...saved,inputs:receipt?.input_records,verification_sources:receipt?.verification_sources,evidence_fingerprint:receipt?.fingerprint}:null;
   }
   function flightEvidence(modelId){
+    if(model(modelId)?.type==='staged_ascent')return window.SixDStagedAscent.report(powerResult(modelId),{projectId:state.data.project_id,revision:state.data.revision,modelId,runId:currentRun()?.run_id,reviewDigest:currentRun()?.review?.digest,hasDraft:!!state.draft,origin:currentRun()?.model_origins?.[modelId]});
+    if(model(modelId)?.type==='guided_ascent')return window.SixDGuidedAscent.report(powerResult(modelId),{projectId:state.data.project_id,revision:state.data.revision,modelId,runId:currentRun()?.run_id,reviewDigest:currentRun()?.review?.digest,hasDraft:!!state.draft,origin:currentRun()?.model_origins?.[modelId]});
     if(model(modelId)?.type!=='powered_flight')return '';
     return window.SixDPoweredFlight.report(powerResult(modelId),{projectId:state.data.project_id,revision:state.data.revision,modelId,runId:currentRun()?.run_id,reviewDigest:currentRun()?.review?.digest,hasDraft:!!state.draft,origin:currentRun()?.model_origins?.[modelId]});
   }
@@ -994,6 +1012,9 @@
     return window.SixDPowerBudget.report(powerResult(modelId),{projectId:state.data.project_id,revision:state.data.revision,modelId,runId:currentRun()?.run_id,reviewDigest:currentRun()?.review?.digest,hasDraft:!!state.draft,origin:currentRun()?.model_origins?.[modelId]});
   }
   function renderPanel() {
+    // This full-width tool hides the Inspector. Avoid constructing duplicate
+    // trajectories and launching reference requests for invisible controls.
+    if(['guided-ascent','staged-ascent'].includes(state.page)){ $('#sd-panel-context').replaceChildren(); $('#sd-panel-body').replaceChildren(); return; }
     const selected=state.selected;
     root.querySelectorAll('[data-panel]').forEach(el=>el.setAttribute('aria-selected',String(el.dataset.panel===state.panel)));
     $('#sd-panel-body').setAttribute('aria-labelledby','sd-tab-'+state.panel);
@@ -1549,7 +1570,7 @@
       return;
     }
     if(name==='attitude'){if($('#sd-author-dialog').open){$('#sd-author-dialog').close();author.editor=null;}state.page='attitude';state.panel='details';stopInvestigationPolling();render();return;}
-    if(name==='powered-flight'){if($('#sd-author-dialog').open){$('#sd-author-dialog').close();author.editor=null;}state.page='powered-flight';state.panel='details';stopInvestigationPolling();render();return;}
+    if(['powered-flight','vertical-mode','guided-ascent','staged-ascent'].includes(name)){if($('#sd-author-dialog').open){$('#sd-author-dialog').close();author.editor=null;}state.stagedProfileEdit=null;state.page=name==='staged-ascent'||name==='powered-flight'&&allModels().some(m=>m.type==='staged_ascent')?'staged-ascent':name==='guided-ascent'||name==='powered-flight'&&allModels().some(m=>m.type==='guided_ascent')?'guided-ascent':'powered-flight';state.panel='details';stopInvestigationPolling();render();return;}
     if(name==='power'){if($('#sd-author-dialog').open){$('#sd-author-dialog').close();author.editor=null;}state.page='power';state.panel='details';stopInvestigationPolling();render();return;}
     if(name==='clear-test-selection'){ai.testSelection=null;syncAssistantContext();renderPanel();return;}
     if(name==='export-review'){
@@ -1560,12 +1581,13 @@
     }
     if(name==='ai-start'){await startInvestigation();return;}
     if(name==='ai-refresh'){await Promise.allSettled([refreshAiStatus(),loadInvestigations()]);return;}
+    if(name==='rocket-reference'){await showImport('rocket_review');return;}
     if(name==='import'){await showImport();return;}
     if(name==='spreadsheet-import'){showSpreadsheetImport();return;}
     if(name==='create-project'){
-      if(!state.importing)return;const candidate=copy(state.importing);candidate.project_id=$('#sd-import-id').value.trim();candidate.name=$('#sd-import-name').value.trim();
+      if(!state.importing)return;const isRocketReference=state.importing.project_id==='constructed-rocket-review',isGuidedReference=state.importing.project_id==='constructed-guided-ascent-review',isStagedReference=state.importing.project_id==='constructed-staged-ascent-review';const candidate=copy(state.importing);candidate.project_id=$('#sd-import-id').value.trim();candidate.name=$('#sd-import-name').value.trim();
       if(!candidate.project_id||!candidate.name){importError(new Error('Provide a project ID and name.'));return;}
-      await perform(async()=>{try{state.data=await api('/api/projects',{project:candidate});state.request++;state.draft=null;state.impact=null;invalidatePreflight();state.system='overview';state.selected=defaultSelection();state.page='system';await refreshProjects();$('#sd-import-dialog').close();resetCamera();}catch(error){importError(error);throw error;}},'Project saved locally. Run checks to calculate its evidence.');return;
+      await perform(async()=>{try{state.data=await api('/api/projects',{project:candidate});state.request++;state.draft=null;state.impact=null;invalidatePreflight();state.system='overview';state.selected=defaultSelection();state.stagedProfileEdit=null;state.page=isRocketReference?'review-home':isStagedReference?'staged-ascent':isGuidedReference?'guided-ascent':'system';await refreshProjects();try{localStorage.setItem('sixd.workspace.last-project',state.data.project_id);}catch{}$('#sd-import-dialog').close();resetCamera();}catch(error){importError(error);throw error;}},'Project saved locally. Run checks to calculate its evidence.');return;
     }
     if(!state.data)return;
     if(name==='author-project'||name==='author-edit'){
@@ -1596,11 +1618,27 @@
     if(name==='investigate'){if(state.selected)select(state.selected.kind,state.selected.id,true);return;}
     if(name==='zoom-in'||name==='zoom-out'){state.camera.scale=Math.max(.3,Math.min(1.8,state.camera.scale+(name==='zoom-in'?.1:-.1)));applyCamera();return;}
     if(name==='fit'){fit();return;}
+    if(name==='rocket-stage'){
+      if(state.draft||!latest()||!currentRun())return;
+      const projectId=state.data.project_id,revision=state.data.revision,runId=currentRun().run_id;
+      const current=()=>state.data?.project_id===projectId&&state.data?.revision===revision&&currentRun()?.run_id===runId&&!state.draft;
+      await perform(async()=>{
+        const snapshot=await api('/api/review-workspace'+query(projectId,revision));
+        if(!current())return;
+        const reference=snapshot.rocket_reference;
+        if(snapshot.run_id!==runId||!reference?.recognized||!reference.can_stage||![11000,20000].includes(reference.next_thrust))throw Error('The reference context changed. Reload the latest saved revision before staging this change.');
+        const candidate=copy(state.data.project);candidate.inputs.thrust.value=reference.next_thrust;
+        const preview=await api('/api/impact',{project_id:projectId,base_revision:revision,project:candidate});
+        if(!current())return;
+        state.draft=candidate;state.impact=preview.impact;invalidatePreflight();state.page='changes';state.panel='details';
+        stopInvestigationPolling();
+      },'Thrust change staged and dependencies previewed. Review it, save a revision, then rerun affected checks.');return;
+    }
     if(name==='edit'){
       if(!beginDraft())return;
       if(state.page!=='authoring'){state.page='system';state.view='table';}state.panel='details';message('Draft editing enabled. Changes are unsaved until you choose Save revision.');render();if(state.page==='authoring')void refreshPreflight();return;
     }
-    if(name==='discard'){state.draft=null;state.impact=null;invalidatePreflight();repairContext();message('Draft discarded. The saved revision is preserved.');render();if(state.page==='authoring')void refreshPreflight();return;}
+    if(name==='discard'){state.stagedProfileEdit=null;state.draft=null;state.impact=null;invalidatePreflight();repairContext();message('Draft discarded. The saved revision is preserved.');render();if(state.page==='authoring')void refreshPreflight();return;}
     if(name==='impact'){
       if(!state.draft)return;const errors=editErrors();if(errors.length){showError(errors[0]);return;}
       const projectId=state.data.project_id,revision=state.data.revision,draft=state.draft;

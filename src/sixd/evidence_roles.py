@@ -33,6 +33,29 @@ def build_roles(record):
                 pair = "coarse_to_middle" if match[1] == "0" else "middle_to_fine"
                 quantity = "position" if match[2] == "max_position_difference_m" else "velocity"
                 role = quantity + "_difference_" + pair
+            guided_prefix = "/recorded_evidence/guided_response/"
+            if path == guided_prefix + "parameters/altitude_numerical_tolerance":
+                role = "position_grid_tolerance"
+            elif path == guided_prefix + "parameters/velocity_numerical_tolerance":
+                role = "velocity_grid_tolerance"
+            guided_match = re.fullmatch(re.escape(guided_prefix) + r"diagnostics/level_differences/([01])/(max_position_difference_m|max_velocity_difference_m_s)", path)
+            if guided_match:
+                pair = "coarse_to_middle" if guided_match[1] == "0" else "middle_to_fine"
+                quantity = "position" if guided_match[2] == "max_position_difference_m" else "velocity"
+                role = quantity + "_difference_" + pair
+            staged_prefix = "/recorded_evidence/staged_response/"
+            if path == staged_prefix+"parameters/position_numerical_tolerance":
+                role = "position_grid_tolerance"
+            elif path == staged_prefix+"parameters/velocity_numerical_tolerance":
+                role = "velocity_grid_tolerance"
+            staged_match = re.fullmatch(re.escape(staged_prefix)+r"diagnostics/level_differences/([01])/(max_position_difference_m|max_velocity_difference_m_s)",path)
+            if staged_match:
+                pair = "coarse_to_middle" if staged_match[1] == "0" else "middle_to_fine"
+                quantity = "position" if staged_match[2] == "max_position_difference_m" else "velocity"
+                role = quantity+"_difference_"+pair
+            mass_match = re.fullmatch(re.escape(staged_prefix)+r"solver/stage_plan/([0-3])/(initial_mass_kg|burnout_mass_kg|post_separation_mass_kg)",path)
+            if mass_match:
+                role = "stage_"+str(int(mass_match[1])+1)+"_"+mass_match[2].removesuffix("_kg")
         elif fact["evidence_id"].startswith("recheck:") and path == "/matches_saved_result":
             role = "same_adapter_reproduced"
         if role:
