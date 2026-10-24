@@ -47,7 +47,7 @@ BUILD_FILES = [WEB / name for name in ("workspace.html", "workspace.css", "works
 CODE_FILES = [Path(__file__).with_name(name) for name in (
     "workspace_server.py", "workspace.py", "engineering.py", "lifecycle.py",
     "__init__.py", "project_examples.py", "project_io.py", "workspace_ai.py",
-    "project_investigation.py", "explanation_quality.py", "model_evaluation.py", "workspace_evaluation.py", "providers.py", "action_selection.py",
+    "project_investigation.py", "whole_project_investigation.py", "explanation_quality.py", "model_evaluation.py", "workspace_evaluation.py", "providers.py", "action_selection.py",
     "chains.py", "attitude.py", "powered_flight.py", "simulation.py", "orbital_adapter.py", "workspace_simulation.py", "project_authoring.py", "spreadsheet_intake.py", "workspace_scenarios.py", "workspace_test_data.py", "test_evidence.py", "systems.py", "workspace_systems.py", "workflow_evaluation.py", "workspace_workflow_evaluation.py", "evidence_facts.py", "evidence_roles.py", "change_evidence.py", "credential_store.py", "evidence_evaluation.py", "workspace_evidence_evaluation.py", "workspace_sources.py", "workspace_actions.py", "workspace_comparison.py", "source_context.py", "workspace_research.py", "workspace_coverage.py")]
 
 
@@ -340,7 +340,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 requirement_id = self._one(query, "requirement_id")
                 if project_id is None:
                     raise WorkspaceError("A project ID is required.")
-                self._reply(200, {"investigations": self.server.ai.list(project_id, revision, requirement_id)})
+                self._reply(200, {"investigations": self.server.ai.list(project_id, revision, requirement_id, scope=self._one(query, "scope"))})
             elif route.startswith("/api/investigations/"):
                 self._reply(200, self.server.ai.get(route.removeprefix("/api/investigations/")))
             elif route == "/api/projects":
@@ -573,8 +573,15 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 self._fields(value, set())
                 view = self.server.ai.forget_key()
             elif route == "/api/investigations":
-                basic = {"project_id", "revision", "requirement_id", "question"}
+                project_scope = value.get("scope") == "project"
+                basic = {"project_id", "revision", "scope", "question"} if project_scope else {"project_id", "revision", "requirement_id", "question"}
+                if not project_scope and "scope" in value:
+                    if value["scope"] != "requirement":
+                        raise WorkspaceError("Choose project or requirement scope.")
+                    basic.add("scope")
                 selected_test = {"test_comparison_id", "test_row_number"}
+                if project_scope and set(value) & selected_test:
+                    raise WorkspaceError("Project investigations cannot select a test row.")
                 self._fields(value, basic | selected_test if set(value) & selected_test else basic)
                 if set(value) & selected_test and (not isinstance(value["test_comparison_id"], str)
                         or re.fullmatch(r"[a-f0-9]{32}", value["test_comparison_id"]) is None
@@ -584,7 +591,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                     raise WorkspaceError("A project ID is required.")
                 extras = {key: value[key] for key in selected_test} if set(value) & selected_test else {}
                 view = self.server.ai.start(value["project_id"], self._revision(value["revision"]),
-                                            value["requirement_id"], value["question"], **extras)
+                                            value.get("requirement_id"), value["question"], scope=value.get("scope", "requirement"), **extras)
             elif route == "/api/projects":
                 self._fields(value, {"project"})
                 view = self.server.store.create_project(value["project"])

@@ -1,3 +1,5 @@
+> Build D, October 24: [scoped results](BUILD_D_RESULTS.md) and [machine-readable history](validation/BUILD_D_CHECKS.json) add 98 distinct relevant methods across seven modules, six browser groups and bounded live whole-project records. Counts overlap earlier modules and are not additive to past suites. One final current-source changed-rocket case completed; historical generic/failed replies remain distinct.
+
 # Validation index — counts are scoped, not additive
 
 Updated October 24, 2026. A software test checks particular behavior. Same-calculator consistency, analytic references, separate-tool numerical comparisons, live model behavior and human/user validation are different kinds of evidence.

@@ -177,3 +177,12 @@ Commit dates record publication checkpoints; some feature work preceded its batc
 - `c5d3e39` · 2026-10-24T10:20:38+05:30 · Normalize archived checkpoint formatting
 - `422aad3` · 2026-10-24T16:05:43+05:30 · Implement rocket review milestones A-C and record judge guidance
 - `b124204` · 2026-10-24T16:07:10+05:30 · Record milestone documentation and GitHub sync workflow
+
+## Additions after the immutable baseline
+
+- [Build D acceptance](BUILD_D_ACCEPTANCE.md)
+- [Whole-project investigation guide](WHOLE_PROJECT_INVESTIGATIONS.md)
+- [Build D delivery/results](BUILD_D_RESULTS.md)
+- [Build D scoped verification and live history](validation/BUILD_D_CHECKS.json)
+
+These later files do not change the historical baseline counts or hashes.

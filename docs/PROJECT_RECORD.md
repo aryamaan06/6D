@@ -20,7 +20,7 @@ Ten maintained adapters are present: ideal propulsion, static cantilever, steady
 
 Nemotron **Super** is selected for browser requirement investigations. Nano's separate historical CLI configuration and earlier Nano/Super/Ultra evaluations are preserved. Tavily reference search and one approved LangSmith metrics-upload workflow have recorded bounded live checks. Their existence does not establish broad model accuracy or customer value.
 
-Delivered application capabilities and evidence are indexed below. **D project-wide AI, E remembered optional-service connections and F protected hosting remain planned.** UI/UX refinement, founder walkthrough, external user evidence and final submission materials remain separately acknowledged. [Current A–F scope](HACKATHON_BUILD_SCOPE.md) · [Submission checklist](SUBMISSION_CHECKLIST.md).
+Delivered application capabilities and evidence are indexed below. **D whole-project investigations are implemented; E remembered optional-service connections and F protected hosting remain planned.** D has one current-source changed-rocket live check, with historical failures and generic replies preserved; broader semantic/human qualification remains pending. UI/UX refinement, founder walkthrough, external user evidence and final submission materials remain separately acknowledged. [Current A–F scope](HACKATHON_BUILD_SCOPE.md) · [Submission checklist](SUBMISSION_CHECKLIST.md).
 
 ## Development chronology and feature record
 
@@ -56,6 +56,7 @@ Dates in this table follow the cited dated documents. See the Git chronology for
 | October 24, A | Integrated constructed propulsion/flight/load/beam/thermal reference with baseline, reduced thrust, correction, exact saved findings, reuse and visible GNC gap. | [Acceptance](BUILD_A_ACCEPTANCE.md), [delivery/results](BUILD_A_RESULTS.md). |
 | October 24, B | Distinct bounded planar ascent with prescribed steering, vector state/numerical support, saved horizontal/vertical playback and connected findings. | [Acceptance](BUILD_B_ACCEPTANCE.md), [delivery/results](BUILD_B_RESULTS.md), [separate reference](GUIDED_ASCENT_REFERENCES.md). |
 | October 24, C | Variable-thrust serial staging, analytical fuel exhaustion, ideal dry-mass discard, ignition delay, profile forms, exact event playback, saved findings and exports. | [Acceptance](BUILD_C_ACCEPTANCE.md), [delivery/results](BUILD_C_RESULTS.md), [separate reference](STAGED_ASCENT_REFERENCES.md), [public scoped check summary](validation/BUILD_C_CHECKS.json). |
+| October 24, D | Whole-project frozen evidence reads, application-owned review queue/changes, compact provider views and guarded contextual next checks. One final current-source case completed; all earlier failures and generic replies retained. | [Guide](WHOLE_PROJECT_INVESTIGATIONS.md), [acceptance](BUILD_D_ACCEPTANCE.md), [results](BUILD_D_RESULTS.md), [scoped checks](validation/BUILD_D_CHECKS.json). |
 | October 24, publication/guidance | Judge-email recommendations mapped to measurable outcomes; A–C source/tests/results pushed; source-byte normalization verified against benchmark hashes; ongoing documentation/Git sync recorded. | [Judge guidance](JUDGE_GUIDANCE_ACTIONS.md), commits `422aad3` and `b124204`, [baseline inventory](PROJECT_RECORD_INVENTORY.json). |
 
 ## Decisions and corrections to preserve
@@ -88,7 +89,7 @@ This audit provides an index for **every published file at the baseline** and a 
 - Pre-October-14 source evolution is not independently established by Git. Preserve the dated first-increment claim and disclose that distinction when describing prior work.
 - Raw private test/provider receipts and workspace activity are retained locally; public summaries are not a byte-for-byte publication of those records. Customer/user input requires its own consent and data handling.
 - No independent human engineering validation, completed outsider usability sessions, customer commitment or real flight validation is established by this record. [Discovery brief](CUSTOMER_DISCOVERY.md).
-- D, E and F, final owner-led UI/UX refinement/walkthrough, external evidence and submission materials remain open. Ten bounded models do not complete all future 6D capabilities. [Current scope](HACKATHON_BUILD_SCOPE.md).
+- E and F, broader live/human AI evaluation, final owner-led UI/UX refinement/walkthrough, external evidence and submission materials remain open. Ten bounded models do not complete all future 6D capabilities. [Current scope](HACKATHON_BUILD_SCOPE.md).
 - Automatic general CAD/code ingestion, coupled high-fidelity disciplines, full launch-to-landing qualification and a production multi-user platform are not implied by the long-term feature catalogue.
 
 Future completed milestones should update this chronology and the relevant guide, acceptance/result evidence, current scope and validation index, then be privacy-checked and pushed. Preserve older records as dated history instead of silently replacing their outcomes.

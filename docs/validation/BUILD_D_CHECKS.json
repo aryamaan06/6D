@@ -1,0 +1,347 @@
+{
+  "schema": "sixd.build-d-checks.v1",
+  "date": "2026-10-24",
+  "development_review": "Coding-assistant implementation/review; independent human engineering review remains pending.",
+  "offline": {
+    "distinct_test_methods": 98,
+    "modules": {
+      "test_whole_project_investigation": 17,
+      "test_project_investigation": 25,
+      "test_workspace_ai": 25,
+      "test_workspace_ai_api": 7,
+      "test_workspace_model_selection": 9,
+      "test_source_assistant": 8,
+      "test_ai_qualification": 7
+    },
+    "scope": "Targeted relevant modules, not a clean full-suite claim. Synthetic transports make no paid calls."
+  },
+  "browser": {
+    "groups": [
+      "Project entry opens visible scoped panel and starter; navigation makes no inference request",
+      "Explicit start completes four offline wire actions, preserves all canonical findings and displays actual model/mode/cost/latency",
+      "Citation opens exact captured project bundle",
+      "Switch to requirement scope retains its original independent history and workflow",
+      "Switching back reloads saved whole-project receipt without modifying project runs",
+      "Project review and history remain accessible at narrow viewport"
+    ],
+    "errors": [],
+    "offline": true
+  },
+  "live": {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "announced_total_ceiling_usd": 0.8,
+    "total_reserved_usd": 0.6197627999999993,
+    "initial_cumulative_reserved_usd": 2.479980380000001,
+    "final_cumulative_reserved_usd": 3.0997431800000004,
+    "cohorts": [
+      {
+        "cohort": 1,
+        "build": "e7bade3092e9",
+        "note": "Selector contract failed before an accepted read; new adapter initially masked validation as invalid_json.",
+        "reserved_usd": 0.0038466000000001443,
+        "existing_rows_unchanged": true,
+        "cases": [
+          {
+            "case": "mixed_baseline",
+            "investigation_id": "fd2414f3de4d444b98cf042df634a781",
+            "project_id": "build-d-rocket-20261024t144249z",
+            "revision": 1,
+            "run_id": "f8d2bbb490614aaa8f497fc6a952cf2b",
+            "review_digest": "d3013f4d9df1e14e95492e30aa92b19a108f6e0a0b5af24c3009bd874306bc15",
+            "state": "failed",
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "provider_mode": "live_token_factory",
+            "request_attempts": 1,
+            "accepted_responses": 0,
+            "live_model_calls": 0,
+            "reserved_usd": 0.0038466,
+            "elapsed_seconds": 1.2972559000008914,
+            "error_code": "invalid_action_response",
+            "explanation_acceptance": null,
+            "summary": ""
+          }
+        ]
+      },
+      {
+        "cohort": 2,
+        "build": "0a1bd45f9036",
+        "note": "All actions completed; correct missing-guidance wording was falsely rejected by the scope vocabulary check.",
+        "reserved_usd": 0.09476670000000009,
+        "existing_rows_unchanged": true,
+        "cases": [
+          {
+            "case": "mixed_baseline",
+            "investigation_id": "ee70564560224b17b959aa5d26f729b1",
+            "project_id": "build-d-rocket-20261024t144416z",
+            "revision": 1,
+            "run_id": "82967c985d83457da9493cbcb10fd7a5",
+            "review_digest": "2c3c5ca97bd6961bec28d70f8e1bcfc27501e018802abdc5b83198837a9fd023",
+            "state": "failed",
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "provider_mode": "live_token_factory",
+            "request_attempts": 4,
+            "accepted_responses": 4,
+            "live_model_calls": 4,
+            "reserved_usd": 0.09476669999999998,
+            "elapsed_seconds": 8.112487900001724,
+            "error_code": "explanation_rejected",
+            "explanation_acceptance": {
+              "accepted": false,
+              "blocked_codes": [
+                "scope_missing"
+              ],
+              "human_review": "pending",
+              "method": "limited_phrase_guards",
+              "semantic_accuracy_established": false
+            },
+            "summary": ""
+          }
+        ]
+      },
+      {
+        "cohort": 3,
+        "build": "dea9b5a77f5c",
+        "note": "Baseline completed; changed revision exceeded the provider transport envelope after three reads. Full local records were then separated from compact provider views with preflight size checks.",
+        "reserved_usd": 0.15558810000000012,
+        "existing_rows_unchanged": true,
+        "cases": [
+          {
+            "case": "mixed_baseline",
+            "investigation_id": "6381beb4068f409f9a088e9ebbfe6299",
+            "project_id": "build-d-rocket-20261024t144539z",
+            "revision": 1,
+            "run_id": "bd04700821b8448a807a19c0677c1215",
+            "review_digest": "661b58de9e6eb580264a356d8d3c7272213419941c4681114c9ecd5c0073bbbc",
+            "state": "completed",
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "provider_mode": "live_token_factory",
+            "request_attempts": 4,
+            "accepted_responses": 4,
+            "live_model_calls": 4,
+            "reserved_usd": 0.09476669999999998,
+            "elapsed_seconds": 7.377152599998226,
+            "error_code": null,
+            "explanation_acceptance": {
+              "accepted": true,
+              "blocked_codes": [],
+              "human_review": "pending",
+              "method": "limited_phrase_guards",
+              "semantic_accuracy_established": false
+            },
+            "summary": "Next step: address the unassessed launch_guidance requirement by obtaining a supported analysis and verification method per its review actions."
+          },
+          {
+            "case": "changed_dependencies",
+            "investigation_id": "71733c84c11d4ccb893c57291f7a7d69",
+            "project_id": "build-d-rocket-20261024t144539z",
+            "revision": 2,
+            "run_id": "e4bca731160f4b2ca7d7e292d99e3da9",
+            "review_digest": "83378f842ae39f351ceb68954b4df971c9f88dcb0025e4e50258f641f8a1845d",
+            "state": "failed",
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "provider_mode": "live_token_factory",
+            "request_attempts": 3,
+            "accepted_responses": 3,
+            "live_model_calls": 3,
+            "reserved_usd": 0.0608214,
+            "elapsed_seconds": 5.6344726999996055,
+            "error_code": "provider_or_action_error",
+            "explanation_acceptance": null,
+            "summary": ""
+          }
+        ]
+      },
+      {
+        "cohort": 4,
+        "build": "4caec3cb635e",
+        "note": "A real incorrect change explanation was rejected, including a claim that a declared limit decreased.",
+        "reserved_usd": 0.0748814999999996,
+        "existing_rows_unchanged": true,
+        "cases": [
+          {
+            "case": "changed_dependencies",
+            "investigation_id": "2e21847a4dd04742b81fd927e534482a",
+            "project_id": "build-d-rocket-20261024t144927z",
+            "revision": 2,
+            "run_id": "ee97a7f16ce84396afb0d93e0d7d0cf4",
+            "review_digest": "f37241786232782d45ff36d72a5c63fec3c4868d342cda5312eecf4e206a42e7",
+            "state": "failed",
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "provider_mode": "live_token_factory",
+            "request_attempts": 4,
+            "accepted_responses": 4,
+            "live_model_calls": 4,
+            "reserved_usd": 0.0748815,
+            "elapsed_seconds": 9.001899399998365,
+            "error_code": "explanation_rejected",
+            "explanation_acceptance": {
+              "accepted": false,
+              "blocked_codes": [
+                "direction_or_causality_prose",
+                "next_check_missing"
+              ],
+              "human_review": "pending",
+              "method": "limited_phrase_guards",
+              "semantic_accuracy_established": false
+            },
+            "summary": ""
+          }
+        ]
+      },
+      {
+        "cohort": 5,
+        "build": "273840f8eeae",
+        "note": "Changed and staged/out-of-scope cases completed but copied a generic example; these are protocol/guard passes, not evidence of useful project-specific reasoning.",
+        "reserved_usd": 0.14978489999999978,
+        "existing_rows_unchanged": true,
+        "cases": [
+          {
+            "case": "changed_dependencies",
+            "investigation_id": "25559e1dc77d45999cf6344fc0a4210d",
+            "project_id": "build-d-rocket-20261024t145211z",
+            "revision": 2,
+            "run_id": "419151c4cadc45e492b2447b62f0155a",
+            "review_digest": "190a7d6be2562b84616a601a62c18b9d36e2568cf248fc8425c6db5d3119fa12",
+            "state": "completed",
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "provider_mode": "live_token_factory",
+            "request_attempts": 4,
+            "accepted_responses": 4,
+            "live_model_calls": 4,
+            "reserved_usd": 0.0615135,
+            "elapsed_seconds": 7.429613300002529,
+            "error_code": null,
+            "explanation_acceptance": {
+              "accepted": true,
+              "blocked_codes": [],
+              "human_review": "pending",
+              "method": "limited_phrase_guards",
+              "semantic_accuracy_established": false
+            },
+            "summary": "Review the declared inputs, linked load assumptions and criterion basis. Obtain applicable guidance evidence and independent analysis for excluded effects before extending the bounded results."
+          },
+          {
+            "case": "staged_unsupported_approval_request",
+            "investigation_id": "e835deedcabb48918961d2e6a2b731d2",
+            "project_id": "build-d-staged-20261024t145211z",
+            "revision": 1,
+            "run_id": "7edf8b987ac643eb89d071ab6ebb5f25",
+            "review_digest": "dfe9e14834346cf67bf84e607d2d4fe9082e3889babd09acf94ac0568aca612a",
+            "state": "completed",
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "provider_mode": "live_token_factory",
+            "request_attempts": 4,
+            "accepted_responses": 4,
+            "live_model_calls": 4,
+            "reserved_usd": 0.0882714,
+            "elapsed_seconds": 7.469311499997275,
+            "error_code": null,
+            "explanation_acceptance": {
+              "accepted": true,
+              "blocked_codes": [],
+              "human_review": "pending",
+              "method": "limited_phrase_guards",
+              "semantic_accuracy_established": false
+            },
+            "summary": "Review the declared inputs, linked load assumptions and criterion basis. Obtain applicable guidance evidence and independent analysis for excluded effects before extending the bounded results."
+          }
+        ]
+      },
+      {
+        "cohort": 6,
+        "build": "f78e679672be",
+        "note": "With the example removed, a useful specific recommendation was falsely rejected for higher-fidelity/scope wording.",
+        "reserved_usd": 0.07044749999999977,
+        "existing_rows_unchanged": true,
+        "cases": [
+          {
+            "case": "changed_dependencies",
+            "investigation_id": "02693011590a4ac9987063f875c178b8",
+            "project_id": "build-d-rocket-20261024t145544z",
+            "revision": 2,
+            "run_id": "1c105f0be90b4652be5a7740a44752b6",
+            "review_digest": "89491ae438cbdaf27214cc0ce2e2a66f5c2e90b64d400bbf6300c6a38e720422",
+            "state": "failed",
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "provider_mode": "live_token_factory",
+            "request_attempts": 4,
+            "accepted_responses": 4,
+            "live_model_calls": 4,
+            "reserved_usd": 0.0704475,
+            "elapsed_seconds": 9.092916600002354,
+            "error_code": "explanation_rejected",
+            "explanation_acceptance": {
+              "accepted": false,
+              "blocked_codes": [
+                "direction_or_causality_prose",
+                "scope_missing"
+              ],
+              "human_review": "pending",
+              "method": "limited_phrase_guards",
+              "semantic_accuracy_established": false
+            },
+            "summary": ""
+          }
+        ]
+      },
+      {
+        "cohort": 7,
+        "build": "cf12c89b7417",
+        "note": "Final current-source changed-rocket case completed with a specific burnout-height and guidance recommendation; narrow coding-assistant review found no material conflict with the captured findings. Independent human review is pending.",
+        "reserved_usd": 0.07044749999999977,
+        "existing_rows_unchanged": true,
+        "cases": [
+          {
+            "case": "changed_dependencies",
+            "investigation_id": "e8f328aa6d5c4167915275841cef42b6",
+            "project_id": "build-d-rocket-20261024t145739z",
+            "revision": 2,
+            "run_id": "bbdfff21e46545a0973b0b75fe1089b8",
+            "review_digest": "d2eaafde511bc8e26227584dfaee56791a85bc6200b8a28bf7678cee80dbc6f7",
+            "state": "completed",
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "provider_mode": "live_token_factory",
+            "request_attempts": 4,
+            "accepted_responses": 4,
+            "live_model_calls": 4,
+            "reserved_usd": 0.0704475,
+            "elapsed_seconds": 9.2723361999997,
+            "error_code": null,
+            "explanation_acceptance": {
+              "accepted": true,
+              "blocked_codes": [],
+              "human_review": "pending",
+              "method": "limited_phrase_guards",
+              "semantic_accuracy_established": false
+            },
+            "summary": "Focus on burnout height: compare recorded metric and declared limit, confirm input sources and requirement basis, then evaluate a justified design change or higher‑fidelity analysis. Also address launch guidance: obtain an applicable analysis and verification method, document its inputs and acceptance method, and connect its evidence through a supported integration."
+          }
+        ]
+      }
+    ],
+    "billing_disclosure": "Reservations are not a provider invoice. Each deliberate job retained the existing per-job/request limits.",
+    "current_final_scope": "One current-source changed-rocket case. Earlier cohorts have their own source versions; successful baseline/staged cases do not establish a current comprehensive qualification.",
+    "semantic_accuracy_established": false,
+    "human_review": "pending",
+    "final_case_usage": {
+      "usage": {
+        "completion_tokens": 246,
+        "prompt_tokens": 47139,
+        "total_tokens": 47385
+      },
+      "usage_estimate_usd": 0.014363099999999998,
+      "reserved_usd": 0.0704475,
+      "elapsed_seconds": 9.2723361999997
+    },
+    "attempted_investigations": 9,
+    "completed_investigations": 4,
+    "request_attempts": 32
+  },
+  "delivery": {
+    "url": "http://127.0.0.1:8768/",
+    "build": "cf12c89b7417",
+    "final_receipt_visible": true,
+    "unexpected_posts": [],
+    "page_errors": []
+  }
+}

@@ -46,18 +46,18 @@ Judge-email recommendations and their concrete 6D actions, evidence and remainin
 2. Calculate a saved baseline and inspect its findings, assumptions, numerical support and exclusions.
 3. Edit a draft and preview the declared dependencies affected by a change.
 4. Save the revision and explicitly rerun affected checks. Inspect calculation/reuse origins and compare retained runs.
-5. Investigate a finding with Nemotron, review supporting references, track follow-up actions and export the evidence.
+5. Investigate a finding or choose **Investigate project** to review related saved findings, changes and next checks with Nemotron; review references, track follow-up actions and export the evidence.
 
 Working views include the system canvas/table/reader, review overview, change comparison, coverage, action queue, reports, orbital, vertical, planar and staged-flight playback, simulation-history imports and sampled operating-envelope studies. [Current capabilities and boundaries](docs/CONNECTED_REVIEW.md) · [Agreed A–F build scope](docs/HACKATHON_BUILD_SCOPE.md).
 
 ## How Nebius and Nemotron are used
 
-The contextual Assistant calls **NVIDIA Nemotron through Nebius Token Factory** during actual investigations. It selects bounded evidence reads and supported reproducibility rechecks, then explains captured findings and missing evidence. The application owns numerical quantities, units, change directions and verdicts; model prose cannot replace them.
+The contextual Assistant calls **NVIDIA Nemotron through Nebius Token Factory** during actual investigations. Requirement scope offers bounded evidence reads and supported reproducibility rechecks. Whole-project scope connects saved findings, dependencies and changes, then recommends next checks; its exact numbers and change facts stay in application-owned tables. [Whole-project workflow and measured limits](docs/BUILD_D_RESULTS.md). The application owns numerical quantities, units, change directions and verdicts; model prose cannot replace them.
 
 | Candidate | Recorded evidence | Current use |
 | --- | --- | --- |
 | Nano | Completed earlier case packs; rejected its first read action in the corrected October 20 three-case comparison, leaving two tasks untested. | Historical CLI configuration; not the selected browser Assistant. |
-| Super | Selected from earlier reviewed comparison evidence. An October 20 explanation reversed a limit-change direction; a separate offline replay under the new guard rejects it. Four current constructed qualification cases completed after that correction. | Selected project Assistant. |
+| Super | Selected from earlier reviewed comparison evidence. An October 20 explanation reversed a limit-change direction; a separate offline replay under the new guard rejects it. Four earlier constructed qualification cases completed after that correction. Build D separately records a current-source project-specific changed-rocket check, historical generic replies and preserved rejections. | Selected project Assistant. |
 | Ultra | Completed all three October 20 corrected-contract cases; earlier failures and skipped cases remain recorded. It has not completed the current four-case pack. | Evaluated candidate; not enabled as an automatic deep mode. |
 
 These observations concern particular protocols, cases and settings; they are not a universal model ranking. [Comparison results](docs/APPLICATION_ROLES_LIVE_RESULTS.md) · [Direction guard and replay](docs/CHANGE_DIRECTION_RESULTS.md) · [Latest live qualification](docs/AI_QUALIFICATION_RESULTS.md).
@@ -74,7 +74,9 @@ Tavily supplies explicit reference searches followed by human review/save/link s
 | [30 published-reference/domain checks, October 19](docs/PUBLISHED_BENCHMARK_RESULTS.md) | Specified analytic, rounded and separate-tool checks across seven bounded models, with sources and tolerances. |
 | [Current orbital reference comparisons](docs/NUMERICAL_ACCURACY_RESULTS.md) | Constructed cases compared with analytic/NASA CSPICE references after the RK4 improvement; numerical support remains separately gated. |
 | [Powered-flight reference checks](docs/POWERED_FLIGHT_REFERENCE_RESULTS.json) | Recorded reference inputs, errors/tolerances and declared calculation scope. |
-| [Current live Assistant qualification](docs/AI_QUALIFICATION_RESULTS.md) | Super completed four constructed evidence tasks with 16 accepted responses. Separate coding-agent AI review found no material error in those four explanations; independent human review remains pending. |
+| [Earlier live requirement qualification](docs/AI_QUALIFICATION_RESULTS.md) | Super completed four constructed evidence tasks with 16 accepted responses. Separate coding-agent AI review found no material error in those four explanations; independent human review remains pending. |
+
+[Build D results](docs/BUILD_D_RESULTS.md) retain all nine whole-project investigation attempts, including four completed histories and five stopped/rejected ones. The final current-source evidence is one specific changed-rocket case; USD0.6197628 was reserved across all attempts, below the USD0.80 ceiling. Generic historical replies and phrase-check false positives are disclosed alongside a caught incorrect direction claim.
 
 The October 24 full offline discovery executed 1,225 methods and exposed two test-fixture issues, including one cleanup error; both affected modules passed 11 tests after correction. The original full-run failure/skip record is retained; a clean full-suite rerun is not claimed. The skipped SciPy reference passed separately with its development dependencies.
 
@@ -90,7 +92,7 @@ The broader 6D concept predates some of this code. The repository history alone 
 
 ## Limits
 
-The ten bounded models cover ideal propulsion, static beams, steady radiative equilibrium, single-condition drag, unforced two-body orbits, supplied power/energy budgets, single-axis spacecraft pointing, vertical ascent/coast, prescribed planar ascent and variable-thrust serial staged ascent. These are not complete engineering disciplines. Scalar links do not create simultaneous multiphysics coupling. Prescribed steering is not closed-loop guidance/control. Project-wide AI investigations and the other remaining D–F work are planned, not delivered features.
+The ten bounded models cover ideal propulsion, static beams, steady radiative equilibrium, single-condition drag, unforced two-body orbits, supplied power/energy budgets, single-axis spacecraft pointing, vertical ascent/coast, prescribed planar ascent and variable-thrust serial staged ascent. These are not complete engineering disciplines. Scalar links do not create simultaneous multiphysics coupling. Prescribed steering is not closed-loop guidance/control. Whole-project AI reviews the captured scalar evidence and declared gaps, with the exclusions in its guide. E remembered optional-service connections and F protected hosting remain planned.
 
 There is no complete launch-to-orbit, reentry or landing simulator, hardware/flight qualification, customer validation or launch authorization. Current data/examples are constructed unless explicitly classified otherwise. Recorded playback is historical evidence, not a new live inference. The local loopback server must not simply be exposed publicly; Build F must provide appropriate access, isolation and spending controls.
 

@@ -6,7 +6,7 @@
   const state = {data:null, projects:[], templates:[], draft:null, impact:null, system:'overview', selected:null, view:'canvas', page:'review-home', panel:'details', busy:false, importing:null, trajectory:null, camera:{x:15,y:35,scale:1}, request:0};
   const author = {catalog:null, preflight:null, snapshot:'', serial:0, loading:false, error:'', timer:null, editor:null};
   // Credentials are never assigned to application state or persistent browser storage.
-  const ai = {status:null, statusError:'', statusLoading:false, evaluation:null, evaluationError:'', evaluationLoading:false, requirementId:null, question:'', records:[], error:'', loading:false, loadedContext:'', starting:false, connecting:false, context:'', generation:0, timer:null, controller:null};
+  const ai = {scope:'requirement',status:null, statusError:'', statusLoading:false, evaluation:null, evaluationError:'', evaluationLoading:false, requirementId:null, question:'', records:[], error:'', loading:false, loadedContext:'', starting:false, connecting:false, context:'', generation:0, timer:null, controller:null};
   ai.testSelection=null;
   const reviewGuide={open:true,exportedRun:null};
   try{reviewGuide.open=localStorage.getItem('sixd.review-guide.dismissed')!=='yes';}catch{}
@@ -1057,7 +1057,7 @@
   function fit() {const canvas=$('#sd-canvas'),stage=$('#sd-graph-stage');if(!canvas||!stage)return;state.camera.scale=Math.max(.3,Math.min(1,(canvas.clientWidth-40)/Number(stage.dataset.width),(canvas.clientHeight-90)/Number(stage.dataset.height)));state.camera.x=(canvas.clientWidth-Number(stage.dataset.width)*state.camera.scale)/2;state.camera.y=40;applyCamera();}
   function bindPan() {const canvas=$('#sd-canvas');if(!canvas)return;let drag=null;canvas.addEventListener('pointerdown',event=>{if(event.target.closest('button,input,select')||window.innerWidth<=570)return;drag={x:event.clientX,y:event.clientY,cx:state.camera.x,cy:state.camera.y};canvas.setPointerCapture(event.pointerId);});canvas.addEventListener('pointermove',event=>{if(!drag)return;state.camera.x=drag.cx+event.clientX-drag.x;state.camera.y=drag.cy+event.clientY-drag.y;applyCamera();});const end=()=>{drag=null;};canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);}
   function select(kind,id,investigate=false) {
-    state.selected={kind,id};if(investigate)state.panel='assistant';
+    state.selected={kind,id};if(investigate){ai.scope='requirement';state.panel='assistant';}
     if(kind==='requirement'){const r=req(id),s=owningSystem(r?.model_id);if(s&&state.system!=='overview'&&!activeSystem()?.model_ids.includes(r?.model_id))state.system=s.id;}
     render();
     if(investigate&&kind==='requirement')void refreshAiStatus();
@@ -1076,17 +1076,17 @@
   function syncAssistantContext() {
     const selected=state.selected;
     const matching=selected?.kind==='requirement'?req(selected.id):selected?.kind==='model'?allReqs().find(r=>r.model_id===selected.id):selected?.kind==='input'?allReqs().find(r=>r.limit_input===selected.id||Object.values(model(r.model_id)?.inputs || {}).includes(selected.id)):null;
-    ai.requirementId=matching?.id || selectedReqs()[0]?.id || null;
+    ai.requirementId=ai.scope==='project'?'__project__':matching?.id || selectedReqs()[0]?.id || null;
     const selection=ai.testSelection;
     if(selection&&(selection.projectId!==state.data?.project_id||selection.revision!==state.data?.revision||selection.requirementId!==ai.requirementId))ai.testSelection=null;
-    const next=state.data?JSON.stringify([state.data.project_id,state.data.revision,ai.requirementId,ai.testSelection?.comparisonId||null,ai.testSelection?.rowNumber||null]):'';
+    const next=state.data?JSON.stringify([state.data.project_id,state.data.revision,currentRun()?.run_id||null,ai.scope,ai.requirementId,ai.testSelection?.comparisonId||null,ai.testSelection?.rowNumber||null]):'';
     if(next!==ai.context){stopInvestigationPolling();ai.context=next;ai.question='';ai.records=[];ai.error='';ai.loading=false;ai.loadedContext='';ai.starting=false;}
   }
   function aiStatusMarkup() {
     const s=ai.status;
     if(!s)return '<p class="sd-small sd-muted">'+esc(ai.statusError || 'Reading local AI configuration…')+'</p>';
     const connectionNote=s.credential_error?'<p class="sd-notice">The saved connection could not be restored or updated. Re-enter the key privately, or forget the saved copy. No provider request was made.</p>':s.key_remembered?'<p class="sd-small sd-muted">Saved encrypted on this device. 6D restores the key on startup without making an inference call.</p>':s.key_source==='environment'?'<p class="sd-small sd-muted">Connected from the NEBIUS_API_KEY environment variable. Remove that variable to prevent its use on a later start.</p>':s.key_present?'<p class="sd-small sd-muted">Connected for this server session only. The key is not remembered.</p>':'';
-    return connectionNote+'<div class="sd-ai-connection"><span class="sd-dot '+(s.key_present?'sd-green':'sd-amber')+'"></span><strong>'+(s.key_present?'Key connected locally':'No key connected')+'</strong></div><p class="sd-small sd-muted">'+esc(s.model?providerModelLabel(s.model):'Model not configured')+' · Nebius Token Factory</p><dl class="sd-details-grid sd-ai-budget"><dt>Approved development allowance</dt><dd>'+dollars(s.budget?.cap_usd)+'</dd><dt>Cumulative reservations</dt><dd>'+dollars(s.budget?.reserved_usd)+'</dd><dt>Reservation capacity remaining</dt><dd>'+dollars(s.budget?.remaining_usd)+'</dd></dl><p class="sd-small sd-muted">Per investigation: at most '+esc(s.max_job_requests ?? 6)+' requests and '+dollars(s.max_job_reservation_usd ?? .10)+' reserved. These conservative reservations track the application’s allowance; your Nebius console shows the actual balance and billed usage.</p>'+(!s.configured?'<p class="sd-notice">Live provider setup is not ready. '+esc(s.note || '')+'</p>':s.provider_mode&&s.provider_mode!=='live_token_factory'?'<p class="sd-notice">Offline test provider · no live NVIDIA inference.</p>':!s.live_validated?'<p class="sd-small sd-muted">The current build has no completed live investigation matching its source versions and provider settings. Earlier live receipts remain available in saved history.</p>':'');
+    return connectionNote+'<div class="sd-ai-connection"><span class="sd-dot '+(s.key_present?'sd-green':'sd-amber')+'"></span><strong>'+(s.key_present?'Key connected locally':'No key connected')+'</strong></div><p class="sd-small sd-muted">'+esc(s.model?providerModelLabel(s.model):'Model not configured')+' · Nebius Token Factory</p><dl class="sd-details-grid sd-ai-budget"><dt>Approved development allowance</dt><dd>'+dollars(s.budget?.cap_usd)+'</dd><dt>Cumulative reservations</dt><dd>'+dollars(s.budget?.reserved_usd)+'</dd><dt>Reservation capacity remaining</dt><dd>'+dollars(s.budget?.remaining_usd)+'</dd></dl><p class="sd-small sd-muted">Per investigation: at most '+esc(s.max_job_requests ?? 6)+' requests and '+dollars(s.max_job_reservation_usd ?? .10)+' reserved. These conservative reservations track the application’s allowance; your Nebius console shows the actual balance and billed usage.</p>'+(!s.configured?'<p class="sd-notice">Live provider setup is not ready. '+esc(s.note || '')+'</p>':s.provider_mode&&s.provider_mode!=='live_token_factory'?'<p class="sd-notice">Offline test provider · no live NVIDIA inference.</p>':!(ai.scope==='project'?s.whole_project_live_validated:s.live_validated)?'<p class="sd-small sd-muted">This investigation scope has no completed live record matching its source versions and provider settings. Earlier live receipts remain available in saved history.</p>':'');
   }
   async function refreshAiStatus() {
     if(ai.statusLoading)return;
@@ -1161,7 +1161,7 @@
     if(!ai.status.key_present)return 'Connect your Nebius key to enable a live investigation.';
     if(!ai.status.configured)return 'Live provider setup is not ready.';
     if(!(ai.status.budget?.remaining_usd>0))return 'The approved cumulative allowance has no remaining capacity.';
-    if(ai.records.some(investigationActive))return 'An investigation is still running for this requirement.';
+    if(ai.records.some(investigationActive))return 'An investigation is still running for this scope.';
     if(ai.loading)return 'Reading saved investigations before allowing a new request.';
     return '';
   }
@@ -1172,11 +1172,22 @@
     $('#sd-ai-blocked').textContent=blocked;$('#sd-ai-blocked').hidden=!blocked;
     $('#sd-ai-question-count').textContent=ai.question.length+'/2000';
   }
+  function renderProjectAssistant() {
+    $('#sd-panel-context').innerHTML='<span class="sd-label">AI investigation · saved R'+esc(state.data.revision)+'</span><h2>Whole-project review</h2>';
+    $('#sd-panel-body').innerHTML='<div class="sd-action-row"><button type="button" class="sd-button sd-primary" disabled>Project</button><button type="button" class="sd-button" data-action="requirement-investigate">Requirement</button></div><div id="sd-ai-status">'+aiStatusMarkup()+'</div><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings</button><p>Investigate related saved findings, declared dependencies, executed/reused evidence and changes together. Canonical calculations stay authoritative.</p><p class="sd-small sd-muted">This reviews scalar findings and model scope. It does not analyze unselected test rows, imported histories, study records or unlinked sources, and does not rerun physics.</p><label class="sd-field">Your project question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="4" maxlength="2000">'+esc(ai.question)+'</textarea></label><span id="sd-ai-question-count" class="sd-small sd-muted"></span><button type="button" class="sd-button" data-action="ai-project-question">Ask what changed and what to check</button><p class="sd-small sd-ai-consent">Starting sends your question and the saved project findings, related inputs/model definitions, prior changes and pinned linked reference excerpts to '+esc(providerModelLabel(ai.status?.model))+' on Nebius. This uses the existing approved allowance. Opening this panel sends nothing.</p><p id="sd-ai-blocked" class="sd-notice" hidden></p><button type="button" id="sd-ai-start" class="sd-button sd-primary sd-full-width" data-action="ai-start">Start live investigation</button><div id="sd-ai-history" class="sd-ai-history" aria-live="polite"></div>';
+    renderAiHistory();updateAiControls();
+    if(ai.loadedContext!==ai.context&&!ai.loading)void loadInvestigations();
+  }
+  function wholeProjectEvidenceMarkup(record) {
+    const findings=record.canonical_findings||{}, rows=record.priorities||[], deps=record.evidence?.dependencies, changes=record.evidence?.changes;
+    const context=(deps?'<p class="sd-small"><strong>Calculated:</strong> '+esc((deps.executed_model_ids||[]).join(', ')||'None')+'<br><strong>Reused:</strong> '+esc((deps.reused_model_ids||[]).join(', ')||'None')+'</p>':'')+(changes?'<details class="sd-source"><summary>Application-owned revision changes</summary><p>'+esc(changes.note)+'</p>'+(changes.comparison?'<p>Changed inputs: '+esc(changes.comparison.changed_inputs.join(', ')||'None')+'<br>Findings needing recheck after the change: '+esc(changes.comparison.previous_evidence_needs_rechecking.join(', ')||'None')+'</p>':'')+Object.entries(changes.requirement_directions||{}).map(([id,c])=>'<details><summary>'+esc(id)+'</summary>'+c.comparisons.filter(r=>r.direction!=='unchanged').map(r=>'<p><strong>'+esc(r.label)+'</strong> · '+esc(human(r.direction))+'<br>'+measure(r.before)+' → '+measure(r.after)+'</p>').join('')+'</details>').join('')+'</details>':'');
+    return '<section class="sd-source"><h3>Application-owned project evidence</h3><p class="sd-small">'+esc(record.priority_policy||'Review queue; not a failure-risk ranking.')+'</p>'+rows.map(row=>'<details class="sd-source"><summary>'+chip(row.status)+' '+esc(row.title||row.requirement_id)+'</summary><p>'+esc(findings[row.requirement_id]?.reason||'')+'</p><dl class="sd-details-grid"><dt>Saved metric</dt><dd>'+measure(findings[row.requirement_id]?.evidence?.metric)+'</dd><dt>Declared criterion</dt><dd>'+esc(findings[row.requirement_id]?.evidence?.operator||'')+' '+measure(findings[row.requirement_id]?.evidence?.limit)+'</dd></dl>'+row.review_actions.map(a=>'<p><strong>'+esc(a.title)+'</strong><br>'+esc(a.action)+'</p>').join('')+'</details>').join('')+context+'<p class="sd-small">Elapsed: '+(typeof record.elapsed_seconds==='number'?esc(record.elapsed_seconds.toFixed(2))+' s':'Pending')+' · Reservations: '+dollars(record.reserved_usd)+' · Provider token usage: '+esc(record.usage_complete?record.usage?.total_tokens:'Unavailable / incomplete')+'. Usage-based estimate at configured price ceilings: '+dollars(record.usage_estimate_usd)+'. Neither this estimate nor reservations are a provider invoice.</p><p class="sd-small sd-muted">Limited explanation guards do not establish semantic correctness. Independent human review remains pending.</p></section>';
+  }
   function renderAssistant() {
-    syncAssistantContext();const r=req(ai.requirementId);
+    syncAssistantContext();if(ai.scope==='project'){renderProjectAssistant();return;}const r=req(ai.requirementId);
     $('#sd-panel-context').innerHTML='<span class="sd-label">AI investigation · saved R'+state.data.revision+'</span><h2>'+esc(r?.title || 'Choose a requirement')+'</h2>'+(r?'<span class="sd-small sd-muted">'+esc(r.id)+'</span>':'');
     if(!r){$('#sd-panel-body').innerHTML='<p>Select a requirement and choose Investigate to work with its engineering evidence.</p>';return;}
-    $('#sd-panel-body').innerHTML='<div id="sd-ai-status" class="sd-ai-status">'+aiStatusMarkup()+'</div><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings '+icon('plug')+'</button><div class="sd-ai-scope"><span class="sd-label">Investigation scope</span><p>'+esc(r.title)+'<br>Model: '+esc(human(r.model_id))+' · '+chip(reqStatus(r.id))+'</p><p class="sd-small sd-muted">The saved requirement result stays authoritative. AI can inspect records, request a supported recheck and explain findings; its prose cannot change the verdict.</p></div><label class="sd-field" for="sd-ai-question">Your question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="4" maxlength="2000" placeholder="What supports this result, and what remains unassessed?">'+esc(ai.question)+'</textarea></label><span id="sd-ai-question-count" class="sd-small sd-muted"></span><div class="sd-action-row"><button type="button" class="sd-button" data-action="ai-source-question">Ask about linked references</button><button type="button" class="sd-button" data-action="sources">Open source library</button></div><p class="sd-small sd-ai-consent">Starting sends your question and scoped project records, including linked inputs, model and requirement evidence and relevant saved reference excerpts, to <span id="sd-ai-consent-model">'+esc(providerModelLabel(ai.status?.model))+'</span> on Nebius. This consumes the existing approved allowance. Opening this panel and connecting a key make no inference calls.</p><p class="sd-notice" id="sd-ai-blocked" hidden></p><button type="button" class="sd-button sd-primary sd-full-width" data-action="ai-start" id="sd-ai-start">Start live investigation</button><div id="sd-ai-history" class="sd-ai-history" aria-live="polite" aria-relevant="additions text"></div>';
+    $('#sd-panel-body').innerHTML='<button type="button" class="sd-button" data-action="project-investigate">Review whole project</button><div id="sd-ai-status" class="sd-ai-status">'+aiStatusMarkup()+'</div><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings '+icon('plug')+'</button><div class="sd-ai-scope"><span class="sd-label">Investigation scope</span><p>'+esc(r.title)+'<br>Model: '+esc(human(r.model_id))+' · '+chip(reqStatus(r.id))+'</p><p class="sd-small sd-muted">The saved requirement result stays authoritative. AI can inspect records, request a supported recheck and explain findings; its prose cannot change the verdict.</p></div><label class="sd-field" for="sd-ai-question">Your question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="4" maxlength="2000" placeholder="What supports this result, and what remains unassessed?">'+esc(ai.question)+'</textarea></label><span id="sd-ai-question-count" class="sd-small sd-muted"></span><div class="sd-action-row"><button type="button" class="sd-button" data-action="ai-source-question">Ask about linked references</button><button type="button" class="sd-button" data-action="sources">Open source library</button></div><p class="sd-small sd-ai-consent">Starting sends your question and scoped project records, including linked inputs, model and requirement evidence and relevant saved reference excerpts, to <span id="sd-ai-consent-model">'+esc(providerModelLabel(ai.status?.model))+'</span> on Nebius. This consumes the existing approved allowance. Opening this panel and connecting a key make no inference calls.</p><p class="sd-notice" id="sd-ai-blocked" hidden></p><button type="button" class="sd-button sd-primary sd-full-width" data-action="ai-start" id="sd-ai-start">Start live investigation</button><div id="sd-ai-history" class="sd-ai-history" aria-live="polite" aria-relevant="additions text"></div>';
     if(ai.testSelection){
       const scope=$('#sd-panel-body .sd-ai-scope');
       scope.insertAdjacentHTML('beforeend','<p class="sd-small">Selected CSV row '+esc(ai.testSelection.rowNumber)+' from comparison <span class="sd-receipt">'+esc(ai.testSelection.comparisonId)+'</span>. This recorded observation will be sent with its original baseline, conditions and applicability context.</p><button type="button" class="sd-mini-action" data-action="clear-test-selection">Clear selected test row</button>'+testEvidenceSlot('assistant',[r.id]));
@@ -1191,6 +1202,8 @@
     if(kind==='model')label='Model: '+human(item);
     if(kind==='recheck')label='Fresh calculation recheck: '+human(item);
     if(kind==='changes')label='Saved revision changes';
+    if(record.scope==='project'&&id==='project')label='Captured project findings and references';
+    if(record.scope==='project'&&id==='dependencies')label='Saved model scope and dependencies';
     return '<button type="button" class="sd-ai-citation" data-citation="'+esc(id)+'" data-investigation-record="'+esc(investigationId(record))+'">'+icon('file-check-2')+esc(label)+'</button>';
   }
   function guidanceMarkup(record) {
@@ -1380,11 +1393,11 @@
       (investigationActive(record)?'<p class="sd-ai-progress" role="status"><span class="sd-dot sd-amber"></span>'+esc(record.state==='queued'?'Queued on this local server.':'Investigation running. Recorded actions appear below.')+'</p>':'')+
       investigationFailureMarkup(record)+
       (record.canonical_finding?'<div class="sd-ai-verdict"><span class="sd-label">Recorded requirement finding</span>'+chip(findingStatus(record.canonical_finding))+'<p>'+esc(record.canonical_finding.reason)+'</p></div>':'')+
-      guidanceMarkup(record)+
-      (record.evidence_facts_prose_policy==='application_roles_v1'?evidenceRolesMarkup(record)+'<details class="sd-source"><summary>All captured numerical facts</summary>'+evidenceFactsMarkup(record)+'</details>':evidenceFactsMarkup(record))+
+      (record.scope==='project'?wholeProjectEvidenceMarkup(record):guidanceMarkup(record))+
+      (record.scope==='project'?'':record.evidence_facts_prose_policy==='application_roles_v1'?evidenceRolesMarkup(record)+'<details class="sd-source"><summary>All captured numerical facts</summary>'+evidenceFactsMarkup(record)+'</details>':evidenceFactsMarkup(record))+
       evidenceChangesMarkup(record)+
       rejectedInterpretationMarkup(record)+
-      (record.summary?'<div class="sd-ai-interpretation"><span class="sd-label">Original AI interpretation · not a kernel verdict</span>'+interpretationCaveatMarkup(record)+evidenceInterpretationMarkup(record.summary,record)+'</div>':'')+
+      (record.summary?'<div class="sd-ai-interpretation"><span class="sd-label">Original AI interpretation · not a kernel verdict</span>'+interpretationCaveatMarkup(record)+(record.scope==='project'?'<p>'+esc(record.summary)+'</p>':evidenceInterpretationMarkup(record.summary,record))+'</div>':'')+
       (citations.length?'<h4>Evidence cited</h4><div class="sd-ai-citations">'+citations.map(id=>citationMarkup(id,record)).join('')+'</div>':'')+
       (evidence.length?'<details class="sd-source sd-ai-captured"><summary>Captured evidence records</summary>'+captured+'</details>':'')+
       (events.length?'<details class="sd-source" '+(investigationActive(record)?'open':'')+'><summary>Recorded activity · '+events.length+' events</summary><ol class="sd-ai-events">'+activity+'</ol></details>':'')+
@@ -1401,12 +1414,12 @@
   }
   function renderAiHistory() {
     const container=$('#sd-ai-history');if(!container)return;
-    const html='<div class="sd-section-heading"><h3>Saved investigations</h3><button type="button" class="sd-mini-action" data-action="ai-refresh">Refresh</button></div>'+(ai.error?'<p class="sd-error" role="alert">'+esc(ai.error)+'</p>':'')+(ai.loading&&!ai.records.length?'<p class="sd-small sd-muted">Reading saved investigations…</p>':'')+(!ai.records.length&&!ai.loading?'<p class="sd-small sd-muted">No investigation has been recorded for this requirement and revision. Nothing is sent until you choose Start.</p>':'')+ai.records.map(investigationMarkup).join('');
+    const html='<div class="sd-section-heading"><h3>Saved investigations</h3><button type="button" class="sd-mini-action" data-action="ai-refresh">Refresh</button></div>'+(ai.error?'<p class="sd-error" role="alert">'+esc(ai.error)+'</p>':'')+(ai.loading&&!ai.records.length?'<p class="sd-small sd-muted">Reading saved investigations…</p>':'')+(!ai.records.length&&!ai.loading?'<p class="sd-small sd-muted">No investigation has been recorded for this scope and revision. Nothing is sent until you choose Start.</p>':'')+ai.records.map(investigationMarkup).join('');
     if(container.dataset.rendered!==html){container.innerHTML=html;container.dataset.rendered=html;icons();}
     updateAiControls();
   }
   async function openAssistant(requirementId) {
-    ai.testSelection=null;
+    ai.scope='requirement';ai.testSelection=null;
   const reviewGuide={open:true,exportedRun:null};
   try{reviewGuide.open=localStorage.getItem('sixd.review-guide.dismissed')!=='yes';}catch{}
     if(requirementId&&req(requirementId))state.selected={kind:'requirement',id:requirementId};
@@ -1418,7 +1431,7 @@
     stopInvestigationPolling();const generation=ai.generation,context=ai.context;
     ai.loading=true;ai.error='';renderAiHistory();ai.controller=new AbortController();
     try{
-      const payload=await api('/api/investigations'+query(state.data.project_id,state.data.revision)+'&requirement_id='+encodeURIComponent(ai.requirementId),undefined,{signal:ai.controller.signal});
+      const payload=await api('/api/investigations'+query(state.data.project_id,state.data.revision)+(ai.scope==='project'?'&scope=project':'&scope=requirement&requirement_id='+encodeURIComponent(ai.requirementId)),undefined,{signal:ai.controller.signal});
       if(generation!==ai.generation||context!==ai.context)return;
       ai.records=Array.isArray(payload.investigations)?payload.investigations:[];
     }catch(error){if(error.name!=='AbortError'&&generation===ai.generation)ai.error='Saved investigations could not be read. '+error.message;}
@@ -1445,7 +1458,7 @@
     const context=ai.context;ai.starting=true;ai.error='';updateAiControls();
     try{
       const selection=ai.testSelection;
-      const record=await api('/api/investigations',{project_id:state.data.project_id,revision:state.data.revision,requirement_id:ai.requirementId,question:ai.question.trim(),...(selection?{test_comparison_id:selection.comparisonId,test_row_number:selection.rowNumber}:{})});
+      const record=await api('/api/investigations',{project_id:state.data.project_id,revision:state.data.revision,...(ai.scope==='project'?{scope:'project'}:{requirement_id:ai.requirementId}),question:ai.question.trim(),...(selection?{test_comparison_id:selection.comparisonId,test_row_number:selection.rowNumber}:{})});
       if(context!==ai.context)return;
       ai.records=[record,...ai.records.filter(item=>investigationId(item)!==investigationId(record))];renderAiHistory();
       scheduleInvestigationPoll(ai.generation,context);await refreshAiStatus();
@@ -1468,7 +1481,7 @@
   function openCitation(id,recordId) {
     const record=ai.records.find(item=>investigationId(item)===recordId);if(!record)return;
     const payload=record.evidence?.[id],split=id.indexOf(':'),kind=payload?.kind || (split<0?id:id.slice(0,split)),item=payload?.requirement?.id || payload?.model?.id || payload?.model_id || (split<0?'':id.slice(split+1));
-    if(record.review_digest!==currentRun()?.review?.digest || kind==='recheck'){
+    if(record.scope==='project'||record.review_digest!==currentRun()?.review?.digest || kind==='recheck'){
       const captured=[...root.querySelectorAll('[data-evidence-id]')].find(el=>el.dataset.evidenceId===id&&el.dataset.evidenceRecord===recordId);
       if(captured){captured.closest('.sd-ai-captured').open=true;captured.open=true;captured.querySelector('summary').focus();captured.scrollIntoView({block:'nearest'});}
       else message('The citation is preserved in the investigation JSON.');
@@ -1579,6 +1592,9 @@
       const interfaceProfile=interfaceLinks.profile,sourceProfile=sourceLinks.profile,actionProfile=actionLinks.profile,coverageProfile=coverageLinks.profile,seriesProfile=seriesLinks.profile,envelopeProfile=envelopeLinks.profile;
       await perform(async()=>{const snapshot=await api('/api/engineering-review-export'+query(projectId,revision));if(key!==testLinkKey()||!same(snapshot.test_evidence,profile)||(snapshot.workspace.system_interfaces&&snapshot.workspace.system_interfaces.digest!==interfaceProfile.digest)||snapshot.project_sources?.digest!==sourceProfile.digest||snapshot.engineering_actions?.digest!==actionProfile.digest||snapshot.engineering_coverage?.digest!==coverageProfile.digest||snapshot.simulation_imports?.digest!==seriesProfile.digest||snapshot.operating_envelopes?.digest!==envelopeProfile.digest){void refreshEnvelopes(true);void refreshSeries(true);void refreshCoverage(true);void refreshSourceLinks(true);void refreshActionLinks(true);throw Error('Evidence, references or actions changed. Refresh the report before exporting.');}saveBlob(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),'6d-combined-review-r'+revision+'.json');});return;
     }
+    if(name==='project-investigate'){ai.scope='project';ai.testSelection=null;state.page='system';state.system='overview';state.view='reader';state.panel='assistant';render();icons();if(window.innerWidth<=950)$('#sd-panel-context').scrollIntoView({block:'start'});await refreshAiStatus();return;}
+    if(name==='requirement-investigate'){ai.scope='requirement';syncAssistantContext();renderPanel();icons();return;}
+    if(name==='ai-project-question'){ai.question='What changed in this saved design, which criteria or evidence gaps need attention, and what should we check next?';$('#sd-ai-question').value=ai.question;updateAiControls();return;}
     if(name==='ai-start'){await startInvestigation();return;}
     if(name==='ai-refresh'){await Promise.allSettled([refreshAiStatus(),loadInvestigations()]);return;}
     if(name==='rocket-reference'){await showImport('rocket_review');return;}

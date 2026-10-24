@@ -126,7 +126,7 @@ class WorkspaceAI:
     @staticmethod
     def _sources():
         folder = Path(__file__).resolve().parent
-        names = ("workspace_ai.py", "ai_qualification.py", "workspace_qualification.py", "workspace_observability.py", "powered_flight.py", "guided_ascent.py", "staged_ascent.py", "attitude.py", "simulation.py", "orbital_adapter.py", "credential_store.py", "project_investigation.py", "source_context.py", "workspace_sources.py", "explanation_quality.py", "evidence_facts.py", "evidence_roles.py", "change_evidence.py", "evidence_evaluation.py", "workspace_evidence_evaluation.py", "test_evidence.py", "workspace_test_data.py", "model_evaluation.py", "workspace_evaluation.py", "workflow_evaluation.py", "workspace_workflow_evaluation.py", "providers.py", "action_selection.py", "workspace.py", "engineering.py", "lifecycle.py", "__init__.py")
+        names = ("workspace_ai.py", "whole_project_investigation.py", "ai_qualification.py", "workspace_qualification.py", "workspace_observability.py", "powered_flight.py", "guided_ascent.py", "staged_ascent.py", "attitude.py", "simulation.py", "orbital_adapter.py", "credential_store.py", "project_investigation.py", "source_context.py", "workspace_sources.py", "explanation_quality.py", "evidence_facts.py", "evidence_roles.py", "change_evidence.py", "evidence_evaluation.py", "workspace_evidence_evaluation.py", "test_evidence.py", "workspace_test_data.py", "model_evaluation.py", "workspace_evaluation.py", "workflow_evaluation.py", "workspace_workflow_evaluation.py", "providers.py", "action_selection.py", "workspace.py", "engineering.py", "lifecycle.py", "__init__.py")
         return {name: sha256((folder / name).read_bytes()).hexdigest() for name in names if (folder / name).is_file()}
 
     def _config(self):
@@ -221,7 +221,10 @@ class WorkspaceAI:
                          max_job_reservation_usd=self._job_ceiling(config))
             with self._db() as db:
                 records = [self._read(row) for row in db.execute("SELECT * FROM project_investigations WHERE state='completed' ORDER BY created_at DESC LIMIT 100")]
-            value["live_validated"] = any(record.get("provider_mode") == "live_token_factory"
+            value["whole_project_live_validated"] = any(record.get("scope") == "project" and record.get("provider_mode") == "live_token_factory"
+                and record.get("live_model_calls", 0) > 0 and record.get("agent_sources") == self._runtime
+                and record.get("model") == config.model and record.get("provider_settings") == self._settings(config) for record in records)
+            value["live_validated"] = any(record.get("scope") != "project" and record.get("provider_mode") == "live_token_factory"
                 and record.get("live_model_calls", 0) > 0 and record.get("agent_sources") == self._runtime
                 and record.get("model") == config.model and record.get("provider_settings") == self._settings(config)
                 for record in records)
@@ -335,7 +338,7 @@ class WorkspaceAI:
                 record["evidence_facts_origin"] = "current_app_read_only_projection"
             except (KeyError, TypeError, ValueError, OverflowError):
                 record["evidence_facts_unavailable"] = "The exact captured scope is unavailable; current evidence was not substituted."
-        if record.get("state") != "completed":
+        if record.get("scope") == "project" or record.get("state") != "completed":
             return record
         from .explanation_quality import build_guidance, evaluate_explanation
         record = deepcopy(record)
@@ -379,7 +382,13 @@ class WorkspaceAI:
                 raise WorkspaceError("Investigation not found.")
             return self._projection(self._read(row), db)
 
-    def list(self, project_id, revision, requirement_id=None):
+    def list(self, project_id, revision, requirement_id=None, *, scope=None):
+        if scope not in (None, "project", "requirement"):
+            raise WorkspaceError("Choose project or requirement scope.")
+        if scope == "project":
+            if requirement_id is not None:
+                raise WorkspaceError("Project scope cannot select one requirement.")
+            requirement_id = "__project__"
         # Check identity/revision even when no investigation exists.
         self.store.get(project_id, revision)
         with self._db() as db:
@@ -388,10 +397,19 @@ class WorkspaceAI:
             if requirement_id is not None:
                 query += " AND requirement_id=?"
                 values.append(requirement_id)
+            if scope == "requirement":
+                query += " AND requirement_id!=?"
+                values.append("__project__")
             rows = db.execute(query + " ORDER BY created_at DESC LIMIT 50", values).fetchall()
             return [self._projection(self._read(row), db) for row in rows]
 
-    def start(self, project_id, revision, requirement_id, question, *, test_comparison_id=None, test_row_number=None):
+    def start(self, project_id, revision, requirement_id, question, *, test_comparison_id=None, test_row_number=None, scope="requirement"):
+        if scope not in ("requirement", "project"):
+            raise WorkspaceError("Choose project or requirement scope.")
+        if scope == "project":
+            if requirement_id is not None or test_comparison_id is not None or test_row_number is not None:
+                raise WorkspaceError("Project investigations cannot select one requirement or test row.")
+            requirement_id = "__project__"
         if not isinstance(requirement_id, str) or not requirement_id:
             raise WorkspaceError("Select a requirement for the investigation.")
         if not isinstance(question, str) or not 1 <= len(question.strip()) <= 2000:
@@ -402,9 +420,13 @@ class WorkspaceAI:
             view = self.store._view(connection, project_id, revision)
             if not view["run"]:
                 raise ConflictError("Run checks for the selected saved revision before starting an investigation.")
-            if not any(item["id"] == requirement_id for item in view["project"]["requirements"]):
+            if scope != "project" and not any(item["id"] == requirement_id for item in view["project"]["requirements"]):
                 raise WorkspaceError("The requirement is not in the selected saved revision.")
-            view["project_sources"] = capture_in_snapshot(connection, self.store, view, requirement_id)
+            if scope == "project":
+                view["whole_project_sources"] = {item["id"]: capture_in_snapshot(connection, self.store, view, item["id"])
+                    for item in view["project"]["requirements"]}
+            else:
+                view["project_sources"] = capture_in_snapshot(connection, self.store, view, requirement_id)
         if (test_comparison_id is None) != (test_row_number is None):
             raise WorkspaceError("Select both a saved test comparison and its row number.")
         if test_comparison_id is not None:
@@ -415,7 +437,11 @@ class WorkspaceAI:
             view["test_evidence"] = TestEvidence(self.store, WorkspaceTestData(self.store)).investigation_context(
                 project_id, revision, requirement_id, test_comparison_id, test_row_number)
         from .project_investigation import validate_investigation_view
-        validate_investigation_view(view, requirement_id)
+        if scope == "project":
+            from .whole_project_investigation import capture_context
+            capture_context(view)  # Size/integrity preflight before saving a job or reserving.
+        else:
+            validate_investigation_view(view, requirement_id)
         config = self._config()
         if self._budget(config)["remaining_usd"] <= 0:
             raise ConflictError("The approved cumulative allowance is exhausted. No request was sent.")
@@ -426,7 +452,7 @@ class WorkspaceAI:
                 raise ConflictError("Connect Nebius privately before starting an investigation. No request was sent.")
             if self._key in question:
                 raise WorkspaceError("Remove private credential material from the question before saving or sending it.")
-            if contains_private_text(view["project_sources"], self._key):
+            if contains_private_text(view, self._key):
                 raise WorkspaceError("Remove private credential material from linked references before starting an investigation.")
             if self._sources() != self._runtime:
                 raise ConflictError("Application sources changed. Restart 6D before an investigation.")
@@ -434,7 +460,7 @@ class WorkspaceAI:
             record = {"schema": "sixd.project-investigation.v1", "investigation_id": identity,
                       "project_id": project_id, "revision": revision,
                       "review_digest": view["run"]["review"]["digest"],
-                      "requirement_id": requirement_id, "question": question.strip(),
+                      "requirement_id": requirement_id, "scope": scope, "question": question.strip(),
                       "state": "queued", "model": config.model, "provider_mode": self._provider_mode,
                       "started_at": _now(), "completed_at": None, "events": [], "evidence": {},
                       "summary": "", "citations": [], "live_model_calls": 0, "request_attempts": 0,
@@ -483,6 +509,9 @@ class WorkspaceAI:
         try:
             self._save_owned(record)
             provider = self._factory(config, budget, key)
+            if queued.get("scope") == "project" and isinstance(provider, TokenFactoryProvider):
+                from .whole_project_investigation import WholeProjectActionAdapter
+                provider._action_adapter = WholeProjectActionAdapter()
             # Offline injected providers cannot be described as live progress.
             record["provider_mode"] = provider.mode
             self._save_owned(record)
@@ -499,10 +528,19 @@ class WorkspaceAI:
                 record["events"].append(update)
                 record["request_attempts"] = getattr(provider, "request_attempts", 0)
                 self._save_owned(record)
-            result = investigate_project(view, record["requirement_id"], record["question"], provider,
-                                         investigation_id=record["investigation_id"], on_event=event)
+            if record.get("scope") == "project":
+                from .whole_project_investigation import investigate_whole_project
+                result = investigate_whole_project(view, record["question"], provider,
+                    investigation_id=record["investigation_id"], on_event=event)
+            else:
+                result = investigate_project(view, record["requirement_id"], record["question"], provider,
+                    investigation_id=record["investigation_id"], on_event=event)
             record = {**result, "agent_sources": self._runtime, "reserved_usd": budget.reserved,
                       "request_reservations": budget.count, "provider_settings": queued["provider_settings"]}
+            if record.get("scope") == "project":
+                usage = record.get("usage", {})
+                record["usage_estimate_usd"] = ((usage.get("prompt_tokens", 0) * config.input_usd_per_million_ceiling + usage.get("completion_tokens", 0) * config.output_usd_per_million_ceiling) / 1_000_000 if record.get("usage_complete") else None)
+                record["usage_estimate_basis"] = "Provider-reported tokens times configured price ceilings; not billed usage."
             self._check_session(record["investigation_id"], epoch)
         except Exception as error:
             # Suppress all raw factory/session exception text, including typed
