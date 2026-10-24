@@ -8,9 +8,12 @@ import time
 from . import lifecycle
 from .project_investigation import (_lock_view, _runtime_matches, _parse, _selection,
                                     _fail, _failure, SUMMARY_MAX_CHARACTERS)
-from .explanation_quality import build_guidance
+from .explanation_quality import (build_guidance, _affirmative, _readiness_claim_text,
+                                  _status_claims, _named_status_subject,
+                                  _BLANKET_STATUS_SUBJECT)
 from .evidence_roles import qualitative_projection
-from .change_evidence import build_change_context, provider_change_context
+from .change_evidence import (build_change_context, provider_change_context,
+                             has_directional_commentary)
 from .project_investigation import _scoped_changes
 from .source_context import validate_context, contains_private_text
 from .providers import ProviderError, safe_response_diagnostic
@@ -199,18 +202,41 @@ def _wire_projection(payload):
     projected['full_evidence_notice']='Compact qualitative view. All requirement statuses and model scopes are retained. Exact numeric comparisons, source pointers and full guidance remain in the cited frozen local bundle.'
     return qualitative_projection(projected)
 
-def _quality(summary, findings):
+def _quality(summary, findings, requirements=()):
+    """Limited phrase guards; accepted prose is not a semantic guarantee.
+
+    Named statuses bind only to their own captured requirement. A whole review
+    with mixed findings cannot give an unqualified 'the requirement' a unique
+    referent, so only explicit names and blanket claims are compared here.
+    """
     summary = re.sub('[\u2010-\u2015\u2212]', '-', summary)
+    text = summary.casefold()
     flags = []
     if re.search(r'\d|\[\[|[<>=%]', summary):
         flags.append('numerical_prose')
-    if re.search(r'\b(?:increas\w*|decreas\w*|higher(?![-\s]+fidelity)|lower(?![-\s]+fidelity)|unchanged|identical|caus\w*|because|due to|resulted in|led to)\b', summary, re.I):
+    if (has_directional_commentary(summary)
+            or _affirmative(r'\b(?:caus\w*|because|due to|resulted in|led to)\b', text)):
         flags.append('direction_or_causality_prose')
-    if re.search(r'\b(?:ready|safe|cleared|approved)\s+(?:for|to)\s+launch|launch\s+(?:is\s+)?authorized|guarantee\w*|mission\s+(?:will|shall)\s+succeed', summary, re.I):
+    if _affirmative(r'\b(?:ready|safe|cleared|approved)\s+(?:for|to)\s+launch|launch\s+(?:is\s+)?authorized|guarantee\w*|mission\s+(?:will|shall)\s+succeed', _readiness_claim_text(text)):
         flags.append('readiness_or_guarantee')
-    if any(f['status'] != 'met' for f in findings.values()) and re.search(r'\b(?:all|every|everything)\s+(?:(?:requirements|checks|criteria|systems)\s+)?(?:(?:are|is|have|has|were)\s+)?(?:passed|passes|met|satisfied|good)\b', summary, re.I):
+    blanket = _status_claims(summary, _BLANKET_STATUS_SUBJECT)
+    if any(claim != finding['status'] for claim in blanket for finding in findings.values()):
         flags.append('blanket_status_contradiction')
-    if re.search(r'\b(?:rocket|vehicle|mission|design)\s+(?:(?:has|is|will)\s+)?(?:failed|fails|impossible|safe)\b', summary, re.I):
+    # Keep the legacy explicit blanket reassurance vocabulary in addition to
+    # the canonical status words used by the shared polarity check.
+    elif (any(f['status'] != 'met' for f in findings.values())
+            and _affirmative(r'\b(?:all|every|everything)\s+(?:(?:requirements|checks|criteria|systems)\s+)?(?:(?:are|is|have|has|were)\s+)?good\b', text)):
+        flags.append('blanket_status_contradiction')
+    aliases = {identity: [identity] for identity in findings}
+    for requirement in requirements:
+        if requirement.get('id') in aliases:
+            aliases[requirement['id']].append(requirement.get('title'))
+    for identity, finding in findings.items():
+        subject = _named_status_subject(aliases[identity])
+        if subject and any(claim != finding['status'] for claim in _status_claims(summary, subject)):
+            flags.append('canonical_status_contradiction')
+            break
+    if _affirmative(r'\b(?:rocket|vehicle|mission|design)\s+(?:(?:has|is|will)\s+)?(?:failed|fails|impossible|safe)\b', text):
         flags.append('unsupported_physical_conclusion')
     if not re.search(r'\b(?:review\w*|inspect\w*|obtain\w*|verify|verifying|rerun|confirm\w*|check\w*|document\w*)\b', summary, re.I):
         flags.append('next_check_missing')
@@ -273,7 +299,7 @@ def investigate_whole_project(view, question, provider, *, investigation_id, on_
                 if not isinstance(args, dict) or set(args) != {'summary', 'evidence_ids'}: _fail()
                 _, citations, summary = _selection({'action': action, **args}, names, sorted(record['evidence']))
                 if contains_private_text(summary, secret): _fail()
-                quality = _quality(summary, record['canonical_findings']); record['explanation_acceptance'] = quality
+                quality = _quality(summary, record['canonical_findings'], bundles['project']['requirements']); record['explanation_acceptance'] = quality
                 if not quality['accepted']:
                     record['rejected_interpretation'] = {'summary': summary, 'reason_codes': quality['blocked_codes']}
                     raise ProviderError('Rejected interpretation.', code='explanation_rejected')

@@ -83,14 +83,9 @@ def evaluate_roles(record):
         flags.append({"code": "fact_catalog_mismatch", "severity": "error",
                       "message": "Application-owned numerical roles do not match the exact captured sources and scope."})
     summary = record.get("summary", "")
-    if record.get("canonical_finding", {}).get("status") == "met":
-        from .explanation_quality import _affirmative
-        negative = (r"\b(?:(?:the|this)\s+(?:(?:canonical(?:\s+design)?|calculated|design)\s+)?|"
-                    r"(?:canonical(?:\s+design)?|calculated|design)\s+)(?:criterion|requirement)\s+"
-                    r"(?:(?:is|was)\s+)?(?:not[_\s]+met|unmet|violat\w*|fails?)\b")
-        if _affirmative(negative, summary.casefold()):
-            flags.append({"code": "canonical_status_contradiction", "severity": "error",
-                          "message": "The qualitative commentary contradicts the captured met criterion."})
+    # Status polarity is checked centrally in evaluate_explanation for both
+    # current and legacy records, after exact captured quotations and scoped
+    # physical-test claims are handled. Keep numerical ownership checks here.
     if re.search(r"\[\[(?:fact|role):", summary):
         flags.append({"code": "unknown_fact_reference", "severity": "error",
                       "message": "Inline numerical references are not part of this qualitative contract. The app displays their source-bound roles separately."})

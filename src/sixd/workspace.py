@@ -5,6 +5,7 @@ records, never model results or executable code. Reuse is allowed only for an
 identical model, its complete input records, adapter version and verifier source
 hashes. Requirement limits are always evaluated against the selected revision.
 """
+from collections import OrderedDict
 from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, timezone
@@ -13,6 +14,7 @@ import json
 import math
 from pathlib import Path
 import sqlite3
+from threading import RLock
 from uuid import uuid4
 
 from . import lifecycle
@@ -197,13 +199,66 @@ def _graph(project):
     return result
 
 
+class _SerializedCache:
+    """Bounded, thread-safe LRU of strings; callers cannot mutate cache values."""
+
+    def __init__(self, entries, byte_limit):
+        self.entries, self.byte_limit = entries, byte_limit
+        self.values = OrderedDict()
+        self.size = 0
+        self.lock = RLock()
+
+    def get(self, key):
+        with self.lock:
+            item = self.values.get(key)
+            if item is None:
+                return None
+            self.values.move_to_end(key)
+            return item[0]
+
+    def put(self, key, value):
+        size = len(value.encode("utf-8"))
+        with self.lock:
+            previous = self.values.pop(key, None)
+            if previous:
+                self.size -= previous[1]
+            if size > self.byte_limit:
+                return
+            self.values[key] = (value, size)
+            self.size += size
+            while len(self.values) > self.entries or self.size > self.byte_limit:
+                _, removed = self.values.popitem(last=False)
+                self.size -= removed[1]
+
+
+def _verification_fingerprint(sources):
+    return _digest({"sources": sources, "versions": MODEL_VERSIONS})
+
+
+def _run_key(row, payload_digest, fingerprint):
+    # The actual stored bytes are hashed independently of the mutable digest
+    # column. Include every row identity field, including its sequence.
+    return (row["sequence"], row["run_id"], row["project_id"], row["revision"],
+            row["created_at"], row["digest"], payload_digest, fingerprint)
+
+
 class WorkspaceStore:
     """Open a local database; each public operation uses its own connection."""
 
     def __init__(self, db_path):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._verified_receipts = _SerializedCache(8, 16 * 1024 * 1024)
+        self._run_summaries = _SerializedCache(1024, 2 * 1024 * 1024)
+        self._comparisons = _SerializedCache(64, 1024 * 1024)
         with self._connect() as connection:
+            try:
+                connection.execute("SELECT json_remove('{}','$.x'), json_group_array(key) FROM json_each('{}')").fetchone()
+                self._has_json_projection = True
+            except sqlite3.OperationalError:
+                # Some supported Python builds link SQLite without JSON1.
+                # Those runtimes retain the slower complete verification path.
+                self._has_json_projection = False
             connection.executescript("""
                 CREATE TABLE IF NOT EXISTS projects (
                     project_id TEXT PRIMARY KEY, created_at TEXT NOT NULL
@@ -227,6 +282,8 @@ class WorkspaceStore:
     def _connect(self, *, write=False):
         connection = sqlite3.connect(str(self.db_path), timeout=10)
         connection.row_factory = sqlite3.Row
+        connection.create_function("sixd_sha256", 1,
+            lambda value: sha256(value.encode("utf-8")).hexdigest(), deterministic=True)
         connection.execute("PRAGMA foreign_keys = ON")
         try:
             if write:
@@ -257,45 +314,135 @@ class WorkspaceStore:
         except (ValueError, TypeError, KeyError) as exc:
             raise WorkspaceError("Stored project revision is inconsistent: " + str(exc)) from exc
 
-    def _receipt(self, row):
+    @staticmethod
+    def _receipt_scope(receipt, row, model_ids=None, result_ids=None):
+        if (receipt["run_id"] != row["run_id"] or receipt["revision"] != row["revision"]
+                or receipt["project_id"] != row["project_id"]
+                or receipt["review"]["revision"] != str(row["revision"])
+                or receipt["review"]["project_id"] != row["project_id"]):
+            raise ValueError("Stored run identity does not match its review.")
+        model_ids = set(receipt["review"]["evidence"]) if model_ids is None else set(model_ids)
+        result_ids = set(receipt["model_results"]) if result_ids is None else set(result_ids)
+        executed, reused = receipt["executed_model_ids"], receipt["reused_model_ids"]
+        if (result_ids != model_ids or set(receipt["model_origins"]) != model_ids
+                or len(executed) != len(set(executed)) or len(reused) != len(set(reused))
+                or set(executed) & set(reused) or set(executed) | set(reused) != model_ids):
+            raise ValueError("Stored execution scope does not match its models.")
+        for model_id, origin in receipt["model_origins"].items():
+            if (origin["disposition"] != ("executed" if model_id in executed else "reused")
+                    or not isinstance(origin["run_id"], str) or not origin["run_id"]
+                    or _revision(origin["revision"]) > receipt["revision"]
+                    or (model_id in executed and (origin["run_id"] != receipt["run_id"]
+                                                 or origin["revision"] != receipt["revision"]))):
+                raise ValueError("Stored model execution origin is inconsistent.")
+
+    def _receipt(self, row, *, fingerprint=None):
+        fingerprint = fingerprint or _verification_fingerprint(_sources())
+        serialized = row["receipt"]
+        payload_digest = sha256(serialized.encode("utf-8")).hexdigest()
+        key = _run_key(row, payload_digest, fingerprint)
+        cached = self._verified_receipts.get(key)
+        if cached is not None:
+            return json.loads(cached)
         try:
-            receipt = json.loads(row["receipt"])
+            receipt = json.loads(serialized)
             if _digest(receipt) != row["digest"]:
                 raise ValueError("Stored run digest does not match.")
             lifecycle.verify_review(receipt["review"])
-            if (receipt["run_id"] != row["run_id"] or receipt["revision"] != row["revision"]
-                    or receipt["project_id"] != row["project_id"]
-                    or receipt["review"]["revision"] != str(row["revision"])
-                    or receipt["review"]["project_id"] != row["project_id"]):
-                raise ValueError("Stored run identity does not match its review.")
-            model_ids = set(receipt["review"]["evidence"])
-            executed = receipt["executed_model_ids"]
-            reused = receipt["reused_model_ids"]
-            if (set(receipt["model_results"]) != model_ids or set(receipt["model_origins"]) != model_ids
-                    or len(executed) != len(set(executed)) or len(reused) != len(set(reused))
-                    or set(executed) & set(reused) or set(executed) | set(reused) != model_ids):
-                raise ValueError("Stored execution scope does not match its models.")
+            self._receipt_scope(receipt, row)
             for model_id, result in receipt["model_results"].items():
                 evidence = receipt["review"]["evidence"][model_id]
                 expected_result = {key: value for key, value in evidence.items()
                                    if key not in {"model_definition", "input_records", "verification_sources", "fingerprint"}}
                 if expected_result != result:
                     raise ValueError("Stored model results disagree with review evidence.")
-                origin = receipt["model_origins"][model_id]
-                if (origin["disposition"] != ("executed" if model_id in executed else "reused")
-                        or not isinstance(origin["run_id"], str) or not origin["run_id"]
-                        or _revision(origin["revision"]) > receipt["revision"]
-                        or (model_id in executed and (origin["run_id"] != receipt["run_id"]
-                                                     or origin["revision"] != receipt["revision"]))):
-                    raise ValueError("Stored model execution origin is inconsistent.")
+            self._verified_receipts.put(key, serialized)
             return receipt
         except (ValueError, TypeError, KeyError) as exc:
             raise WorkspaceError("Stored execution receipt is inconsistent: " + str(exc)) from exc
 
+    def _run_metadata(self, connection, project_id, revision, snapshots, fingerprint):
+        """Check history bytes and compact scope without decoding old trajectories.
+
+        All receipt bytes/digests, row identities, source/version metadata,
+        execution origins and revision snapshots remain checked. Numerical
+        receipt verification is lazy: it runs when a receipt is displayed or
+        used for reuse, rather than asserting every old trajectory on each GET.
+        """
+        try:
+            rows = connection.execute("""
+                SELECT sequence,run_id,project_id,revision,created_at,digest,
+                       sixd_sha256(receipt) AS payload_digest
+                FROM runs WHERE project_id=? AND revision<=?
+                ORDER BY revision DESC,sequence DESC
+            """, (project_id, revision)).fetchall()
+        except sqlite3.Error as exc:
+            raise WorkspaceError("Stored execution receipt metadata is inconsistent: " + str(exc)) from exc
+        result = []
+        for row in rows:
+            key = _run_key(row, row["payload_digest"], fingerprint)
+            encoded = self._run_summaries.get(key)
+            if encoded is None:
+                try:
+                    # Generated receipts are canonical JSON: their byte hash is
+                    # their outer digest. Preserve support for valid historical
+                    # JSON with other whitespace by fully checking that row.
+                    if not self._has_json_projection or row["payload_digest"] != row["digest"]:
+                        full = connection.execute("SELECT * FROM runs WHERE sequence=?", (row["sequence"],)).fetchone()
+                        receipt = self._receipt(full, fingerprint=fingerprint)
+                        model_ids, result_ids = list(receipt["review"]["evidence"]), list(receipt["model_results"])
+                        receipt.pop("model_results")
+                        receipt["review"].pop("evidence")
+                        receipt["review"].pop("findings")
+                    else:
+                        projected = connection.execute("""
+                            SELECT json_remove(receipt,'$.model_results','$.review.evidence','$.review.findings') AS metadata,
+                                (SELECT json_group_array(key) FROM json_each(receipt,'$.review.evidence')) AS model_ids,
+                                (SELECT json_group_array(key) FROM json_each(receipt,'$.model_results')) AS result_ids,
+                                sixd_sha256(json_remove(json_extract(receipt,'$.review'),'$.digest')) AS review_payload_digest
+                            FROM runs WHERE sequence=?
+                        """, (row["sequence"],)).fetchone()
+                        receipt = json.loads(projected["metadata"])
+                        model_ids, result_ids = json.loads(projected["model_ids"]), json.loads(projected["result_ids"])
+                        if projected["review_payload_digest"] != receipt["review"]["digest"]:
+                            # SQLite normally preserves generated canonical JSON
+                            # tokens. If it serializes a historical token another
+                            # way, canonical Python verification remains decisive.
+                            full = connection.execute("SELECT * FROM runs WHERE sequence=?", (row["sequence"],)).fetchone()
+                            self._receipt(full, fingerprint=fingerprint)
+                    if receipt["review"]["schema"] != lifecycle.REVIEW_SCHEMA:
+                        raise ValueError("Unsupported review schema.")
+                    self._receipt_scope(receipt, row, model_ids, result_ids)
+                    lifecycle._validate_sources(receipt["review"]["verification_sources"])
+                    lifecycle._versions(receipt["review"]["adapter_versions"])
+                    if set(model_ids) != {item["id"] for item in receipt["review"]["project"]["models"]}:
+                        raise ValueError("Stored execution scope does not match its project.")
+                    encoded = _encode(receipt)
+                    self._run_summaries.put(key, encoded)
+                except (ValueError, TypeError, KeyError, sqlite3.Error) as exc:
+                    raise WorkspaceError("Stored execution receipt metadata is inconsistent: " + str(exc)) from exc
+            receipt = json.loads(encoded)
+            if receipt["review"]["project"] != snapshots.get(row["revision"]):
+                raise WorkspaceError("Stored execution receipt disagrees with its project revision.")
+            result.append({"row": row, "key": key, "revision": row["revision"],
+                           "sources": receipt["review"]["verification_sources"],
+                           "versions": receipt["review"]["adapter_versions"]})
+        return result
+
+    def _selected_receipt(self, connection, metadata, snapshots, fingerprint):
+        if metadata is None:
+            return None
+        row = connection.execute("SELECT * FROM runs WHERE sequence=?", (metadata["row"]["sequence"],)).fetchone()
+        receipt = self._receipt(row, fingerprint=fingerprint)
+        if receipt["review"]["project"] != snapshots.get(receipt["revision"]):
+            raise WorkspaceError("Stored execution receipt disagrees with its project revision.")
+        return receipt
+
     def _runs(self, connection, project_id, revision):
         rows = connection.execute("SELECT * FROM runs WHERE project_id=? AND revision<=? ORDER BY revision DESC, sequence DESC",
                                   (project_id, revision)).fetchall()
-        receipts = [self._receipt(row) for row in rows]
+        fingerprint = _verification_fingerprint(_sources())
+        receipts = [self._receipt(row, fingerprint=fingerprint) for row in rows]
         snapshots = {}
         for receipt in receipts:
             number = receipt["revision"]
@@ -325,32 +472,42 @@ class WorkspaceStore:
                 "changed_adapter_types": changed}
 
     def _view(self, connection, project_id, revision=None):
+        # Metadata keys and selected receipt fetches must describe one SQLite
+        # snapshot, including when another process edits application storage.
+        # A write caller already owns BEGIN IMMEDIATE; preserve that transaction.
+        if not connection.in_transaction:
+            connection.execute("BEGIN")
         rows = self._rows(connection, project_id)
         latest = rows[-1]["revision"]
         selected = latest if revision is None else _revision(revision)
         row = next((item for item in rows if item["revision"] == selected), None)
         if row is None:
             raise WorkspaceError("Project revision not found.")
-        project = self._project(row)
-        all_receipts = self._runs(connection, project_id, latest)
-        receipts = [item for item in all_receipts if item["revision"] <= selected]
-        current = next((item for item in receipts if item["revision"] == selected and self._fresh(item)), None)
-        # A repeated run of the same revision must not erase its comparison
-        # against the preceding reviewed design. Reuse itself can still choose
-        # the newest receipt, independently, in run().
-        previous = (next((item for item in receipts if item["revision"] < selected), None)
-                    if current else next(iter(receipts), None))
-        if current and previous is None:
-            previous = next((item for item in receipts if item is not current and not self._fresh(item)), None)
+        snapshots = {item["revision"]: self._project(item) for item in rows}
+        project = snapshots[selected]
+        sources = _sources()
+        fingerprint = _verification_fingerprint(sources)
+        all_metadata = self._run_metadata(connection, project_id, latest, snapshots, fingerprint)
+        metadata = [item for item in all_metadata if item["revision"] <= selected]
+        def fresh(item):
+            return item["sources"] == sources and item["versions"] == MODEL_VERSIONS
+        current_meta = next((item for item in metadata if item["revision"] == selected and fresh(item)), None)
+        # Repeated checks compare against the preceding reviewed design; reuse
+        # independently selects the newest receipt in run().
+        previous_meta = (next((item for item in metadata if item["revision"] < selected), None)
+                         if current_meta else next(iter(metadata), None))
+        if current_meta and previous_meta is None:
+            previous_meta = next((item for item in metadata if item is not current_meta and not fresh(item)), None)
+        current = self._selected_receipt(connection, current_meta, snapshots, fingerprint)
+        previous = self._selected_receipt(connection, previous_meta, snapshots, fingerprint)
         reference = current or previous
-        prior = deepcopy(previous)
+        prior = previous
         if prior:
-            prior["stale"] = prior["revision"] != selected or not self._fresh(prior)
+            prior["stale"] = prior["revision"] != selected or not fresh(previous_meta)
             prior["stale_reasons"] = ([] if prior["revision"] == selected else ["Different project revision."])
-            if not self._fresh(prior):
+            if not fresh(previous_meta):
                 prior["stale_reasons"].append("Verification sources or adapter versions changed.")
         if current:
-            current = deepcopy(current)
             current.update(stale=False, stale_reasons=[])
         configuration_base = None
         before = project
@@ -359,19 +516,24 @@ class WorkspaceStore:
         else:
             earlier = next((item for item in reversed(rows) if item["revision"] < selected), None)
             if earlier is not None:
-                before = self._project(earlier)
+                before = snapshots[earlier["revision"]]
                 configuration_base = {"revision": earlier["revision"], "project": before}
         impact = _impact(before, project,
                          **self._applicability_changes(reference))
         if not reference:
             impact["affected_model_ids"] = [item["id"] for item in project["models"]]
             impact["affected_requirement_ids"] = [item["id"] for item in project["requirements"]]
-        revision_views = []
-        for item in rows:
-            candidate_runs = [run for run in all_receipts if run["revision"] == item["revision"]]
-            revision_views.append({"revision": item["revision"], "created_at": item["created_at"],
-                                   "has_current_run": any(self._fresh(run) for run in candidate_runs)})
-        comparison = lifecycle.compare_reviews(prior["review"], current["review"]) if prior and current else None
+        fresh_revisions = {item["revision"] for item in all_metadata if fresh(item)}
+        revision_views = [{"revision": item["revision"], "created_at": item["created_at"],
+                           "has_current_run": item["revision"] in fresh_revisions} for item in rows]
+        comparison = None
+        if prior and current:
+            comparison_key = (previous_meta["key"], current_meta["key"])
+            encoded = self._comparisons.get(comparison_key)
+            if encoded is None:
+                encoded = _encode(lifecycle.compare_reviews(prior["review"], current["review"]))
+                self._comparisons.put(comparison_key, encoded)
+            comparison = json.loads(encoded)
         view = {"schema": "sixd.workspace.v1", "project_id": project_id,
                 "revision": selected, "latest_revision": latest, "project": project,
                 "revisions": revision_views, "run": current, "prior_run": prior,
@@ -473,7 +635,10 @@ class WorkspaceStore:
             project = self._project(row)
             if not project["models"] or not project["requirements"]:
                 raise WorkspaceError("Add at least one model and one requirement before running checks.")
-            prior = next(iter(self._runs(connection, project_id, revision)), None)
+            snapshots = {item["revision"]: self._project(item) for item in rows if item["revision"] <= revision}
+            fingerprint = _verification_fingerprint(sources)
+            metadata = self._run_metadata(connection, project_id, revision, snapshots, fingerprint)
+            prior = self._selected_receipt(connection, next(iter(metadata), None), snapshots, fingerprint)
             prior_models = {item["id"]: item for item in prior["review"]["project"]["models"]} if prior else {}
             results, reused, executed, origins = {}, [], [], {}
             run_id = uuid4().hex

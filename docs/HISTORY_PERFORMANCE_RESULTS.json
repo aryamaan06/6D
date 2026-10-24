@@ -1,0 +1,3823 @@
+{
+  "schema": "sixd.workspace-history-performance.v1",
+  "settings": {
+    "counts": [
+      2,
+      7,
+      13
+    ],
+    "steps": 512,
+    "warm_reads": 2,
+    "cold_reads": 2,
+    "history": "One growing isolated SQLite history; one run per revision; independent heat input = 500 + 10*(revision-1) after revision 1",
+    "baseline_commit": "c76d0b6b109a2567201573b21bea4cf2be9922fa"
+  },
+  "reproduction": [
+    "tools/run_python.cmd tools/benchmark_workspace_history.py --phase before",
+    "tools/run_python.cmd tools/benchmark_workspace_history.py --phase after",
+    "Or run both consecutively: tools/run_python.cmd tools/benchmark_workspace_history.py"
+  ],
+  "method": {
+    "timed_scope": "Public store method only; new-store mode includes constructor; excludes JSON serialization, digest collection and explicit post-checkpoint verification",
+    "warm_read": "Same WorkspaceStore instance already used to build this history",
+    "new_store_read": "New WorkspaceStore instance for every read in same child process; OS/filesystem caches not flushed",
+    "save_run_summary": "Cumulative one sample per revision up to each checkpoint; latest_save/latest_run are also retained",
+    "identity_control": "Same fixed _now() and sequential UUID(int=n) in both subprocesses; no other workspace/model logic replaced",
+    "source_control": "Immutable git-archive baseline with matching kernels; current copied source with CRLF normalized to LF; active source never swapped",
+    "payload": "Complete public returned view as sorted compact ensure_ascii JSON UTF-8 bytes; transport/gzip costs excluded",
+    "verification_counts": "Instrument lifecycle.verify_review and WorkspaceStore._receipt equally in both source subprocesses",
+    "run_order": "Before phase precedes after; no process import crossover; same Python executable; no CPU affinity or load control"
+  },
+  "limitations": [
+    "Finite constructed local history and this machine only; elapsed timing is descriptive and has no pass threshold.",
+    "New-store reads are cold for application object caches only; they are not cold-process or cold-disk measurements.",
+    "Review verification checks internal evidence consistency; it does not recompute or prove orbital physics.",
+    "The retained orbital grid is fixed by settings.steps; no mission accuracy, hardware or production scale claim follows.",
+    "Database/payload size and serialization costs remain visible and can grow; paid model, network and multi-user server latency are excluded.",
+    "Fixed clock/UUID and instrumentation add the same small overhead to each phase; other offline tests may run on this shared machine, which is not dedicated idle hardware.",
+    "This fixed 512-step default is a bounded scaling probe; it does not reproduce another reviewer's unknown orbital resolution or wall-clock timings."
+  ],
+  "before": {
+    "label": "before",
+    "started_at": "2026-10-24T15:58:23.304093+00:00",
+    "completed_at": "2026-10-24T15:58:52.335006+00:00",
+    "fixture_sha256": "ac70646d58d6ea2bc92ec8337def5718c68c5cad94fdcd6e89bc11acaebbb2ac",
+    "verification_sources": {
+      "__init__.py": "78d6082497bab8046047377617289599eeebbf30b039bb1dc691fa7c2233249f",
+      "attitude.py": "f8b2a5c469621816efdc4a3075d85e336669734aec355a3f21bd4c3785449250",
+      "chains.py": "6ea5ec7dfc342de44a13ea862ecabc56e92cdb2fc143dc4c6ead663bb4bea873",
+      "engineering.py": "9f06f57ab3157cd133ef5dcef23062baab3694c3d3c98ca2df8e95793ac12422",
+      "guided_ascent.py": "f55844015128752a44d87507ebe1a399159dcc554d181c7098c189619091b38a",
+      "lifecycle.py": "4157dae5df580a9ebe6a8f8aa0e65d2aebbb5cce31bb9011c743866c6751afc2",
+      "orbital_adapter.py": "faddd9da33889a428d032edf76f7dedbd8be4a7fee166536fa65525fc50e28e8",
+      "powered_flight.py": "4949e7b5c3d4846bf6b4b08dee4790a3e50b8e75b5724b23321d632fe2aadc1e",
+      "simulation.py": "cf3bb5149edc5aa1e91911312f8685d1d4b1b7d301a79648efbcb7fc93311b60",
+      "staged_ascent.py": "fd68a79c7a508c1a1c309e58940a9782837f565a1605cecc8184ca1cae2a6240"
+    },
+    "executed_source_manifest_digest": "945f23ba09c733c778677efb26bd81a3d52024bce2ffe9ff8a0de94fb7141d4f",
+    "sources_unchanged_during_measurement": true,
+    "create": {
+      "operation": "create",
+      "revision": 1,
+      "seconds": 0.02191070000117179,
+      "verify_review_calls": 0,
+      "receipt_decode_calls": 0,
+      "compact_json_payload_bytes": 7707,
+      "canonical_view_sha256": "73b894d2a774d426ad1cb07a24cd07c7a451e8050f6f20a46139570665b2d6a9",
+      "review_digest": null,
+      "evidence_fingerprints": {},
+      "executed_model_ids": [],
+      "reused_model_ids": []
+    },
+    "checkpoints": [
+      {
+        "revision_count": 2,
+        "run_count": 2,
+        "warm_get": {
+          "samples": [
+            {
+              "operation": "warm_get",
+              "revision": 2,
+              "seconds": 0.2734878999981447,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "warm_get",
+              "revision": 2,
+              "seconds": 0.26346080000075744,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.2684743499994511,
+          "minimum_seconds": 0.26346080000075744,
+          "maximum_seconds": 0.2734878999981447,
+          "total_seconds": 0.5369486999989022,
+          "verify_review_calls": 8,
+          "receipt_decode_calls": 4
+        },
+        "new_store_get": {
+          "samples": [
+            {
+              "operation": "new_store_get",
+              "revision": 2,
+              "seconds": 0.25834710000344785,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "new_store_get",
+              "revision": 2,
+              "seconds": 0.25641219999670284,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.25737965000007534,
+          "minimum_seconds": 0.25641219999670284,
+          "maximum_seconds": 0.25834710000344785,
+          "total_seconds": 0.5147593000001507,
+          "verify_review_calls": 8,
+          "receipt_decode_calls": 4
+        },
+        "save": {
+          "samples": [
+            {
+              "operation": "save",
+              "revision": 2,
+              "seconds": 0.10280049999710172,
+              "verify_review_calls": 1,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332044,
+              "canonical_view_sha256": "167d2e39ad13e3595cb396e5be67742c681b01ae1aabff61bb6df532fb76dd6e",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 3,
+              "seconds": 0.17880500000319444,
+              "verify_review_calls": 2,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 332146,
+              "canonical_view_sha256": "bd0e2a2a54898be0b51e6ca65fb0de1800454f2c6e7bd15057bcc583fe111936",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 4,
+              "seconds": 0.22810470000695204,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 332235,
+              "canonical_view_sha256": "a8c2d0cb3d6c6147942cc3ad2316d740e12f87ede56cb78fd941e5a3b7d7b4b0",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 5,
+              "seconds": 0.39785249999840744,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 4,
+              "compact_json_payload_bytes": 332318,
+              "canonical_view_sha256": "7c6b2c33d60fbe585b31d18638286ce217b1305ab3d73b20037742a9cc2db11c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 6,
+              "seconds": 0.48051520000444725,
+              "verify_review_calls": 5,
+              "receipt_decode_calls": 5,
+              "compact_json_payload_bytes": 332404,
+              "canonical_view_sha256": "e322312ec4f96b0047612144e273a4d22c0ac9731dda781bb069fdfb00a8d0be",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 7,
+              "seconds": 0.3913883999994141,
+              "verify_review_calls": 6,
+              "receipt_decode_calls": 6,
+              "compact_json_payload_bytes": 332493,
+              "canonical_view_sha256": "1baf1f04d6221d4ef762330da07cb46b7338169da53359ed5fc577c37400873c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 8,
+              "seconds": 0.49225039999873843,
+              "verify_review_calls": 7,
+              "receipt_decode_calls": 7,
+              "compact_json_payload_bytes": 332576,
+              "canonical_view_sha256": "936c6b7e814203df5bdfeebc60d85d41422427b80a33f1cc7b430795032353d1",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 9,
+              "seconds": 0.4916215999983251,
+              "verify_review_calls": 8,
+              "receipt_decode_calls": 8,
+              "compact_json_payload_bytes": 332662,
+              "canonical_view_sha256": "b35806dae8ee6d10d57284ceb1179b7f85093c7fef4db48bf39ad01036b5aed9",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 10,
+              "seconds": 0.542253300001903,
+              "verify_review_calls": 9,
+              "receipt_decode_calls": 9,
+              "compact_json_payload_bytes": 332755,
+              "canonical_view_sha256": "c3311435304ab1fe86ea32fce7e5db05433478e4792a7b919a815b7bb5a64cbf",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 11,
+              "seconds": 0.6063943000044674,
+              "verify_review_calls": 10,
+              "receipt_decode_calls": 10,
+              "compact_json_payload_bytes": 332843,
+              "canonical_view_sha256": "dcc31487d60f808287c9891e0edd1058b0efa7bd2bab18874f509f1494ea9408",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 12,
+              "seconds": 0.6628734000041732,
+              "verify_review_calls": 11,
+              "receipt_decode_calls": 11,
+              "compact_json_payload_bytes": 332930,
+              "canonical_view_sha256": "574bb8570ade9e4b1d6e563763a44c81feb63d990117fc18d3b491fb451c01d4",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 13,
+              "seconds": 0.9509792000026209,
+              "verify_review_calls": 12,
+              "receipt_decode_calls": 12,
+              "compact_json_payload_bytes": 333020,
+              "canonical_view_sha256": "8f4626d6f824b487e3045f71813c16b2e65fd5d4259e2cb928cd62b8bdd4b4c2",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            }
+          ],
+          "sample_count": 1,
+          "median_seconds": 0.10280049999710172,
+          "minimum_seconds": 0.10280049999710172,
+          "maximum_seconds": 0.10280049999710172,
+          "total_seconds": 0.10280049999710172,
+          "verify_review_calls": 1,
+          "receipt_decode_calls": 1
+        },
+        "run": {
+          "samples": [
+            {
+              "operation": "run",
+              "revision": 1,
+              "seconds": 0.1947894000040833,
+              "verify_review_calls": 1,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 331893,
+              "canonical_view_sha256": "ef5ca29900ca765d55b936f4de94067379a4cb8ec31497544b4623e11c2dee7d",
+              "review_digest": "fe4a0326fc7233dcccc3b57d256f450a68a9b1d9d3bf94ba1581cfd699a2316c",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "eb77b142bf346bd84939741c2948bf9411de7c79b2f8a2f5eb0fd92a71814a1b"
+              },
+              "executed_model_ids": [
+                "orbit",
+                "thermal"
+              ],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "run",
+              "revision": 2,
+              "seconds": 0.4182122000056552,
+              "verify_review_calls": 5,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 3,
+              "seconds": 0.738538100005826,
+              "verify_review_calls": 7,
+              "receipt_decode_calls": 5,
+              "compact_json_payload_bytes": 657219,
+              "canonical_view_sha256": "6495bce52983bddd745adf798a252759b004955c62f79dedd73bdf2af28f2030",
+              "review_digest": "a98a2cd04899abb58a3f697104a79b8aaee936ef66e5f248a51c6590a95bcf4f",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "85e0cb0e2c6ead4fd14929015e3b81c914c91e2f8e58acb57f081c4807609401"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 4,
+              "seconds": 0.8246445999975549,
+              "verify_review_calls": 9,
+              "receipt_decode_calls": 7,
+              "compact_json_payload_bytes": 657305,
+              "canonical_view_sha256": "073c3b3d4d2c1db87988989a5deaa3d7dee54edf147caafd6f0c5fdb56049e52",
+              "review_digest": "c4e662f933cb0430e46407bc7c4c769acaffc653da97f36535fad1b6d6ae89b4",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "67166f8a6409f639fb7884a0921db403ba9dcfa728a4fd80ce89bad5471a0faa"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 5,
+              "seconds": 1.0930716000002576,
+              "verify_review_calls": 11,
+              "receipt_decode_calls": 9,
+              "compact_json_payload_bytes": 657388,
+              "canonical_view_sha256": "954d8f4876dfaedba53c9b5350c0fcd3823462abf677a05547794f049a440ab6",
+              "review_digest": "b4e60e88bf0202b841993eb6a79401c5458f9fb3c37f79ab962591414a1da005",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "26b82ebea433334e41dde3dc9e5b90a7336c1337811241c1168d124bbdf59f81"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 6,
+              "seconds": 1.128363799994986,
+              "verify_review_calls": 13,
+              "receipt_decode_calls": 11,
+              "compact_json_payload_bytes": 657477,
+              "canonical_view_sha256": "ffeba6ba966f61b026b528b29d74d5de2fe46eb81144be74c53ef269ea70a8aa",
+              "review_digest": "b19d0e5397ec330945fee4469be2ab1096a253ff22faf4b6cbbd022a10cdc73a",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "d1afee3414d583e6952cb79a3622887179971ba4e87a58a55f461f9694fbb3f6"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 7,
+              "seconds": 1.0745023999988916,
+              "verify_review_calls": 15,
+              "receipt_decode_calls": 13,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 8,
+              "seconds": 1.0387028999975882,
+              "verify_review_calls": 17,
+              "receipt_decode_calls": 15,
+              "compact_json_payload_bytes": 657646,
+              "canonical_view_sha256": "dc68d3588355042e15d007c6c4bd3c17bb3f89715a6857a008352091a5215bd2",
+              "review_digest": "4e1c46473301d53da02ec1760be8a83f7002181f8456f81d66e7b02c3bd7ab8d",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c2e2387a80a4534adbdb723bcb7d561444a1e39ed2328b22176da56af9b2615c"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 9,
+              "seconds": 1.157012499999837,
+              "verify_review_calls": 19,
+              "receipt_decode_calls": 17,
+              "compact_json_payload_bytes": 657735,
+              "canonical_view_sha256": "a858d7e249b3673a2ce0e3bd554b8232e5938c5bbfcff851a2ce0acd7909ffa3",
+              "review_digest": "d488199912cf79af905e1168b7e2c43f209d1e12cbe60e662083bc489e00eb44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "adc0911c9d8d58bc4bab7f5ce1d975b605b31e41b3bbfb69ba2c84b4edee6f3a"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 10,
+              "seconds": 1.266042600000219,
+              "verify_review_calls": 21,
+              "receipt_decode_calls": 19,
+              "compact_json_payload_bytes": 657830,
+              "canonical_view_sha256": "59e0479a6abe9653e02c033290f24cb956e8868fa22ebe82f95cc48fe4e0952c",
+              "review_digest": "5c6c7c860ef82f08fb372bfe29c5a694278c7d88393d915c77a1e4e516b3cf32",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "b6c2d92ac8ee9d4a89fe0bc2d0e9bccee636685b0c20608bf89d1efa310269b8"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 11,
+              "seconds": 1.3681992999991053,
+              "verify_review_calls": 23,
+              "receipt_decode_calls": 21,
+              "compact_json_payload_bytes": 657919,
+              "canonical_view_sha256": "f8ebdc34a9ebf95a58c7d3b1725c7eeb30bf1ad76e6c8eb353f4f77963e7e18e",
+              "review_digest": "4beed5c15445b9540f08cc7ced8e5f67ac5f79f69a82adebd072ef73f431fa44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c79418386e1a2d8ff07dfc0e3890eb08d495fde39dc1966e231a7f39ee6aced4"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 12,
+              "seconds": 1.5179103999980725,
+              "verify_review_calls": 25,
+              "receipt_decode_calls": 23,
+              "compact_json_payload_bytes": 658009,
+              "canonical_view_sha256": "aa1aa0ebe5e7b6d62f4b5e87e76ca2f8d3e8631eb02ae7def1db8a95b0229358",
+              "review_digest": "f64e0ca1428d90d8f5ea4bb8983a40961d40b6fe33ec560fb9ac44696e53c294",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "a119f38bc944763c5ef0fd2960db3376177f814afb6a92d34767a5dbe3437872"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 13,
+              "seconds": 1.7405480999950669,
+              "verify_review_calls": 27,
+              "receipt_decode_calls": 25,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.30650080000486923,
+          "minimum_seconds": 0.1947894000040833,
+          "maximum_seconds": 0.4182122000056552,
+          "total_seconds": 0.6130016000097385,
+          "verify_review_calls": 6,
+          "receipt_decode_calls": 4
+        },
+        "latest_save": {
+          "operation": "save",
+          "revision": 2,
+          "seconds": 0.10280049999710172,
+          "verify_review_calls": 1,
+          "receipt_decode_calls": 1,
+          "compact_json_payload_bytes": 332044,
+          "canonical_view_sha256": "167d2e39ad13e3595cb396e5be67742c681b01ae1aabff61bb6df532fb76dd6e",
+          "review_digest": null,
+          "evidence_fingerprints": {},
+          "executed_model_ids": [],
+          "reused_model_ids": []
+        },
+        "latest_run": {
+          "operation": "run",
+          "revision": 2,
+          "seconds": 0.4182122000056552,
+          "verify_review_calls": 5,
+          "receipt_decode_calls": 3,
+          "compact_json_payload_bytes": 657114,
+          "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+          "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+          "evidence_fingerprints": {
+            "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+            "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+          },
+          "executed_model_ids": [
+            "thermal"
+          ],
+          "reused_model_ids": [
+            "orbit"
+          ]
+        },
+        "all_stored_reviews_verified": true,
+        "database_file_bytes": 688128
+      },
+      {
+        "revision_count": 7,
+        "run_count": 7,
+        "warm_get": {
+          "samples": [
+            {
+              "operation": "warm_get",
+              "revision": 7,
+              "seconds": 0.8183687000055215,
+              "verify_review_calls": 9,
+              "receipt_decode_calls": 7,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "warm_get",
+              "revision": 7,
+              "seconds": 0.7975115000008373,
+              "verify_review_calls": 9,
+              "receipt_decode_calls": 7,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.8079401000031794,
+          "minimum_seconds": 0.7975115000008373,
+          "maximum_seconds": 0.8183687000055215,
+          "total_seconds": 1.6158802000063588,
+          "verify_review_calls": 18,
+          "receipt_decode_calls": 14
+        },
+        "new_store_get": {
+          "samples": [
+            {
+              "operation": "new_store_get",
+              "revision": 7,
+              "seconds": 0.5205186000021058,
+              "verify_review_calls": 9,
+              "receipt_decode_calls": 7,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "new_store_get",
+              "revision": 7,
+              "seconds": 0.4976831000021775,
+              "verify_review_calls": 9,
+              "receipt_decode_calls": 7,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.5091008500021417,
+          "minimum_seconds": 0.4976831000021775,
+          "maximum_seconds": 0.5205186000021058,
+          "total_seconds": 1.0182017000042833,
+          "verify_review_calls": 18,
+          "receipt_decode_calls": 14
+        },
+        "save": {
+          "samples": [
+            {
+              "operation": "save",
+              "revision": 2,
+              "seconds": 0.10280049999710172,
+              "verify_review_calls": 1,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332044,
+              "canonical_view_sha256": "167d2e39ad13e3595cb396e5be67742c681b01ae1aabff61bb6df532fb76dd6e",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 3,
+              "seconds": 0.17880500000319444,
+              "verify_review_calls": 2,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 332146,
+              "canonical_view_sha256": "bd0e2a2a54898be0b51e6ca65fb0de1800454f2c6e7bd15057bcc583fe111936",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 4,
+              "seconds": 0.22810470000695204,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 332235,
+              "canonical_view_sha256": "a8c2d0cb3d6c6147942cc3ad2316d740e12f87ede56cb78fd941e5a3b7d7b4b0",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 5,
+              "seconds": 0.39785249999840744,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 4,
+              "compact_json_payload_bytes": 332318,
+              "canonical_view_sha256": "7c6b2c33d60fbe585b31d18638286ce217b1305ab3d73b20037742a9cc2db11c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 6,
+              "seconds": 0.48051520000444725,
+              "verify_review_calls": 5,
+              "receipt_decode_calls": 5,
+              "compact_json_payload_bytes": 332404,
+              "canonical_view_sha256": "e322312ec4f96b0047612144e273a4d22c0ac9731dda781bb069fdfb00a8d0be",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 7,
+              "seconds": 0.3913883999994141,
+              "verify_review_calls": 6,
+              "receipt_decode_calls": 6,
+              "compact_json_payload_bytes": 332493,
+              "canonical_view_sha256": "1baf1f04d6221d4ef762330da07cb46b7338169da53359ed5fc577c37400873c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 8,
+              "seconds": 0.49225039999873843,
+              "verify_review_calls": 7,
+              "receipt_decode_calls": 7,
+              "compact_json_payload_bytes": 332576,
+              "canonical_view_sha256": "936c6b7e814203df5bdfeebc60d85d41422427b80a33f1cc7b430795032353d1",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 9,
+              "seconds": 0.4916215999983251,
+              "verify_review_calls": 8,
+              "receipt_decode_calls": 8,
+              "compact_json_payload_bytes": 332662,
+              "canonical_view_sha256": "b35806dae8ee6d10d57284ceb1179b7f85093c7fef4db48bf39ad01036b5aed9",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 10,
+              "seconds": 0.542253300001903,
+              "verify_review_calls": 9,
+              "receipt_decode_calls": 9,
+              "compact_json_payload_bytes": 332755,
+              "canonical_view_sha256": "c3311435304ab1fe86ea32fce7e5db05433478e4792a7b919a815b7bb5a64cbf",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 11,
+              "seconds": 0.6063943000044674,
+              "verify_review_calls": 10,
+              "receipt_decode_calls": 10,
+              "compact_json_payload_bytes": 332843,
+              "canonical_view_sha256": "dcc31487d60f808287c9891e0edd1058b0efa7bd2bab18874f509f1494ea9408",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 12,
+              "seconds": 0.6628734000041732,
+              "verify_review_calls": 11,
+              "receipt_decode_calls": 11,
+              "compact_json_payload_bytes": 332930,
+              "canonical_view_sha256": "574bb8570ade9e4b1d6e563763a44c81feb63d990117fc18d3b491fb451c01d4",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 13,
+              "seconds": 0.9509792000026209,
+              "verify_review_calls": 12,
+              "receipt_decode_calls": 12,
+              "compact_json_payload_bytes": 333020,
+              "canonical_view_sha256": "8f4626d6f824b487e3045f71813c16b2e65fd5d4259e2cb928cd62b8bdd4b4c2",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            }
+          ],
+          "sample_count": 6,
+          "median_seconds": 0.3097465500031831,
+          "minimum_seconds": 0.10280049999710172,
+          "maximum_seconds": 0.48051520000444725,
+          "total_seconds": 1.779466300009517,
+          "verify_review_calls": 21,
+          "receipt_decode_calls": 21
+        },
+        "run": {
+          "samples": [
+            {
+              "operation": "run",
+              "revision": 1,
+              "seconds": 0.1947894000040833,
+              "verify_review_calls": 1,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 331893,
+              "canonical_view_sha256": "ef5ca29900ca765d55b936f4de94067379a4cb8ec31497544b4623e11c2dee7d",
+              "review_digest": "fe4a0326fc7233dcccc3b57d256f450a68a9b1d9d3bf94ba1581cfd699a2316c",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "eb77b142bf346bd84939741c2948bf9411de7c79b2f8a2f5eb0fd92a71814a1b"
+              },
+              "executed_model_ids": [
+                "orbit",
+                "thermal"
+              ],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "run",
+              "revision": 2,
+              "seconds": 0.4182122000056552,
+              "verify_review_calls": 5,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 3,
+              "seconds": 0.738538100005826,
+              "verify_review_calls": 7,
+              "receipt_decode_calls": 5,
+              "compact_json_payload_bytes": 657219,
+              "canonical_view_sha256": "6495bce52983bddd745adf798a252759b004955c62f79dedd73bdf2af28f2030",
+              "review_digest": "a98a2cd04899abb58a3f697104a79b8aaee936ef66e5f248a51c6590a95bcf4f",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "85e0cb0e2c6ead4fd14929015e3b81c914c91e2f8e58acb57f081c4807609401"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 4,
+              "seconds": 0.8246445999975549,
+              "verify_review_calls": 9,
+              "receipt_decode_calls": 7,
+              "compact_json_payload_bytes": 657305,
+              "canonical_view_sha256": "073c3b3d4d2c1db87988989a5deaa3d7dee54edf147caafd6f0c5fdb56049e52",
+              "review_digest": "c4e662f933cb0430e46407bc7c4c769acaffc653da97f36535fad1b6d6ae89b4",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "67166f8a6409f639fb7884a0921db403ba9dcfa728a4fd80ce89bad5471a0faa"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 5,
+              "seconds": 1.0930716000002576,
+              "verify_review_calls": 11,
+              "receipt_decode_calls": 9,
+              "compact_json_payload_bytes": 657388,
+              "canonical_view_sha256": "954d8f4876dfaedba53c9b5350c0fcd3823462abf677a05547794f049a440ab6",
+              "review_digest": "b4e60e88bf0202b841993eb6a79401c5458f9fb3c37f79ab962591414a1da005",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "26b82ebea433334e41dde3dc9e5b90a7336c1337811241c1168d124bbdf59f81"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 6,
+              "seconds": 1.128363799994986,
+              "verify_review_calls": 13,
+              "receipt_decode_calls": 11,
+              "compact_json_payload_bytes": 657477,
+              "canonical_view_sha256": "ffeba6ba966f61b026b528b29d74d5de2fe46eb81144be74c53ef269ea70a8aa",
+              "review_digest": "b19d0e5397ec330945fee4469be2ab1096a253ff22faf4b6cbbd022a10cdc73a",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "d1afee3414d583e6952cb79a3622887179971ba4e87a58a55f461f9694fbb3f6"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 7,
+              "seconds": 1.0745023999988916,
+              "verify_review_calls": 15,
+              "receipt_decode_calls": 13,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 8,
+              "seconds": 1.0387028999975882,
+              "verify_review_calls": 17,
+              "receipt_decode_calls": 15,
+              "compact_json_payload_bytes": 657646,
+              "canonical_view_sha256": "dc68d3588355042e15d007c6c4bd3c17bb3f89715a6857a008352091a5215bd2",
+              "review_digest": "4e1c46473301d53da02ec1760be8a83f7002181f8456f81d66e7b02c3bd7ab8d",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c2e2387a80a4534adbdb723bcb7d561444a1e39ed2328b22176da56af9b2615c"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 9,
+              "seconds": 1.157012499999837,
+              "verify_review_calls": 19,
+              "receipt_decode_calls": 17,
+              "compact_json_payload_bytes": 657735,
+              "canonical_view_sha256": "a858d7e249b3673a2ce0e3bd554b8232e5938c5bbfcff851a2ce0acd7909ffa3",
+              "review_digest": "d488199912cf79af905e1168b7e2c43f209d1e12cbe60e662083bc489e00eb44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "adc0911c9d8d58bc4bab7f5ce1d975b605b31e41b3bbfb69ba2c84b4edee6f3a"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 10,
+              "seconds": 1.266042600000219,
+              "verify_review_calls": 21,
+              "receipt_decode_calls": 19,
+              "compact_json_payload_bytes": 657830,
+              "canonical_view_sha256": "59e0479a6abe9653e02c033290f24cb956e8868fa22ebe82f95cc48fe4e0952c",
+              "review_digest": "5c6c7c860ef82f08fb372bfe29c5a694278c7d88393d915c77a1e4e516b3cf32",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "b6c2d92ac8ee9d4a89fe0bc2d0e9bccee636685b0c20608bf89d1efa310269b8"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 11,
+              "seconds": 1.3681992999991053,
+              "verify_review_calls": 23,
+              "receipt_decode_calls": 21,
+              "compact_json_payload_bytes": 657919,
+              "canonical_view_sha256": "f8ebdc34a9ebf95a58c7d3b1725c7eeb30bf1ad76e6c8eb353f4f77963e7e18e",
+              "review_digest": "4beed5c15445b9540f08cc7ced8e5f67ac5f79f69a82adebd072ef73f431fa44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c79418386e1a2d8ff07dfc0e3890eb08d495fde39dc1966e231a7f39ee6aced4"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 12,
+              "seconds": 1.5179103999980725,
+              "verify_review_calls": 25,
+              "receipt_decode_calls": 23,
+              "compact_json_payload_bytes": 658009,
+              "canonical_view_sha256": "aa1aa0ebe5e7b6d62f4b5e87e76ca2f8d3e8631eb02ae7def1db8a95b0229358",
+              "review_digest": "f64e0ca1428d90d8f5ea4bb8983a40961d40b6fe33ec560fb9ac44696e53c294",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "a119f38bc944763c5ef0fd2960db3376177f814afb6a92d34767a5dbe3437872"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 13,
+              "seconds": 1.7405480999950669,
+              "verify_review_calls": 27,
+              "receipt_decode_calls": 25,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 7,
+          "median_seconds": 0.8246445999975549,
+          "minimum_seconds": 0.1947894000040833,
+          "maximum_seconds": 1.128363799994986,
+          "total_seconds": 5.472122100007255,
+          "verify_review_calls": 61,
+          "receipt_decode_calls": 49
+        },
+        "latest_save": {
+          "operation": "save",
+          "revision": 7,
+          "seconds": 0.3913883999994141,
+          "verify_review_calls": 6,
+          "receipt_decode_calls": 6,
+          "compact_json_payload_bytes": 332493,
+          "canonical_view_sha256": "1baf1f04d6221d4ef762330da07cb46b7338169da53359ed5fc577c37400873c",
+          "review_digest": null,
+          "evidence_fingerprints": {},
+          "executed_model_ids": [],
+          "reused_model_ids": []
+        },
+        "latest_run": {
+          "operation": "run",
+          "revision": 7,
+          "seconds": 1.0745023999988916,
+          "verify_review_calls": 15,
+          "receipt_decode_calls": 13,
+          "compact_json_payload_bytes": 657563,
+          "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+          "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+          "evidence_fingerprints": {
+            "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+            "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+          },
+          "executed_model_ids": [
+            "thermal"
+          ],
+          "reused_model_ids": [
+            "orbit"
+          ]
+        },
+        "all_stored_reviews_verified": true,
+        "database_file_bytes": 2347008
+      },
+      {
+        "revision_count": 13,
+        "run_count": 13,
+        "warm_get": {
+          "samples": [
+            {
+              "operation": "warm_get",
+              "revision": 13,
+              "seconds": 1.059314500002074,
+              "verify_review_calls": 15,
+              "receipt_decode_calls": 13,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "warm_get",
+              "revision": 13,
+              "seconds": 1.0879193999935524,
+              "verify_review_calls": 15,
+              "receipt_decode_calls": 13,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 1.0736169499978132,
+          "minimum_seconds": 1.059314500002074,
+          "maximum_seconds": 1.0879193999935524,
+          "total_seconds": 2.1472338999956264,
+          "verify_review_calls": 30,
+          "receipt_decode_calls": 26
+        },
+        "new_store_get": {
+          "samples": [
+            {
+              "operation": "new_store_get",
+              "revision": 13,
+              "seconds": 1.0266474999953061,
+              "verify_review_calls": 15,
+              "receipt_decode_calls": 13,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "new_store_get",
+              "revision": 13,
+              "seconds": 0.8668452999991132,
+              "verify_review_calls": 15,
+              "receipt_decode_calls": 13,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.9467463999972097,
+          "minimum_seconds": 0.8668452999991132,
+          "maximum_seconds": 1.0266474999953061,
+          "total_seconds": 1.8934927999944193,
+          "verify_review_calls": 30,
+          "receipt_decode_calls": 26
+        },
+        "save": {
+          "samples": [
+            {
+              "operation": "save",
+              "revision": 2,
+              "seconds": 0.10280049999710172,
+              "verify_review_calls": 1,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332044,
+              "canonical_view_sha256": "167d2e39ad13e3595cb396e5be67742c681b01ae1aabff61bb6df532fb76dd6e",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 3,
+              "seconds": 0.17880500000319444,
+              "verify_review_calls": 2,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 332146,
+              "canonical_view_sha256": "bd0e2a2a54898be0b51e6ca65fb0de1800454f2c6e7bd15057bcc583fe111936",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 4,
+              "seconds": 0.22810470000695204,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 332235,
+              "canonical_view_sha256": "a8c2d0cb3d6c6147942cc3ad2316d740e12f87ede56cb78fd941e5a3b7d7b4b0",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 5,
+              "seconds": 0.39785249999840744,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 4,
+              "compact_json_payload_bytes": 332318,
+              "canonical_view_sha256": "7c6b2c33d60fbe585b31d18638286ce217b1305ab3d73b20037742a9cc2db11c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 6,
+              "seconds": 0.48051520000444725,
+              "verify_review_calls": 5,
+              "receipt_decode_calls": 5,
+              "compact_json_payload_bytes": 332404,
+              "canonical_view_sha256": "e322312ec4f96b0047612144e273a4d22c0ac9731dda781bb069fdfb00a8d0be",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 7,
+              "seconds": 0.3913883999994141,
+              "verify_review_calls": 6,
+              "receipt_decode_calls": 6,
+              "compact_json_payload_bytes": 332493,
+              "canonical_view_sha256": "1baf1f04d6221d4ef762330da07cb46b7338169da53359ed5fc577c37400873c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 8,
+              "seconds": 0.49225039999873843,
+              "verify_review_calls": 7,
+              "receipt_decode_calls": 7,
+              "compact_json_payload_bytes": 332576,
+              "canonical_view_sha256": "936c6b7e814203df5bdfeebc60d85d41422427b80a33f1cc7b430795032353d1",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 9,
+              "seconds": 0.4916215999983251,
+              "verify_review_calls": 8,
+              "receipt_decode_calls": 8,
+              "compact_json_payload_bytes": 332662,
+              "canonical_view_sha256": "b35806dae8ee6d10d57284ceb1179b7f85093c7fef4db48bf39ad01036b5aed9",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 10,
+              "seconds": 0.542253300001903,
+              "verify_review_calls": 9,
+              "receipt_decode_calls": 9,
+              "compact_json_payload_bytes": 332755,
+              "canonical_view_sha256": "c3311435304ab1fe86ea32fce7e5db05433478e4792a7b919a815b7bb5a64cbf",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 11,
+              "seconds": 0.6063943000044674,
+              "verify_review_calls": 10,
+              "receipt_decode_calls": 10,
+              "compact_json_payload_bytes": 332843,
+              "canonical_view_sha256": "dcc31487d60f808287c9891e0edd1058b0efa7bd2bab18874f509f1494ea9408",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 12,
+              "seconds": 0.6628734000041732,
+              "verify_review_calls": 11,
+              "receipt_decode_calls": 11,
+              "compact_json_payload_bytes": 332930,
+              "canonical_view_sha256": "574bb8570ade9e4b1d6e563763a44c81feb63d990117fc18d3b491fb451c01d4",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 13,
+              "seconds": 0.9509792000026209,
+              "verify_review_calls": 12,
+              "receipt_decode_calls": 12,
+              "compact_json_payload_bytes": 333020,
+              "canonical_view_sha256": "8f4626d6f824b487e3045f71813c16b2e65fd5d4259e2cb928cd62b8bdd4b4c2",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            }
+          ],
+          "sample_count": 12,
+          "median_seconds": 0.4860684000013862,
+          "minimum_seconds": 0.10280049999710172,
+          "maximum_seconds": 0.9509792000026209,
+          "total_seconds": 5.525838500019745,
+          "verify_review_calls": 78,
+          "receipt_decode_calls": 78
+        },
+        "run": {
+          "samples": [
+            {
+              "operation": "run",
+              "revision": 1,
+              "seconds": 0.1947894000040833,
+              "verify_review_calls": 1,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 331893,
+              "canonical_view_sha256": "ef5ca29900ca765d55b936f4de94067379a4cb8ec31497544b4623e11c2dee7d",
+              "review_digest": "fe4a0326fc7233dcccc3b57d256f450a68a9b1d9d3bf94ba1581cfd699a2316c",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "eb77b142bf346bd84939741c2948bf9411de7c79b2f8a2f5eb0fd92a71814a1b"
+              },
+              "executed_model_ids": [
+                "orbit",
+                "thermal"
+              ],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "run",
+              "revision": 2,
+              "seconds": 0.4182122000056552,
+              "verify_review_calls": 5,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 3,
+              "seconds": 0.738538100005826,
+              "verify_review_calls": 7,
+              "receipt_decode_calls": 5,
+              "compact_json_payload_bytes": 657219,
+              "canonical_view_sha256": "6495bce52983bddd745adf798a252759b004955c62f79dedd73bdf2af28f2030",
+              "review_digest": "a98a2cd04899abb58a3f697104a79b8aaee936ef66e5f248a51c6590a95bcf4f",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "85e0cb0e2c6ead4fd14929015e3b81c914c91e2f8e58acb57f081c4807609401"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 4,
+              "seconds": 0.8246445999975549,
+              "verify_review_calls": 9,
+              "receipt_decode_calls": 7,
+              "compact_json_payload_bytes": 657305,
+              "canonical_view_sha256": "073c3b3d4d2c1db87988989a5deaa3d7dee54edf147caafd6f0c5fdb56049e52",
+              "review_digest": "c4e662f933cb0430e46407bc7c4c769acaffc653da97f36535fad1b6d6ae89b4",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "67166f8a6409f639fb7884a0921db403ba9dcfa728a4fd80ce89bad5471a0faa"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 5,
+              "seconds": 1.0930716000002576,
+              "verify_review_calls": 11,
+              "receipt_decode_calls": 9,
+              "compact_json_payload_bytes": 657388,
+              "canonical_view_sha256": "954d8f4876dfaedba53c9b5350c0fcd3823462abf677a05547794f049a440ab6",
+              "review_digest": "b4e60e88bf0202b841993eb6a79401c5458f9fb3c37f79ab962591414a1da005",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "26b82ebea433334e41dde3dc9e5b90a7336c1337811241c1168d124bbdf59f81"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 6,
+              "seconds": 1.128363799994986,
+              "verify_review_calls": 13,
+              "receipt_decode_calls": 11,
+              "compact_json_payload_bytes": 657477,
+              "canonical_view_sha256": "ffeba6ba966f61b026b528b29d74d5de2fe46eb81144be74c53ef269ea70a8aa",
+              "review_digest": "b19d0e5397ec330945fee4469be2ab1096a253ff22faf4b6cbbd022a10cdc73a",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "d1afee3414d583e6952cb79a3622887179971ba4e87a58a55f461f9694fbb3f6"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 7,
+              "seconds": 1.0745023999988916,
+              "verify_review_calls": 15,
+              "receipt_decode_calls": 13,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 8,
+              "seconds": 1.0387028999975882,
+              "verify_review_calls": 17,
+              "receipt_decode_calls": 15,
+              "compact_json_payload_bytes": 657646,
+              "canonical_view_sha256": "dc68d3588355042e15d007c6c4bd3c17bb3f89715a6857a008352091a5215bd2",
+              "review_digest": "4e1c46473301d53da02ec1760be8a83f7002181f8456f81d66e7b02c3bd7ab8d",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c2e2387a80a4534adbdb723bcb7d561444a1e39ed2328b22176da56af9b2615c"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 9,
+              "seconds": 1.157012499999837,
+              "verify_review_calls": 19,
+              "receipt_decode_calls": 17,
+              "compact_json_payload_bytes": 657735,
+              "canonical_view_sha256": "a858d7e249b3673a2ce0e3bd554b8232e5938c5bbfcff851a2ce0acd7909ffa3",
+              "review_digest": "d488199912cf79af905e1168b7e2c43f209d1e12cbe60e662083bc489e00eb44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "adc0911c9d8d58bc4bab7f5ce1d975b605b31e41b3bbfb69ba2c84b4edee6f3a"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 10,
+              "seconds": 1.266042600000219,
+              "verify_review_calls": 21,
+              "receipt_decode_calls": 19,
+              "compact_json_payload_bytes": 657830,
+              "canonical_view_sha256": "59e0479a6abe9653e02c033290f24cb956e8868fa22ebe82f95cc48fe4e0952c",
+              "review_digest": "5c6c7c860ef82f08fb372bfe29c5a694278c7d88393d915c77a1e4e516b3cf32",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "b6c2d92ac8ee9d4a89fe0bc2d0e9bccee636685b0c20608bf89d1efa310269b8"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 11,
+              "seconds": 1.3681992999991053,
+              "verify_review_calls": 23,
+              "receipt_decode_calls": 21,
+              "compact_json_payload_bytes": 657919,
+              "canonical_view_sha256": "f8ebdc34a9ebf95a58c7d3b1725c7eeb30bf1ad76e6c8eb353f4f77963e7e18e",
+              "review_digest": "4beed5c15445b9540f08cc7ced8e5f67ac5f79f69a82adebd072ef73f431fa44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c79418386e1a2d8ff07dfc0e3890eb08d495fde39dc1966e231a7f39ee6aced4"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 12,
+              "seconds": 1.5179103999980725,
+              "verify_review_calls": 25,
+              "receipt_decode_calls": 23,
+              "compact_json_payload_bytes": 658009,
+              "canonical_view_sha256": "aa1aa0ebe5e7b6d62f4b5e87e76ca2f8d3e8631eb02ae7def1db8a95b0229358",
+              "review_digest": "f64e0ca1428d90d8f5ea4bb8983a40961d40b6fe33ec560fb9ac44696e53c294",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "a119f38bc944763c5ef0fd2960db3376177f814afb6a92d34767a5dbe3437872"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 13,
+              "seconds": 1.7405480999950669,
+              "verify_review_calls": 27,
+              "receipt_decode_calls": 25,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 13,
+          "median_seconds": 1.0930716000002576,
+          "minimum_seconds": 0.1947894000040833,
+          "maximum_seconds": 1.7405480999950669,
+          "total_seconds": 13.560537899997144,
+          "verify_review_calls": 193,
+          "receipt_decode_calls": 169
+        },
+        "latest_save": {
+          "operation": "save",
+          "revision": 13,
+          "seconds": 0.9509792000026209,
+          "verify_review_calls": 12,
+          "receipt_decode_calls": 12,
+          "compact_json_payload_bytes": 333020,
+          "canonical_view_sha256": "8f4626d6f824b487e3045f71813c16b2e65fd5d4259e2cb928cd62b8bdd4b4c2",
+          "review_digest": null,
+          "evidence_fingerprints": {},
+          "executed_model_ids": [],
+          "reused_model_ids": []
+        },
+        "latest_run": {
+          "operation": "run",
+          "revision": 13,
+          "seconds": 1.7405480999950669,
+          "verify_review_calls": 27,
+          "receipt_decode_calls": 25,
+          "compact_json_payload_bytes": 658096,
+          "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+          "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+          "evidence_fingerprints": {
+            "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+            "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+          },
+          "executed_model_ids": [
+            "thermal"
+          ],
+          "reused_model_ids": [
+            "orbit"
+          ]
+        },
+        "all_stored_reviews_verified": true,
+        "database_file_bytes": 4325376
+      }
+    ],
+    "operation_sequence_sha256": "357fae722671a60aedf088d453276d95916e53126253bd531c3caf3fe7305962",
+    "environment": {
+      "python": "3.14.7 (tags/v3.14.7:823f032, Aug  5 2026, 10:51:32) [MSC v.1944 64 bit (AMD64)]",
+      "python_implementation": "CPython",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "machine": "AMD64",
+      "processor": "Intel64 Family 6 Model 166 Stepping 0, GenuineIntel",
+      "logical_cpu_count": 12,
+      "sqlite_version": "3.50.4",
+      "perf_counter_resolution_seconds": 1e-07
+    },
+    "paid_model_calls": 0,
+    "network_calls": 0,
+    "application_database_access": false,
+    "source_provenance": {
+      "kind": "immutable_git_archive",
+      "commit": "c76d0b6b109a2567201573b21bea4cf2be9922fa",
+      "raw_source_manifest_digest": "945f23ba09c733c778677efb26bd81a3d52024bce2ffe9ff8a0de94fb7141d4f",
+      "executed_source_manifest_digest": "945f23ba09c733c778677efb26bd81a3d52024bce2ffe9ff8a0de94fb7141d4f",
+      "raw_workspace_sha256": "04824468dac2cafdbcce03eab9ffd7beb8bb030fe59a7fae988661bbb01a04c7",
+      "executed_workspace_sha256": "04824468dac2cafdbcce03eab9ffd7beb8bb030fe59a7fae988661bbb01a04c7",
+      "crlf_normalized_files": [],
+      "source_file_count": 58,
+      "raw_verification_sources": {
+        "__init__.py": "78d6082497bab8046047377617289599eeebbf30b039bb1dc691fa7c2233249f",
+        "attitude.py": "f8b2a5c469621816efdc4a3075d85e336669734aec355a3f21bd4c3785449250",
+        "chains.py": "6ea5ec7dfc342de44a13ea862ecabc56e92cdb2fc143dc4c6ead663bb4bea873",
+        "engineering.py": "9f06f57ab3157cd133ef5dcef23062baab3694c3d3c98ca2df8e95793ac12422",
+        "guided_ascent.py": "f55844015128752a44d87507ebe1a399159dcc554d181c7098c189619091b38a",
+        "lifecycle.py": "4157dae5df580a9ebe6a8f8aa0e65d2aebbb5cce31bb9011c743866c6751afc2",
+        "orbital_adapter.py": "faddd9da33889a428d032edf76f7dedbd8be4a7fee166536fa65525fc50e28e8",
+        "powered_flight.py": "4949e7b5c3d4846bf6b4b08dee4790a3e50b8e75b5724b23321d632fe2aadc1e",
+        "simulation.py": "cf3bb5149edc5aa1e91911312f8685d1d4b1b7d301a79648efbcb7fc93311b60",
+        "staged_ascent.py": "fd68a79c7a508c1a1c309e58940a9782837f565a1605cecc8184ca1cae2a6240"
+      }
+    }
+  },
+  "before_preservation_sha256": "fff43cd1c411206c324db77588787380c6ccba322818879d905a2e65f22d95b1",
+  "after": {
+    "label": "after",
+    "started_at": "2026-10-24T15:58:53.728857+00:00",
+    "completed_at": "2026-10-24T15:59:01.170792+00:00",
+    "fixture_sha256": "ac70646d58d6ea2bc92ec8337def5718c68c5cad94fdcd6e89bc11acaebbb2ac",
+    "verification_sources": {
+      "__init__.py": "78d6082497bab8046047377617289599eeebbf30b039bb1dc691fa7c2233249f",
+      "attitude.py": "f8b2a5c469621816efdc4a3075d85e336669734aec355a3f21bd4c3785449250",
+      "chains.py": "6ea5ec7dfc342de44a13ea862ecabc56e92cdb2fc143dc4c6ead663bb4bea873",
+      "engineering.py": "9f06f57ab3157cd133ef5dcef23062baab3694c3d3c98ca2df8e95793ac12422",
+      "guided_ascent.py": "f55844015128752a44d87507ebe1a399159dcc554d181c7098c189619091b38a",
+      "lifecycle.py": "4157dae5df580a9ebe6a8f8aa0e65d2aebbb5cce31bb9011c743866c6751afc2",
+      "orbital_adapter.py": "faddd9da33889a428d032edf76f7dedbd8be4a7fee166536fa65525fc50e28e8",
+      "powered_flight.py": "4949e7b5c3d4846bf6b4b08dee4790a3e50b8e75b5724b23321d632fe2aadc1e",
+      "simulation.py": "cf3bb5149edc5aa1e91911312f8685d1d4b1b7d301a79648efbcb7fc93311b60",
+      "staged_ascent.py": "fd68a79c7a508c1a1c309e58940a9782837f565a1605cecc8184ca1cae2a6240"
+    },
+    "executed_source_manifest_digest": "76ae3add7418dc9b7d75d792897b31aef83c3188d1f51a0cd1c1df72c9a0e986",
+    "sources_unchanged_during_measurement": true,
+    "create": {
+      "operation": "create",
+      "revision": 1,
+      "seconds": 0.02307909999944968,
+      "verify_review_calls": 0,
+      "receipt_decode_calls": 0,
+      "compact_json_payload_bytes": 7707,
+      "canonical_view_sha256": "73b894d2a774d426ad1cb07a24cd07c7a451e8050f6f20a46139570665b2d6a9",
+      "review_digest": null,
+      "evidence_fingerprints": {},
+      "executed_model_ids": [],
+      "reused_model_ids": []
+    },
+    "checkpoints": [
+      {
+        "revision_count": 2,
+        "run_count": 2,
+        "warm_get": {
+          "samples": [
+            {
+              "operation": "warm_get",
+              "revision": 2,
+              "seconds": 0.03274049999890849,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "warm_get",
+              "revision": 2,
+              "seconds": 0.03080989999580197,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.03177519999735523,
+          "minimum_seconds": 0.03080989999580197,
+          "maximum_seconds": 0.03274049999890849,
+          "total_seconds": 0.06355039999471046,
+          "verify_review_calls": 0,
+          "receipt_decode_calls": 4
+        },
+        "new_store_get": {
+          "samples": [
+            {
+              "operation": "new_store_get",
+              "revision": 2,
+              "seconds": 0.20298279999406077,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "new_store_get",
+              "revision": 2,
+              "seconds": 0.1977337999996962,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.2003582999968785,
+          "minimum_seconds": 0.1977337999996962,
+          "maximum_seconds": 0.20298279999406077,
+          "total_seconds": 0.400716599993757,
+          "verify_review_calls": 8,
+          "receipt_decode_calls": 4
+        },
+        "save": {
+          "samples": [
+            {
+              "operation": "save",
+              "revision": 2,
+              "seconds": 0.027610400000412483,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332044,
+              "canonical_view_sha256": "167d2e39ad13e3595cb396e5be67742c681b01ae1aabff61bb6df532fb76dd6e",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 3,
+              "seconds": 0.026876300005824305,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332146,
+              "canonical_view_sha256": "bd0e2a2a54898be0b51e6ca65fb0de1800454f2c6e7bd15057bcc583fe111936",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 4,
+              "seconds": 0.030670399995869957,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332235,
+              "canonical_view_sha256": "a8c2d0cb3d6c6147942cc3ad2316d740e12f87ede56cb78fd941e5a3b7d7b4b0",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 5,
+              "seconds": 0.031278000002203044,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332318,
+              "canonical_view_sha256": "7c6b2c33d60fbe585b31d18638286ce217b1305ab3d73b20037742a9cc2db11c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 6,
+              "seconds": 0.03755020000244258,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332404,
+              "canonical_view_sha256": "e322312ec4f96b0047612144e273a4d22c0ac9731dda781bb069fdfb00a8d0be",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 7,
+              "seconds": 0.03789590000087628,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332493,
+              "canonical_view_sha256": "1baf1f04d6221d4ef762330da07cb46b7338169da53359ed5fc577c37400873c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 8,
+              "seconds": 0.03952209999988554,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332576,
+              "canonical_view_sha256": "936c6b7e814203df5bdfeebc60d85d41422427b80a33f1cc7b430795032353d1",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 9,
+              "seconds": 0.04835010000533657,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332662,
+              "canonical_view_sha256": "b35806dae8ee6d10d57284ceb1179b7f85093c7fef4db48bf39ad01036b5aed9",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 10,
+              "seconds": 0.04536470000311965,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332755,
+              "canonical_view_sha256": "c3311435304ab1fe86ea32fce7e5db05433478e4792a7b919a815b7bb5a64cbf",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 11,
+              "seconds": 0.04379209999751765,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332843,
+              "canonical_view_sha256": "dcc31487d60f808287c9891e0edd1058b0efa7bd2bab18874f509f1494ea9408",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 12,
+              "seconds": 0.04596489999676123,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332930,
+              "canonical_view_sha256": "574bb8570ade9e4b1d6e563763a44c81feb63d990117fc18d3b491fb451c01d4",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 13,
+              "seconds": 0.048134399999980815,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 333020,
+              "canonical_view_sha256": "8f4626d6f824b487e3045f71813c16b2e65fd5d4259e2cb928cd62b8bdd4b4c2",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            }
+          ],
+          "sample_count": 1,
+          "median_seconds": 0.027610400000412483,
+          "minimum_seconds": 0.027610400000412483,
+          "maximum_seconds": 0.027610400000412483,
+          "total_seconds": 0.027610400000412483,
+          "verify_review_calls": 0,
+          "receipt_decode_calls": 1
+        },
+        "run": {
+          "samples": [
+            {
+              "operation": "run",
+              "revision": 1,
+              "seconds": 0.15804239999852143,
+              "verify_review_calls": 1,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 331893,
+              "canonical_view_sha256": "ef5ca29900ca765d55b936f4de94067379a4cb8ec31497544b4623e11c2dee7d",
+              "review_digest": "fe4a0326fc7233dcccc3b57d256f450a68a9b1d9d3bf94ba1581cfd699a2316c",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "eb77b142bf346bd84939741c2948bf9411de7c79b2f8a2f5eb0fd92a71814a1b"
+              },
+              "executed_model_ids": [
+                "orbit",
+                "thermal"
+              ],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "run",
+              "revision": 2,
+              "seconds": 0.24347449999913806,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 3,
+              "seconds": 0.23254560000350466,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657219,
+              "canonical_view_sha256": "6495bce52983bddd745adf798a252759b004955c62f79dedd73bdf2af28f2030",
+              "review_digest": "a98a2cd04899abb58a3f697104a79b8aaee936ef66e5f248a51c6590a95bcf4f",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "85e0cb0e2c6ead4fd14929015e3b81c914c91e2f8e58acb57f081c4807609401"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 4,
+              "seconds": 0.23261920000368264,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657305,
+              "canonical_view_sha256": "073c3b3d4d2c1db87988989a5deaa3d7dee54edf147caafd6f0c5fdb56049e52",
+              "review_digest": "c4e662f933cb0430e46407bc7c4c769acaffc653da97f36535fad1b6d6ae89b4",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "67166f8a6409f639fb7884a0921db403ba9dcfa728a4fd80ce89bad5471a0faa"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 5,
+              "seconds": 0.24446249999891734,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657388,
+              "canonical_view_sha256": "954d8f4876dfaedba53c9b5350c0fcd3823462abf677a05547794f049a440ab6",
+              "review_digest": "b4e60e88bf0202b841993eb6a79401c5458f9fb3c37f79ab962591414a1da005",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "26b82ebea433334e41dde3dc9e5b90a7336c1337811241c1168d124bbdf59f81"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 6,
+              "seconds": 0.2651387999940198,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657477,
+              "canonical_view_sha256": "ffeba6ba966f61b026b528b29d74d5de2fe46eb81144be74c53ef269ea70a8aa",
+              "review_digest": "b19d0e5397ec330945fee4469be2ab1096a253ff22faf4b6cbbd022a10cdc73a",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "d1afee3414d583e6952cb79a3622887179971ba4e87a58a55f461f9694fbb3f6"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 7,
+              "seconds": 0.2785868999999366,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 8,
+              "seconds": 0.2647017999988748,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657646,
+              "canonical_view_sha256": "dc68d3588355042e15d007c6c4bd3c17bb3f89715a6857a008352091a5215bd2",
+              "review_digest": "4e1c46473301d53da02ec1760be8a83f7002181f8456f81d66e7b02c3bd7ab8d",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c2e2387a80a4534adbdb723bcb7d561444a1e39ed2328b22176da56af9b2615c"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 9,
+              "seconds": 0.27910030000202823,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657735,
+              "canonical_view_sha256": "a858d7e249b3673a2ce0e3bd554b8232e5938c5bbfcff851a2ce0acd7909ffa3",
+              "review_digest": "d488199912cf79af905e1168b7e2c43f209d1e12cbe60e662083bc489e00eb44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "adc0911c9d8d58bc4bab7f5ce1d975b605b31e41b3bbfb69ba2c84b4edee6f3a"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 10,
+              "seconds": 0.26842110000143293,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657830,
+              "canonical_view_sha256": "59e0479a6abe9653e02c033290f24cb956e8868fa22ebe82f95cc48fe4e0952c",
+              "review_digest": "5c6c7c860ef82f08fb372bfe29c5a694278c7d88393d915c77a1e4e516b3cf32",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "b6c2d92ac8ee9d4a89fe0bc2d0e9bccee636685b0c20608bf89d1efa310269b8"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 11,
+              "seconds": 0.26581440000154544,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657919,
+              "canonical_view_sha256": "f8ebdc34a9ebf95a58c7d3b1725c7eeb30bf1ad76e6c8eb353f4f77963e7e18e",
+              "review_digest": "4beed5c15445b9540f08cc7ced8e5f67ac5f79f69a82adebd072ef73f431fa44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c79418386e1a2d8ff07dfc0e3890eb08d495fde39dc1966e231a7f39ee6aced4"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 12,
+              "seconds": 0.27230250000138767,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 658009,
+              "canonical_view_sha256": "aa1aa0ebe5e7b6d62f4b5e87e76ca2f8d3e8631eb02ae7def1db8a95b0229358",
+              "review_digest": "f64e0ca1428d90d8f5ea4bb8983a40961d40b6fe33ec560fb9ac44696e53c294",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "a119f38bc944763c5ef0fd2960db3376177f814afb6a92d34767a5dbe3437872"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 13,
+              "seconds": 0.29189380000025267,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.20075844999882975,
+          "minimum_seconds": 0.15804239999852143,
+          "maximum_seconds": 0.24347449999913806,
+          "total_seconds": 0.4015168999976595,
+          "verify_review_calls": 4,
+          "receipt_decode_calls": 4
+        },
+        "latest_save": {
+          "operation": "save",
+          "revision": 2,
+          "seconds": 0.027610400000412483,
+          "verify_review_calls": 0,
+          "receipt_decode_calls": 1,
+          "compact_json_payload_bytes": 332044,
+          "canonical_view_sha256": "167d2e39ad13e3595cb396e5be67742c681b01ae1aabff61bb6df532fb76dd6e",
+          "review_digest": null,
+          "evidence_fingerprints": {},
+          "executed_model_ids": [],
+          "reused_model_ids": []
+        },
+        "latest_run": {
+          "operation": "run",
+          "revision": 2,
+          "seconds": 0.24347449999913806,
+          "verify_review_calls": 3,
+          "receipt_decode_calls": 3,
+          "compact_json_payload_bytes": 657114,
+          "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+          "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+          "evidence_fingerprints": {
+            "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+            "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+          },
+          "executed_model_ids": [
+            "thermal"
+          ],
+          "reused_model_ids": [
+            "orbit"
+          ]
+        },
+        "all_stored_reviews_verified": true,
+        "database_file_bytes": 688128
+      },
+      {
+        "revision_count": 7,
+        "run_count": 7,
+        "warm_get": {
+          "samples": [
+            {
+              "operation": "warm_get",
+              "revision": 7,
+              "seconds": 0.04643539999960922,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "warm_get",
+              "revision": 7,
+              "seconds": 0.04457920000277227,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.04550730000119074,
+          "minimum_seconds": 0.04457920000277227,
+          "maximum_seconds": 0.04643539999960922,
+          "total_seconds": 0.09101460000238148,
+          "verify_review_calls": 0,
+          "receipt_decode_calls": 4
+        },
+        "new_store_get": {
+          "samples": [
+            {
+              "operation": "new_store_get",
+              "revision": 7,
+              "seconds": 0.26362360000348417,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "new_store_get",
+              "revision": 7,
+              "seconds": 0.2529744999992545,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.2582990500013693,
+          "minimum_seconds": 0.2529744999992545,
+          "maximum_seconds": 0.26362360000348417,
+          "total_seconds": 0.5165981000027386,
+          "verify_review_calls": 8,
+          "receipt_decode_calls": 4
+        },
+        "save": {
+          "samples": [
+            {
+              "operation": "save",
+              "revision": 2,
+              "seconds": 0.027610400000412483,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332044,
+              "canonical_view_sha256": "167d2e39ad13e3595cb396e5be67742c681b01ae1aabff61bb6df532fb76dd6e",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 3,
+              "seconds": 0.026876300005824305,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332146,
+              "canonical_view_sha256": "bd0e2a2a54898be0b51e6ca65fb0de1800454f2c6e7bd15057bcc583fe111936",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 4,
+              "seconds": 0.030670399995869957,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332235,
+              "canonical_view_sha256": "a8c2d0cb3d6c6147942cc3ad2316d740e12f87ede56cb78fd941e5a3b7d7b4b0",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 5,
+              "seconds": 0.031278000002203044,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332318,
+              "canonical_view_sha256": "7c6b2c33d60fbe585b31d18638286ce217b1305ab3d73b20037742a9cc2db11c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 6,
+              "seconds": 0.03755020000244258,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332404,
+              "canonical_view_sha256": "e322312ec4f96b0047612144e273a4d22c0ac9731dda781bb069fdfb00a8d0be",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 7,
+              "seconds": 0.03789590000087628,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332493,
+              "canonical_view_sha256": "1baf1f04d6221d4ef762330da07cb46b7338169da53359ed5fc577c37400873c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 8,
+              "seconds": 0.03952209999988554,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332576,
+              "canonical_view_sha256": "936c6b7e814203df5bdfeebc60d85d41422427b80a33f1cc7b430795032353d1",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 9,
+              "seconds": 0.04835010000533657,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332662,
+              "canonical_view_sha256": "b35806dae8ee6d10d57284ceb1179b7f85093c7fef4db48bf39ad01036b5aed9",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 10,
+              "seconds": 0.04536470000311965,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332755,
+              "canonical_view_sha256": "c3311435304ab1fe86ea32fce7e5db05433478e4792a7b919a815b7bb5a64cbf",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 11,
+              "seconds": 0.04379209999751765,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332843,
+              "canonical_view_sha256": "dcc31487d60f808287c9891e0edd1058b0efa7bd2bab18874f509f1494ea9408",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 12,
+              "seconds": 0.04596489999676123,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332930,
+              "canonical_view_sha256": "574bb8570ade9e4b1d6e563763a44c81feb63d990117fc18d3b491fb451c01d4",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 13,
+              "seconds": 0.048134399999980815,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 333020,
+              "canonical_view_sha256": "8f4626d6f824b487e3045f71813c16b2e65fd5d4259e2cb928cd62b8bdd4b4c2",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            }
+          ],
+          "sample_count": 6,
+          "median_seconds": 0.0309741999990365,
+          "minimum_seconds": 0.026876300005824305,
+          "maximum_seconds": 0.03789590000087628,
+          "total_seconds": 0.19188120000762865,
+          "verify_review_calls": 0,
+          "receipt_decode_calls": 6
+        },
+        "run": {
+          "samples": [
+            {
+              "operation": "run",
+              "revision": 1,
+              "seconds": 0.15804239999852143,
+              "verify_review_calls": 1,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 331893,
+              "canonical_view_sha256": "ef5ca29900ca765d55b936f4de94067379a4cb8ec31497544b4623e11c2dee7d",
+              "review_digest": "fe4a0326fc7233dcccc3b57d256f450a68a9b1d9d3bf94ba1581cfd699a2316c",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "eb77b142bf346bd84939741c2948bf9411de7c79b2f8a2f5eb0fd92a71814a1b"
+              },
+              "executed_model_ids": [
+                "orbit",
+                "thermal"
+              ],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "run",
+              "revision": 2,
+              "seconds": 0.24347449999913806,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 3,
+              "seconds": 0.23254560000350466,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657219,
+              "canonical_view_sha256": "6495bce52983bddd745adf798a252759b004955c62f79dedd73bdf2af28f2030",
+              "review_digest": "a98a2cd04899abb58a3f697104a79b8aaee936ef66e5f248a51c6590a95bcf4f",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "85e0cb0e2c6ead4fd14929015e3b81c914c91e2f8e58acb57f081c4807609401"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 4,
+              "seconds": 0.23261920000368264,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657305,
+              "canonical_view_sha256": "073c3b3d4d2c1db87988989a5deaa3d7dee54edf147caafd6f0c5fdb56049e52",
+              "review_digest": "c4e662f933cb0430e46407bc7c4c769acaffc653da97f36535fad1b6d6ae89b4",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "67166f8a6409f639fb7884a0921db403ba9dcfa728a4fd80ce89bad5471a0faa"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 5,
+              "seconds": 0.24446249999891734,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657388,
+              "canonical_view_sha256": "954d8f4876dfaedba53c9b5350c0fcd3823462abf677a05547794f049a440ab6",
+              "review_digest": "b4e60e88bf0202b841993eb6a79401c5458f9fb3c37f79ab962591414a1da005",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "26b82ebea433334e41dde3dc9e5b90a7336c1337811241c1168d124bbdf59f81"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 6,
+              "seconds": 0.2651387999940198,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657477,
+              "canonical_view_sha256": "ffeba6ba966f61b026b528b29d74d5de2fe46eb81144be74c53ef269ea70a8aa",
+              "review_digest": "b19d0e5397ec330945fee4469be2ab1096a253ff22faf4b6cbbd022a10cdc73a",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "d1afee3414d583e6952cb79a3622887179971ba4e87a58a55f461f9694fbb3f6"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 7,
+              "seconds": 0.2785868999999366,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 8,
+              "seconds": 0.2647017999988748,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657646,
+              "canonical_view_sha256": "dc68d3588355042e15d007c6c4bd3c17bb3f89715a6857a008352091a5215bd2",
+              "review_digest": "4e1c46473301d53da02ec1760be8a83f7002181f8456f81d66e7b02c3bd7ab8d",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c2e2387a80a4534adbdb723bcb7d561444a1e39ed2328b22176da56af9b2615c"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 9,
+              "seconds": 0.27910030000202823,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657735,
+              "canonical_view_sha256": "a858d7e249b3673a2ce0e3bd554b8232e5938c5bbfcff851a2ce0acd7909ffa3",
+              "review_digest": "d488199912cf79af905e1168b7e2c43f209d1e12cbe60e662083bc489e00eb44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "adc0911c9d8d58bc4bab7f5ce1d975b605b31e41b3bbfb69ba2c84b4edee6f3a"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 10,
+              "seconds": 0.26842110000143293,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657830,
+              "canonical_view_sha256": "59e0479a6abe9653e02c033290f24cb956e8868fa22ebe82f95cc48fe4e0952c",
+              "review_digest": "5c6c7c860ef82f08fb372bfe29c5a694278c7d88393d915c77a1e4e516b3cf32",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "b6c2d92ac8ee9d4a89fe0bc2d0e9bccee636685b0c20608bf89d1efa310269b8"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 11,
+              "seconds": 0.26581440000154544,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657919,
+              "canonical_view_sha256": "f8ebdc34a9ebf95a58c7d3b1725c7eeb30bf1ad76e6c8eb353f4f77963e7e18e",
+              "review_digest": "4beed5c15445b9540f08cc7ced8e5f67ac5f79f69a82adebd072ef73f431fa44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c79418386e1a2d8ff07dfc0e3890eb08d495fde39dc1966e231a7f39ee6aced4"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 12,
+              "seconds": 0.27230250000138767,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 658009,
+              "canonical_view_sha256": "aa1aa0ebe5e7b6d62f4b5e87e76ca2f8d3e8631eb02ae7def1db8a95b0229358",
+              "review_digest": "f64e0ca1428d90d8f5ea4bb8983a40961d40b6fe33ec560fb9ac44696e53c294",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "a119f38bc944763c5ef0fd2960db3376177f814afb6a92d34767a5dbe3437872"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 13,
+              "seconds": 0.29189380000025267,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 7,
+          "median_seconds": 0.24347449999913806,
+          "minimum_seconds": 0.15804239999852143,
+          "maximum_seconds": 0.2785868999999366,
+          "total_seconds": 1.6548698999977205,
+          "verify_review_calls": 19,
+          "receipt_decode_calls": 19
+        },
+        "latest_save": {
+          "operation": "save",
+          "revision": 7,
+          "seconds": 0.03789590000087628,
+          "verify_review_calls": 0,
+          "receipt_decode_calls": 1,
+          "compact_json_payload_bytes": 332493,
+          "canonical_view_sha256": "1baf1f04d6221d4ef762330da07cb46b7338169da53359ed5fc577c37400873c",
+          "review_digest": null,
+          "evidence_fingerprints": {},
+          "executed_model_ids": [],
+          "reused_model_ids": []
+        },
+        "latest_run": {
+          "operation": "run",
+          "revision": 7,
+          "seconds": 0.2785868999999366,
+          "verify_review_calls": 3,
+          "receipt_decode_calls": 3,
+          "compact_json_payload_bytes": 657563,
+          "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+          "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+          "evidence_fingerprints": {
+            "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+            "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+          },
+          "executed_model_ids": [
+            "thermal"
+          ],
+          "reused_model_ids": [
+            "orbit"
+          ]
+        },
+        "all_stored_reviews_verified": true,
+        "database_file_bytes": 2347008
+      },
+      {
+        "revision_count": 13,
+        "run_count": 13,
+        "warm_get": {
+          "samples": [
+            {
+              "operation": "warm_get",
+              "revision": 13,
+              "seconds": 0.05772599999909289,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "warm_get",
+              "revision": 13,
+              "seconds": 0.05416880000120727,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.05594740000015008,
+          "minimum_seconds": 0.05416880000120727,
+          "maximum_seconds": 0.05772599999909289,
+          "total_seconds": 0.11189480000030017,
+          "verify_review_calls": 0,
+          "receipt_decode_calls": 4
+        },
+        "new_store_get": {
+          "samples": [
+            {
+              "operation": "new_store_get",
+              "revision": 13,
+              "seconds": 0.28337110000575194,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "new_store_get",
+              "revision": 13,
+              "seconds": 0.2759105000004638,
+              "verify_review_calls": 4,
+              "receipt_decode_calls": 2,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 2,
+          "median_seconds": 0.27964080000310787,
+          "minimum_seconds": 0.2759105000004638,
+          "maximum_seconds": 0.28337110000575194,
+          "total_seconds": 0.5592816000062157,
+          "verify_review_calls": 8,
+          "receipt_decode_calls": 4
+        },
+        "save": {
+          "samples": [
+            {
+              "operation": "save",
+              "revision": 2,
+              "seconds": 0.027610400000412483,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332044,
+              "canonical_view_sha256": "167d2e39ad13e3595cb396e5be67742c681b01ae1aabff61bb6df532fb76dd6e",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 3,
+              "seconds": 0.026876300005824305,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332146,
+              "canonical_view_sha256": "bd0e2a2a54898be0b51e6ca65fb0de1800454f2c6e7bd15057bcc583fe111936",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 4,
+              "seconds": 0.030670399995869957,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332235,
+              "canonical_view_sha256": "a8c2d0cb3d6c6147942cc3ad2316d740e12f87ede56cb78fd941e5a3b7d7b4b0",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 5,
+              "seconds": 0.031278000002203044,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332318,
+              "canonical_view_sha256": "7c6b2c33d60fbe585b31d18638286ce217b1305ab3d73b20037742a9cc2db11c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 6,
+              "seconds": 0.03755020000244258,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332404,
+              "canonical_view_sha256": "e322312ec4f96b0047612144e273a4d22c0ac9731dda781bb069fdfb00a8d0be",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 7,
+              "seconds": 0.03789590000087628,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332493,
+              "canonical_view_sha256": "1baf1f04d6221d4ef762330da07cb46b7338169da53359ed5fc577c37400873c",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 8,
+              "seconds": 0.03952209999988554,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332576,
+              "canonical_view_sha256": "936c6b7e814203df5bdfeebc60d85d41422427b80a33f1cc7b430795032353d1",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 9,
+              "seconds": 0.04835010000533657,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332662,
+              "canonical_view_sha256": "b35806dae8ee6d10d57284ceb1179b7f85093c7fef4db48bf39ad01036b5aed9",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 10,
+              "seconds": 0.04536470000311965,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332755,
+              "canonical_view_sha256": "c3311435304ab1fe86ea32fce7e5db05433478e4792a7b919a815b7bb5a64cbf",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 11,
+              "seconds": 0.04379209999751765,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332843,
+              "canonical_view_sha256": "dcc31487d60f808287c9891e0edd1058b0efa7bd2bab18874f509f1494ea9408",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 12,
+              "seconds": 0.04596489999676123,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 332930,
+              "canonical_view_sha256": "574bb8570ade9e4b1d6e563763a44c81feb63d990117fc18d3b491fb451c01d4",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "save",
+              "revision": 13,
+              "seconds": 0.048134399999980815,
+              "verify_review_calls": 0,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 333020,
+              "canonical_view_sha256": "8f4626d6f824b487e3045f71813c16b2e65fd5d4259e2cb928cd62b8bdd4b4c2",
+              "review_digest": null,
+              "evidence_fingerprints": {},
+              "executed_model_ids": [],
+              "reused_model_ids": []
+            }
+          ],
+          "sample_count": 12,
+          "median_seconds": 0.03870900000038091,
+          "minimum_seconds": 0.026876300005824305,
+          "maximum_seconds": 0.04835010000533657,
+          "total_seconds": 0.4630095000102301,
+          "verify_review_calls": 0,
+          "receipt_decode_calls": 12
+        },
+        "run": {
+          "samples": [
+            {
+              "operation": "run",
+              "revision": 1,
+              "seconds": 0.15804239999852143,
+              "verify_review_calls": 1,
+              "receipt_decode_calls": 1,
+              "compact_json_payload_bytes": 331893,
+              "canonical_view_sha256": "ef5ca29900ca765d55b936f4de94067379a4cb8ec31497544b4623e11c2dee7d",
+              "review_digest": "fe4a0326fc7233dcccc3b57d256f450a68a9b1d9d3bf94ba1581cfd699a2316c",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "eb77b142bf346bd84939741c2948bf9411de7c79b2f8a2f5eb0fd92a71814a1b"
+              },
+              "executed_model_ids": [
+                "orbit",
+                "thermal"
+              ],
+              "reused_model_ids": []
+            },
+            {
+              "operation": "run",
+              "revision": 2,
+              "seconds": 0.24347449999913806,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657114,
+              "canonical_view_sha256": "ba5a100d2333b068d0776a919b3c529c022cfdb57847e7782a3e5bf0a1c54092",
+              "review_digest": "f022c896d965c537ba12d14ca8e2d8bb37e529c0400fb8ae473f978662717cbd",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "e0e0a75e67f121e122a1e3bf941acc89886bbd0b0dc3d97e63eedce808177f98"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 3,
+              "seconds": 0.23254560000350466,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657219,
+              "canonical_view_sha256": "6495bce52983bddd745adf798a252759b004955c62f79dedd73bdf2af28f2030",
+              "review_digest": "a98a2cd04899abb58a3f697104a79b8aaee936ef66e5f248a51c6590a95bcf4f",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "85e0cb0e2c6ead4fd14929015e3b81c914c91e2f8e58acb57f081c4807609401"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 4,
+              "seconds": 0.23261920000368264,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657305,
+              "canonical_view_sha256": "073c3b3d4d2c1db87988989a5deaa3d7dee54edf147caafd6f0c5fdb56049e52",
+              "review_digest": "c4e662f933cb0430e46407bc7c4c769acaffc653da97f36535fad1b6d6ae89b4",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "67166f8a6409f639fb7884a0921db403ba9dcfa728a4fd80ce89bad5471a0faa"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 5,
+              "seconds": 0.24446249999891734,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657388,
+              "canonical_view_sha256": "954d8f4876dfaedba53c9b5350c0fcd3823462abf677a05547794f049a440ab6",
+              "review_digest": "b4e60e88bf0202b841993eb6a79401c5458f9fb3c37f79ab962591414a1da005",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "26b82ebea433334e41dde3dc9e5b90a7336c1337811241c1168d124bbdf59f81"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 6,
+              "seconds": 0.2651387999940198,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657477,
+              "canonical_view_sha256": "ffeba6ba966f61b026b528b29d74d5de2fe46eb81144be74c53ef269ea70a8aa",
+              "review_digest": "b19d0e5397ec330945fee4469be2ab1096a253ff22faf4b6cbbd022a10cdc73a",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "d1afee3414d583e6952cb79a3622887179971ba4e87a58a55f461f9694fbb3f6"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 7,
+              "seconds": 0.2785868999999366,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657563,
+              "canonical_view_sha256": "7a787377f6751b2d4c1b26303b2adf05670ab2be5c85966ddd9639c6ce923245",
+              "review_digest": "546757bdb22b9b3533c09a00885f8ba6b78a808694e3b587bd073268911997a6",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "6b3781d60a9133dfccbf75910f07301cd859521ed4aac1b6bbea2b344d1b7ae9"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 8,
+              "seconds": 0.2647017999988748,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657646,
+              "canonical_view_sha256": "dc68d3588355042e15d007c6c4bd3c17bb3f89715a6857a008352091a5215bd2",
+              "review_digest": "4e1c46473301d53da02ec1760be8a83f7002181f8456f81d66e7b02c3bd7ab8d",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c2e2387a80a4534adbdb723bcb7d561444a1e39ed2328b22176da56af9b2615c"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 9,
+              "seconds": 0.27910030000202823,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657735,
+              "canonical_view_sha256": "a858d7e249b3673a2ce0e3bd554b8232e5938c5bbfcff851a2ce0acd7909ffa3",
+              "review_digest": "d488199912cf79af905e1168b7e2c43f209d1e12cbe60e662083bc489e00eb44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "adc0911c9d8d58bc4bab7f5ce1d975b605b31e41b3bbfb69ba2c84b4edee6f3a"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 10,
+              "seconds": 0.26842110000143293,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657830,
+              "canonical_view_sha256": "59e0479a6abe9653e02c033290f24cb956e8868fa22ebe82f95cc48fe4e0952c",
+              "review_digest": "5c6c7c860ef82f08fb372bfe29c5a694278c7d88393d915c77a1e4e516b3cf32",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "b6c2d92ac8ee9d4a89fe0bc2d0e9bccee636685b0c20608bf89d1efa310269b8"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 11,
+              "seconds": 0.26581440000154544,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 657919,
+              "canonical_view_sha256": "f8ebdc34a9ebf95a58c7d3b1725c7eeb30bf1ad76e6c8eb353f4f77963e7e18e",
+              "review_digest": "4beed5c15445b9540f08cc7ced8e5f67ac5f79f69a82adebd072ef73f431fa44",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "c79418386e1a2d8ff07dfc0e3890eb08d495fde39dc1966e231a7f39ee6aced4"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 12,
+              "seconds": 0.27230250000138767,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 658009,
+              "canonical_view_sha256": "aa1aa0ebe5e7b6d62f4b5e87e76ca2f8d3e8631eb02ae7def1db8a95b0229358",
+              "review_digest": "f64e0ca1428d90d8f5ea4bb8983a40961d40b6fe33ec560fb9ac44696e53c294",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "a119f38bc944763c5ef0fd2960db3376177f814afb6a92d34767a5dbe3437872"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            },
+            {
+              "operation": "run",
+              "revision": 13,
+              "seconds": 0.29189380000025267,
+              "verify_review_calls": 3,
+              "receipt_decode_calls": 3,
+              "compact_json_payload_bytes": 658096,
+              "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+              "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+              "evidence_fingerprints": {
+                "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+                "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+              },
+              "executed_model_ids": [
+                "thermal"
+              ],
+              "reused_model_ids": [
+                "orbit"
+              ]
+            }
+          ],
+          "sample_count": 13,
+          "median_seconds": 0.2651387999940198,
+          "minimum_seconds": 0.15804239999852143,
+          "maximum_seconds": 0.29189380000025267,
+          "total_seconds": 3.297103800003242,
+          "verify_review_calls": 37,
+          "receipt_decode_calls": 37
+        },
+        "latest_save": {
+          "operation": "save",
+          "revision": 13,
+          "seconds": 0.048134399999980815,
+          "verify_review_calls": 0,
+          "receipt_decode_calls": 1,
+          "compact_json_payload_bytes": 333020,
+          "canonical_view_sha256": "8f4626d6f824b487e3045f71813c16b2e65fd5d4259e2cb928cd62b8bdd4b4c2",
+          "review_digest": null,
+          "evidence_fingerprints": {},
+          "executed_model_ids": [],
+          "reused_model_ids": []
+        },
+        "latest_run": {
+          "operation": "run",
+          "revision": 13,
+          "seconds": 0.29189380000025267,
+          "verify_review_calls": 3,
+          "receipt_decode_calls": 3,
+          "compact_json_payload_bytes": 658096,
+          "canonical_view_sha256": "59bdafabfb2b4b13aca818560dfc75263e0433cefef47c51562ad7038021b5a2",
+          "review_digest": "4d66e3e7e9febb7427720454cec42c517e0427e4b72c1c3045e872cd6ad6a6c2",
+          "evidence_fingerprints": {
+            "orbit": "91cf12a4e68a8883d233d53beb8869756e9dd52ab0f7fe6dd73dde7905527798",
+            "thermal": "11fdf275671b84fd63cae00a6008c5b80b8e5c51328e4ed0861998fc0dd17ae7"
+          },
+          "executed_model_ids": [
+            "thermal"
+          ],
+          "reused_model_ids": [
+            "orbit"
+          ]
+        },
+        "all_stored_reviews_verified": true,
+        "database_file_bytes": 4325376
+      }
+    ],
+    "operation_sequence_sha256": "357fae722671a60aedf088d453276d95916e53126253bd531c3caf3fe7305962",
+    "environment": {
+      "python": "3.14.7 (tags/v3.14.7:823f032, Aug  5 2026, 10:51:32) [MSC v.1944 64 bit (AMD64)]",
+      "python_implementation": "CPython",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "machine": "AMD64",
+      "processor": "Intel64 Family 6 Model 166 Stepping 0, GenuineIntel",
+      "logical_cpu_count": 12,
+      "sqlite_version": "3.50.4",
+      "perf_counter_resolution_seconds": 1e-07
+    },
+    "paid_model_calls": 0,
+    "network_calls": 0,
+    "application_database_access": false,
+    "source_provenance": {
+      "kind": "copied_candidate_source",
+      "raw_source_manifest_digest": "76ae3add7418dc9b7d75d792897b31aef83c3188d1f51a0cd1c1df72c9a0e986",
+      "executed_source_manifest_digest": "76ae3add7418dc9b7d75d792897b31aef83c3188d1f51a0cd1c1df72c9a0e986",
+      "raw_workspace_sha256": "f896d93bd8aabef3eb066e17354d42a451dfb4b7af27742410312155adf4018b",
+      "executed_workspace_sha256": "f896d93bd8aabef3eb066e17354d42a451dfb4b7af27742410312155adf4018b",
+      "crlf_normalized_files": [],
+      "source_file_count": 58,
+      "normalization": "CRLF -> LF in isolated candidate copy only; active source is untouched",
+      "raw_verification_sources": {
+        "__init__.py": "78d6082497bab8046047377617289599eeebbf30b039bb1dc691fa7c2233249f",
+        "attitude.py": "f8b2a5c469621816efdc4a3075d85e336669734aec355a3f21bd4c3785449250",
+        "chains.py": "6ea5ec7dfc342de44a13ea862ecabc56e92cdb2fc143dc4c6ead663bb4bea873",
+        "engineering.py": "9f06f57ab3157cd133ef5dcef23062baab3694c3d3c98ca2df8e95793ac12422",
+        "guided_ascent.py": "f55844015128752a44d87507ebe1a399159dcc554d181c7098c189619091b38a",
+        "lifecycle.py": "4157dae5df580a9ebe6a8f8aa0e65d2aebbb5cce31bb9011c743866c6751afc2",
+        "orbital_adapter.py": "faddd9da33889a428d032edf76f7dedbd8be4a7fee166536fa65525fc50e28e8",
+        "powered_flight.py": "4949e7b5c3d4846bf6b4b08dee4790a3e50b8e75b5724b23321d632fe2aadc1e",
+        "simulation.py": "cf3bb5149edc5aa1e91911312f8685d1d4b1b7d301a79648efbcb7fc93311b60",
+        "staged_ascent.py": "fd68a79c7a508c1a1c309e58940a9782837f565a1605cecc8184ca1cae2a6240"
+      }
+    }
+  },
+  "comparison": {
+    "executed_verification_source_hashes_equal": true,
+    "raw_verification_source_hashes_equal": true,
+    "fixture_sha256_equal": true,
+    "complete_canonical_operation_sequence_equal": true,
+    "comparison_applicable": true,
+    "structural_read_verification_reduction_passed": true,
+    "timing_threshold_assertions": false,
+    "checkpoints": [
+      {
+        "revision_count": 2,
+        "operations": {
+          "warm_get": {
+            "before_median_seconds": 0.2684743499994511,
+            "after_median_seconds": 0.03177519999735523,
+            "measured_speedup_ratio": 8.449178920094829,
+            "before_verify_review_calls": 8,
+            "after_verify_review_calls": 0,
+            "before_receipt_decode_calls": 4,
+            "after_receipt_decode_calls": 4,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 657114,
+            "after_compact_json_payload_bytes": 657114
+          },
+          "new_store_get": {
+            "before_median_seconds": 0.25737965000007534,
+            "after_median_seconds": 0.2003582999968785,
+            "measured_speedup_ratio": 1.2845968946836004,
+            "before_verify_review_calls": 8,
+            "after_verify_review_calls": 8,
+            "before_receipt_decode_calls": 4,
+            "after_receipt_decode_calls": 4,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 657114,
+            "after_compact_json_payload_bytes": 657114
+          },
+          "save": {
+            "before_median_seconds": 0.10280049999710172,
+            "after_median_seconds": 0.027610400000412483,
+            "measured_speedup_ratio": 3.723252832105509,
+            "before_verify_review_calls": 1,
+            "after_verify_review_calls": 0,
+            "before_receipt_decode_calls": 1,
+            "after_receipt_decode_calls": 1,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 333020,
+            "after_compact_json_payload_bytes": 333020
+          },
+          "run": {
+            "before_median_seconds": 0.30650080000486923,
+            "after_median_seconds": 0.20075844999882975,
+            "measured_speedup_ratio": 1.5267143176621252,
+            "before_verify_review_calls": 6,
+            "after_verify_review_calls": 4,
+            "before_receipt_decode_calls": 4,
+            "after_receipt_decode_calls": 4,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 658096,
+            "after_compact_json_payload_bytes": 658096
+          }
+        }
+      },
+      {
+        "revision_count": 7,
+        "operations": {
+          "warm_get": {
+            "before_median_seconds": 0.8079401000031794,
+            "after_median_seconds": 0.04550730000119074,
+            "measured_speedup_ratio": 17.754076818049825,
+            "before_verify_review_calls": 18,
+            "after_verify_review_calls": 0,
+            "before_receipt_decode_calls": 14,
+            "after_receipt_decode_calls": 4,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 657563,
+            "after_compact_json_payload_bytes": 657563
+          },
+          "new_store_get": {
+            "before_median_seconds": 0.5091008500021417,
+            "after_median_seconds": 0.2582990500013693,
+            "measured_speedup_ratio": 1.970974535134538,
+            "before_verify_review_calls": 18,
+            "after_verify_review_calls": 8,
+            "before_receipt_decode_calls": 14,
+            "after_receipt_decode_calls": 4,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 657563,
+            "after_compact_json_payload_bytes": 657563
+          },
+          "save": {
+            "before_median_seconds": 0.3097465500031831,
+            "after_median_seconds": 0.0309741999990365,
+            "measured_speedup_ratio": 10.000146896863138,
+            "before_verify_review_calls": 21,
+            "after_verify_review_calls": 0,
+            "before_receipt_decode_calls": 21,
+            "after_receipt_decode_calls": 6,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 333020,
+            "after_compact_json_payload_bytes": 333020
+          },
+          "run": {
+            "before_median_seconds": 0.8246445999975549,
+            "after_median_seconds": 0.24347449999913806,
+            "measured_speedup_ratio": 3.3869854954029037,
+            "before_verify_review_calls": 61,
+            "after_verify_review_calls": 19,
+            "before_receipt_decode_calls": 49,
+            "after_receipt_decode_calls": 19,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 658096,
+            "after_compact_json_payload_bytes": 658096
+          }
+        }
+      },
+      {
+        "revision_count": 13,
+        "operations": {
+          "warm_get": {
+            "before_median_seconds": 1.0736169499978132,
+            "after_median_seconds": 0.05594740000015008,
+            "measured_speedup_ratio": 19.189755913499702,
+            "before_verify_review_calls": 30,
+            "after_verify_review_calls": 0,
+            "before_receipt_decode_calls": 26,
+            "after_receipt_decode_calls": 4,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 658096,
+            "after_compact_json_payload_bytes": 658096
+          },
+          "new_store_get": {
+            "before_median_seconds": 0.9467463999972097,
+            "after_median_seconds": 0.27964080000310787,
+            "measured_speedup_ratio": 3.3855803587555453,
+            "before_verify_review_calls": 30,
+            "after_verify_review_calls": 8,
+            "before_receipt_decode_calls": 26,
+            "after_receipt_decode_calls": 4,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 658096,
+            "after_compact_json_payload_bytes": 658096
+          },
+          "save": {
+            "before_median_seconds": 0.4860684000013862,
+            "after_median_seconds": 0.03870900000038091,
+            "measured_speedup_ratio": 12.556986747180321,
+            "before_verify_review_calls": 78,
+            "after_verify_review_calls": 0,
+            "before_receipt_decode_calls": 78,
+            "after_receipt_decode_calls": 12,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 333020,
+            "after_compact_json_payload_bytes": 333020
+          },
+          "run": {
+            "before_median_seconds": 1.0930716000002576,
+            "after_median_seconds": 0.2651387999940198,
+            "measured_speedup_ratio": 4.122639161167328,
+            "before_verify_review_calls": 193,
+            "after_verify_review_calls": 37,
+            "before_receipt_decode_calls": 169,
+            "after_receipt_decode_calls": 37,
+            "canonical_returned_views_equal": true,
+            "before_compact_json_payload_bytes": 658096,
+            "after_compact_json_payload_bytes": 658096
+          }
+        }
+      }
+    ],
+    "passed": true
+  },
+  "before_preserved_unchanged": true
+}

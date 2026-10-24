@@ -18,3 +18,5 @@ Build A supplies the populated hero path. It must not imply that separate orbita
 Build D may present a captured failure and a guarded replay, with their actual dates, policies and live/offline distinction. It must not silently promote old Ultra compatibility to current quality qualification. A fallback can only show clearly labelled recorded evidence, never impersonate a fresh response.
 
 Build F must not expose the current local key, shutdown, backup or writable workspace endpoints by changing the bind address alone. No automatic cloud spending or public deployment follows from this plan. Deployment and ongoing operation require a concrete reviewed configuration and an approved budget.
+
+October 25 correction pass is delivered within A–D: faster history verification/copying, consistent status/direction checks and LF checkout consistency. It adds no G/H feature scope. See [correction results](CORRECTIVE_BUILD_RESULTS.md); E/F remain planned. Current-source live qualification must be distinguished from historical AI receipts after these changes.

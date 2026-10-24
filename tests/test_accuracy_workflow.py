@@ -92,7 +92,7 @@ class AccuracyWorkflowTests(unittest.TestCase):
         results['thermal']['applicability']['physical_applicability'] = 'validated'
         with self.assertRaisesRegex(ValueError, 'physical applicability'):
             lifecycle.review_project(self.project, results)
-        self.assertEqual(len(catalog()['models']), 8)
+        self.assertEqual(len(catalog()['models']), 10)
 
     def test_legacy_v1_history_is_not_rewritten_or_rerun(self):
         self.project['models'][0].pop('accuracy')

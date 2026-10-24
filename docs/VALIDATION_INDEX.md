@@ -1,3 +1,5 @@
+> October 25 corrections: [delivery scope](CORRECTIVE_BUILD_RESULTS.md), [machine-readable checks](validation/CORRECTIVE_BUILD_CHECKS.json), [paired timing report](HISTORY_PERFORMANCE_RESULTS.json) and [20 separate reference cases](validation/CANONICAL_SOURCE_REFERENCE_RESULTS.json). Full discovery ran 1,338 methods with three stale assertion failures and three SciPy skips; the corrected three modules passed 37 methods. Earlier results remain below as dated history; counts overlap.
+
 > Build D, October 24: [scoped results](BUILD_D_RESULTS.md) and [machine-readable history](validation/BUILD_D_CHECKS.json) add 98 distinct relevant methods across seven modules, six browser groups and bounded live whole-project records. Counts overlap earlier modules and are not additive to past suites. One final current-source changed-rocket case completed; historical generic/failed replies remain distinct.
 
 # Validation index — counts are scoped, not additive

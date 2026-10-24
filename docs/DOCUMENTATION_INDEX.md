@@ -186,3 +186,13 @@ Commit dates record publication checkpoints; some feature work preceded its batc
 - [Build D scoped verification and live history](validation/BUILD_D_CHECKS.json)
 
 These later files do not change the historical baseline counts or hashes.
+
+## October 25 correction records
+
+- [Performance and correctness acceptance](CORRECTIVE_BUILD_ACCEPTANCE.md)
+- [Delivery, exact verification scope and limits](CORRECTIVE_BUILD_RESULTS.md)
+- [Paired history-performance measurements](HISTORY_PERFORMANCE_RESULTS.json)
+- [Scoped corrective checks](validation/CORRECTIVE_BUILD_CHECKS.json)
+- [Canonical-source independent reference rerun](validation/CANONICAL_SOURCE_REFERENCE_RESULTS.json)
+
+These additions preserve the original inventory baseline and historical result documents.

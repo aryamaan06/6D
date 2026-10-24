@@ -60,7 +60,9 @@ The contextual Assistant calls **NVIDIA Nemotron through Nebius Token Factory** 
 | Super | Selected from earlier reviewed comparison evidence. An October 20 explanation reversed a limit-change direction; a separate offline replay under the new guard rejects it. Four earlier constructed qualification cases completed after that correction. Build D separately records a current-source project-specific changed-rocket check, historical generic replies and preserved rejections. | Selected project Assistant. |
 | Ultra | Completed all three October 20 corrected-contract cases; earlier failures and skipped cases remain recorded. It has not completed the current four-case pack. | Evaluated candidate; not enabled as an automatic deep mode. |
 
-These observations concern particular protocols, cases and settings; they are not a universal model ranking. [Comparison results](docs/APPLICATION_ROLES_LIVE_RESULTS.md) · [Direction guard and replay](docs/CHANGE_DIRECTION_RESULTS.md) · [Latest live qualification](docs/AI_QUALIFICATION_RESULTS.md).
+These observations concern particular protocols, cases and settings; they are not a universal model ranking. [Comparison results](docs/APPLICATION_ROLES_LIVE_RESULTS.md) · [Direction guard and replay](docs/CHANGE_DIRECTION_RESULTS.md) · [Recorded requirement qualification](docs/AI_QUALIFICATION_RESULTS.md).
+
+Earlier live receipts retain their original policies and source identities. Current-build live qualification is pending after the source/guard corrections; offline tests do not replace it.
 
 Connect a Nebius key privately through **Connect AI** after configuring an approved provider allowance. [Provider setup](docs/PROVIDER_SETUP.md). Local engineering calculations and saved evidence work without inference; new AI investigations require a usable Token Factory connection. No paid call occurs on startup or connection. The cumulative reservation ledger, per-job ceilings and no-retry policy remain enforced; reservations are not a provider invoice.
 
@@ -78,7 +80,9 @@ Tavily supplies explicit reference searches followed by human review/save/link s
 
 [Build D results](docs/BUILD_D_RESULTS.md) retain all nine whole-project investigation attempts, including four completed histories and five stopped/rejected ones. The final current-source evidence is one specific changed-rocket case; USD0.6197628 was reserved across all attempts, below the USD0.80 ceiling. Generic historical replies and phrase-check false positives are disclosed alongside a caught incorrect direction claim.
 
-The October 24 full offline discovery executed 1,225 methods and exposed two test-fixture issues, including one cleanup error; both affected modules passed 11 tests after correction. The original full-run failure/skip record is retained; a clean full-suite rerun is not claimed. The skipped SciPy reference passed separately with its development dependencies.
+The October 25 correction pass measured a 13-revision, 512-step orbital history: warm reads improved from 1.074 s to 0.056 s and new-store reads from 0.947 s to 0.280 s on shared development hardware, with identical complete returned evidence. The source-stable 1,000-edit check again had zero discrepancies, and 20 separate numerical-reference cases passed.
+
+Full discovery ran 1,338 methods and exposed three outdated catalog/source-list test expectations; those were corrected and the affected 37 methods passed. Three development-only SciPy methods were skipped in the application environment and covered separately. No subsequent clean full-suite rerun is claimed. [Corrective results and caveats](docs/CORRECTIVE_BUILD_RESULTS.md).
 
 [Validation index](docs/VALIDATION_INDEX.md) distinguishes historical full-suite counts, current targeted tests, browser assertions and reference checks. They are not additive. Full regression tests can be run with `python -m unittest discover -s tests`; they use synthetic provider transports, not paid inference.
 

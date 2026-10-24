@@ -120,17 +120,68 @@ def provider_change_context(context):
         "instruction": "Use only these application-derived directions for factual before/after claims. Not comparable means no direction is established. Do not infer physical cause or that all inputs/models were unchanged."}
 
 
-_DIRECTION = (r"increas(?:e|es|ed|ing)|rais(?:e|es|ed|ing)|higher|grew|grown|"
-              r"decreas(?:e|es|ed|ing)|reduc(?:e|es|ed|ing)|lower(?:ed)?|fell|fallen|"
-              r"unchanged|constant|identical|the same|equal")
+_INCREASE = (r"increas(?:e|es|ed|ing)|rais(?:e|es|ed|ing)|higher|larger|greater|"
+             r"grew|grown|ris(?:e|es|en|ing)|rose|(?:went|gone)\s+up|climb(?:s|ed|ing)?")
+_DECREASE = (r"decreas(?:e|es|ed|ing)|reduc(?:e|es|ed|ing)|lower(?:ed)?|smaller|"
+             r"fell|fallen|drop(?:s|ped|ping)?|declin(?:e|es|ed|ing)|(?:went|gone)\s+down")
+_RELAXATION = r"loosen(?:s|ed|ing)?|relax(?:es|ed|ing)?"
+_DIRECTION = (_INCREASE + "|" + _DECREASE + "|" + _RELAXATION
+              + r"|unchanged|constant|identical|the same|equal")
+_PROPOSED_DIRECTION_SUFFIX = (
+    r"(?:(?:may|might|could|would|should)\s+(?:be\s+)?|(?:is|are)\s+)"
+    r"(?:needed|justified|appropriate|considered|reviewed|evaluated|proposed|recommended)\b"
+)
 
 
 def _claimed_direction(word):
-    if re.match(r"increas|rais|higher|grew|grown", word):
+    if re.fullmatch(_INCREASE, word):
         return "increased"
-    if re.match(r"decreas|reduc|lower|fell|fallen", word):
+    if re.fullmatch(_DECREASE, word):
         return "decreased"
+    if re.fullmatch(_RELAXATION, word):
+        return None  # Relaxing <= and >= criteria has opposite scalar meanings.
     return "unchanged"
+
+
+def _commentary_clauses(summary):
+    text = re.sub(r"[\u2010-\u2015\u2212]", "-", summary.casefold())
+    for old, new in (("didn't", "did not"), ("hasn't", "has not"),
+                     ("wasn't", "was not"), ("isn't", "is not")):
+        text = text.replace(old, new)
+    for sentence in re.findall(r"[^.!?;\n]+[.!?;\n]?", text):
+        if sentence.endswith("?") and re.match(r"\s*(?:did|does|do|has|have|had|is|are|was|were|why|how|what|could|would|should|can)\b", sentence):
+            continue
+        for clause in re.split(r"\b(?:while|whereas|but|however|nevertheless)\b|:\s*|,\s*(?=(?:which|and)\b)", sentence.rstrip(".!?;\n")):
+            if (re.match(r"\s*(?:if|unless|whether|could|would|should|might|may|hypothetical|proposed)\b", clause)
+                    or re.match(r"\s*(?:next\b.*?|then\s+)?(?:review|check|consider|evaluate|obtain|verify|compare|inspect|investigate|do\s+not)\b", clause)):
+                continue
+            yield clause
+
+
+def has_directional_commentary(summary):
+    """Limited words-only guard, without claiming general semantic accuracy.
+
+    Whole-project commentary cannot restate a direction even when correct.
+    Preserve requested analyses, hypothetical recommendations and the common
+    higher-fidelity recommendation, which does not compare saved scalars.
+    """
+    from .explanation_quality import _nonasserted_prefix
+    pattern = r"\b(?:" + _DIRECTION + r")\b"
+    for clause in _commentary_clauses(summary):
+        for match in re.finditer(pattern, clause):
+            if (match.group(0) in {"higher", "lower"}
+                    and re.match(r"[-\s]+fidelity\b", clause[match.end():])):
+                continue
+            prefix = clause[:match.start()]
+            if (re.search(r"\b(?:a|an|the)\s+$", prefix)
+                    and re.match(r"\s+(?:(?!(?:and|but|which|that|than)\b)[\w-]+\s+){0,4}"
+                                 + _PROPOSED_DIRECTION_SUFFIX, clause[match.end():])):
+                continue
+            if (_nonasserted_prefix(prefix)
+                    or re.search(r"\b(?:if|unless|whether|could|would|should|might|may|hypothetical|proposed)\b", prefix)):
+                continue
+            return True
+    return False
 
 
 def evaluate_change_commentary(summary, context):
@@ -142,17 +193,9 @@ def evaluate_change_commentary(summary, context):
     """
     if context is None or not context.get("available"):
         return []
+    from .explanation_quality import _nonasserted_prefix
     flags = []
-    text = summary.casefold().replace("didn't", "did not").replace("hasn't", "has not")
-    clauses = []
-    for sentence in re.findall(r"[^.!?;\n]+[.!?;\n]?", text):
-        if sentence.endswith("?") and re.match(r"\s*(?:did|does|do|has|have|had|is|are|was|were|why|how|what|could|would|should|can)\b", sentence):
-            continue
-        clauses.extend(re.split(r"\b(?:while|whereas|but)\b|,\s*(?=(?:which|and)\b)", sentence.rstrip(".!?;\n")))
-    for clause in clauses:
-        if (re.match(r"\s*(?:if|unless|whether|could|would|should|might|may|hypothetical|proposed)\b", clause)
-                or re.match(r"\s*(?:next\b.*?|then\s+)?(?:review|check|consider|evaluate|obtain|verify|compare|inspect)\b", clause)):
-            continue
+    for clause in _commentary_clauses(summary):
         for row in context.get("comparisons", []):
             for alias in row.get("aliases", []):
                 if not alias or len(alias) > 180:
@@ -162,19 +205,35 @@ def evaluate_change_commentary(summary, context):
                 # 'an increased maximum temperature input'. Keep the binding
                 # local so a different subject elsewhere cannot inherit it.
                 patterns = [
-                    subject + r"(?:\s+(?:input|value|metric))?\s+(?:(?:has|have|had|is|are|was|were|been|did|does|do|now|remains?|remained|stayed)\s+){0,3}(?P<neg>not\s+|never\s+)?(?P<direction>" + _DIRECTION + r")\b",
+                    subject + r"(?:\s+(?:input|value|metric))?\s+(?:(?:has|have|had|is|are|was|were|been|did|does|do|now|got|became|become|becomes|remains?|remained|stayed)\s+){0,3}(?P<neg>not\s+|never\s+)?(?P<direction>" + _DIRECTION + r")\b",
                     r"(?P<neg>not\s+|never\s+)?(?P<direction>" + _DIRECTION + r")\s+" + subject,
                 ]
-                for pattern in patterns:
+                for pattern_index, pattern in enumerate(patterns):
                     for match in re.finditer(pattern, clause):
-                        if re.search(r"\b(?:if|unless|whether|could|would|should|might|may|hypothetical|proposed)\b", clause[:match.start()]):
+                        if (_nonasserted_prefix(clause[:match.start()])
+                                or re.search(r"\b(?:if|unless|whether|could|would|should|might|may|hypothetical|proposed)\b", clause[:match.start()])):
                             continue
-                        if (match["direction"] in ("higher", "lower", "equal", "the same", "identical")
+                        if pattern_index == 1 and re.match(r"\s+" + _PROPOSED_DIRECTION_SUFFIX, clause[match.end():]):
+                            continue
+                        if (match["direction"] in ("higher", "larger", "greater", "lower", "smaller", "equal", "the same", "identical")
                                 and re.match(r"\s+(?:than|to|as)\s+", clause[match.end():])
                                 and not re.search(r"\b(?:prior|previous|before|earlier)\b", clause[match.end():])):
                             continue  # A static cross-quantity comparison is not a revision direction.
                         direction = _claimed_direction(match["direction"])
                         if match.start() and re.search(r"\b(?:not|no|never)\s+(?:an?\s+)?$", clause[:match.start()]):
+                            continue
+                        if direction is None:
+                            if match["neg"]:
+                                continue  # A denial does not assert threshold relaxation.
+                            # The v1 context preserves exact scalar directions,
+                            # not a criterion-relaxation interpretation. Do not
+                            # guess an operator or mutate historical digests.
+                            flag = {"code": "change_comparison_unavailable", "severity": "error",
+                                "message": "A threshold-relaxation statement is not established by the captured scalar directions alone.",
+                                "subject": row["subject"], "recorded_direction": row["direction"],
+                                "claimed_direction": "criterion_relaxation", "negated": bool(match["neg"])}
+                            if flag not in flags:
+                                flags.append(flag)
                             continue
                         contradicts = (row["direction"] == direction if match["neg"] else
                                        row["direction"] != direction)

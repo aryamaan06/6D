@@ -255,7 +255,15 @@ def build_guidance(project, review, requirement_id, evidence_ids=()):
     }
 
 
-_QUANTITY = re.compile(r"(?<![\w.])([-+]?\d+(?:,\d{3})*(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*(kg\*m\^2|N\*m\*s/rad|N\*m/rad|N\*m|rad/s|rad|kg/m\^3|m/s\^2|kg/s|m/s|m\^4|m\^2|Pa|kg|K|W|J|N|s|m)\b")
+# Legacy prose inspection recognizes common prefixed units literally. Matching
+# a unit never converts it or makes a prose quantity evidence; current model
+# commentary still follows the separate words-only application-role contract.
+_QUANTITY_NUMBER = r"[-+]?(?:\d+(?:,\d{3})*(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?"
+_QUANTITY_UNIT = (r"kg\*m\^2|N\*m\*s/rad|N\*m/rad|N\*m|rad/s|rad|"
+                  r"kg/m\^3|kg/s|(?:km|cm|mm|m)/s\^2|(?:km|cm|mm|m)/s|"
+                  r"(?:km|cm|mm|m)\^[234]|(?:G|M|k)?Pa|(?:M|k)?N|"
+                  r"(?:M|k|m)?W|(?:M|k)?J|(?:k|m)?g|K|ms|s|km|cm|mm|m")
+_QUANTITY = re.compile(r"(?<![\w.])(" + _QUANTITY_NUMBER + r")\s*(" + _QUANTITY_UNIT + r")(?![\w/\^*])")
 
 
 def _nonasserted_prefix(prefix):
@@ -264,7 +272,9 @@ def _nonasserted_prefix(prefix):
     prefix = re.split(r"\b(?:but|however|nevertheless)\b", prefix)[-1]
     if re.search(r"\b(?:whether|if)\s+(?:(?:the|this)\s+)?$", prefix):
         return True
-    if re.search(r"\b(?:cannot|can't|can\s+not|do\s+not|does\s+not|did\s+not|must\s+not)\s+(?:yet\s+)?(?:claim|say|conclude|determine|establish|know|predict|assert|show|mean|imply)\b[^;.!?]{0,100}$", prefix):
+    if re.search(r"\b(?:cannot|can't|can\s+not|do\s+not|don't|does\s+not|doesn't|did\s+not|didn't|must\s+not|mustn't)\s+(?:yet\s+)?(?:claim|say|conclude|determine|establish|know|predict|assert|assume|show|mean|imply)\b[^;.!?]{0,100}$", prefix):
+        return True
+    if re.search(r"\b(?:not\s+(?:true|the\s+case)|false)\s+that\b[^;.!?]{0,100}$", prefix):
         return True
     if re.search(r"\bnot\s+(?:a\s+)?(?:finding|claim|conclusion|indication|evidence|proof)\s+(?:that|of)\b[^;.!?]{0,100}$", prefix):
         return True
@@ -282,6 +292,72 @@ def _affirmative(pattern, text):
                 and not re.search(r"\b(?:not|never|cannot|can't|no\s+claim\s+that|does\s+not|do\s+not)\s+(?:be\s+|been\s+|considered\s+|declared\s+|automatically\s+)?$", prefix)):
             return True
     return False
+
+
+_STATUS_OUTCOME = (
+    r"(?P<not_assessed>(?:not[_\s]+|never\s+)(?:yet\s+|currently\s+)?(?:been\s+)?assessed|unassessed)|"
+    r"(?P<not_met>(?:not[_\s]+|never\s+)(?:yet\s+|currently\s+)?(?:been\s+)?(?:met|satisfied|passed)|unmet|unsatisfied|fails?|failed|violat\w*|"
+    r"(?:does|did)\s+not\s+(?:meet|satisfy|pass)(?:\s+the\s+(?:criterion|requirement))?)|"
+    r"(?P<met>met|satisfied|passes|passed|meets\s+the\s+(?:criterion|requirement))"
+)
+_SELECTED_STATUS_SUBJECT = (
+    r"(?:(?:the|this)\s+(?:(?:canonical(?:\s+design)?|calculated|design|selected)\s+)?"
+    r"(?:requirement|criterion|finding)(?:\s+status)?|"
+    r"(?:canonical\s+)?(?:finding\s+)?status|canonical\s+finding|"
+    r"(?:canonical(?:\s+design)?|calculated|design)\s+(?:requirement|criterion))"
+)
+_BLANKET_STATUS_SUBJECT = (
+    r"(?:everything|all(?:\s+(?:requirements|checks|criteria|systems))?|"
+    r"every\s+(?:requirement|check|criterion))"
+)
+
+
+def _status_claims(text, subject):
+    """Read explicit local status phrases, without inferring general meaning.
+
+    Callers supply the subject scope: a single selected requirement may use
+    'this requirement', whereas a whole review must bind a named requirement or
+    an explicit blanket claim. Unverified quotation marks do not exempt claims.
+    Exact attributed captured reason/issue quotes are masked by the caller.
+    """
+    for contraction, expanded in (("isn't", "is not"), ("wasn't", "was not"),
+                                  ("aren't", "are not"), ("weren't", "were not"),
+                                  ("hasn't", "has not"), ("haven't", "have not"),
+                                  ("doesn't", "does not"), ("didn't", "did not")):
+        text = re.sub(re.escape(contraction), expanded, text, flags=re.I)
+    pattern = re.compile(
+        r"(?<!\w)(?:" + subject + r")(?!\w)\s*:?\s*"
+        r"(?:(?:is|was|are|were|has|have|remains?|remained)\s+)?"
+        r"(?:been\s+)?(?:recorded\s+as\s+)?[\"'`]?"
+        r"(?:" + _STATUS_OUTCOME + r")(?!\w)", re.I)
+    claims = []
+    for sentence in re.split(r"(?<=[.!?;])\s+|\n+", text):
+        for match in pattern.finditer(sentence):
+            prefix = re.split(r":\s*", sentence[:match.start()].casefold())[-1]
+            prefix = re.split(r"\b(?:but|however|nevertheless)\b", prefix)[-1]
+            if (_nonasserted_prefix(prefix)
+                    or re.search(r"\b(?:check|verify|determine|assess|investigate|ask|consider)\b[^.!?;]*$", prefix)
+                    or (sentence.rstrip().endswith("?")
+                        and re.match(r"\s*(?:is|was|are|were|has|have|does|did|can|could|would|should|whether)\b", sentence, re.I))):
+                continue
+            if re.search(r"\b(?:not|never)\s+(?:that\s+)?$", prefix):
+                continue
+            claims.append(next(status for status in _MEANINGS if match.group(status) is not None))
+    return claims
+
+
+def _named_status_subject(aliases):
+    """Escape explicit IDs/titles and their ordinary-space spelling only."""
+    forms = set()
+    for alias in aliases:
+        if isinstance(alias, str) and 0 < len(alias.strip()) <= 180:
+            forms.add(alias.strip())
+            forms.add(re.sub(r"[_-]+", " ", alias.strip()))
+    if not forms:
+        return None
+    return (r"(?:the\s+)?(?:requirement\s+)?[\"'`]?"
+            r"(?:" + "|".join(re.escape(form) for form in sorted(forms, key=len, reverse=True))
+            + r")[\"'`]?(?:\s+(?:requirement|criterion|finding|status))?")
 
 
 def _readiness_claim_text(text):
@@ -401,7 +477,7 @@ def _unsupported_result_statements(text, finding):
         r"(?:would|will)\s+(?:be\s+)?(?:met|not[_\s]+met|satisfied|above|below|within)\b|"
         r"(?:is|was|would\s+be|will\s+be)\s+(?:above|below|greater\s+than|less\s+than)\b)"
     )
-    quantity = r"[-+]?\d+(?:,\d{3})*(?:\.\d+)?(?:[eE][-+]?\d+)?\s*(?:kg\*m\^2|N\*m\*s/rad|N\*m/rad|N\*m|rad/s|rad|kg/m\^3|m/s\^2|kg/s|m/s|m\^4|m\^2|Pa|kg|K|W|J|N|s|m)\b"
+    quantity = _QUANTITY_NUMBER + r"\s*(?:" + _QUANTITY_UNIT + r")(?![\w/\^*])"
     # Use original case for unit recognition; other words are case-insensitive.
     assertion = re.compile(subject + r"\s+(?:" + comparison + r"|"
                            r"(?:(?:would|will)\s+(?:be|reach|equal)|is|was|equals?|reaches?|"
@@ -631,9 +707,13 @@ def evaluate_explanation(record):
     comparison_contradictions = _literal_comparison_contradictions(claim_summary)
     if comparison_contradictions:
         flag("literal_comparison_contradiction", "An explicit same-unit numerical comparison contradicts the literal values printed in the explanation. Inspect the recorded metric and limit; this check does not determine requirement satisfaction.", "error")
-    positive = _affirmative(r"\b(?:everything|all\s+(?:requirements|checks))\s+(?:(?:has|have|are|were|is|was)\s+)?(?:passed|passes|met)\b|\b(?:this|the)\s+requirement\s+(?:(?:is|was|has)\s+)?(?:met|satisfied|passes|passed)\b", claim_text)
-    if status in {"not_met", "not_assessed"} and positive:
-        flag("canonical_status_contradiction", "A positive outcome claim conflicts with the canonical requirement status.", "error")
+    status_subjects = [_SELECTED_STATUS_SUBJECT, _BLANKET_STATUS_SUBJECT]
+    named_subject = _named_status_subject([record.get("requirement_id"), finding.get("requirement_id")])
+    if named_subject:
+        status_subjects.append(named_subject)
+    if (status in _MEANINGS and any(claim != status for subject in status_subjects
+                                  for claim in _status_claims(claim_summary, subject))):
+        flag("canonical_status_contradiction", "An explicit outcome claim conflicts with the canonical requirement status.", "error")
     readiness_text = _readiness_claim_text(text if test_bundle is not None else claim_text)
     if _affirmative(r"\b(?:mission\s+success\s+is\s+guaranteed|guarantees?\s+mission\s+success|(?:ready|safe|cleared|approved)\s+(?:for|to)\s+launch|launch\s+(?:is\s+)?authorized)\b", readiness_text):
         flag("readiness_or_guarantee_claim", "Readiness or guarantee language requires review; this evidence does not authorize launch.", "error")
