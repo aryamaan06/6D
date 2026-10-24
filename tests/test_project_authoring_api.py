@@ -65,7 +65,7 @@ class ProjectAuthoringAPITests(unittest.TestCase):
             status, catalog = self.request("/api/model-catalog")
             self.assertEqual(status, 200)
             self.assertEqual({m["type"] for m in catalog["models"]},
-                {"ideal_propulsion", "static_cantilever", "radiative_equilibrium", "drag_load", "orbital_trajectory", "power_energy_budget", "attitude_control"})
+                {"ideal_propulsion", "static_cantilever", "radiative_equilibrium", "drag_load", "orbital_trajectory", "power_energy_budget", "attitude_control", "powered_flight"})
             for model in catalog["models"]:
                 self.assertTrue(model["parameters"])
                 self.assertTrue(model["metrics"])

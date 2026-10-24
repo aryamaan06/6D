@@ -21,6 +21,15 @@ class UltraDiagnosticTests(unittest.TestCase):
         self.store=WorkspaceStore(self.folder/'workspace.sqlite3')
         self.ai=WorkspaceAI(self.store,self.folder,provider_factory=offline_factory)
         self.old=WorkflowEvaluation(self.ai);self.service=UltraDiagnostic(self.ai)
+        self.addCleanup(self.wait_for_idle)
+
+    def wait_for_idle(self):
+        # Join the ownership lifecycle before deleting SQLite files on Windows.
+        # This is a fixture deadline, not a provider retry or quality gate.
+        end=time.monotonic()+45
+        while self.ai._active and time.monotonic()<end:
+            time.sleep(.05)
+        self.assertIsNone(self.ai._active, 'Offline worker did not release its session.')
 
     def case(self):
         project=example_projects()['orbital_review'];self.store.create_project(project)
@@ -44,11 +53,11 @@ class UltraDiagnosticTests(unittest.TestCase):
         self.ai.connect(KEY);case=self.case()
         with patch('sixd.workspace_workflow_evaluation.build_plan',return_value={'cases':[case]}):
             started=self.service.start(allowance_usd=.5,allow_spend=True)
-        end=time.monotonic()+15
+        end=time.monotonic()+45
         while time.monotonic()<end:
             record=self.service.get(started['comparison_id'])
-            if record['state'] not in {'queued','running'}:break
-            time.sleep(.02)
+            if record['state'] not in {'queued','running'} and self.ai._active is None:break
+            time.sleep(.05)
         self.assertEqual(record['state'],'completed',record)
         self.assertEqual(record['receipt']['provider_mode'],'offline_transport_fixture')
         self.assertEqual(record['receipt']['live_model_calls'],0)
