@@ -271,11 +271,13 @@ class ResearchTests(unittest.TestCase):
             self.assertFalse(reader.is_alive(), 'Status must not wait for provider network I/O')
             self.assertEqual(statuses[0]['active_requests'], 1)
             self.assertEqual(statuses[0]['reserved_credits'], 1)
-            self.service.disconnect()
+            with self.assertRaises(ConflictError):
+                self.service.disconnect()
         finally:
             finish.set();worker.join(3)
         self.assertFalse(worker.is_alive())
         self.assertEqual(results[0]['state'], 'completed')
+        self.service.disconnect()
         self.assertFalse(self.service.status()['key_present'])
         self.assertEqual(self.service.status()['active_requests'], 0)
 

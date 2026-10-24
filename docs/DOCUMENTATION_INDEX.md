@@ -196,3 +196,10 @@ These later files do not change the historical baseline counts or hashes.
 - [Canonical-source independent reference rerun](validation/CANONICAL_SOURCE_REFERENCE_RESULTS.json)
 
 These additions preserve the original inventory baseline and historical result documents.
+
+## October 25 Build E records
+
+- [Acceptance](BUILD_E_ACCEPTANCE.md)
+- [Results and boundaries](BUILD_E_RESULTS.md)
+- [Remember/restore/forget guide](REMEMBERED_SERVICE_CONNECTIONS.md)
+- [Scoped machine-readable checks](validation/BUILD_E_CHECKS.json)

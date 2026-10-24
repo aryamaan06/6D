@@ -30,6 +30,8 @@ Python **3.10+** is required; the application runtime uses the standard library.
 
 On Windows, `Setup-6D.cmd`, `Open-6D.cmd` and `Stop-6D.cmd` provide the same workflow; `py -3` may be used in place of `python`. On Linux/macOS, use `python3`. Windows has native launcher verification; the other platforms still need native qualification. [Setup, backup and recovery details](docs/RELEASE_HANDOVER.md).
 
+Windows users can opt into **Remember on this device** separately for Nebius, Tavily and LangSmith. Protected keys restore locally after restart without provider calls. Tavily reservations and LangSmith preview/upload approval remain intact; credential files are excluded from backups. [Connection controls and limits](docs/REMEMBERED_SERVICE_CONNECTIONS.md) · [Build E checks](docs/BUILD_E_RESULTS.md).
+
 For a connected rocket example, choose **Rocket reference** in the sidebar, create the project and calculate its baseline. Review overview stages a thrust reduction and correction through the normal preview/save/rerun controls. Five bounded calculations share explicit inputs and scalar links; launch guidance stays unassessed. [Reference walkthrough and verification](docs/BUILD_A_RESULTS.md).
 
 A fresh checkout opens without saved private project data or provider credentials. Use **Import project** to choose a constructed reference, explicitly create it, and **Run checks**. **Guided review** follows a design change; **Powered flight** offers its existing vertical-ascent reference. Loading a page never silently calculates a new verdict. [Powered-flight walkthrough](docs/POWERED_FLIGHT.md).
@@ -96,7 +98,7 @@ The broader 6D concept predates some of this code. The repository history alone 
 
 ## Limits
 
-The ten bounded models cover ideal propulsion, static beams, steady radiative equilibrium, single-condition drag, unforced two-body orbits, supplied power/energy budgets, single-axis spacecraft pointing, vertical ascent/coast, prescribed planar ascent and variable-thrust serial staged ascent. These are not complete engineering disciplines. Scalar links do not create simultaneous multiphysics coupling. Prescribed steering is not closed-loop guidance/control. Whole-project AI reviews the captured scalar evidence and declared gaps, with the exclusions in its guide. E remembered optional-service connections and F protected hosting remain planned.
+The ten bounded models cover ideal propulsion, static beams, steady radiative equilibrium, single-condition drag, unforced two-body orbits, supplied power/energy budgets, single-axis spacecraft pointing, vertical ascent/coast, prescribed planar ascent and variable-thrust serial staged ascent. These are not complete engineering disciplines. Scalar links do not create simultaneous multiphysics coupling. Prescribed steering is not closed-loop guidance/control. Whole-project AI reviews the captured scalar evidence and declared gaps, with the exclusions in its guide. E remembered optional-service connections are implemented; F protected hosting remains planned.
 
 There is no complete launch-to-orbit, reentry or landing simulator, hardware/flight qualification, customer validation or launch authorization. Current data/examples are constructed unless explicitly classified otherwise. Recorded playback is historical evidence, not a new live inference. The local loopback server must not simply be exposed publicly; Build F must provide appropriate access, isolation and spending controls.
 

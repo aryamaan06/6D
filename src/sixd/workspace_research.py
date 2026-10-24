@@ -7,6 +7,7 @@ from copy import deepcopy
 import ipaddress
 import json
 import math
+from pathlib import Path
 import re
 import threading
 from urllib.error import HTTPError, URLError
@@ -16,6 +17,8 @@ from uuid import uuid4
 
 from .workspace import WorkspaceError, ConflictError, _digest, _encode, _now, _revision
 from .workspace_sources import _text, _url, _targets
+from .credential_store import CredentialError
+from .service_credentials import ServiceCredentialStore, credential_error_code, validate_connection
 
 SCHEMA = 'sixd.research-search.v1'
 ENDPOINT = 'https://api.tavily.com/search'
@@ -181,7 +184,7 @@ def preview_source(receipt, index):
 
 
 class WorkspaceResearch:
-    def __init__(self, store, sources, transport=None):
+    def __init__(self, store, sources, transport=None, *, credential_store=None, local_directory=None):
         if sources.store is not store:
             raise WorkspaceError('Research and source library must share a workspace.')
         self.store, self.sources = store, sources
@@ -189,6 +192,10 @@ class WorkspaceResearch:
         self._active = 0
         self._transport = transport or _transport
         self._lock = threading.RLock()
+        local = Path(local_directory) if local_directory is not None else self.store.db_path.parent
+        self._credential_store = (credential_store if credential_store is not None else
+            ServiceCredentialStore(local / 'credentials' / 'tavily.dpapi', service='tavily'))
+        self._remembered, self._key_source, self._credential_error = False, None, None
         with store._connect(write=True) as connection:
             connection.execute('''CREATE TABLE IF NOT EXISTS project_research_versions (
                 search_id TEXT NOT NULL, version INTEGER NOT NULL,
@@ -196,6 +203,20 @@ class WorkspaceResearch:
                 created_at TEXT NOT NULL, snapshot TEXT NOT NULL, digest TEXT NOT NULL,
                 PRIMARY KEY(search_id,version),
                 FOREIGN KEY(project_id,revision) REFERENCES revisions(project_id,revision))''')
+        try:
+            self._remembered = self._credential_store.exists()
+            if self._remembered:
+                restored = self._credential_store.load()
+                if not isinstance(restored, dict) or set(restored) != {'key', 'settings'}:
+                    raise CredentialError('credential_data_invalid')
+                settings = validate_connection('tavily', restored['key'], restored['settings'])
+                with self.store._connect() as connection:
+                    if settings['credit_limit'] < self._reserved(connection):
+                        raise CredentialError('credential_data_invalid')
+                self._key, self._credit_limit = restored['key'], settings['credit_limit']
+                self._key_source = 'remembered'
+        except CredentialError as error:
+            self._credential_error = credential_error_code(error)
 
     def _reserved(self, connection):
         return connection.execute('SELECT COUNT(*) FROM project_research_versions WHERE version=1').fetchone()[0]
@@ -227,23 +248,62 @@ class WorkspaceResearch:
                 'active_requests': self._active,
                 'usage_review_required': review_required,
                 'can_search': self._key is not None and self._credit_limit is not None and reserved < self._credit_limit and not review_required,
-                'key_storage': 'server_memory_only', 'limitations': list(LIMITATIONS)}
+                'remember_supported': self._credential_store.supported,
+                'key_remembered': self._remembered, 'key_source': self._key_source,
+                'credential_error': self._credential_error,
+                'key_storage': 'windows_current_user_dpapi' if self._key_source == 'remembered' else 'server_memory_only',
+                'limitations': list(LIMITATIONS)}
 
-    def connect(self, api_key, credit_limit):
+    def connect(self, api_key, credit_limit, remember=False):
         if (not isinstance(api_key, str) or not 8 <= len(api_key) <= 2048
                 or any(ord(ch) < 33 or ord(ch) > 126 for ch in api_key)):
             raise WorkspaceError('Enter a nonempty Tavily key privately, without whitespace.')
         if type(credit_limit) is not int or not 1 <= credit_limit <= MAX_CREDITS:
             raise WorkspaceError('Choose an absolute local Tavily allowance from one through twenty credits.')
+        if type(remember) is not bool:
+            raise WorkspaceError('Remember on this device must be true or false.')
         with self._lock, self.store._connect() as connection:
+            if self._active:
+                raise ConflictError('Wait for the current explicit search before changing its connection.')
             if credit_limit < self._reserved(connection):
                 raise WorkspaceError('The absolute allowance cannot be below retained request reservations.')
+            try:
+                if remember:
+                    self._credential_store.save(api_key, {'credit_limit': credit_limit})
+                else:
+                    self._credential_store.forget()
+            except CredentialError as error:
+                self._credential_error = credential_error_code(error)
+                raise WorkspaceError('The private connection was not changed because local credential storage could not be updated. Review the storage status.') from None
             self._key, self._credit_limit = api_key, credit_limit
+            self._remembered, self._key_source, self._credential_error = remember, 'remembered' if remember else 'session', None
         return self.status()
 
     def disconnect(self):
         with self._lock:
+            if self._active:
+                raise ConflictError('Wait for the current explicit search before disconnecting its connection.')
+            self._forget_connection()
             self._key, self._credit_limit = None, None
+            self._key_source = None
+        return self.status()
+
+    def _forget_connection(self):
+        try:
+            self._credential_store.forget()
+        except CredentialError as error:
+            self._credential_error = credential_error_code(error)
+            raise WorkspaceError('The remembered copy could not be removed. The current private connection was not changed.') from None
+        self._remembered, self._credential_error = False, None
+        if self._key_source == 'remembered':
+            self._key_source = 'session'
+
+    def forget_key(self):
+        """Remove the saved copy while keeping the current session and allowance."""
+        with self._lock:
+            if self._active:
+                raise ConflictError('Wait for the current explicit search before changing its remembered connection.')
+            self._forget_connection()
         return self.status()
 
     @staticmethod

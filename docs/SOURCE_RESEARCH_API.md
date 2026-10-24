@@ -1,3 +1,5 @@
+> October 25 Build E: optional Windows-encrypted remembering is now available separately for Tavily and LangSmith. Service settings restore locally; prior reservations and explicit upload approvals remain. Keys stay out of backups. [Current connection guide](REMEMBERED_SERVICE_CONNECTIONS.md) · [Verification](BUILD_E_RESULTS.md). Earlier session-only statements below describe the previous implementation.
+
 # Optional Tavily reference-search contract
 
 October 24 live result: the connected service completed one Basic search returning five NASA references, using one reserved and provider-reported credit. Exact preview/form handoff and preservation checks passed; see [TAVILY_LIVE_RESULTS.md](TAVILY_LIVE_RESULTS.md). Results remain unverified supplemental material.

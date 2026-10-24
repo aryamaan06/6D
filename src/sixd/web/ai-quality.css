@@ -53,6 +53,9 @@
 #sixd-workspace .aq-private-form{display:grid;grid-template-columns:minmax(150px,1.15fr) 85px minmax(180px,1.3fr);gap:13px;align-items:end;padding:16px 18px;border:1px solid var(--sd-border);border-radius:8px;margin-top:16px}
 #sixd-workspace .aq-private-form label{display:flex;flex-direction:column;gap:6px;font-size:10.5px;font-weight:550;min-width:0}
 #sixd-workspace .aq-private-form label .aq-muted{font-weight:400}
+#sixd-workspace .aq-private-form label.aq-remember{grid-column:1/-1;flex-direction:row;align-items:center;gap:8px}
+#sixd-workspace .aq-private-form label.aq-remember input{width:16px;height:16px;min-width:16px;margin:0;padding:0;accent-color:var(--sd-blue)}
+#sixd-workspace .aq-private-form label.aq-remember:has(input:disabled){color:var(--sd-soft)}
 #sixd-workspace .aq-private-form input,#sixd-workspace .aq-private-form select{width:100%;min-width:0;background:#fff;border:1px solid var(--sd-border);border-radius:6px;padding:8px 9px;font-size:11px;color:var(--sd-ink)}
 #sixd-workspace .aq-private-form>.aq-inline,#sixd-workspace .aq-private-form>p{grid-column:1/-1}
 #sixd-workspace .aq-private-form>p{margin-top:0}

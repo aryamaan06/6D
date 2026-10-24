@@ -8,6 +8,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 import json
 import math
+from pathlib import Path
 import re
 import threading
 from urllib.error import HTTPError, URLError
@@ -16,6 +17,8 @@ from uuid import UUID, uuid4
 
 from .model_evaluation import CANDIDATES
 from .workspace import ConflictError, WorkspaceError, _digest, _encode, _now
+from .credential_store import CredentialError
+from .service_credentials import ServiceCredentialStore, credential_error_code, validate_connection
 
 SCHEMA = 'sixd.observability-export.v1'
 PREVIEW_SCHEMA = 'sixd.observability-preview.v1'
@@ -164,12 +167,16 @@ def _payload(record):
 
 
 class WorkspaceObservability:
-    def __init__(self, ai, qualification, *, transport=None):
+    def __init__(self, ai, qualification, *, transport=None, credential_store=None, local_directory=None):
         self.ai, self.qualification, self.store = ai, qualification, ai.store
         self._key, self._region, self._workspace_id = None, 'us', None
         self._transport = transport or _transport
         self._lock = threading.RLock()
         self._active = 0
+        local = Path(local_directory) if local_directory is not None else self.store.db_path.parent
+        self._credential_store = (credential_store if credential_store is not None else
+            ServiceCredentialStore(local / 'credentials' / 'langsmith.dpapi', service='langsmith'))
+        self._remembered, self._key_source, self._credential_error = False, None, None
         with self.store._connect(write=True) as db:
             db.execute('''CREATE TABLE IF NOT EXISTS project_observability_versions (
                 export_id TEXT NOT NULL, version INTEGER NOT NULL,
@@ -182,6 +189,17 @@ class WorkspaceObservability:
                 self._insert(db, {**{k: v for k, v in first.items() if k != 'digest'},
                     'version': 2, 'state': 'interrupted', 'completed_at': _now(),
                     'error_code': 'server_restarted', 'previous_digest': first['digest']})
+        try:
+            self._remembered = self._credential_store.exists()
+            if self._remembered:
+                restored = self._credential_store.load()
+                if not isinstance(restored, dict) or set(restored) != {'key', 'settings'}:
+                    raise CredentialError('credential_data_invalid')
+                settings = validate_connection('langsmith', restored['key'], restored['settings'])
+                self._key, self._region, self._workspace_id = restored['key'], settings['region'], settings['workspace_id']
+                self._key_source = 'remembered'
+        except CredentialError as error:
+            self._credential_error = credential_error_code(error)
 
     @staticmethod
     def _insert(db, value):
@@ -218,17 +236,23 @@ class WorkspaceObservability:
         with self._lock, self.store._connect() as db:
             attempts = db.execute('SELECT COUNT(*) FROM project_observability_versions WHERE version=1').fetchone()[0]
             return {'schema': 'sixd.observability-status.v1', 'provider': 'langsmith',
-                    'key_present': self._key is not None, 'key_storage': 'server_memory_only',
+                    'key_present': self._key is not None,
+                    'remember_supported': self._credential_store.supported,
+                    'key_remembered': self._remembered, 'key_source': self._key_source,
+                    'credential_error': self._credential_error,
+                    'key_storage': 'windows_current_user_dpapi' if self._key_source == 'remembered' else 'server_memory_only',
                     'region': self._region, 'workspace_id': self._workspace_id,
                     'endpoint': ENDPOINTS[self._region], 'attempts': attempts, 'maximum_attempts': MAX_EXPORTS,
                     'active_requests': self._active, 'can_export': self._key is not None and attempts < MAX_EXPORTS and not self._active,
                     'limitations': list(LIMITATIONS)}
 
-    def connect(self, api_key, region='us', workspace_id=None):
+    def connect(self, api_key, region='us', workspace_id=None, remember=False):
         if not isinstance(api_key, str) or not 8 <= len(api_key) <= 2048 or any(not 33 <= ord(ch) <= 126 for ch in api_key):
             raise WorkspaceError('Enter the LangSmith key privately without whitespace.')
         if not isinstance(region, str) or region not in ENDPOINTS:
             raise WorkspaceError('Choose the US or EU LangSmith region.')
+        if type(remember) is not bool:
+            raise WorkspaceError('Remember on this device must be true or false.')
         if workspace_id is not None:
             try:
                 if not isinstance(workspace_id, str) or str(UUID(workspace_id)) != workspace_id.lower():
@@ -241,12 +265,43 @@ class WorkspaceObservability:
         with self._lock:
             if self._active:
                 raise ConflictError('Wait for the current explicit upload before changing its connection.')
+            try:
+                if remember:
+                    self._credential_store.save(api_key, {'region': region, 'workspace_id': workspace_id})
+                else:
+                    self._credential_store.forget()
+            except CredentialError as error:
+                self._credential_error = credential_error_code(error)
+                raise WorkspaceError('The private connection was not changed because local credential storage could not be updated. Review the storage status.') from None
             self._key, self._region, self._workspace_id = api_key, region, workspace_id
+            self._remembered, self._key_source, self._credential_error = remember, 'remembered' if remember else 'session', None
         return self.status()
 
     def disconnect(self):
         with self._lock:
+            if self._active:
+                raise ConflictError('Wait for the current explicit upload before disconnecting its connection.')
+            self._forget_connection()
             self._key = None
+            self._key_source = None
+        return self.status()
+
+    def _forget_connection(self):
+        try:
+            self._credential_store.forget()
+        except CredentialError as error:
+            self._credential_error = credential_error_code(error)
+            raise WorkspaceError('The remembered copy could not be removed. The current private connection was not changed.') from None
+        self._remembered, self._credential_error = False, None
+        if self._key_source == 'remembered':
+            self._key_source = 'session'
+
+    def forget_key(self):
+        """Remove the saved copy while keeping the current session and settings."""
+        with self._lock:
+            if self._active:
+                raise ConflictError('Wait for the current explicit upload before changing its remembered connection.')
+            self._forget_connection()
         return self.status()
 
     def preview(self, qualification_id):

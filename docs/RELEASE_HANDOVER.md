@@ -1,3 +1,5 @@
+> October 25 Build E: optional Windows-encrypted remembering is now available separately for Tavily and LangSmith. Service settings restore locally; prior reservations and explicit upload approvals remain. Keys stay out of backups. [Current connection guide](REMEMBERED_SERVICE_CONNECTIONS.md) · [Verification](BUILD_E_RESULTS.md). Earlier session-only statements below describe the previous implementation.
+
 # Running and recovering 6D
 
 This guide covers the local 6D application. The code and deterministic engineering

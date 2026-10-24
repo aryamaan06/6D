@@ -39,7 +39,7 @@ class WindowsDPAPI:
     supported = os.name == "nt"
 
     @staticmethod
-    def _transform(data, *, decrypt):
+    def _transform(data, *, decrypt, entropy_bytes=_ENTROPY):
         if os.name != "nt":
             raise CredentialError("credential_storage_unsupported")
         if not isinstance(data, bytes) or not 0 < len(data) <= MAX_FILE_BYTES:
@@ -61,9 +61,9 @@ class WindowsDPAPI:
             free.argtypes = [ctypes.c_void_p]
             free.restype = ctypes.c_void_p
             source_buffer = (ctypes.c_ubyte * len(data)).from_buffer_copy(data)
-            entropy_buffer = (ctypes.c_ubyte * len(_ENTROPY)).from_buffer_copy(_ENTROPY)
+            entropy_buffer = (ctypes.c_ubyte * len(entropy_bytes)).from_buffer_copy(entropy_bytes)
             source = _DataBlob(len(data), ctypes.cast(source_buffer, ctypes.POINTER(ctypes.c_ubyte)))
-            entropy = _DataBlob(len(_ENTROPY), ctypes.cast(entropy_buffer, ctypes.POINTER(ctypes.c_ubyte)))
+            entropy = _DataBlob(len(entropy_bytes), ctypes.cast(entropy_buffer, ctypes.POINTER(ctypes.c_ubyte)))
             output, description = _DataBlob(), ctypes.c_void_p()
             try:
                 if decrypt:

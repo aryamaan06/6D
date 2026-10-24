@@ -60,6 +60,7 @@ CODE_FILES += [Path(__file__).with_name("staged_ascent.py")]
 BUILD_FILES += [WEB / name for name in ("guided-ascent.js", "guided-ascent.css")]
 BUILD_FILES += [WEB / name for name in ("staged-ascent.js", "staged-ascent.css")]
 CODE_FILES += [Path(__file__).with_name("workspace_series.py")]
+CODE_FILES += [Path(__file__).with_name("service_credentials.py")]
 CODE_FILES += [Path(__file__).with_name(name) for name in ("ai_qualification.py", "workspace_qualification.py", "workspace_observability.py")]
 BUILD_FILES += [WEB / name for name in ("ai-quality.js", "ai-quality.css")]
 
@@ -106,7 +107,8 @@ class WorkspaceHTTPServer(ThreadingHTTPServer):
         self.test_evidence = TestEvidence(self.store, self.test_data)
         self.systems = WorkspaceSystems(self.store)
         self.sources = WorkspaceSources(self.store)
-        self.research = WorkspaceResearch(self.store, self.sources, transport=research_transport)
+        self.research = WorkspaceResearch(self.store, self.sources, transport=research_transport,
+            local_directory=ai_local_directory or Path(db_path).parent)
         self.actions = WorkspaceActions(self.store, self.sources)
         self.coverage = WorkspaceCoverage(self.store)
         self.comparison = WorkspaceComparison(self.store, self.scenarios)
@@ -118,7 +120,8 @@ class WorkspaceHTTPServer(ThreadingHTTPServer):
         self.ultra_diagnostic = UltraDiagnostic(self.ai)
         self.evidence_evaluation = EvidenceEvaluation(self.ai)
         self.qualification = WorkspaceQualification(self.ai)
-        self.observability = WorkspaceObservability(self.ai, self.qualification, transport=observability_transport)
+        self.observability = WorkspaceObservability(self.ai, self.qualification,
+            transport=observability_transport, local_directory=self.ai.local)
         super().__init__(address, WorkspaceHandler)
 
 
@@ -453,15 +456,18 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 return
             if _code_fingerprint() != RUNTIME_ID:
                 raise ConflictError("6D application code has changed. Restart the local workspace server before saving or running checks.")
-            if route not in {"/api/envelopes/preview", "/api/simulation-imports", "/api/simulation-imports/preview", "/api/projects", "/api/revisions", "/api/impact", "/api/run", "/api/ai/connect", "/api/ai/disconnect", "/api/ai/forget", "/api/investigations", "/api/model-evaluation/start", "/api/workflow-evaluation/start", "/api/ultra-diagnostic/start", "/api/evidence-evaluation/prepare", "/api/evidence-evaluation/start", "/api/simulations", "/api/authoring/preflight", "/api/scenarios", "/api/test-data/preview", "/api/test-comparisons", "/api/test-evidence/impact", "/api/interfaces/preview", "/api/project-intake/inspect", "/api/project-intake/preview", "/api/sources", "/api/source-links", "/api/source-links/confirm", "/api/actions", "/api/actions/update", "/api/actions/review", "/api/design-comparison", "/api/research/connect", "/api/research/disconnect", "/api/research/search", "/api/coverage/save", "/api/ai-quality/prepare", "/api/ai-quality/start", "/api/observability/connect", "/api/observability/disconnect", "/api/observability/preview", "/api/observability/export"}:
+            if route not in {"/api/envelopes/preview", "/api/simulation-imports", "/api/simulation-imports/preview", "/api/projects", "/api/revisions", "/api/impact", "/api/run", "/api/ai/connect", "/api/ai/disconnect", "/api/ai/forget", "/api/investigations", "/api/model-evaluation/start", "/api/workflow-evaluation/start", "/api/ultra-diagnostic/start", "/api/evidence-evaluation/prepare", "/api/evidence-evaluation/start", "/api/simulations", "/api/authoring/preflight", "/api/scenarios", "/api/test-data/preview", "/api/test-comparisons", "/api/test-evidence/impact", "/api/interfaces/preview", "/api/project-intake/inspect", "/api/project-intake/preview", "/api/sources", "/api/source-links", "/api/source-links/confirm", "/api/actions", "/api/actions/update", "/api/actions/review", "/api/design-comparison", "/api/research/connect", "/api/research/forget", "/api/research/disconnect", "/api/research/search", "/api/coverage/save", "/api/ai-quality/prepare", "/api/ai-quality/start", "/api/observability/connect", "/api/observability/forget", "/api/observability/disconnect", "/api/observability/preview", "/api/observability/export"}:
                 self._error(404, "This workspace action is not available.")
                 return
             if route in {"/api/source-links", "/api/source-links/confirm"}:
                 if not isinstance(value.get("expected_digest"), str) or re.fullmatch(r"[a-f0-9]{64}", value["expected_digest"]) is None:
                     raise WorkspaceError("Refresh the source library and supply its exact displayed context digest.")
             if route == "/api/research/connect":
-                self._fields(value, {"api_key", "credit_limit"})
-                view = self.server.research.connect(value["api_key"], value["credit_limit"])
+                self._fields(value, {"api_key", "credit_limit", "remember"} if "remember" in value else {"api_key", "credit_limit"})
+                view = self.server.research.connect(value["api_key"], value["credit_limit"], remember=value.get("remember", False))
+            elif route == "/api/research/forget":
+                self._fields(value, set())
+                view = self.server.research.forget_key()
             elif route == "/api/research/disconnect":
                 self._fields(value, set())
                 view = self.server.research.disconnect()
@@ -543,8 +549,11 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 self._fields(value, {"allow_spend", "allowance_usd"})
                 view = self.server.qualification.start(allow_spend=value["allow_spend"], allowance_usd=value["allowance_usd"])
             elif route == "/api/observability/connect":
-                self._fields(value, {"api_key", "region", "workspace_id"})
-                view = self.server.observability.connect(value["api_key"], region=value["region"], workspace_id=value["workspace_id"])
+                self._fields(value, {"api_key", "region", "workspace_id", "remember"} if "remember" in value else {"api_key", "region", "workspace_id"})
+                view = self.server.observability.connect(value["api_key"], region=value["region"], workspace_id=value["workspace_id"], remember=value.get("remember", False))
+            elif route == "/api/observability/forget":
+                self._fields(value, set())
+                view = self.server.observability.forget_key()
             elif route == "/api/observability/disconnect":
                 self._fields(value, set())
                 view = self.server.observability.disconnect()

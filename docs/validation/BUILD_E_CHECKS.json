@@ -1,0 +1,117 @@
+{
+  "schema": "sixd.build-e-checks.v1",
+  "delivery_date": "2026-10-25",
+  "basis": "Scoped offline implementation and browser checks; not live provider qualification or independent human validation.",
+  "tests": {
+    "modules": [
+      {
+        "module": "test_service_credentials",
+        "tests": 11
+      },
+      {
+        "module": "test_optional_service_connections",
+        "tests": 13
+      },
+      {
+        "module": "test_credential_store",
+        "tests": 8
+      },
+      {
+        "module": "test_workspace_research",
+        "tests": 16
+      },
+      {
+        "module": "test_workspace_observability",
+        "tests": 12
+      },
+      {
+        "module": "test_optional_connection_api",
+        "tests": 11
+      },
+      {
+        "module": "test_release_connection_api",
+        "tests": 5
+      },
+      {
+        "module": "test_remembered_connection",
+        "tests": 7
+      },
+      {
+        "module": "test_source_research_api",
+        "tests": 6
+      },
+      {
+        "module": "test_workspace_ai_api",
+        "tests": 7
+      }
+    ],
+    "tests": 96,
+    "failures": 0,
+    "errors": 0,
+    "skips": [
+      {
+        "test": "test_directory_and_symlink_paths_fail_closed (test_service_credentials.ServiceCredentialFixtureTests.test_directory_and_symlink_paths_fail_closed)",
+        "reason": "Creating symlinks needs local Windows privilege."
+      }
+    ],
+    "elapsed_seconds": 36.064,
+    "passed": true
+  },
+  "browser": {
+    "build_id": "a8807e9db185",
+    "synthetic_credentials": true,
+    "native_windows_dpapi": true,
+    "checks": [
+      "Tavily opt-in persists via actual HTTP and native DPAPI; key field clears",
+      "LangSmith opt-in retains selected EU region/UUID in actual protected storage",
+      "Real backend restart restores both connections and settings; checkbox remains unchecked",
+      "LangSmith disconnect removes its saved copy and leaves Tavily connected",
+      "Tavily Forget removes only its saved copy and retains current session",
+      "Optional connection controls remain accessible at narrow viewport",
+      "Forgotten/disconnected keys do not return at next restart; no browser key persistence",
+      "Only four deliberate connection actions posted; zero search/upload/inference requests, external browser requests or JS errors"
+    ],
+    "errors": [],
+    "external_requests": 0,
+    "post_routes": [
+      "/api/observability/connect",
+      "/api/observability/disconnect",
+      "/api/research/connect",
+      "/api/research/forget"
+    ]
+  },
+  "actual_delivery": {
+    "address": "http://127.0.0.1:8768/",
+    "build_id": "a8807e9db185",
+    "restart_required": false,
+    "existing_nebius_restored": true,
+    "optional_remember_unchecked": true,
+    "connection_controls_loaded": true,
+    "post_requests": 0,
+    "external_browser_requests": 0,
+    "javascript_errors": 0
+  },
+  "preservation": {
+    "workspace_tables_unchanged": true,
+    "budget_tables_unchanged": true,
+    "private_configs_and_ciphertext_unchanged": true,
+    "tables_checked": 22,
+    "rows_checked": 80,
+    "private_files_checked": 3
+  },
+  "provider_calls": {
+    "nebius": 0,
+    "tavily": 0,
+    "langsmith": 0
+  },
+  "paid_cost_usd": 0,
+  "allowance_changed": false,
+  "source_policy": "LF runtime bytes; raw historical hashes and receipts retained.",
+  "pending": [
+    "F protected hosted access and isolation",
+    "Final current-source live AI qualification",
+    "Independent human/user review",
+    "Owner-led UI refinement and walkthrough",
+    "Submission packaging"
+  ]
+}

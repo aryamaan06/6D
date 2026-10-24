@@ -1,3 +1,5 @@
+> October 25 Build E: optional Windows-encrypted remembering is now available separately for Tavily and LangSmith. Service settings restore locally; prior reservations and explicit upload approvals remain. Keys stay out of backups. [Current connection guide](REMEMBERED_SERVICE_CONNECTIONS.md) · [Verification](BUILD_E_RESULTS.md). Earlier session-only statements below describe the previous implementation.
+
 # Current Assistant qualification and optional service connections
 
 Open http://127.0.0.1:8768/ and select **AI quality & tools** in the left sidebar. This page supplements the existing requirement Inspector/Assistant; it does not replace the engineering workflow.

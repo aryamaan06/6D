@@ -108,9 +108,16 @@
 
     function renderObservability() {
       const status = obs(), record = selectedReceipt(), id = exportId();
-      select('[data-aq-observability-status]').innerHTML = '<div class="aq-inline"><span class="aq-dot ' + (status.key_present ? 'aq-connected' : '') + '" aria-hidden="true"></span><strong>' + (status.key_present ? 'LangSmith key connected' : 'LangSmith is optional') + '</strong>' + (status.key_present ? '<span class="aq-muted">' + esc(String(status.region || 'region not recorded').toUpperCase()) + '</span>' : '') + '</div>' + (status.workspace_id ? '<p class="aq-caption aq-mono">Workspace: ' + esc(status.workspace_id) + '</p>' : '') + '<p class="aq-caption">This sends qualification metrics only: no prompts, engineering data or API keys. Preview the exact payload, then upload it once to your private LangSmith account. It is not a public post. LangSmith account usage is separate from the Nebius dollar ceiling.</p>';
+      const connectionState = status.credential_error ? (status.key_present ? 'Connected for this server session. Saved-key storage state is unavailable.' : 'No LangSmith key is connected. Saved-key storage state is unavailable.') : status.key_present ? (status.key_remembered ? (status.key_source === 'remembered' ? 'Remembered key connected locally.' : 'Session connected; an encrypted key copy is saved on this device.') : 'Connected for this server session only. No key is saved on this device.') : status.key_remembered ? 'A saved key is present, but no key is connected.' : 'No LangSmith key is connected or saved.';
+      select('[data-aq-observability-status]').innerHTML = '<div class="aq-inline"><span class="aq-dot ' + (status.key_present ? 'aq-connected' : '') + '" aria-hidden="true"></span><strong>' + (status.key_present ? 'LangSmith key connected' : 'LangSmith is optional') + '</strong>' + (status.key_present ? '<span class="aq-muted">' + esc(String(status.region || 'region not recorded').toUpperCase()) + '</span>' : '') + '</div><p class="aq-caption" role="status">' + esc(connectionState) + '</p>' + (status.key_remembered ? '<p class="aq-caption">The saved key, region and workspace restore on server startup. Restoring or connecting makes no LangSmith request and does not validate the key.</p>' : '<p class="aq-caption">Connecting makes no LangSmith request and does not validate the key.</p>') + (status.credential_error ? '<p class="aq-warning" role="alert">The saved key could not be restored or updated. Re-enter it privately, or forget the saved copy. No LangSmith request was made.</p>' : '') + (status.workspace_id ? '<p class="aq-caption aq-mono">Workspace: ' + esc(status.workspace_id) + '</p>' : '') + '<p class="aq-caption">This sends qualification metrics only: no prompts, engineering data or API keys. Preview the exact payload, then upload it once to your private LangSmith account. It is not a public post. LangSmith account usage is separate from the Nebius dollar ceiling.</p>';
       select('[data-aq="connect-observability"]').disabled = locked();
-      select('[data-aq="disconnect-observability"]').disabled = locked() || !status.key_present;
+      select('[data-aq="forget-observability"]').disabled = locked() || (!status.key_remembered && !status.credential_error);
+      select('[data-aq="disconnect-observability"]').disabled = locked() || (!status.key_present && !status.key_remembered && !status.credential_error);
+      host.querySelectorAll('[data-aq-key],[data-aq-region],[data-aq-workspace]').forEach(node => node.disabled = locked());
+      const remember = select('[data-aq-remember]');
+      remember.disabled = locked() || status.remember_supported !== true;
+      if (status.remember_supported !== true) remember.checked = false;
+      select('[data-aq-remember-note]').textContent = status.remember_supported === true ? 'Optional: save an encrypted copy for this Windows account and restore it when 6D starts. Leaving this unchecked removes any previous saved key when you connect.' : 'Remembering is unavailable on this device. A connection stays in server memory only.';
       select('[data-aq="preview"]').disabled = locked() || !id || running(record);
       const preview = state.preview;
       const panel = select('[data-aq-export-preview]');
@@ -148,7 +155,12 @@
         if (!live() || generation !== state.generation) return;
         if (status?.schema !== 'sixd.ai-quality-status.v1') throw new Error('Unexpected status contract');
         if (state.status && (status.observability?.region !== obs().region || status.observability?.workspace_id !== obs().workspace_id)) state.preview = null;
+        const previousObservability = state.status?.observability;
         state.status = status;
+        if (!previousObservability || status.observability?.region !== previousObservability.region || status.observability?.workspace_id !== previousObservability.workspace_id) {
+          select('[data-aq-region]').value = status.observability?.region === 'eu' ? 'eu' : 'us';
+          select('[data-aq-workspace]').value = status.observability?.workspace_id || '';
+        }
         const id = idOf(status.qualification?.latest);
         if (id !== state.receiptId) { state.receipt = null;state.receiptId = id;state.preview = null; }
         state.receiptError = false;
@@ -180,7 +192,7 @@
       state.generation++;
       state.busy = action;state.error = '';state.notice = '';render();
       try { await work(); }
-      catch (error) { if (live() && error.name !== 'AbortError') state.error = ({start:'The live batch could not be started or confirmed. Refresh status before deciding what to do next. No automatic retry will run.',connect:'The private LangSmith connection could not be confirmed. Check the key, region and workspace, then reconnect explicitly.',disconnect:'The LangSmith disconnection could not be confirmed. Refresh status to check it.',preview:'The metrics preview could not be prepared. Refresh the receipt and try previewing again.',export:'The metrics upload failed or could not be confirmed. The attempt is retained; no automatic retry will run.'}[action] || 'The requested operation could not be completed.'); }
+      catch (error) { if (live() && error.name !== 'AbortError') state.error = ({start:'The live batch could not be started or confirmed. Refresh status before deciding what to do next. No automatic retry will run.',connect:'The private LangSmith connection could not be confirmed. Check the key, region and workspace, then reconnect explicitly.',forget:'Removing the saved LangSmith key could not be confirmed. Refresh status to check it.',disconnect:'The LangSmith disconnect and saved-key removal could not be confirmed. Refresh status to check it.',preview:'The metrics preview could not be prepared. Refresh the receipt and try previewing again.',export:'The metrics upload failed or could not be confirmed. The attempt is retained; no automatic retry will run.'}[action] || 'The requested operation could not be completed.'); }
       finally { if (live()) { state.busy = '';render();schedule(); } }
     }
 
@@ -199,11 +211,25 @@
       input.value = '';
       if (!key) { state.error = 'Enter the LangSmith key privately in this form.';message();return; }
       const region = select('[data-aq-region]').value, workspace = select('[data-aq-workspace]').value.trim();
+      const remember = obs().remember_supported === true && select('[data-aq-remember]').checked;
+      select('[data-aq-remember]').checked = false;
       await mutate('connect',async() => {
-        await request('/api/observability/connect',{api_key:key,region,workspace_id:workspace || null});
+        const status = await request('/api/observability/connect',{api_key:key,region,workspace_id:workspace || null,remember});
         if (!live()) return;
         state.preview = null;
-        state.notice = 'LangSmith connected privately. No metrics have been uploaded.';
+        state.notice = status.key_remembered ? 'LangSmith connected and remembered on this device. No LangSmith request was made; the key has not been validated.' : 'LangSmith connected for this server session. No LangSmith request was made; the key has not been validated.';
+        await refresh(true);
+      });
+    }
+
+    async function clearConnection(action) {
+      const input = select('[data-aq-key]');if (input) input.value = '';
+      select('[data-aq-remember]').checked = false;
+      await mutate(action,async() => {
+        const status = await request('/api/observability/' + action,{});
+        if (!live()) return;
+        if (action === 'disconnect') state.preview = null;
+        state.notice = action === 'forget' ? (status.key_present ? 'Saved LangSmith key forgotten. The current server session remains connected.' : 'Saved LangSmith key forgotten. No key is connected.') : 'LangSmith disconnected and the saved key removed. Existing local receipts remain available.';
         await refresh(true);
       });
     }
@@ -235,7 +261,7 @@
       });
     }
 
-    host.innerHTML = '<article class="aq-workspace" aria-label="AI quality and connections"><header class="aq-header"><div><span class="aq-eyebrow">AI quality</span><h1>Evidence before confidence.</h1><p>Inspect the configured Assistant, run a bounded live qualification and keep its receipts visible.</p></div>' + button('refresh','Refresh status',true) + '</header><div data-aq-message aria-live="polite"></div><section class="aq-section aq-connection" aria-label="Nemotron connection"><div data-aq-connection></div></section><section class="aq-section" aria-labelledby="aq-qualification-title"><div class="aq-section-heading"><div><h2 id="aq-qualification-title">Live Nemotron qualification</h2><p>Four constructed evidence cases. This is a small application workflow check, not a broad model benchmark.</p></div></div><div data-aq-cases></div><div class="aq-start"><div><strong>A deliberate, bounded batch</strong><p>Up to $0.80 and 24 request reservations inside the existing cumulative allowance. No automatic retry, model selection or numerical verdict edits.</p><p class="aq-caption" data-aq-start-state></p></div>' + button('start','Run four live checks · $0.80 ceiling',true,true) + '</div><div data-aq-result></div></section><section class="aq-section" aria-labelledby="aq-observability-title"><div class="aq-section-heading"><div><h2 id="aq-observability-title">Optional metrics in LangSmith</h2><p>Preview first. Upload only after checking the captured metrics.</p></div></div><div data-aq-observability-status></div><form class="aq-private-form" data-aq-connect-form autocomplete="off"><label>LangSmith API key<input type="password" data-aq-key autocomplete="new-password" spellcheck="false" aria-describedby="aq-private-note"></label><label>Region<select data-aq-region><option value="us">US</option><option value="eu">EU</option></select></label><label>Workspace UUID <span class="aq-muted">(optional)</span><input type="text" data-aq-workspace autocomplete="off" spellcheck="false" placeholder="Leave blank for account default"></label><div class="aq-inline">' + button('connect-observability','Connect privately',true) + button('disconnect-observability','Disconnect',true) + '</div><p id="aq-private-note" class="aq-caption">The key is cleared from this field immediately on connection and kept only in server memory. It is never saved in browser storage or included in the preview.</p></form><div class="aq-inline aq-export-actions">' + button('preview','Preview metrics for LangSmith',true) + '<span class="aq-caption">Available after a complete receipt is loaded.</span></div><div data-aq-export-preview></div><div data-aq-export-history></div></section><section class="aq-section" aria-labelledby="aq-research-title"><h2 id="aq-research-title">External source research</h2><div data-aq-research></div></section><footer class="aq-footer"><p>Local status reads are free of inference calls. Nemotron investigations and optional external service actions require their own explicit buttons. Qualification results do not certify a design or guarantee mission success.</p></footer></article>';
+    host.innerHTML = '<article class="aq-workspace" aria-label="AI quality and connections"><header class="aq-header"><div><span class="aq-eyebrow">AI quality</span><h1>Evidence before confidence.</h1><p>Inspect the configured Assistant, run a bounded live qualification and keep its receipts visible.</p></div>' + button('refresh','Refresh status',true) + '</header><div data-aq-message aria-live="polite"></div><section class="aq-section aq-connection" aria-label="Nemotron connection"><div data-aq-connection></div></section><section class="aq-section" aria-labelledby="aq-qualification-title"><div class="aq-section-heading"><div><h2 id="aq-qualification-title">Live Nemotron qualification</h2><p>Four constructed evidence cases. This is a small application workflow check, not a broad model benchmark.</p></div></div><div data-aq-cases></div><div class="aq-start"><div><strong>A deliberate, bounded batch</strong><p>Up to $0.80 and 24 request reservations inside the existing cumulative allowance. No automatic retry, model selection or numerical verdict edits.</p><p class="aq-caption" data-aq-start-state></p></div>' + button('start','Run four live checks · $0.80 ceiling',true,true) + '</div><div data-aq-result></div></section><section class="aq-section" aria-labelledby="aq-observability-title"><div class="aq-section-heading"><div><h2 id="aq-observability-title">Optional metrics in LangSmith</h2><p>Preview first. Upload only after checking the captured metrics.</p></div></div><div data-aq-observability-status></div><form class="aq-private-form" data-aq-connect-form autocomplete="off"><label>LangSmith API key<input type="password" data-aq-key autocomplete="new-password" spellcheck="false" aria-describedby="aq-private-note"></label><label>Region<select data-aq-region><option value="us">US</option><option value="eu">EU</option></select></label><label>Workspace UUID <span class="aq-muted">(optional)</span><input type="text" data-aq-workspace autocomplete="off" spellcheck="false" placeholder="Leave blank for account default"></label><label class="aq-remember"><input type="checkbox" data-aq-remember aria-describedby="aq-remember-note" disabled>Remember on this device</label><p id="aq-remember-note" data-aq-remember-note class="aq-caption"></p><div class="aq-inline">' + button('connect-observability','Connect privately',true) + button('forget-observability','Forget saved key',true) + button('disconnect-observability','Disconnect and forget',true) + '</div><p id="aq-private-note" class="aq-caption">The key is cleared from this field on submission and never saved in browser storage or included in the preview. Forget removes the saved key and keeps the current session connected. Disconnect and forget removes both.</p></form><div class="aq-inline aq-export-actions">' + button('preview','Preview metrics for LangSmith',true) + '<span class="aq-caption">Available after a complete receipt is loaded.</span></div><div data-aq-export-preview></div><div data-aq-export-history></div></section><section class="aq-section" aria-labelledby="aq-research-title"><h2 id="aq-research-title">External source research</h2><div data-aq-research></div></section><footer class="aq-footer"><p>Local status reads are free of inference calls. Nemotron investigations and optional external service actions require their own explicit buttons. Qualification results do not certify a design or guarantee mission success.</p></footer></article>';
 
     host.onclick = event => {
       const element = event.target.closest('[data-aq]');
@@ -244,7 +270,8 @@
       if (action === 'refresh') void refresh();
       else if (action === 'start') void start();
       else if (action === 'connect-observability') void connect();
-      else if (action === 'disconnect-observability') void mutate('disconnect',async() => { await request('/api/observability/disconnect',{});if (live()) { state.preview = null;state.notice = 'LangSmith disconnected. Existing local receipts remain available.';await refresh(true); } });
+      else if (action === 'forget-observability') void clearConnection('forget');
+      else if (action === 'disconnect-observability') void clearConnection('disconnect');
       else if (action === 'preview') void preview();
       else if (action === 'export') void upload();
       else if (action === 'sources') ctx.onSources?.();
