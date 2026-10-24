@@ -48,7 +48,7 @@ Judge-email recommendations and their concrete 6D actions, evidence and remainin
 4. Save the revision and explicitly rerun affected checks. Inspect calculation/reuse origins and compare retained runs.
 5. Investigate a finding with Nemotron, review supporting references, track follow-up actions and export the evidence.
 
-Working views include the system canvas/table/reader, review overview, change comparison, coverage, action queue, reports, orbital/vertical-flight playback, simulation-history imports and sampled operating-envelope studies. [Current capabilities and boundaries](docs/CONNECTED_REVIEW.md) · [Agreed A–F build scope](docs/HACKATHON_BUILD_SCOPE.md).
+Working views include the system canvas/table/reader, review overview, change comparison, coverage, action queue, reports, orbital, vertical, planar and staged-flight playback, simulation-history imports and sampled operating-envelope studies. [Current capabilities and boundaries](docs/CONNECTED_REVIEW.md) · [Agreed A–F build scope](docs/HACKATHON_BUILD_SCOPE.md).
 
 ## How Nebius and Nemotron are used
 
@@ -82,13 +82,15 @@ The October 24 full offline discovery executed 1,225 methods and exposed two tes
 
 ## Submission-period development
 
+[Complete project record](docs/PROJECT_RECORD.md) · [Documentation index](docs/DOCUMENTATION_INDEX.md) · [Published-file inventory](docs/PROJECT_RECORD_INVENTORY.json). These cover preserved work before A–C as well as the latest milestones, decisions, failures and remaining gaps.
+
 The tracked repository begins on **October 14, 2026**. During October 14–24 the implementation added the engineering-evidence workspace, revision/reuse verification, authoring/intake, bounded orbital/flight calculations and accuracy gates, specialist history import, sampled studies, source/action/coverage workflows, and live Nemotron/Tavily/LangSmith integration. Dates and original outcomes remain in [historical development notes](docs/CHANGELOG.md).
 
 The broader 6D concept predates some of this code. The repository history alone does not establish whether any earlier implementation existed before the submission period; the entrant must confirm that history in the submission. [Submission-period inventory](docs/SUBMISSION_PERIOD.md).
 
 ## Limits
 
-The eight bounded models cover ideal propulsion, static beams, steady radiative equilibrium, single-condition drag, unforced two-body orbits, supplied power/energy budgets, single-axis spacecraft pointing and vertical ascent/coast. These are not complete engineering disciplines. Scalar links do not create simultaneous multiphysics coupling. Guided ascent, staging and project-wide AI investigations are planned in A–F, not delivered features.
+The ten bounded models cover ideal propulsion, static beams, steady radiative equilibrium, single-condition drag, unforced two-body orbits, supplied power/energy budgets, single-axis spacecraft pointing, vertical ascent/coast, prescribed planar ascent and variable-thrust serial staged ascent. These are not complete engineering disciplines. Scalar links do not create simultaneous multiphysics coupling. Prescribed steering is not closed-loop guidance/control. Project-wide AI investigations and the other remaining D–F work are planned, not delivered features.
 
 There is no complete launch-to-orbit, reentry or landing simulator, hardware/flight qualification, customer validation or launch authorization. Current data/examples are constructed unless explicitly classified otherwise. Recorded playback is historical evidence, not a new live inference. The local loopback server must not simply be exposed publicly; Build F must provide appropriate access, isolation and spending controls.
 

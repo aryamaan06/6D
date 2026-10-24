@@ -1,3 +1,5 @@
+> Planning/development reference with historical status notes. See the [current project record](PROJECT_RECORD.md) and [delivered/pending A–F scope](HACKATHON_BUILD_SCOPE.md). Design intent and the broader vision remain useful; dated status, model choices and task sequences are not current delivery claims.
+
 # 6D — connected engineering workspace specification
 
 October 19 delivered: Calculation chains is a scoped workspace view with a dependency graph, exact-unit connection editor and saved scalar provenance. It uses the shared project draft/revision rather than a separate configuration. Table/Inspector model edits preserve explicit links; Changes previews transitive dependencies. Existing Canvas/Table/Reader, reports and other discipline pages remain available. See CALCULATION_CHAINS_ACCEPTANCE.md.

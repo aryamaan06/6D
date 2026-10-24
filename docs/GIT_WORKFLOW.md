@@ -1,3 +1,5 @@
+> Current status, October 24: public repository access was verified and MIT licensing approved. The October 14 private-repository setup below is historical. Completed authorized milestones must be privacy-checked, documented, committed/pushed and remotely verified. See the [project record](PROJECT_RECORD.md). Private credentials, databases and raw logs stay local.
+
 # 6D — local development and private GitHub
 
 October 14, 2026. Arya created [aryamaan06/6D](https://github.com/aryamaan06/6D), and authenticated metadata confirmed it is private and writable. The existing 6d-startup folder is the local Git repository; branch `main`, remote `origin`. GitHub supplements this folder, not a separate codebase.

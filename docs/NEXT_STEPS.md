@@ -1,3 +1,5 @@
+> Planning/development reference with historical status notes. See the [current project record](PROJECT_RECORD.md) and [delivered/pending A–F scope](HACKATHON_BUILD_SCOPE.md). Design intent and the broader vision remain useful; dated status, model choices and task sequences are not current delivery claims.
+
 # 6D: next steps — October 14, 2026
 
 The active full startup scope is PROJECT_BRIEF.md and PRODUCT_FEATURES.md; BUILD_PLAN.md defines the current sequence. October 21 is a working-capability checkpoint. TODAY_TASKS.md contains Arya's exact setup/review commands. This note does not supersede those documents.

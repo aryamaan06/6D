@@ -1,3 +1,5 @@
+> Planning/development reference with historical status notes. See the [current project record](PROJECT_RECORD.md) and [delivered/pending A–F scope](HACKATHON_BUILD_SCOPE.md). Design intent and the broader vision remain useful; dated status, model choices and task sequences are not current delivery claims.
+
 # 6D — October 21 submission blueprint
 
 Planning revision: October 13, 2026. Application implementation has not resumed under this blueprint. Owner: Arya; implementation lead: Codex in the original chat titled 6D.

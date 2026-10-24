@@ -1,3 +1,5 @@
+> Planning/development reference with historical status notes. See the [current project record](PROJECT_RECORD.md) and [delivered/pending A–F scope](HACKATHON_BUILD_SCOPE.md). Design intent and the broader vision remain useful; dated status, model choices and task sequences are not current delivery claims.
+
 # 6D — model selection and routing plan
 
 Current development-model preference: Ultra remains the default for demanding work. Arya now permits Extra High, High, Medium or smaller models only when Ultra would clearly be overkill; recommend model and effort before each proposed build task. Gemini/Antigravity/Google AI Studio are optional resources for a specific justified task, not mandatory integrations. The project-authoring milestone is using GPT-6.1 Sol Ultra as explicitly selected by Arya.
