@@ -30,6 +30,7 @@ _BLOCKING_CODES = frozenset({
     "test_evidence_unmatched_quantity", "test_evidence_validation_claim",
     "fact_catalog_mismatch", "unknown_fact_reference", "unbound_numeric_literal",
     "change_direction_contradiction", "change_context_mismatch", "change_comparison_unavailable",
+    "uncaptured_linked_reference",
 })
 _MEANINGS = {
     "met": "The calculated metric meets the declared criterion within this bounded model and its stated assumptions.",
@@ -649,6 +650,35 @@ def _selected_test_claims(record, summary):
     return "".join(masked), bundle, flags, quantities
 
 
+def uncaptured_linked_reference_claim(summary, sources):
+    """Detect a narrow existing-reference claim when captured link sets are empty.
+
+    None means legacy/unknown context, not proof that no references exist. This
+    does not validate a named source when some links are captured or understand
+    arbitrary reference paraphrases. Input provenance labels are not link sets.
+    """
+    if sources is None or not isinstance(sources, dict):
+        return False
+    if 'links' in sources:
+        if not isinstance(sources['links'], list) or sources['links']:
+            return False
+    elif any(not isinstance(context, dict) or not isinstance(context.get('links'), list)
+             or context['links'] for context in sources.values()):
+        return False
+    pattern = (r'\b(?:linked|attached|cited)\s+'
+               r'(?:(?:[a-z][\w-]*)\s+){0,6}'
+               r'(?:references?|documents?|publications?|papers?|reports?)\b')
+    for match in re.finditer(pattern, summary, re.I):
+        prefix = re.split(r'(?<=[.!?;])\s+|\n+', summary[:match.start()])[-1].casefold()
+        suffix = summary[match.end():].casefold()
+        if (_nonasserted_prefix(prefix)
+                or re.search(r'\b(?:no|without|lack\s+of|missing)\s+(?:(?:any|currently|captured)\s+)*$', prefix)
+                or re.match(r'\s+(?:(?:are|were|remain|is|was)\s+)?(?:missing|absent|unavailable|not\s+(?:available|captured|provided|present))\b', suffix)):
+            continue
+        return True
+    return False
+
+
 def evaluate_explanation(record):
     """Flag bounded, observable explanation problems, preserving raw prose.
 
@@ -676,6 +706,9 @@ def evaluate_explanation(record):
 
     for item in test_flags:
         flag(item["code"], item["message"], item["severity"])
+    if uncaptured_linked_reference_claim(summary, record.get('project_sources')):
+        flag('uncaptured_linked_reference',
+             'The explanation describes a linked reference although the frozen context contains no captured reference links.', 'error')
     fact_links = evaluate_fact_links(record)
     for item in fact_links["flags"]:
         flag(item["code"], item["message"], item["severity"])

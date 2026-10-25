@@ -171,13 +171,14 @@ try {
  await ensureProject('navigation-a');await click('review-home');await page.locator('.rw-workspace[aria-busy="false"]').waitFor();
  const styles=await page.evaluate(()=>{
   const root=document.querySelector('#sixd-workspace'),heading=document.querySelector('h1'),body=getComputedStyle(root),h=getComputedStyle(heading);
-  return {font:body.fontFamily,color:body.color,background:body.backgroundColor,headingTracking:h.letterSpacing,metricFont: getComputedStyle(document.querySelector('.rw-count-value')).fontFamily};
+  return {font:body.fontFamily,color:body.color,background:body.backgroundColor,headingTracking:h.letterSpacing,metricFont:getComputedStyle(document.querySelector('.rw-count-value')).fontFamily,bodyPx:parseFloat(body.fontSize),labelPx:parseFloat(getComputedStyle(document.querySelector('.sd-label')).fontSize),metricPx:parseFloat(getComputedStyle(document.querySelector('.rw-count-value')).fontSize)};
  });
  assert.match(styles.font,/Geist|apple-system|Segoe UI|Arial/i);
  assert.equal(styles.color,'rgb(29, 29, 31)');
  assert.notEqual(styles.background,'rgb(255, 255, 255)');
  assert.ok(parseFloat(styles.headingTracking)<0);
  assert.match(styles.metricFont,/mono|Consolas/i);
+ assert.ok(styles.bodyPx>=14.5);assert.ok(styles.labelPx>=13);assert.ok(styles.metricPx>=13);
  pass('Requested local editorial typography, ink and soft canvas are applied without remote fonts');
  await page.screenshot({path:join(output,'desktop.png'),fullPage:true});
  await page.setViewportSize({width:390,height:844});

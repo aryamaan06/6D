@@ -101,6 +101,10 @@ SYSTEM = LEGACY_SYSTEM.split("New investigations use evidence_links_v1:")[0] + (
     "For revision changes, use application_change_context for exact increased, decreased, unchanged or not-comparable directions. "
     "Do not infer directions, physical causes or whole-model equivalence from withheld values. "
     "Write one short paragraph explaining the recorded status, relevant scope and a concrete next review. "
+    "Use two or three sentences. State the bounded model scope explicitly before recommending a check. "
+    "Say 'the saved revision' instead of retyping revision labels or numbers. "
+    "If no linked references were captured, do not describe any reference as linked, attached or cited. "
+    "You may recommend obtaining a new reference without claiming it already exists. "
     "Keep the required evidence_ids as separate whole-record citations."
     + " " + SOURCE_NOTICE
 )
@@ -265,6 +269,7 @@ class ProjectActionAdapter:
         wire_messages = [{"role": "system", "content": LEGACY_SYSTEM if policy == PROSE_POLICY else SYSTEM}]
         canonical_status = None
         change_context = None
+        linked_reference_count = None
         if not isinstance(messages, list):
             _fail("Invalid project history. No request was sent.")
         for original in deepcopy(messages):
@@ -276,6 +281,7 @@ class ProjectActionAdapter:
                 captured = _parse(original["content"])
                 if captured.get("kind") == "requirement":
                     canonical_status = captured.get("finding", {}).get("status")
+                    linked_reference_count = len((captured.get("supplemental_project_sources") or {}).get("links", []))
                 if captured.get("kind") == "changes":
                     change_context = provider_change_context(build_change_context(captured))
                 original["content"] = json.dumps(qualitative_projection(captured), allow_nan=False)
@@ -309,11 +315,14 @@ class ProjectActionAdapter:
             "recorded_evidence_ids": ids,
             "instruction": f"Call select_next_action once. Read actions require empty IDs and summary. Finish requires exactly the recorded IDs and a concise summary of 1 to {SUMMARY_MAX_CHARACTERS} characters; prefer 1200 characters or fewer.",
             "response_constraints": {"finish_summary_max_characters": SUMMARY_MAX_CHARACTERS, "read_summary_characters": 0},
+            "valid_read_selections": [{"action": name, "evidence_ids": [], "summary": ""}
+                                      for name in names if name != "finish"],
             **({"explanation_contract": {
                 "policy": ROLE_POLICY, "canonical_status": canonical_status,
                 "change_commentary_policy": CHANGE_POLICY,
                 "application_change_context": change_context,
-                "instruction": "Finish summary must be words only: no numbers, values, IDs, inline references or numbered lists. Exact numerical roles are already displayed by 6D. Give scope and one concrete next check. Do not estimate withheld values.",
+                "captured_linked_reference_count": linked_reference_count,
+                "instruction": "Write two or three sentences, beginning with the bounded model scope. Finish summary must be words only: no digits, revision numbers, values, IDs, inline references or numbered lists. Say the saved revision. Exact numerical roles are already displayed by 6D. Give one concrete next check. Do not estimate withheld values or invent linked references when the captured count is zero.",
                 "example": {"met": "The calculated criterion is met within the bounded model. Review input provenance and excluded effects before extending this result.",
                     "not_met": "The calculated criterion is not met within the bounded model. Inspect the saved comparison and input sources, then evaluate a justified revision and rerun affected checks.",
                     "not_assessed": "Satisfaction cannot be established from the available evidence. Obtain applicable analysis inputs and a supported verification method; this gap is not a physical failure."}.get(canonical_status, "Read the required evidence before explaining the saved status.")}}
@@ -327,6 +336,18 @@ class ProjectActionAdapter:
                 "summary": {"type": "string", "description": f"Empty for reads/recheck. For finish: 1 to {SUMMARY_MAX_CHARACTERS} characters, preferably at most 1200; cite exact recorded IDs separately." + (" Words only. No quantities, digits, inline fact references or numbered lists; 6D displays source-bound numerical roles automatically." if policy == ROLE_POLICY else "")},
             }, "required": ["action", "evidence_ids", "summary"], "additionalProperties": False},
         }}
+        if "finish" not in names:
+            # Reads are action selection, not an opportunity to explain unseen
+            # evidence. Express the existing decoder contract on the wire too.
+            # This guides constrained decoders; local validation stays mandatory.
+            fields = tool["function"]["parameters"]["properties"]
+            fields["evidence_ids"]["maxItems"] = 0
+            fields["summary"]["enum"] = [""]
+        elif policy == ROLE_POLICY:
+            fields = tool["function"]["parameters"]["properties"]
+            fields["summary"]["pattern"] = r"^[^0-9]*$"
+            if names == ["finish"]:
+                fields["summary"]["minLength"] = 100
         return wire_messages, [tool], {"type": "function", "function": {"name": WIRE_TOOL}}
 
     @staticmethod

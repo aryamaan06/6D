@@ -30,6 +30,8 @@ Python **3.10+** is required; the application runtime uses the standard library.
 
 On Windows, `Setup-6D.cmd`, `Open-6D.cmd` and `Stop-6D.cmd` provide the same workflow; `py -3` may be used in place of `python`. On Linux/macOS, use `python3`. Windows has native launcher verification; the other platforms still need native qualification. [Setup, backup and recovery details](docs/RELEASE_HANDOVER.md).
 
+The Assistant offers **Nano, Super and Ultra per investigation**, with the chosen model recorded in history and the same shared spending controls. Selecting a model sends nothing; explicit Start runs it. [Model guide](docs/THREE_MODEL_CHOICES.md) · [Measured results and preserved failures](docs/THREE_MODEL_RESULTS.md).
+
 Windows users can opt into **Remember on this device** separately for Nebius, Tavily and LangSmith. Protected keys restore locally after restart without provider calls. Tavily reservations and LangSmith preview/upload approval remain intact; credential files are excluded from backups. [Connection controls and limits](docs/REMEMBERED_SERVICE_CONNECTIONS.md) · [Build E checks](docs/BUILD_E_RESULTS.md).
 
 The application opens on **Projects**. Select a saved project, then choose **Overview**, **Engineering**, **Simulations & studies**, **Evidence & review** or **Project setup**. Breadcrumbs and browser Back/Forward retain the saved-view location. [Navigation and typography guide](docs/WORKSPACE_NAVIGATION.md).

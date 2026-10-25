@@ -15,6 +15,7 @@ from .hosted_limits import HostedProviderBudget, HostedSpendLedger
 from .project_investigation import ProjectActionAdapter
 from .providers import LiveConfig, ProviderError, TokenFactoryProvider
 from .workspace_ai import MAX_APPROVED_ALLOWANCE_USD
+from .model_choices import permitted_variant
 from .workspace_server import WorkspaceRuntime
 
 
@@ -102,7 +103,7 @@ class HostedRuntimeFactory:
             runtime.hosted_spending = lambda: self.ledger.status(session_id)
 
             def hosted_budget(config):
-                if config != self.config:
+                if not permitted_variant(self.config, config):
                     raise ProviderError('Hosted provider settings changed.', code='configuration_error')
                 value = self.ledger.status(session_id)
                 return {'cap_usd': value['total_cap_usd'], 'reserved_usd': value['total_reserved_usd'],
@@ -112,7 +113,7 @@ class HostedRuntimeFactory:
             runtime.ai._budget = hosted_budget
 
             def provider(config, budget, key):
-                if config != self.config or key != self._key:
+                if not permitted_variant(self.config, config) or key != self._key:
                     raise ProviderError('Hosted provider configuration changed; no request was sent.', code='configuration_error')
                 return TokenFactoryProvider(config, HostedProviderBudget(budget, self.ledger, session_id),
                     api_key=key, transport=self._transport, action_adapter=ProjectActionAdapter())

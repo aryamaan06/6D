@@ -31,8 +31,8 @@ html, body {
   font-synthesis: none;
   color: var(--sd-ink);
   background: var(--sd-bg);
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 14.5px;
+  line-height: 1.6;
 }
 
 #sixd-workspace :is(h1, h2, h3) {
@@ -88,7 +88,7 @@ html, body {
   .td-badge, .te-badge) {
   font-family: var(--sd-font-mono);
   font-variant-numeric: tabular-nums slashed-zero;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: -0.01em;
 }
 
@@ -98,7 +98,6 @@ html, body {
   .sr-budget dd, .ga-table td, .sa-table td) {
   font-family: var(--sd-font-mono);
   font-variant-numeric: tabular-nums slashed-zero;
-  font-size: 12px;
 }
 
 /* Prominent findings retain their hierarchy; only their font family changes. */
@@ -111,7 +110,7 @@ html, body {
 #sixd-workspace .rw-rocket-result > span:nth-child(2) {
   font-family: var(--sd-font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 12px;
+  font-size: 13px;
 }
 #sixd-workspace .sd-table :is(td, th) {
   font-variant-numeric: tabular-nums;
@@ -123,6 +122,40 @@ html, body {
 /* Hosted access uses the same native family without importing a web font. */
 .sixd-hosted-banner {
   font-family: var(--sd-font-sans);
+}
+
+/* Keep model choice and form values as readable as the surrounding controls. */
+#sixd-workspace .sd-ai-model-picker {
+  display: grid;
+  gap: 7px;
+  margin: 14px 0;
+  min-width: 0;
+}
+#sixd-workspace #sd-ai-model {
+  width: 100%;
+  max-width: 100%;
+  min-height: 40px;
+  font-size: 14px;
+}
+#sixd-workspace #sd-ai-model-help {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sd-soft);
+}
+#sixd-workspace :is(.sd-input, .sd-select, .sd-table-input,
+  .sd-ai-question, .td-csv),
+#sixd-workspace .aq-private-form :is(input, select) {
+  font-size: 14px;
+  line-height: 1.5;
+}
+@media (max-width: 650px) {
+  #sixd-workspace :is(.sd-input, .sd-select, .sd-table-input,
+    .sd-ai-question, .td-csv, input[type="number"], input[type="password"],
+    [data-field="value"], [data-field="unit"]),
+  #sixd-workspace .aq-private-form :is(input, select),
+  #sixd-workspace #sd-ai-model {
+    font-size: 16px;
+  }
 }
 
 @media print {

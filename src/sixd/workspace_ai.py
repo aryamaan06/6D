@@ -127,10 +127,10 @@ class WorkspaceAI:
     def _sources():
         folder = Path(__file__).resolve().parent
         names = ("workspace_ai.py", "whole_project_investigation.py", "ai_qualification.py", "workspace_qualification.py", "workspace_observability.py", "powered_flight.py", "guided_ascent.py", "staged_ascent.py", "attitude.py", "simulation.py", "orbital_adapter.py", "credential_store.py", "project_investigation.py", "source_context.py", "workspace_sources.py", "explanation_quality.py", "evidence_facts.py", "evidence_roles.py", "change_evidence.py", "evidence_evaluation.py", "workspace_evidence_evaluation.py", "test_evidence.py", "workspace_test_data.py", "model_evaluation.py", "workspace_evaluation.py", "workflow_evaluation.py", "workspace_workflow_evaluation.py", "providers.py", "action_selection.py", "workspace.py", "engineering.py", "lifecycle.py", "__init__.py")
-        names += ("service_credentials.py", "hosted_server.py", "hosted_runtime.py", "hosted_limits.py")
+        names += ("service_credentials.py", "hosted_server.py", "hosted_runtime.py", "hosted_limits.py", "model_choices.py")
         return {name: sha256((folder / name).read_bytes()).hexdigest() for name in names if (folder / name).is_file()}
 
-    def _config(self):
+    def _config(self, model_choice=None):
         config = LiveConfig.load(self.local / "token-factory.json")
         if config.spend_cap_usd > MAX_APPROVED_ALLOWANCE_USD:
             raise ProviderError("The configured allowance exceeds the approved cumulative USD 29.50 cap.", code="configuration_error")
@@ -166,6 +166,9 @@ class WorkspaceAI:
                     output_usd_per_million_ceiling=candidate["output_usd_per_million"])
             except (OSError, sqlite3.Error, ValueError, KeyError, TypeError, StopIteration, AttributeError):
                 raise ProviderError("The selected project model has no intact qualifying comparison and manual review. Review the saved selection; no fallback was made.", code="configuration_error") from None
+        if model_choice is not None:
+            from .model_choices import explicit_config
+            config = explicit_config(config, model_choice)
         return config
 
     @staticmethod
@@ -206,8 +209,10 @@ class WorkspaceAI:
             "request_timeout_seconds", "input_usd_per_million_ceiling", "output_usd_per_million_ceiling")}
 
     def status(self):
+        from .model_choices import catalog, choice_id, explicit_config
         with self._lock:
             present = bool(self._key)
+            investigation_active = self._active is not None
             credential_status = {"remember_supported": self._credential_store.supported,
                 "key_remembered": self._remembered, "key_source": self._key_source,
                 "credential_error": self._credential_error,
@@ -215,7 +220,9 @@ class WorkspaceAI:
         value = {"configured": False, "key_present": present, "model": None,
                  "provider_mode": self._provider_mode, "max_job_requests": MAX_JOB_REQUESTS,
                  "max_job_reservation_usd": MAX_JOB_RESERVATION_USD,
-                 "live_validated": False, "budget": None, **credential_status}
+                 "live_validated": False, "budget": None, "available_models": catalog(),
+                 "default_model_choice": None, "automatic_model_selection": False,
+                 "investigation_active": investigation_active, **credential_status}
         try:
             config = self._config()
             value.update(model=config.model, budget=self._budget(config), configured=present,
@@ -229,6 +236,16 @@ class WorkspaceAI:
                 and record.get("live_model_calls", 0) > 0 and record.get("agent_sources") == self._runtime
                 and record.get("model") == config.model and record.get("provider_settings") == self._settings(config)
                 for record in records)
+            value["default_model_choice"] = choice_id(config.model)
+            for option in value["available_models"]:
+                variant = explicit_config(config, option["id"])
+                observed = [record for record in records if record.get("provider_mode") == "live_token_factory"
+                    and record.get("live_model_calls", 0) > 0 and record.get("agent_sources") == self._runtime
+                    and record.get("model") == variant.model and record.get("provider_settings") == self._settings(variant)]
+                option["live_validated"] = any(r.get("scope") != "project" for r in observed)
+                option["whole_project_live_validated"] = any(r.get("scope") == "project" for r in observed)
+                if observed:
+                    option["validation_state"] = "current_source_workflow_observed"
             if self._key_source == "remembered":
                 value["note"] = "Connected with a key remembered in Windows-encrypted local storage. No inference call is made until you start an investigation."
             elif self._key_source == "environment":
@@ -404,7 +421,10 @@ class WorkspaceAI:
             rows = db.execute(query + " ORDER BY created_at DESC LIMIT 50", values).fetchall()
             return [self._projection(self._read(row), db) for row in rows]
 
-    def start(self, project_id, revision, requirement_id, question, *, test_comparison_id=None, test_row_number=None, scope="requirement"):
+    def start(self, project_id, revision, requirement_id, question, *, test_comparison_id=None, test_row_number=None, scope="requirement", model_choice=None):
+        if model_choice is not None:
+            from .model_choices import candidate
+            candidate(model_choice)
         if scope not in ("requirement", "project"):
             raise WorkspaceError("Choose project or requirement scope.")
         if scope == "project":
@@ -443,7 +463,7 @@ class WorkspaceAI:
             capture_context(view)  # Size/integrity preflight before saving a job or reserving.
         else:
             validate_investigation_view(view, requirement_id)
-        config = self._config()
+        config = self._config(model_choice) if model_choice is not None else self._config()
         if self._budget(config)["remaining_usd"] <= 0:
             raise ConflictError("The approved cumulative allowance is exhausted. No request was sent.")
         with self._lock:
@@ -466,6 +486,12 @@ class WorkspaceAI:
                       "started_at": _now(), "completed_at": None, "events": [], "evidence": {},
                       "summary": "", "citations": [], "live_model_calls": 0, "request_attempts": 0,
                       "error": None, "agent_sources": self._runtime, "provider_settings": self._settings(config)}
+            from .model_choices import POLICY, choice_id
+            record.update(model_choice=choice_id(config.model),
+                          model_selection_policy=POLICY if model_choice is not None else "legacy_default",
+                          model_selection_explicit=model_choice is not None,
+                          max_job_requests=MAX_JOB_REQUESTS,
+                          max_job_reservation_usd=self._job_ceiling(config))
             if "test_evidence" in view:
                 record["test_evidence"] = deepcopy(view["test_evidence"])
             if "project_sources" in view:
@@ -538,6 +564,8 @@ class WorkspaceAI:
                     investigation_id=record["investigation_id"], on_event=event)
             record = {**result, "agent_sources": self._runtime, "reserved_usd": budget.reserved,
                       "request_reservations": budget.count, "provider_settings": queued["provider_settings"]}
+            record.update({name: queued[name] for name in ("model_choice", "model_selection_policy",
+                "model_selection_explicit", "max_job_requests", "max_job_reservation_usd") if name in queued})
             if record.get("scope") == "project":
                 usage = record.get("usage", {})
                 record["usage_estimate_usd"] = ((usage.get("prompt_tokens", 0) * config.input_usd_per_million_ceiling + usage.get("completion_tokens", 0) * config.output_usd_per_million_ceiling) / 1_000_000 if record.get("usage_complete") else None)

@@ -9,6 +9,7 @@
   // Credentials are never assigned to application state or persistent browser storage.
   const ai = {scope:'requirement',status:null, statusError:'', statusLoading:false, evaluation:null, evaluationError:'', evaluationLoading:false, requirementId:null, question:'', records:[], error:'', loading:false, loadedContext:'', starting:false, connecting:false, context:'', generation:0, timer:null, controller:null};
   ai.testSelection=null;
+  ai.modelChoice=null;
   const reviewGuide={open:true,exportedRun:null};
   try{reviewGuide.open=localStorage.getItem('sixd.review-guide.dismissed')!=='yes';}catch{}
   const testLinks={key:'',pending:'',profile:null,error:'',serial:0,controller:null,timer:null};
@@ -1130,8 +1131,22 @@
     'nvidia/nemotron-3-super-120b-a12b':'NVIDIA Nemotron 3 Super',
     'nvidia/Nemotron-3-Ultra-550b-a55b':'NVIDIA Nemotron 3 Ultra'
   })[id] || (typeof id==='string'&&id?id:'the configured NVIDIA Nemotron model');
+  function modelChoices() {return Array.isArray(ai.status?.available_models)?ai.status.available_models.filter(row=>['nano','super','ultra'].includes(row.id)):[];}
+  function selectedAIModel() {return modelChoices().find(row=>row.id===ai.modelChoice)||modelChoices().find(row=>row.id===ai.status?.default_model_choice)||null;}
+  function modelChoiceMarkup() {
+    return '<div class="sd-ai-model-picker"><label class="sd-field" for="sd-ai-model">Investigation model<select class="sd-input" id="sd-ai-model" aria-describedby="sd-ai-model-help"></select></label><p id="sd-ai-model-help" class="sd-small sd-muted"></p></div>';
+  }
+  function updateModelChoiceControls() {
+    const select=$('#sd-ai-model');if(!select)return;
+    const rows=modelChoices(),chosen=selectedAIModel();
+    if(chosen)ai.modelChoice=chosen.id;
+    select.innerHTML=rows.length?rows.map(row=>'<option value="'+esc(row.id)+'"'+(row.id===ai.modelChoice?' selected':'')+'>'+esc(row.label)+'</option>').join(''):'<option value="">Reading available models…</option>';
+    select.disabled=!chosen||ai.starting||ai.status?.investigation_active||ai.records.some(investigationActive)||state.busy;
+    $('#sd-ai-model-help').textContent=chosen?chosen.description+' Selection makes no request. All models use the same saved evidence; AI cannot change calculated findings.':'Available model choices must be loaded before starting.';
+    const consent=$('#sd-ai-consent-model');if(consent)consent.textContent=providerModelLabel(chosen?.model||ai.status?.model);
+  }
   function stopInvestigationPolling() {
-    ai.generation++;clearTimeout(ai.timer);ai.timer=null;ai.controller?.abort();ai.controller=null;ai.loading=false;ai.loadedContext='';
+    ai.generation++;clearTimeout(ai.timer);ai.timer=null;clearTimeout(ai.statusTimer);ai.statusTimer=null;ai.controller?.abort();ai.controller=null;ai.loading=false;ai.loadedContext='';
   }
   function syncAssistantContext() {
     const selected=state.selected;
@@ -1146,7 +1161,7 @@
     const s=ai.status;
     if(!s)return '<p class="sd-small sd-muted">'+esc(ai.statusError || 'Reading local AI configuration…')+'</p>';
     const connectionNote=s.credential_error?'<p class="sd-notice">The saved connection could not be restored or updated. Re-enter the key privately, or forget the saved copy. No provider request was made.</p>':s.key_remembered?'<p class="sd-small sd-muted">Saved encrypted on this device. 6D restores the key on startup without making an inference call.</p>':s.key_source==='environment'?'<p class="sd-small sd-muted">Connected from the NEBIUS_API_KEY environment variable. Remove that variable to prevent its use on a later start.</p>':s.key_present?'<p class="sd-small sd-muted">Connected for this server session only. The key is not remembered.</p>':'';
-    return connectionNote+'<div class="sd-ai-connection"><span class="sd-dot '+(s.key_present?'sd-green':'sd-amber')+'"></span><strong>'+(s.key_present?'Key connected locally':'No key connected')+'</strong></div><p class="sd-small sd-muted">'+esc(s.model?providerModelLabel(s.model):'Model not configured')+' · Nebius Token Factory</p><dl class="sd-details-grid sd-ai-budget"><dt>Approved development allowance</dt><dd>'+dollars(s.budget?.cap_usd)+'</dd><dt>Cumulative reservations</dt><dd>'+dollars(s.budget?.reserved_usd)+'</dd><dt>Reservation capacity remaining</dt><dd>'+dollars(s.budget?.remaining_usd)+'</dd></dl><p class="sd-small sd-muted">Per investigation: at most '+esc(s.max_job_requests ?? 6)+' requests and '+dollars(s.max_job_reservation_usd ?? .10)+' reserved. These conservative reservations track the application’s allowance; your Nebius console shows the actual balance and billed usage.</p>'+(!s.configured?'<p class="sd-notice">Live provider setup is not ready. '+esc(s.note || '')+'</p>':s.provider_mode&&s.provider_mode!=='live_token_factory'?'<p class="sd-notice">Offline test provider · no live NVIDIA inference.</p>':!(ai.scope==='project'?s.whole_project_live_validated:s.live_validated)?'<p class="sd-small sd-muted">This investigation scope has no completed live record matching its source versions and provider settings. Earlier live receipts remain available in saved history.</p>':'');
+    return connectionNote+'<div class="sd-ai-connection"><span class="sd-dot '+(s.key_present?'sd-green':'sd-amber')+'"></span><strong>'+(s.key_present?'Key connected locally':'No key connected')+'</strong></div><p class="sd-small sd-muted">'+esc(selectedAIModel()?.model?providerModelLabel(selectedAIModel().model):s.model?providerModelLabel(s.model):'Model not configured')+' · Nebius Token Factory</p><dl class="sd-details-grid sd-ai-budget"><dt>Approved development allowance</dt><dd>'+dollars(s.budget?.cap_usd)+'</dd><dt>Cumulative reservations</dt><dd>'+dollars(s.budget?.reserved_usd)+'</dd><dt>Reservation capacity remaining</dt><dd>'+dollars(s.budget?.remaining_usd)+'</dd></dl><p class="sd-small sd-muted">Per investigation: at most '+esc(s.max_job_requests ?? 6)+' requests and '+dollars(selectedAIModel()?.max_job_reservation_usd ?? s.max_job_reservation_usd ?? .10)+' reserved. These conservative reservations track the application’s allowance; your Nebius console shows the actual balance and billed usage.</p>'+(!s.configured?'<p class="sd-notice">Live provider setup is not ready. '+esc(s.note || '')+'</p>':s.provider_mode&&s.provider_mode!=='live_token_factory'?'<p class="sd-notice">Offline test provider · no live NVIDIA inference.</p>':!(ai.scope==='project'?s.whole_project_live_validated:s.live_validated)?'<p class="sd-small sd-muted">This investigation scope has no completed live record matching its source versions and provider settings. Earlier live receipts remain available in saved history.</p>':'');
   }
   async function refreshAiStatus() {
     if(ai.statusLoading)return;
@@ -1158,13 +1173,15 @@
     $('#sd-ai-connect-label').textContent=ai.status?.key_present?'AI connected':'Connect AI';
     const status=$('#sd-ai-status');if(status)status.innerHTML=aiStatusMarkup();
     const settings=$('#sd-ai-settings-status');if(settings)settings.innerHTML=aiStatusMarkup();
-    const consentModel=$('#sd-ai-consent-model');if(consentModel)consentModel.textContent=providerModelLabel(ai.status?.model);
+    updateModelChoiceControls();
     $('#sd-ai-disconnect-button').disabled=(!ai.status?.key_present&&!ai.status?.key_remembered)||ai.connecting;
     $('#sd-ai-disconnect-button').textContent=ai.status?.key_remembered?'Disconnect & forget':'Disconnect key';
     $('#sd-ai-forget-button').disabled=!ai.status?.key_remembered||ai.connecting;
     $('#sd-ai-remember').disabled=!ai.status?.remember_supported||ai.connecting;
     $('#sd-ai-remember-hint').textContent=ai.status?.remember_supported?'Optional: save an encrypted copy for this Windows account and restore it when 6D starts. Forget removes the saved copy but keeps the current session connected. Disconnect also removes the saved copy.':'Remembering is available on Windows. This connection stays in server memory only.';
     updateAiControls();
+    clearTimeout(ai.statusTimer);
+    if(ai.status?.investigation_active&&state.panel==='assistant')ai.statusTimer=setTimeout(()=>void refreshAiStatus(),1000);
   }
   function evaluationStatusMarkup() {
     const s=ai.evaluation;
@@ -1177,9 +1194,9 @@
     const capturedLimits=comparison?'<p class="sd-small sd-muted">Captured comparison policy: '+esc(comparison.policy_version || 'Original recorded policy')+(typeof comparison.batch_cap_usd==='number'?' · batch ceiling '+dollars(comparison.batch_cap_usd):'')+(typeof comparison.max_request_reservations==='number'?' · up to '+esc(comparison.max_request_reservations)+' request reservations':'')+'. Reserved for this comparison: '+dollars(comparison.reserved_usd)+'. Historical scores stay attached to their recorded policy.</p>':'';
     const decision=comparison?.model_decision;
     const decisionNote=typeof decision==='string'?decision:decision&&(decision.note || decision.reason || decision.summary);
-    const reviewedDecision=decision?'<details class="sd-source"><summary>Recorded model decision</summary>'+(typeof decisionNote==='string'?'<p class="sd-small">'+esc(decisionNote)+'</p>':'')+'<pre>'+esc(typeof decision==='string'?decision:JSON.stringify(decision,null,2))+'</pre></details>':'<p class="sd-small sd-muted">A complete, manually reviewed benefit is required before enabling a stronger model.</p>';
+    const reviewedDecision=decision?'<details class="sd-source"><summary>Recorded model decision</summary>'+(typeof decisionNote==='string'?'<p class="sd-small">'+esc(decisionNote)+'</p>':'')+'<pre>'+esc(typeof decision==='string'?decision:JSON.stringify(decision,null,2))+'</pre></details>':'<p class="sd-small sd-muted">This historical comparison does not change the model you choose for a new investigation.</p>';
     const nextLimits=typeof s.batch_cap_usd==='number'?'<p class="sd-small sd-muted">Prepared next comparison ceiling: '+dollars(s.batch_cap_usd)+' and up to '+esc(s.max_request_reservations ?? 'the configured number of')+' request reservations within the approved cumulative allowance. Opening these settings sends no model requests.</p>':'';
-    return '<div class="sd-section-heading"><h3>Model comparison</h3><span class="sd-chip">'+esc(stages[s.stage] || human(s.stage || 'pending'))+'</span></div><p class="sd-small">Active investigation model: <strong>'+esc(s.active_model?.name || ai.status?.model || 'Not configured')+'</strong></p><ul class="sd-ai-model-list">'+(Array.isArray(s.candidates)?s.candidates:[]).map(candidate=>'<li><div><strong>'+esc(candidate.name || candidate.id)+'</strong><span class="sd-small sd-muted">'+esc(candidate.reason || (candidate.enabled?'Existing baseline':'Not enabled'))+'</span></div><span class="sd-chip">'+(candidate.enabled?'Enabled':'Not enabled')+'</span></li>').join('')+'</ul>'+(comparison?'<p class="sd-small sd-muted">Latest comparison: '+esc(human(comparison.state))+' · '+esc(comparison.completed_cases ?? 0)+'/'+esc(comparison.total_cases ?? s.case_count ?? 0)+' investigations completed.</p>':'')+capturedLimits+recorded+reviewedDecision+report+nextLimits+'<p class="sd-small sd-muted">'+esc(s.note || 'The comparison is prepared. Live evaluation is pending; no stronger model is enabled by preparation alone.')+'</p>';
+    return '<div class="sd-section-heading"><h3>Historical default-selection comparison</h3><span class="sd-chip">'+esc(stages[s.stage] || human(s.stage || 'pending'))+'</span></div><p class="sd-small">Recorded default model: <strong>'+esc(s.active_model?.name || ai.status?.model || 'Not configured')+'</strong></p><ul class="sd-ai-model-list">'+(Array.isArray(s.candidates)?s.candidates:[]).map(candidate=>'<li><div><strong>'+esc(candidate.name || candidate.id)+'</strong><span class="sd-small sd-muted">'+esc(candidate.reason || (candidate.enabled?'Existing baseline':'Not enabled'))+'</span></div><span class="sd-chip">'+(candidate.enabled?'Default at this checkpoint':'Not selected as default')+'</span></li>').join('')+'</ul>'+(comparison?'<p class="sd-small sd-muted">Latest comparison: '+esc(human(comparison.state))+' · '+esc(comparison.completed_cases ?? 0)+'/'+esc(comparison.total_cases ?? s.case_count ?? 0)+' investigations completed.</p>':'')+capturedLimits+recorded+reviewedDecision+report+nextLimits+'<p class="sd-small sd-muted">'+esc(s.note || 'The comparison is prepared. Live evaluation is pending; no stronger model is enabled by preparation alone.')+'</p>';
   }
   async function refreshEvaluationStatus() {
     if(ai.evaluationLoading)return;
@@ -1220,12 +1237,15 @@
     if(!ai.status)return 'Read the AI configuration before starting.';
     if(!ai.status.key_present)return 'Connect your Nebius key to enable a live investigation.';
     if(!ai.status.configured)return 'Live provider setup is not ready.';
+    if(!selectedAIModel())return 'Choose an available investigation model before starting.';
     if(!(ai.status.budget?.remaining_usd>0))return 'The approved cumulative allowance has no remaining capacity.';
+    if(ai.status.investigation_active)return 'An AI investigation is running. Wait for it to finish before starting another.';
     if(ai.records.some(investigationActive))return 'An investigation is still running for this scope.';
     if(ai.loading)return 'Reading saved investigations before allowing a new request.';
     return '';
   }
   function updateAiControls() {
+    updateModelChoiceControls();
     const button=$('#sd-ai-start');if(!button)return;
     const blocked=aiBlockedReason();button.disabled=!!blocked||ai.starting||state.busy||!ai.question.trim();
     button.textContent=ai.starting?'Starting…':'Start live investigation';
@@ -1234,7 +1254,7 @@
   }
   function renderProjectAssistant() {
     $('#sd-panel-context').innerHTML='<span class="sd-label">AI investigation · saved R'+esc(state.data.revision)+'</span><h2>Whole-project review</h2>';
-    $('#sd-panel-body').innerHTML='<div class="sd-action-row"><button type="button" class="sd-button sd-primary" disabled>Project</button><button type="button" class="sd-button" data-action="requirement-investigate">Requirement</button></div><div id="sd-ai-status">'+aiStatusMarkup()+'</div><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings</button><p>Investigate related saved findings, declared dependencies, executed/reused evidence and changes together. Canonical calculations stay authoritative.</p><p class="sd-small sd-muted">This reviews scalar findings and model scope. It does not analyze unselected test rows, imported histories, study records or unlinked sources, and does not rerun physics.</p><label class="sd-field">Your project question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="4" maxlength="2000">'+esc(ai.question)+'</textarea></label><span id="sd-ai-question-count" class="sd-small sd-muted"></span><button type="button" class="sd-button" data-action="ai-project-question">Ask what changed and what to check</button><p class="sd-small sd-ai-consent">Starting sends your question and the saved project findings, related inputs/model definitions, prior changes and pinned linked reference excerpts to '+esc(providerModelLabel(ai.status?.model))+' on Nebius. This uses the existing approved allowance. Opening this panel sends nothing.</p><p id="sd-ai-blocked" class="sd-notice" hidden></p><button type="button" id="sd-ai-start" class="sd-button sd-primary sd-full-width" data-action="ai-start">Start live investigation</button><div id="sd-ai-history" class="sd-ai-history" aria-live="polite"></div>';
+    $('#sd-panel-body').innerHTML='<div class="sd-action-row"><button type="button" class="sd-button sd-primary" disabled>Project</button><button type="button" class="sd-button" data-action="requirement-investigate">Requirement</button></div><div id="sd-ai-status">'+aiStatusMarkup()+'</div><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings</button><p>Investigate related saved findings, declared dependencies, executed/reused evidence and changes together. Canonical calculations stay authoritative.</p><p class="sd-small sd-muted">This reviews scalar findings and model scope. It does not analyze unselected test rows, imported histories, study records or unlinked sources, and does not rerun physics.</p>'+modelChoiceMarkup()+'<label class="sd-field">Your project question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="4" maxlength="2000">'+esc(ai.question)+'</textarea></label><span id="sd-ai-question-count" class="sd-small sd-muted"></span><button type="button" class="sd-button" data-action="ai-project-question">Ask what changed and what to check</button><p class="sd-small sd-ai-consent">Starting sends your question and the saved project findings, related inputs/model definitions, prior changes and pinned linked reference excerpts to <span id="sd-ai-consent-model">'+esc(providerModelLabel(selectedAIModel()?.model||ai.status?.model))+'</span> on Nebius. This uses the existing approved allowance. Opening this panel sends nothing.</p><p id="sd-ai-blocked" class="sd-notice" hidden></p><button type="button" id="sd-ai-start" class="sd-button sd-primary sd-full-width" data-action="ai-start">Start live investigation</button><div id="sd-ai-history" class="sd-ai-history" aria-live="polite"></div>';
     renderAiHistory();updateAiControls();
     if(ai.loadedContext!==ai.context&&!ai.loading)void loadInvestigations();
   }
@@ -1247,7 +1267,7 @@
     syncAssistantContext();if(ai.scope==='project'){renderProjectAssistant();return;}const r=req(ai.requirementId);
     $('#sd-panel-context').innerHTML='<span class="sd-label">AI investigation · saved R'+state.data.revision+'</span><h2>'+esc(r?.title || 'Choose a requirement')+'</h2>'+(r?'<span class="sd-small sd-muted">'+esc(r.id)+'</span>':'');
     if(!r){$('#sd-panel-body').innerHTML='<p>Select a requirement and choose Investigate to work with its engineering evidence.</p>';return;}
-    $('#sd-panel-body').innerHTML='<button type="button" class="sd-button" data-action="project-investigate">Review whole project</button><div id="sd-ai-status" class="sd-ai-status">'+aiStatusMarkup()+'</div><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings '+icon('plug')+'</button><div class="sd-ai-scope"><span class="sd-label">Investigation scope</span><p>'+esc(r.title)+'<br>Model: '+esc(human(r.model_id))+' · '+chip(reqStatus(r.id))+'</p><p class="sd-small sd-muted">The saved requirement result stays authoritative. AI can inspect records, request a supported recheck and explain findings; its prose cannot change the verdict.</p></div><label class="sd-field" for="sd-ai-question">Your question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="4" maxlength="2000" placeholder="What supports this result, and what remains unassessed?">'+esc(ai.question)+'</textarea></label><span id="sd-ai-question-count" class="sd-small sd-muted"></span><div class="sd-action-row"><button type="button" class="sd-button" data-action="ai-source-question">Ask about linked references</button><button type="button" class="sd-button" data-action="sources">Open source library</button></div><p class="sd-small sd-ai-consent">Starting sends your question and scoped project records, including linked inputs, model and requirement evidence and relevant saved reference excerpts, to <span id="sd-ai-consent-model">'+esc(providerModelLabel(ai.status?.model))+'</span> on Nebius. This consumes the existing approved allowance. Opening this panel and connecting a key make no inference calls.</p><p class="sd-notice" id="sd-ai-blocked" hidden></p><button type="button" class="sd-button sd-primary sd-full-width" data-action="ai-start" id="sd-ai-start">Start live investigation</button><div id="sd-ai-history" class="sd-ai-history" aria-live="polite" aria-relevant="additions text"></div>';
+    $('#sd-panel-body').innerHTML='<button type="button" class="sd-button" data-action="project-investigate">Review whole project</button><div id="sd-ai-status" class="sd-ai-status">'+aiStatusMarkup()+'</div><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings '+icon('plug')+'</button><div class="sd-ai-scope"><span class="sd-label">Investigation scope</span><p>'+esc(r.title)+'<br>Model: '+esc(human(r.model_id))+' · '+chip(reqStatus(r.id))+'</p><p class="sd-small sd-muted">The saved requirement result stays authoritative. AI can inspect records, request a supported recheck and explain findings; its prose cannot change the verdict.</p></div>'+modelChoiceMarkup()+'<label class="sd-field" for="sd-ai-question">Your question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="4" maxlength="2000" placeholder="What supports this result, and what remains unassessed?">'+esc(ai.question)+'</textarea></label><span id="sd-ai-question-count" class="sd-small sd-muted"></span><div class="sd-action-row"><button type="button" class="sd-button" data-action="ai-source-question">Ask about linked references</button><button type="button" class="sd-button" data-action="sources">Open source library</button></div><p class="sd-small sd-ai-consent">Starting sends your question and scoped project records, including linked inputs, model and requirement evidence and relevant saved reference excerpts, to <span id="sd-ai-consent-model">'+esc(providerModelLabel(ai.status?.model))+'</span> on Nebius. This consumes the existing approved allowance. Opening this panel and connecting a key make no inference calls.</p><p class="sd-notice" id="sd-ai-blocked" hidden></p><button type="button" class="sd-button sd-primary sd-full-width" data-action="ai-start" id="sd-ai-start">Start live investigation</button><div id="sd-ai-history" class="sd-ai-history" aria-live="polite" aria-relevant="additions text"></div>';
     if(ai.testSelection){
       const scope=$('#sd-panel-body .sd-ai-scope');
       scope.insertAdjacentHTML('beforeend','<p class="sd-small">Selected CSV row '+esc(ai.testSelection.rowNumber)+' from comparison <span class="sd-receipt">'+esc(ai.testSelection.comparisonId)+'</span>. This recorded observation will be sent with its original baseline, conditions and applicability context.</p><button type="button" class="sd-mini-action" data-action="clear-test-selection">Clear selected test row</button>'+testEvidenceSlot('assistant',[r.id]));
@@ -1518,7 +1538,9 @@
     const context=ai.context;ai.starting=true;ai.error='';updateAiControls();
     try{
       const selection=ai.testSelection;
-      const record=await api('/api/investigations',{project_id:state.data.project_id,revision:state.data.revision,...(ai.scope==='project'?{scope:'project'}:{requirement_id:ai.requirementId}),question:ai.question.trim(),...(selection?{test_comparison_id:selection.comparisonId,test_row_number:selection.rowNumber}:{})});
+      const chosen=selectedAIModel();
+      if(!chosen)throw Error('Choose an available investigation model before starting.');
+      const record=await api('/api/investigations',{project_id:state.data.project_id,revision:state.data.revision,...(ai.scope==='project'?{scope:'project'}:{requirement_id:ai.requirementId}),question:ai.question.trim(),model_choice:chosen.id,...(selection?{test_comparison_id:selection.comparisonId,test_row_number:selection.rowNumber}:{})});
       if(context!==ai.context)return;
       ai.records=[record,...ai.records.filter(item=>investigationId(item)!==investigationId(record))];renderAiHistory();
       scheduleInvestigationPoll(ai.generation,context);await refreshAiStatus();
@@ -1810,6 +1832,11 @@
   root.addEventListener('change',event=>{
     if(state.busy)return;
     const el=event.target;
+    if(el.id==='sd-ai-model'){
+      if(ai.starting||ai.status?.investigation_active||ai.records.some(investigationActive)){updateModelChoiceControls();return;}
+      if(modelChoices().some(row=>row.id===el.value)){ai.modelChoice=el.value;const status=$('#sd-ai-status');if(status)status.innerHTML=aiStatusMarkup();updateAiControls();}
+      return;
+    }
     if(el.closest('#sd-author-form')&&el.matches('select[name="type"],select[name="model_id"],select[name="metric"]')){
       const values=Object.fromEntries(new FormData($('#sd-author-form'))),context=author.editor;
       if(context?.kind==='requirement'&&el.name==='model_id'){values.metric='';values.limit_input='';}

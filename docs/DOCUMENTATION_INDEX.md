@@ -224,3 +224,12 @@ These additions preserve the original inventory baseline and historical result d
 - [Acceptance](WORKSPACE_NAVIGATION_ACCEPTANCE.md)
 - [Results, data preservation and remaining scope](WORKSPACE_NAVIGATION_RESULTS.md)
 - [Reproducible isolated browser acceptance](../tools/check_navigation_browser.mjs)
+
+## October 25 three-model selection and readable type
+
+- [Model-choice guide](THREE_MODEL_CHOICES.md)
+- [Acceptance](THREE_MODEL_ACCEPTANCE.md)
+- [Results and preserved live failures](THREE_MODEL_RESULTS.md)
+- [Sanitized verification](validation/THREE_MODEL_CHECKS.json)
+- [Isolated model-choice browser check](../tools/check_model_choices_browser.mjs)
+- [Explicit bounded live-check tool](../tools/check_model_choices_live.py)

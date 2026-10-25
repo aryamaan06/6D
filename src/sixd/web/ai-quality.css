@@ -1,9 +1,9 @@
 /* The AI panel shares the quiet engineering workspace and scopes every rule. */
-#sixd-workspace .aq-workspace{max-width:1240px;margin:0 auto;padding:32px 34px 40px;color:var(--sd-ink);font-size:12px;line-height:1.6}
+#sixd-workspace .aq-workspace{max-width:1240px;margin:0 auto;padding:32px 34px 40px;color:var(--sd-ink);font-size:13px;line-height:1.6}
 #sixd-workspace .aq-header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px}
-#sixd-workspace .aq-eyebrow{display:block;font-size:10px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;color:var(--sd-soft);margin-bottom:8px}
+#sixd-workspace .aq-eyebrow{display:block;font-size:13px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;color:var(--sd-soft);margin-bottom:8px}
 #sixd-workspace .aq-header h1{font-size:28px;font-weight:620;line-height:1.2;letter-spacing:-.75px}
-#sixd-workspace .aq-header p{margin-top:9px;max-width:690px;color:var(--sd-soft);font-size:12px}
+#sixd-workspace .aq-header p{margin-top:9px;max-width:690px;color:var(--sd-soft);font-size:13px}
 #sixd-workspace .aq-header>.sd-button{flex-shrink:0}
 #sixd-workspace .aq-section{margin-top:27px;padding-top:25px;border-top:1px solid var(--sd-border);min-width:0}
 #sixd-workspace .aq-connection{margin-top:0;padding:18px 20px;background:var(--sd-side);border:1px solid var(--sd-border);border-radius:9px}
@@ -11,66 +11,66 @@
 #sixd-workspace .aq-section-heading{display:flex;gap:20px;justify-content:space-between;align-items:flex-start;margin-bottom:17px}
 #sixd-workspace .aq-section-heading p,#sixd-workspace .aq-muted{color:var(--sd-soft)}
 #sixd-workspace .aq-inline{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;min-width:0}
-#sixd-workspace .aq-inline strong{font-size:12px;font-weight:600}
+#sixd-workspace .aq-inline strong{font-size:13px;font-weight:600}
 #sixd-workspace .aq-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0;background:#a5ac9f}
 #sixd-workspace .aq-dot.aq-connected{background:var(--sd-green)}
-#sixd-workspace .aq-caption{font-size:10.5px;line-height:1.65;color:var(--sd-soft);margin-top:7px;overflow-wrap:anywhere}
-#sixd-workspace .aq-mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;font-size:10px}
+#sixd-workspace .aq-caption{font-size:13px;line-height:1.65;color:var(--sd-soft);margin-top:7px;overflow-wrap:anywhere}
+#sixd-workspace .aq-mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;font-size:13px}
 #sixd-workspace .aq-case-plan{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;list-style-position:inside;padding:0;margin:0 0 18px;border:1px solid var(--sd-border);border-radius:9px;overflow:hidden}
-#sixd-workspace .aq-case-plan li{padding:15px;min-width:0;font-size:10px;color:var(--sd-soft)}
+#sixd-workspace .aq-case-plan li{padding:15px;min-width:0;font-size:13px;color:var(--sd-soft)}
 #sixd-workspace .aq-case-plan li+li{border-left:1px solid var(--sd-border)}
-#sixd-workspace .aq-case-plan strong{color:var(--sd-ink);font-size:11px;font-weight:600;overflow-wrap:anywhere}
-#sixd-workspace .aq-case-plan p{margin:7px 0 4px;font-size:10.5px;overflow-wrap:anywhere}
+#sixd-workspace .aq-case-plan strong{color:var(--sd-ink);font-size:13px;font-weight:600;overflow-wrap:anywhere}
+#sixd-workspace .aq-case-plan p{margin:7px 0 4px;font-size:13px;overflow-wrap:anywhere}
 #sixd-workspace .aq-start{display:flex;align-items:center;justify-content:space-between;gap:24px;border-radius:9px;padding:18px 20px;background:#f3f6fc;border:1px solid #e1e7f5;margin:15px 0 22px}
-#sixd-workspace .aq-start strong{font-size:12px;font-weight:600}
-#sixd-workspace .aq-start p{font-size:11px;color:var(--sd-soft);margin-top:4px;max-width:640px}
+#sixd-workspace .aq-start strong{font-size:13px;font-weight:600}
+#sixd-workspace .aq-start p{font-size:13px;color:var(--sd-soft);margin-top:4px;max-width:640px}
 #sixd-workspace .aq-start>.sd-button{flex-shrink:0}
 #sixd-workspace .aq-empty{padding:22px 20px;border:1px solid var(--sd-border);border-radius:8px;background:#fafbf9}
-#sixd-workspace .aq-empty strong{font-size:12px;font-weight:550}
-#sixd-workspace .aq-empty p{font-size:11px;color:var(--sd-soft);margin-top:6px}
+#sixd-workspace .aq-empty strong{font-size:13px;font-weight:550}
+#sixd-workspace .aq-empty p{font-size:13px;color:var(--sd-soft);margin-top:6px}
 #sixd-workspace .aq-receipt-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
 #sixd-workspace .aq-receipt-heading strong{font-weight:600;font-size:13px}
 #sixd-workspace .aq-receipt-heading p{margin-top:4px}
-#sixd-workspace .aq-badge{display:inline-block;padding:3px 7px;font-size:9px;font-weight:550;line-height:1.5;border-radius:4px;background:#f0f1ed;color:var(--sd-soft);white-space:nowrap}
+#sixd-workspace .aq-badge{display:inline-block;padding:3px 7px;font-size:13px;font-weight:550;line-height:1.5;border-radius:4px;background:#f0f1ed;color:var(--sd-soft);white-space:nowrap}
 #sixd-workspace .aq-badge.aq-failed{background:var(--sd-red-soft);color:var(--sd-red)}
 #sixd-workspace .aq-badge.aq-completed,#sixd-workspace .aq-badge.aq-passed,#sixd-workspace .aq-badge.aq-pass{background:var(--sd-green-soft);color:var(--sd-green)}
 #sixd-workspace .aq-badge.aq-running,#sixd-workspace .aq-badge.aq-queued{background:#edf2fd;color:var(--sd-blue)}
-#sixd-workspace .aq-context{font-size:11px;margin:12px 0;color:var(--sd-soft)}
-#sixd-workspace .aq-warning{color:#87631b;background:var(--sd-amber-soft);padding:9px 11px;border-radius:5px;font-size:11px;overflow-wrap:anywhere;margin-top:8px}
+#sixd-workspace .aq-context{font-size:13px;margin:12px 0;color:var(--sd-soft)}
+#sixd-workspace .aq-warning{color:#87631b;background:var(--sd-amber-soft);padding:9px 11px;border-radius:5px;font-size:13px;overflow-wrap:anywhere;margin-top:8px}
 #sixd-workspace .aq-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;border-top:1px solid var(--sd-border);border-bottom:1px solid var(--sd-border);padding:13px 0;margin:14px 0}
-#sixd-workspace .aq-metrics dt{font-size:10px;color:var(--sd-soft)}
+#sixd-workspace .aq-metrics dt{font-size:13px;color:var(--sd-soft)}
 #sixd-workspace .aq-metrics dd{font-size:15px;margin:4px 0 0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 #sixd-workspace .aq-table-wrap{max-width:100%;overflow-x:auto;border:1px solid var(--sd-border);border-radius:8px;margin-top:16px}
-#sixd-workspace .aq-results-table{width:100%;min-width:580px;border-collapse:collapse;font-size:11px}
+#sixd-workspace .aq-results-table{width:100%;min-width:580px;border-collapse:collapse;font-size:13px}
 #sixd-workspace .aq-results-table caption{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 #sixd-workspace .aq-results-table th,#sixd-workspace .aq-results-table td{padding:12px 13px;text-align:left;vertical-align:top;border-bottom:1px solid var(--sd-border);overflow-wrap:anywhere}
-#sixd-workspace .aq-results-table thead th{font-size:10px;color:var(--sd-soft);font-weight:550;background:#fafbf9}
-#sixd-workspace .aq-results-table tbody th{font-size:11px;font-weight:550;width:30%}
+#sixd-workspace .aq-results-table thead th{font-size:13px;color:var(--sd-soft);font-weight:550;background:#fafbf9}
+#sixd-workspace .aq-results-table tbody th{font-size:13px;font-weight:550;width:30%}
 #sixd-workspace .aq-results-table tbody tr:last-child th,#sixd-workspace .aq-results-table tbody tr:last-child td{border-bottom:0}
 #sixd-workspace .aq-receipt-actions{margin-top:14px}
-#sixd-workspace .aq-link{color:var(--sd-blue);text-decoration:none;font-size:11px;overflow-wrap:anywhere}
+#sixd-workspace .aq-link{color:var(--sd-blue);text-decoration:none;font-size:13px;overflow-wrap:anywhere}
 #sixd-workspace .aq-link:hover{text-decoration:underline;text-underline-offset:3px}
 #sixd-workspace .aq-private-form{display:grid;grid-template-columns:minmax(150px,1.15fr) 85px minmax(180px,1.3fr);gap:13px;align-items:end;padding:16px 18px;border:1px solid var(--sd-border);border-radius:8px;margin-top:16px}
-#sixd-workspace .aq-private-form label{display:flex;flex-direction:column;gap:6px;font-size:10.5px;font-weight:550;min-width:0}
+#sixd-workspace .aq-private-form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:550;min-width:0}
 #sixd-workspace .aq-private-form label .aq-muted{font-weight:400}
 #sixd-workspace .aq-private-form label.aq-remember{grid-column:1/-1;flex-direction:row;align-items:center;gap:8px}
 #sixd-workspace .aq-private-form label.aq-remember input{width:16px;height:16px;min-width:16px;margin:0;padding:0;accent-color:var(--sd-blue)}
 #sixd-workspace .aq-private-form label.aq-remember:has(input:disabled){color:var(--sd-soft)}
-#sixd-workspace .aq-private-form input,#sixd-workspace .aq-private-form select{width:100%;min-width:0;background:#fff;border:1px solid var(--sd-border);border-radius:6px;padding:8px 9px;font-size:11px;color:var(--sd-ink)}
+#sixd-workspace .aq-private-form input,#sixd-workspace .aq-private-form select{width:100%;min-width:0;background:#fff;border:1px solid var(--sd-border);border-radius:6px;padding:8px 9px;font-size:13px;color:var(--sd-ink)}
 #sixd-workspace .aq-private-form>.aq-inline,#sixd-workspace .aq-private-form>p{grid-column:1/-1}
 #sixd-workspace .aq-private-form>p{margin-top:0}
 #sixd-workspace .aq-export-actions{margin:16px 0}
 #sixd-workspace .aq-preview-heading{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-top:16px}
-#sixd-workspace .aq-preview-heading strong{font-size:12px;font-weight:550}
-#sixd-workspace .aq-json{margin:12px 0;padding:15px 16px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;max-height:420px;overflow:auto;font-size:10.5px;line-height:1.6;background:#f7f8f5;border:1px solid var(--sd-border);border-radius:7px;color:#46513f}
+#sixd-workspace .aq-preview-heading strong{font-size:13px;font-weight:550}
+#sixd-workspace .aq-json{margin:12px 0;padding:15px 16px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;max-height:420px;overflow:auto;font-size:13px;line-height:1.6;background:#f7f8f5;border:1px solid var(--sd-border);border-radius:7px;color:#46513f}
 #sixd-workspace .aq-json[hidden]{display:none}
-#sixd-workspace .aq-attempts{padding-left:18px;font-size:10.5px;color:var(--sd-soft);overflow-wrap:anywhere}
-#sixd-workspace [data-aq-export-history] details{font-size:11px;margin-top:16px}
+#sixd-workspace .aq-attempts{padding-left:18px;font-size:13px;color:var(--sd-soft);overflow-wrap:anywhere}
+#sixd-workspace [data-aq-export-history] details{font-size:13px;margin-top:16px}
 #sixd-workspace [data-aq-export-history] summary{cursor:pointer}
-#sixd-workspace [data-aq-research]>p{color:var(--sd-soft);font-size:11px;margin:8px 0 13px;max-width:830px}
-#sixd-workspace .aq-error,#sixd-workspace .aq-notice{border:1px solid #e6c5bd;border-radius:7px;padding:12px 15px;font-size:11px;overflow-wrap:anywhere;margin:0 0 16px;background:var(--sd-red-soft);color:var(--sd-red)}
+#sixd-workspace [data-aq-research]>p{color:var(--sd-soft);font-size:13px;margin:8px 0 13px;max-width:830px}
+#sixd-workspace .aq-error,#sixd-workspace .aq-notice{border:1px solid #e6c5bd;border-radius:7px;padding:12px 15px;font-size:13px;overflow-wrap:anywhere;margin:0 0 16px;background:var(--sd-red-soft);color:var(--sd-red)}
 #sixd-workspace .aq-notice{border-color:#d3dfcc;background:var(--sd-green-soft);color:var(--sd-green)}
-#sixd-workspace .aq-footer{margin-top:29px;padding-top:15px;border-top:1px solid var(--sd-border);font-size:10px;color:var(--sd-soft)}
+#sixd-workspace .aq-footer{margin-top:29px;padding-top:15px;border-top:1px solid var(--sd-border);font-size:13px;color:var(--sd-soft)}
 #sixd-workspace .aq-workspace :focus-visible{outline:2px solid var(--sd-blue);outline-offset:3px}
 @media(max-width:1100px){#sixd-workspace .aq-case-plan{grid-template-columns:repeat(2,minmax(0,1fr))}#sixd-workspace .aq-case-plan li:nth-child(3){border-left:0}#sixd-workspace .aq-case-plan li:nth-child(n+3){border-top:1px solid var(--sd-border)}#sixd-workspace .aq-start{flex-direction:column;align-items:flex-start;gap:13px}}
 @media(max-width:650px){#sixd-workspace .aq-workspace{padding:24px 17px 30px}#sixd-workspace .aq-header{flex-wrap:wrap;gap:14px}#sixd-workspace .aq-header h1{font-size:24px}#sixd-workspace .aq-case-plan{grid-template-columns:1fr}#sixd-workspace .aq-case-plan li+li{border-left:0;border-top:1px solid var(--sd-border)}#sixd-workspace .aq-start,#sixd-workspace .aq-connection{padding:16px}#sixd-workspace .aq-start>.sd-button{white-space:normal;text-align:left;max-width:100%}#sixd-workspace .aq-private-form{grid-template-columns:1fr;padding:14px}#sixd-workspace .aq-private-form label,#sixd-workspace .aq-private-form>.aq-inline,#sixd-workspace .aq-private-form>p{grid-column:1}#sixd-workspace .aq-metrics{gap:12px;grid-template-columns:1fr}#sixd-workspace .aq-metrics>div{display:flex;align-items:baseline;justify-content:space-between;gap:14px}#sixd-workspace .aq-metrics dd{font-size:13px}#sixd-workspace .aq-receipt-heading,#sixd-workspace .aq-preview-heading{align-items:flex-start;flex-direction:column;gap:7px}}

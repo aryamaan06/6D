@@ -52,3 +52,7 @@ Older741-style figures may remain in dated historical notes. They are not curren
 ## October 25 UI navigation/font scope
 
 [Delivery](WORKSPACE_NAVIGATION_RESULTS.md): 77 scoped Python methods (76 passed, one hosted Docker-environment skip), six Node history contracts and isolated browser acceptance. These overlap existing suites and are not a new full discovery total. Navigation tests use constructed projects and forbidden external transports. No live AI qualification is established by these checks.
+
+## October 25 Build 2 model choice/readability
+
+[167 combined offline methods passed](THREE_MODEL_RESULTS.md), plus6 Node history contracts,8 model browser groups and17 navigation groups. Three live phases attempted13 jobs:10 completed,3 failed,56 request reservations and USD0.92674272 conservatively reserved. The failures remain recorded; successful cases span source corrections, not one all-model final-source qualification. Counts overlap prior suites; no full discovery or independent human validation is claimed. [Machine summary](validation/THREE_MODEL_CHECKS.json).

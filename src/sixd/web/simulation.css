@@ -7,59 +7,59 @@
 #sixd-workspace .sim-intro p{color:var(--sd-soft);max-width:580px}
 #sixd-workspace .sim-runbar{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
 #sixd-workspace .sim-runbar label{min-width:0;flex:1 1 220px}
-#sixd-workspace .sim-binding{font:11px ui-monospace,monospace;color:#6c7888;overflow-wrap:anywhere;margin:12px 0}
+#sixd-workspace .sim-binding{font:13px ui-monospace,monospace;color:#6c7888;overflow-wrap:anywhere;margin:12px 0}
 #sixd-workspace .sim-stage{border:1px solid #dfe5ef;border-radius:13px;overflow:hidden;background:#f6f8fc;margin-top:18px}
 #sixd-workspace .sim-stage-header{padding:12px 14px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 #sixd-workspace .sim-modes{display:flex;gap:5px}
-#sixd-workspace .sim-modes button{min-height:29px;padding:4px 9px;font-size:11px;background:#ffffffb0}
+#sixd-workspace .sim-modes button{min-height:29px;padding:4px 9px;font-size:13px;background:#ffffffb0}
 #sixd-workspace .sim-modes button[aria-pressed=true]{background:#e5edff;border-color:#99afe9;color:#264ca5}
 #sixd-workspace #sim-scene{width:100%;height:440px;display:block;touch-action:none;cursor:grab;outline-offset:-3px}
 #sixd-workspace #sim-scene:active{cursor:grabbing}
-#sixd-workspace .sim-scene-note{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:11px 15px;font-size:11px;color:#617188;border-top:1px solid #e4e9f0}
+#sixd-workspace .sim-scene-note{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:11px 15px;font-size:13px;color:#617188;border-top:1px solid #e4e9f0}
 #sixd-workspace .sim-dot{display:inline-block;border-radius:50%;width:7px;height:7px;background:#3768d5;margin:0 6px 1px 0}
 #sixd-workspace .sim-amber{background:#bb8a39;margin-left:15px}
 #sixd-workspace .sim-playback{display:flex;align-items:center;gap:12px;padding:17px 0 10px;flex-wrap:wrap}
-#sixd-workspace .sim-scrub{flex:1 1 200px;color:#687486;font-size:10px}
+#sixd-workspace .sim-scrub{flex:1 1 200px;color:#687486;font-size:13px}
 #sixd-workspace #sim-timeline{display:block;width:100%;accent-color:#345bd6;cursor:pointer;margin:5px 0}
-#sixd-workspace .sim-playback output{font:11px ui-monospace,monospace;min-width:145px;text-align:right;color:#55647b}
-#sixd-workspace .sim-rate{width:90px;margin:0!important;font-size:10px}
+#sixd-workspace .sim-playback output{font:13px ui-monospace,monospace;min-width:145px;text-align:right;color:#55647b}
+#sixd-workspace .sim-rate{width:90px;margin:0!important;font-size:13px}
 #sixd-workspace .sim-rate select{padding:4px 7px;min-height:28px}
-#sixd-workspace .sim-caption{font-size:11.5px;color:#6c7685;line-height:1.7;margin:10px 0}
+#sixd-workspace .sim-caption{font-size:13px;color:#6c7685;line-height:1.7;margin:10px 0}
 #sixd-workspace .sim-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:22px 0}
 #sixd-workspace .sim-metrics>div{padding:15px 16px;border:1px solid #e6e9ed;border-radius:10px;background:#fdfefe;min-width:0}
-#sixd-workspace .sim-metrics span{display:block;font-size:11px;color:#7c8795;margin-bottom:8px}
+#sixd-workspace .sim-metrics span{display:block;font-size:13px;color:#7c8795;margin-bottom:8px}
 #sixd-workspace .sim-metrics strong{display:block;font-size:20px;font-weight:550;letter-spacing:-.5px;overflow-wrap:anywhere}
-#sixd-workspace .sim-metrics small{font-size:11px;font-weight:400;color:#7c8795;letter-spacing:0}
+#sixd-workspace .sim-metrics small{font-size:13px;font-weight:400;color:#7c8795;letter-spacing:0}
 #sixd-workspace .sim-history{border:1px solid #e6e9ed;border-radius:10px;padding:17px 19px}
 #sixd-workspace .sim-section-title{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 #sixd-workspace .sim-section-title h3{font-size:13px;font-weight:600}
-#sixd-workspace .sim-section-title select{font-size:11px;min-height:29px}
+#sixd-workspace .sim-section-title select{font-size:13px;min-height:29px}
 #sixd-workspace .sim-section-title label{margin:0}
 #sixd-workspace #sim-chart{display:block;width:100%;height:190px;margin-top:16px;cursor:crosshair}
 #sixd-workspace .sim-details{margin-top:16px;border:1px solid #e6e9ed;border-radius:9px;padding:14px 17px}
-#sixd-workspace .sim-details summary{cursor:pointer;font-size:12px;font-weight:550}
+#sixd-workspace .sim-details summary{cursor:pointer;font-size:13px;font-weight:550}
 #sixd-workspace .sim-details[open] summary{margin-bottom:17px}
 #sixd-workspace .sim-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 15px}
-#sixd-workspace .sim-workspace .sd-field{margin-bottom:10px;font-size:11px}
+#sixd-workspace .sim-workspace .sd-field{margin-bottom:10px;font-size:13px}
 #sixd-workspace .sim-workspace .sd-input,#sixd-workspace .sim-workspace .sd-select{width:100%;max-width:100%}
 #sixd-workspace .sim-workspace fieldset{border:0;padding:0;margin:8px 0 12px}
-#sixd-workspace .sim-workspace legend{font-size:12px;font-weight:550;margin-bottom:7px}
+#sixd-workspace .sim-workspace legend{font-size:13px;font-weight:550;margin-bottom:7px}
 #sixd-workspace .sim-vector{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
-#sixd-workspace .sim-json{white-space:pre-wrap;overflow-wrap:anywhere;background:#f7f8fa;border-radius:7px;padding:14px;font-size:10.5px;line-height:1.7;color:#627086}
-#sixd-workspace .sim-diagnostics{display:grid;grid-template-columns:1fr 1fr;gap:9px 15px;font-size:11px}
+#sixd-workspace .sim-json{white-space:pre-wrap;overflow-wrap:anywhere;background:#f7f8fa;border-radius:7px;padding:14px;font-size:13px;line-height:1.7;color:#627086}
+#sixd-workspace .sim-diagnostics{display:grid;grid-template-columns:1fr 1fr;gap:9px 15px;font-size:13px}
 #sixd-workspace .sim-diagnostics dt{color:#6c7685}
 #sixd-workspace .sim-diagnostics dd{margin:0;overflow-wrap:anywhere;font-family:ui-monospace,monospace}
-#sixd-workspace .sim-scope{padding:17px 0;font-size:11.5px;line-height:1.8;color:#697482}
+#sixd-workspace .sim-scope{padding:17px 0;font-size:13px;line-height:1.8;color:#697482}
 #sixd-workspace .sim-loading{padding:40px;color:#6c7685}
 #sixd-workspace .sim-workflow-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}
 #sixd-workspace .sim-workflow-tabs [aria-pressed="true"]{color:#2855bf;background:#edf2ff;border-color:#bacbf2}
 #sixd-workspace .sim-project-guide{border:1px solid #dce5f2;border-radius:12px;background:#fafcff;padding:18px 20px;margin:0 0 24px}
 #sixd-workspace .sim-project-guide h3,#sixd-workspace .sim-related h3{font-size:14px;font-weight:600;margin:6px 0 10px}
-#sixd-workspace .sim-project-guide>p{font-size:12px;line-height:1.7;max-width:850px;color:#657184}
+#sixd-workspace .sim-project-guide>p{font-size:13px;line-height:1.7;max-width:850px;color:#657184}
 #sixd-workspace .sim-project-models{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin:12px 0 18px}
 #sixd-workspace .sim-project-model{border:1px solid #e0e5ee;background:white;border-radius:9px;padding:13px;min-width:0}
 #sixd-workspace .sim-project-model>div:first-child{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-#sixd-workspace .sim-project-model strong{font-size:12px;overflow-wrap:anywhere}
+#sixd-workspace .sim-project-model strong{font-size:13px;overflow-wrap:anywhere}
 #sixd-workspace .sim-project-model.sim-project-selected{border-color:#9ab5ee;box-shadow:0 0 0 1px #e1eaff}
 #sixd-workspace .sim-related{border:1px solid #e1e6ef;border-radius:10px;padding:16px 18px;margin:18px 0}
 #sixd-workspace .sim-related .sd-table th,#sixd-workspace .sim-related .sd-table td{white-space:normal;overflow-wrap:anywhere}
@@ -68,7 +68,7 @@
 #sixd-workspace .sd-trajectory-context .sd-small{color:#667389;line-height:1.6}
 #sixd-workspace [data-trajectory-model]{display:inline-flex;align-items:center;gap:5px;margin-top:7px}
 #sixd-workspace [data-trajectory-model] svg{width:13px;height:13px}
-#sixd-workspace .sim-workspace h4{margin:20px 0 8px;font-size:12px}
+#sixd-workspace .sim-workspace h4{margin:20px 0 8px;font-size:13px}
 #sixd-workspace .sim-workspace .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 @media(min-width:1500px){#sixd-workspace #sim-scene{height:510px}}
 @media(max-width:900px){#sixd-workspace.sd-simulation-open .sd-shell{grid-template-columns:164px minmax(0,1fr)}#sixd-workspace .sim-workspace{padding:20px 16px}#sixd-workspace .sim-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}#sixd-workspace .sim-intro{flex-direction:column;gap:10px}#sixd-workspace .sim-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

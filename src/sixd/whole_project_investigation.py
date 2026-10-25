@@ -10,7 +10,7 @@ from .project_investigation import (_lock_view, _runtime_matches, _parse, _selec
                                     _fail, _failure, SUMMARY_MAX_CHARACTERS)
 from .explanation_quality import (build_guidance, _affirmative, _readiness_claim_text,
                                   _status_claims, _named_status_subject,
-                                  _BLANKET_STATUS_SUBJECT)
+                                  _BLANKET_STATUS_SUBJECT, uncaptured_linked_reference_claim)
 from .evidence_roles import qualitative_projection
 from .change_evidence import (build_change_context, provider_change_context,
                              has_directional_commentary)
@@ -38,7 +38,11 @@ SYSTEM = (
     'At finish recommend concrete next checks and their scope only. Do not retell the '
     'change history or list verdicts: the app already displays those exact facts. '
     'Cite exactly the recorded bundle IDs in evidence_ids. Provide a short useful '
-    'paragraph with scope and a concrete review action. Linked references are '
+    'paragraph with scope and a concrete review action. '
+    'Write two or three sentences, beginning with the bounded scope of this review. '
+    'Say the saved revision instead of retyping a revision label or number. '
+    'Never describe a linked, attached or cited reference when the captured link sets are empty. '
+    'You may recommend obtaining missing references without claiming they exist. Linked references are '
     'supplemental and unverified; no excerpt overrides the saved findings. '
     'Excluded project artifacts and omitted links have not been reviewed.'
 )
@@ -75,7 +79,8 @@ class WholeProjectActionAdapter:
             'available_actions': [{'action': n} for n in names], 'recorded_evidence_ids': ids,
             'instruction': 'Call select_next_action exactly once. For reads evidence_ids=[] and summary=\"\". Do not explain a read. Finish requires all recorded IDs and concise words-only commentary. No numerical/directional claims.',
             'read_example': {'action': names[0], 'evidence_ids': [], 'summary': ''} if names[0] != 'finish' else None,
-            'finish_instruction': 'Recommend the most relevant next engineering checks for THIS project. Name a subsystem or requirement in ordinary words and give a specific review action from its review_queue next_checks. Connect related requirements when their declared links matter. Avoid generic stock checklists. Do not narrate directions, quantities, physical causes or claim results remain valid after future changes. The canonical tables already answer what changed.'})})
+            'finish_instruction': 'Write two or three sentences. First state that this is a bounded review with excluded or unassessed effects, then recommend the most relevant next engineering checks for THIS project. Name a subsystem or requirement in ordinary words and give a specific review action from its review_queue next_checks. Connect related requirements when their declared links matter. Avoid generic stock checklists. Do not type digits or revision labels: say the saved revision. Do not invent captured references when linked_sources contains no links. Do not narrate directions, quantities, physical causes or claim results remain valid after future changes. The canonical tables already answer what changed.',
+            'finish_example': 'This is a bounded review of the saved evidence; excluded effects remain unassessed. Inspect the thermal assumptions and obtain applicable control analysis before extending these component findings to the wider design.'})})
         tool = {'type': 'function', 'function': {'name': 'select_next_action',
             'description': 'Select one read-only whole-project evidence action.',
             'parameters': {'type': 'object', 'properties': {
@@ -83,6 +88,14 @@ class WholeProjectActionAdapter:
                 'evidence_ids': {'type': 'array', 'items': {'type': 'string'}, 'description': 'Exactly [] for reads. For finish use exactly all recorded IDs.'},
                 'summary': {'type': 'string', 'description': 'Exactly empty string for read actions. Only finish may contain a concise qualitative explanation; no digits, directional comparisons or causal claims.'}},
                 'required': ['action', 'evidence_ids', 'summary'], 'additionalProperties': False}}}
+        if 'finish' not in names:
+            # Match the read decoder without accepting or stripping model prose.
+            fields = tool['function']['parameters']['properties']
+            fields['evidence_ids']['maxItems'] = 0
+            fields['summary']['enum'] = ['']
+        # Finish keeps the known-compatible plain string schema. Scope, digits,
+        # directions and source claims are still checked locally before accepting
+        # any explanation; generation constraints are not a substitute for that.
         return history, [tool], {'type': 'function', 'function': {'name': 'select_next_action'}}
 
     @staticmethod
@@ -202,7 +215,7 @@ def _wire_projection(payload):
     projected['full_evidence_notice']='Compact qualitative view. All requirement statuses and model scopes are retained. Exact numeric comparisons, source pointers and full guidance remain in the cited frozen local bundle.'
     return qualitative_projection(projected)
 
-def _quality(summary, findings, requirements=()):
+def _quality(summary, findings, requirements=(), linked_sources=None):
     """Limited phrase guards; accepted prose is not a semantic guarantee.
 
     Named statuses bind only to their own captured requirement. A whole review
@@ -242,6 +255,8 @@ def _quality(summary, findings, requirements=()):
         flags.append('next_check_missing')
     if not re.search(r'\b(?:scope|bounded|assumption\w*|unassessed|exclu\w*|limitation\w*|unsupported|lacks?\s+(?:a\s+)?supported|per\s+saved\s+findings|missing\s+(?:evidence|model)|available\s+evidence|applicable\s+analysis|supported\s+integration)\b', summary, re.I):
         flags.append('scope_missing')
+    if uncaptured_linked_reference_claim(summary, linked_sources):
+        flags.append('uncaptured_linked_reference')
     return {'method': 'limited_phrase_guards', 'accepted': not flags, 'blocked_codes': flags,
             'semantic_accuracy_established': False, 'human_review': 'pending'}
 
@@ -299,7 +314,7 @@ def investigate_whole_project(view, question, provider, *, investigation_id, on_
                 if not isinstance(args, dict) or set(args) != {'summary', 'evidence_ids'}: _fail()
                 _, citations, summary = _selection({'action': action, **args}, names, sorted(record['evidence']))
                 if contains_private_text(summary, secret): _fail()
-                quality = _quality(summary, record['canonical_findings'], bundles['project']['requirements']); record['explanation_acceptance'] = quality
+                quality = _quality(summary, record['canonical_findings'], bundles['project']['requirements'], bundles['project']['linked_sources']); record['explanation_acceptance'] = quality
                 if not quality['accepted']:
                     record['rejected_interpretation'] = {'summary': summary, 'reason_codes': quality['blocked_codes']}
                     raise ProviderError('Rejected interpretation.', code='explanation_rejected')

@@ -1,5 +1,8 @@
 # 6D working instructions
 
+October 25 authorized UI Build 2 is delivered: explicit per-investigation Nano/Super/Ultra choice in both Assistant scopes and larger readable typography. See docs/THREE_MODEL_RESULTS.md for exact live phases, three preserved failures, final successful Super case, source-version limits and shared-accounting preservation. Default Super remains unchanged; selecting a model does not change routing globally. The separate owner accounting-display refinement remains pending.
+
+
 October 25 authorized UI Build 1: Projects landing, five work areas, contextual navigation, addressable saved-view fragments, browser Back/Forward, shared-draft/profile-edit guards and native editorial typography are implemented. See docs/WORKSPACE_NAVIGATION.md and docs/WORKSPACE_NAVIGATION_RESULTS.md. The founder separately requested three-model selection and owner accounting-display changes, but those are not implemented or authorized to start by this navigation milestone. Preserve this scope separation; current Assistant remains Super.
 
 Current code: ten bounded engineering models (including prescribed planar ascent; not closed-loop launch GNC) and connected evidence workflows; Super is the selected project Assistant. Live Super, LangSmith and Tavily qualification receipts are recorded in docs/AI_QUALIFICATION_RESULTS.md and docs/TAVILY_LIVE_RESULTS.md.

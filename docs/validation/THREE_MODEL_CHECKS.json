@@ -1,0 +1,329 @@
+{
+  "schema": "sixd.three-model-delivery.v1",
+  "date": "2026-10-25",
+  "build_id": "d7c63fea5846",
+  "python_regressions": {
+    "ran": 167,
+    "passed": 167,
+    "full_discovery": false
+  },
+  "node_history_contracts_passed": 6,
+  "model_browser": {
+    "schema": "sixd.model-choice-browser-acceptance.v1",
+    "synthetic_fixture": true,
+    "live_provider_calls": 0,
+    "checks": [
+      "Requirement Assistant offers Nano, Super and Ultra; retained records name their actual models",
+      "Choosing every model retains the question and history, updates consent, and makes no POST or provider request",
+      "Changing investigation scope while a requirement job runs retains the global busy guard without another POST",
+      "Explicit requirement start reaches Ultra; switching is disabled while running and never creates a second request",
+      "A new chosen-model job does not rewrite historical Nano, Super or Ultra receipts",
+      "Whole-project Assistant retains all choices and sends the explicitly selected Nano with project scope",
+      "Assistant body and helper type meet readable sizes; mobile fields are at least sixteen pixels without page overflow",
+      "Shared synthetic allowance is preserved, canonical engineering unchanged, and only the two explicit investigation POSTs occur"
+    ],
+    "errors": [],
+    "external_requests": 0,
+    "unexpected_responses": [],
+    "post_routes": [
+      "/api/investigations",
+      "/api/investigations"
+    ],
+    "seed_models": [
+      "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "nvidia/nemotron-3-super-120b-a12b",
+      "nvidia/Nemotron-3-Ultra-550b-a55b"
+    ],
+    "new_models": [
+      "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+    ],
+    "typography": {
+      "body": 14.5,
+      "helper": 13,
+      "question": 14
+    },
+    "mobile_field_px": 16
+  },
+  "navigation_browser": {
+    "schema": "sixd.navigation-browser-acceptance.v1",
+    "checks": [
+      "Selected project and saved revision have an addressable overview",
+      "Five broad work areas are reachable without a flat list of every tool",
+      "Native browser Back and Forward restore internal locations",
+      "Reload preserves the routed project, saved revision and work area",
+      "A deep link to a historical revision survives reload",
+      "System Table, selected requirement and evidence panel survive deep reload with a parent breadcrumb",
+      "Same-project page navigation and Back retain the unsaved shared draft without a database write",
+      "Cancelled project switch preserves draft; confirmed switch explicitly discards it",
+      "Cancelling browser Back across project context preserves URL, displayed project and draft",
+      "Accepting browser Back loads the previous saved project and discards only the unsaved draft",
+      "Back during a delayed project load leaves URL and displayed project in the same context",
+      "Unapplied stage-profile values survive blocked area, project and revision navigation",
+      "Browser Back cannot remount or discard an unapplied stage-profile form",
+      "Explicit profile cancellation restores navigation while saved staged inputs stay unchanged",
+      "Requested local editorial typography, ink and soft canvas are applied without remote fonts",
+      "Navigation layout stays within a narrow viewport",
+      "Original fixture receipts unchanged; no provider, search, upload, calculation or save POSTs; no browser errors"
+    ],
+    "errors": [],
+    "unexpected_responses": [],
+    "external_requests": 0,
+    "post_routes": [
+      "/api/impact",
+      "/api/interfaces/preview",
+      "/api/test-evidence/impact",
+      "/api/impact",
+      "/api/interfaces/preview",
+      "/api/test-evidence/impact"
+    ],
+    "aborted_stale_requests": 33,
+    "synthetic_fixture": true,
+    "paid_calls": 0,
+    "typography": {
+      "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+      "color": "rgb(29, 29, 31)",
+      "background": "rgb(251, 251, 253)",
+      "headingTracking": "-0.625px",
+      "metricFont": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", monospace",
+      "bodyPx": 14.5,
+      "labelPx": 13,
+      "metricPx": 32
+    }
+  },
+  "live_phases": [
+    {
+      "phase": "20261025T113344153122Z",
+      "build_id": "8c133d73b025",
+      "planned": 9,
+      "rows": [
+        {
+          "model_choice": "nano",
+          "case_id": "limit-only-change",
+          "state": "completed",
+          "investigation_id": "5b1f6155193f481892a5d5e922553fdf",
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "request_reservations": 5,
+          "reserved_usd": 0.01171332,
+          "error_code": null
+        },
+        {
+          "model_choice": "nano",
+          "case_id": "unsupported-control",
+          "state": "completed",
+          "investigation_id": "3c04d9a3877347e5803606d908f3ec9a",
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "request_reservations": 4,
+          "reserved_usd": 0.0077325599999999994,
+          "error_code": null
+        },
+        {
+          "model_choice": "nano",
+          "case_id": "whole-project",
+          "state": "completed",
+          "investigation_id": "9557da64073c42478c198037a788796d",
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "request_reservations": 4,
+          "reserved_usd": 0.00813606,
+          "error_code": null
+        },
+        {
+          "model_choice": "super",
+          "case_id": "limit-only-change",
+          "state": "completed",
+          "investigation_id": "8525f82469b94102b6b230d73a7e709f",
+          "model": "nvidia/nemotron-3-super-120b-a12b",
+          "request_reservations": 5,
+          "reserved_usd": 0.0554886,
+          "error_code": null
+        },
+        {
+          "model_choice": "super",
+          "case_id": "unsupported-control",
+          "state": "completed",
+          "investigation_id": "c4e4ec64294d4c16986431c56cc32b9d",
+          "model": "nvidia/nemotron-3-super-120b-a12b",
+          "request_reservations": 4,
+          "reserved_usd": 0.036200399999999994,
+          "error_code": null
+        },
+        {
+          "model_choice": "super",
+          "case_id": "whole-project",
+          "state": "failed",
+          "investigation_id": "75f986a935ed40c8b03a1517f877a1bc",
+          "model": "nvidia/nemotron-3-super-120b-a12b",
+          "request_reservations": 4,
+          "reserved_usd": 0.0445272,
+          "error_code": "explanation_rejected"
+        },
+        {
+          "model_choice": "ultra",
+          "case_id": "limit-only-change",
+          "state": "failed",
+          "investigation_id": "8241d8a39a5945c685f156a1ce8519c1",
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "request_reservations": 5,
+          "reserved_usd": 0.18496200000000002,
+          "error_code": "explanation_rejected"
+        },
+        {
+          "model_choice": "ultra",
+          "case_id": "unsupported-control",
+          "state": "not_run",
+          "investigation_id": null,
+          "model": null,
+          "request_reservations": null,
+          "reserved_usd": null,
+          "error_code": null
+        },
+        {
+          "model_choice": "ultra",
+          "case_id": "whole-project",
+          "state": "not_run",
+          "investigation_id": null,
+          "model": null,
+          "request_reservations": null,
+          "reserved_usd": null,
+          "error_code": null
+        }
+      ]
+    },
+    {
+      "phase": "20261025T114147300920Z",
+      "build_id": "b92a78aa6276",
+      "planned": 5,
+      "rows": [
+        {
+          "model_choice": "nano",
+          "case_id": "whole-project",
+          "state": "completed",
+          "investigation_id": "140dc284f6744a739b9b6597d7d7170b",
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "request_reservations": 4,
+          "reserved_usd": 0.00959508,
+          "error_code": null
+        },
+        {
+          "model_choice": "super",
+          "case_id": "whole-project",
+          "state": "failed",
+          "investigation_id": "7c0861e7fe4f4887ab36e74243925f0f",
+          "model": "nvidia/nemotron-3-super-120b-a12b",
+          "request_reservations": 4,
+          "reserved_usd": 0.045513,
+          "error_code": "provider_output_limit"
+        },
+        {
+          "model_choice": "ultra",
+          "case_id": "limit-only-change",
+          "state": "completed",
+          "investigation_id": "5177e8606b93424bba6bce2ba97fae17",
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "request_reservations": 5,
+          "reserved_usd": 0.18776199999999998,
+          "error_code": null
+        },
+        {
+          "model_choice": "ultra",
+          "case_id": "unsupported-control",
+          "state": "completed",
+          "investigation_id": "2b25142b7b55450b994e7d3aa86d434d",
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "request_reservations": 4,
+          "reserved_usd": 0.122917,
+          "error_code": null
+        },
+        {
+          "model_choice": "ultra",
+          "case_id": "whole-project",
+          "state": "completed",
+          "investigation_id": "aa0bbd1fc67e4a23a0737edeb5c03d03",
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "request_reservations": 4,
+          "reserved_usd": 0.16323700000000002,
+          "error_code": null
+        }
+      ]
+    },
+    {
+      "phase": "20261025T114636020181Z",
+      "build_id": "d7c63fea5846",
+      "planned": 1,
+      "rows": [
+        {
+          "model_choice": "super",
+          "case_id": "whole-project",
+          "state": "completed",
+          "investigation_id": "3a52f203826e4215ac437e1d7f57b525",
+          "model": "nvidia/nemotron-3-super-120b-a12b",
+          "request_reservations": 4,
+          "reserved_usd": 0.04895849999999999,
+          "error_code": null
+        }
+      ]
+    }
+  ],
+  "live_totals_by_model": {
+    "nano": {
+      "attempted": 4,
+      "completed": 4,
+      "failed": 0,
+      "request_reservations": 17,
+      "reserved_usd": 0.03717702
+    },
+    "super": {
+      "attempted": 5,
+      "completed": 3,
+      "failed": 2,
+      "request_reservations": 21,
+      "reserved_usd": 0.2306877
+    },
+    "ultra": {
+      "attempted": 4,
+      "completed": 3,
+      "failed": 1,
+      "request_reservations": 18,
+      "reserved_usd": 0.6588780000000001
+    }
+  },
+  "live_family_reservation_usd": 0.92674272,
+  "family_requests": 56,
+  "original_reservation_ceiling_usd": 1.95,
+  "request_ceiling": {
+    "initial": 54,
+    "final_explicitly_approved": 60
+  },
+  "current_source_all_model_all_case_qualification": false,
+  "independent_human_review": false,
+  "ai_review": "No material unsupported claim found in accepted paragraphs; broad guidance/imprecise control wording and example-following limitations remain.",
+  "preservation": {
+    "schema": "sixd.build2-preservation.v1",
+    "build_id": "d7c63fea5846",
+    "original_state_checks": 24,
+    "original_state_preserved": true,
+    "differences": [],
+    "constructed_projects_added": 2,
+    "inference_reservations_usd": 0.92674272,
+    "ledger_matches_only_recorded_tests": true,
+    "cumulative_cap_usd": 29.5,
+    "default_model_unchanged": true,
+    "connections": {
+      "connection": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      },
+      "research": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      },
+      "observability": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      }
+    }
+  }
+}

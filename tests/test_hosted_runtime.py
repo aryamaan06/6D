@@ -117,6 +117,33 @@ class HostedRuntimeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             read_private_file(self.folder / 'missing')
 
+    def test_explicit_models_share_hosted_caps_and_reject_configuration_injection(self):
+        from sixd.model_choices import catalog, explicit_config
+        factory = self.factory()
+        identity = '1234567890abcdef1234567890abcdef'
+        runtime = factory(self.state / identity, identity)
+        class Job:
+            def __init__(self): self.count = 0
+            def reserve(self, config, amount): self.count += 1
+        job = Job()
+        for choice in catalog():
+            variant = explicit_config(self.config, choice['id'])
+            provider = runtime.ai._factory(variant, job, KEY)
+            self.assertEqual(provider.config, variant)
+            provider.ledger.reserve(variant, .01)
+            self.assertAlmostEqual(runtime.ai._budget(variant)['reserved_usd'], 1.25 + job.count * .01)
+        self.assertEqual(job.count, 3)
+        self.assertAlmostEqual(factory.ledger.status(identity)['session_reserved_usd'], .03)
+        for changes in ({'spend_cap_usd': 58}, {'approval_id': 'new'},
+                        {'input_usd_per_million_ceiling': 0}, {'max_output_tokens': 8192}):
+            altered = replace(explicit_config(self.config, 'ultra'), **changes)
+            with self.subTest(changes=changes), self.assertRaises(ProviderError):
+                runtime.ai._factory(altered, job, KEY)
+            with self.subTest(budget_changes=changes), self.assertRaises(ProviderError):
+                runtime.ai._budget(altered)
+        self.assertEqual(carried_reservation(self.prior, self.config), 1.25)
+        self.assertEqual(factory.ledger.status(identity)['total_cap_usd'], self.config.spend_cap_usd)
+
     def test_cli_defaults_off_and_requires_explicit_ledger_handoff_for_live(self):
         code = self.folder / 'invitation'
         code.write_text('synthetic-hosted-invitation-code-32-characters')

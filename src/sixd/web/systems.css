@@ -4,8 +4,8 @@
 #sixd-workspace .sy-workspace h4,#sixd-workspace .sy-evidence h4{font-size:13px;margin:0 0 6px}
 #sixd-workspace .sy-page-heading,#sixd-workspace .sy-heading,#sixd-workspace .sy-check>header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;min-width:0}
 #sixd-workspace .sy-page-heading{margin-bottom:22px}
-#sixd-workspace .sy-eyebrow{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#6c7585}
-#sixd-workspace .sy-small,#sixd-workspace .sy-scope{font-size:11px;color:#687487}
+#sixd-workspace .sy-eyebrow{font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#6c7585}
+#sixd-workspace .sy-small,#sixd-workspace .sy-scope{font-size:13px;color:#687487}
 #sixd-workspace .sy-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
 #sixd-workspace .sy-workspace .sd-button{white-space:normal;text-align:left}
 #sixd-workspace .sy-architecture{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;margin-top:24px;min-width:0}
@@ -17,16 +17,16 @@
 #sixd-workspace .sy-system{border:1px solid #dce4f0;border-radius:9px;margin:12px 0;padding:15px;background:#fbfcfe;min-width:0}
 #sixd-workspace .sy-system.sy-selected{border-color:#9db7e7;background:#f4f7fe}
 #sixd-workspace .sy-system p{margin:8px 0}
-#sixd-workspace .sy-system .sy-actions .sd-button{font-size:11px;padding:5px 9px}
+#sixd-workspace .sy-system .sy-actions .sd-button{font-size:13px;padding:5px 9px}
 #sixd-workspace .sy-models{display:flex;flex-wrap:wrap;gap:6px}
-#sixd-workspace .sy-models span{font-size:10px;background:#edf1f7;padding:3px 7px;border-radius:5px;overflow-wrap:anywhere;min-width:0}
+#sixd-workspace .sy-models span{font-size:13px;background:#edf1f7;padding:3px 7px;border-radius:5px;overflow-wrap:anywhere;min-width:0}
 #sixd-workspace .sy-empty{padding:22px;background:#f8fafd;border-radius:8px;color:#667286}
 #sixd-workspace .sy-interface{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;padding:14px 0;border-top:1px solid #edf0f4}
 #sixd-workspace .sy-interface>div{min-width:0}
 #sixd-workspace .sy-interface p{margin:4px 0}
 #sixd-workspace .sy-interface .sy-actions{margin:0;flex-shrink:0}
 #sixd-workspace .sy-connection{display:grid;gap:5px;border-left:2px solid #b3c4e8;background:#f8fafd;padding:12px;margin:12px 0}
-#sixd-workspace .sy-connection small{color:#687487;font-size:10px}
+#sixd-workspace .sy-connection small{color:#687487;font-size:13px}
 #sixd-workspace .sy-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}
 #sixd-workspace .sy-form-grid>*{min-width:0}
 #sixd-workspace .sy-editor{background:#fcfdff;border-color:#bccdeb}
@@ -41,22 +41,22 @@
 #sixd-workspace .sy-loading{padding:16px;color:#687487}
 #sixd-workspace .sy-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin:18px 0}
 #sixd-workspace .sy-check{border:1px solid #e2e7ef;border-radius:9px;padding:16px;min-width:0;break-inside:avoid}
-#sixd-workspace .sy-check p{margin:10px 0;font-size:11px}
-#sixd-workspace .sy-badge{font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;display:inline-block;flex-shrink:0;max-width:100%;box-sizing:border-box}
+#sixd-workspace .sy-check p{margin:10px 0;font-size:13px}
+#sixd-workspace .sy-badge{font-size:13px;font-weight:600;padding:3px 7px;border-radius:5px;display:inline-block;flex-shrink:0;max-width:100%;box-sizing:border-box}
 #sixd-workspace .sy-met{background:#eaf6ef;color:#26724e}
 #sixd-workspace .sy-not_met{background:#fbeeed;color:#a4443a}
 #sixd-workspace .sy-not_assessed{background:#f0f2f5;color:#697486}
 #sixd-workspace .sy-values{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#f8fafd;padding:12px;border-radius:8px}
-#sixd-workspace .sy-values section{display:grid;gap:4px;min-width:0;font-size:11px}
-#sixd-workspace .sy-values span,#sixd-workspace .sy-values small{color:#6b788b;font-size:10px}
+#sixd-workspace .sy-values section{display:grid;gap:4px;min-width:0;font-size:13px}
+#sixd-workspace .sy-values span,#sixd-workspace .sy-values small{color:#6b788b;font-size:13px}
 #sixd-workspace .sy-values strong{font-size:14px;font-weight:550}
-#sixd-workspace .sy-evidence,#sixd-workspace .sy-impact{line-height:1.65;font-size:12px;overflow-wrap:anywhere}
-#sixd-workspace .sy-provenance{background:#f9fafc;border:1px solid #edf0f5;padding:13px;border-radius:8px;font-size:10px}
+#sixd-workspace .sy-evidence,#sixd-workspace .sy-impact{line-height:1.65;font-size:13px;overflow-wrap:anywhere}
+#sixd-workspace .sy-provenance{background:#f9fafc;border:1px solid #edf0f5;padding:13px;border-radius:8px;font-size:13px}
 #sixd-workspace .sy-provenance dl,#sixd-workspace .sy-impact dl{display:grid;grid-template-columns:minmax(100px,160px) minmax(0,1fr);gap:8px 14px}
 #sixd-workspace .sy-provenance dt,#sixd-workspace .sy-impact dt{color:#6b7789}
 #sixd-workspace .sy-provenance dd,#sixd-workspace .sy-impact dd{margin:0;overflow-wrap:anywhere}
 #sixd-workspace .sy-provenance dd{font-family:ui-monospace,monospace}
-#sixd-workspace .sy-identity{font-family:ui-monospace,monospace;font-size:10px;overflow-wrap:anywhere}
+#sixd-workspace .sy-identity{font-family:ui-monospace,monospace;font-size:13px;overflow-wrap:anywhere}
 #sixd-workspace .sy-evidence summary{cursor:pointer}
 @media(max-width:900px){#sixd-workspace .sy-architecture:has(.sy-inspector){grid-template-columns:minmax(0,1fr)}#sixd-workspace .sy-checks{grid-template-columns:1fr}}
 @media(max-width:600px){#sixd-workspace .sy-workspace{padding:17px 10px}#sixd-workspace .sy-page-heading,#sixd-workspace .sy-heading,#sixd-workspace .sy-check>header,#sixd-workspace .sy-interface{flex-wrap:wrap;gap:8px}#sixd-workspace .sy-workspace h2{font-size:21px}#sixd-workspace .sy-architecture>section,#sixd-workspace .sy-inspector,#sixd-workspace .sy-interface-list,#sixd-workspace .sy-unassigned,#sixd-workspace .sy-editor,#sixd-workspace .sy-evidence,#sixd-workspace .sy-impact{padding:14px}#sixd-workspace .sy-form-grid,#sixd-workspace .sy-values{grid-template-columns:1fr}#sixd-workspace .sy-tree .sy-tree{padding-left:9px;margin-left:3px}#sixd-workspace .sy-system{padding:11px}#sixd-workspace .sy-editor input,#sixd-workspace .sy-editor select,#sixd-workspace .sy-editor textarea{font-size:16px}#sixd-workspace .sy-provenance dl,#sixd-workspace .sy-impact dl{grid-template-columns:1fr;gap:3px}#sixd-workspace .sy-provenance dd,#sixd-workspace .sy-impact dd{margin-bottom:9px}}

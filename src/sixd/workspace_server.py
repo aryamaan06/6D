@@ -62,7 +62,7 @@ BUILD_FILES += [WEB / name for name in ("staged-ascent.js", "staged-ascent.css")
 CODE_FILES += [Path(__file__).with_name("workspace_series.py")]
 CODE_FILES += [Path(__file__).with_name(name) for name in ("service_credentials.py", "hosted_server.py", "hosted_runtime.py", "hosted_limits.py")]
 BUILD_FILES += [WEB / name for name in ("hosted-login.html", "hosted-login.js", "hosted-login.css", "hosted-mode.js", "hosted-mode.css")]
-CODE_FILES += [Path(__file__).with_name(name) for name in ("ai_qualification.py", "workspace_qualification.py", "workspace_observability.py")]
+CODE_FILES += [Path(__file__).with_name(name) for name in ("ai_qualification.py", "workspace_qualification.py", "workspace_observability.py", "model_choices.py")]
 BUILD_FILES += [WEB / name for name in ("ai-quality.js", "ai-quality.css")]
 
 
@@ -605,6 +605,10 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                         raise WorkspaceError("Choose project or requirement scope.")
                     basic.add("scope")
                 selected_test = {"test_comparison_id", "test_row_number"}
+                if "model_choice" in value:
+                    basic.add("model_choice")
+                    if value["model_choice"] not in ("nano", "super", "ultra"):
+                        raise WorkspaceError("Choose Nano, Super or Ultra for this investigation.")
                 if project_scope and set(value) & selected_test:
                     raise WorkspaceError("Project investigations cannot select a test row.")
                 self._fields(value, basic | selected_test if set(value) & selected_test else basic)
@@ -616,7 +620,8 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                     raise WorkspaceError("A project ID is required.")
                 extras = {key: value[key] for key in selected_test} if set(value) & selected_test else {}
                 view = self.server.ai.start(value["project_id"], self._revision(value["revision"]),
-                                            value.get("requirement_id"), value["question"], scope=value.get("scope", "requirement"), **extras)
+                                            value.get("requirement_id"), value["question"], scope=value.get("scope", "requirement"),
+                                            model_choice=value.get("model_choice"), **extras)
             elif route == "/api/projects":
                 self._fields(value, {"project"})
                 view = self.server.store.create_project(value["project"])
