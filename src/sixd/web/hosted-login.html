@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>6D | Open the review workspace</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/hosted-login.css">
+  <script defer src="/hosted-login.js"></script>
+</head>
+<body>
+  <main class="hosted-entry">
+    <a class="hosted-brand" href="/" aria-label="6D home"><span aria-hidden="true">6</span>6D</a>
+    <p class="hosted-eyebrow">Protected review access</p>
+    <h1>Follow the evidence.<br>See what changed.</h1>
+    <p class="hosted-intro">Explore a constructed rocket review in an isolated workspace. Change a design input, rerun affected checks and inspect which conclusions still need evidence.</p>
+    <form id="hosted-login" autocomplete="off">
+      <label for="hosted-access-code">Invitation access code</label>
+      <input id="hosted-access-code" name="access_code" type="password" required minlength="32" maxlength="256" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="hosted-code-note">
+      <p id="hosted-code-note" class="hosted-note">Use the invitation code supplied with this demo. This is not a Nebius, Tavily or LangSmith API key.</p>
+      <button type="submit" id="hosted-open">Open review workspace <span aria-hidden="true">→</span></button>
+      <p id="hosted-login-status" class="hosted-status" role="status" aria-live="polite"></p>
+      <p id="hosted-login-error" class="hosted-error" role="alert" hidden></p>
+    </form>
+    <p class="hosted-footnote">A bounded engineering demonstration using constructed inputs. Declared criteria and evidence gaps remain visible; this is not a launch authorization or a production team account.</p>
+  </main>
+</body>
+</html>

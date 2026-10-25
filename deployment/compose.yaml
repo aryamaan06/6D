@@ -1,0 +1,61 @@
+name: sixd-hosted
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    user: "10001:10001"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 1g
+    cpus: 2
+    environment:
+      SIXD_HOST: 0.0.0.0
+      SIXD_PORT: "8080"
+      SIXD_PUBLIC_ORIGIN: "https://${SIXD_DOMAIN:?Set SIXD_DOMAIN to the approved hostname}"
+      SIXD_STATE_ROOT: /var/lib/sixd
+      SIXD_JUDGE_ACCESS_CODE_FILE: /run/secrets/judge-access-code
+      SIXD_LIVE_AI_ENABLED: "0"
+    volumes:
+      - state:/var/lib/sixd
+      - "${SIXD_SECRET_DIRECTORY:?Set an absolute secret directory outside the repository}/judge-access-code:/run/secrets/judge-access-code:ro"
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    expose:
+      - "8080"
+    networks:
+      - application
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      SIXD_DOMAIN: "${SIXD_DOMAIN:?Set SIXD_DOMAIN}"
+      SIXD_TLS_EMAIL: "${SIXD_TLS_EMAIL:?Set the certificate contact address}"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - application
+
+networks:
+  application:
+
+volumes:
+  state:
+  caddy_data:
+  caddy_config:

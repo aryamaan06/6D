@@ -1,0 +1,20 @@
+# Allowlist the application and its public example assets only.
+**
+!src/
+!src/**
+!tools/
+!tools/serve_hosted.py
+!examples/
+!examples/**
+!design/
+!design/vendor/
+!design/vendor/lucide.min.js
+!deployment/
+!deployment/Dockerfile
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.env
+**/.env.*
+**/*.dpapi
+**/*.sqlite3

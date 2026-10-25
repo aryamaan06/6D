@@ -1,0 +1,14 @@
+{
+    email {$SIXD_TLS_EMAIL}
+    admin off
+}
+
+{$SIXD_DOMAIN} {
+    encode zstd gzip
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        Referrer-Policy "no-referrer"
+        -Server
+    }
+    reverse_proxy app:8080
+}

@@ -66,7 +66,7 @@ class JobBudget:
 
 
 class WorkspaceAI:
-    def __init__(self, store, local_directory, *, provider_factory=None, credential_store=None):
+    def __init__(self, store, local_directory, *, provider_factory=None, credential_store=None, allow_environment_key=True):
         self.store = store
         self.local = Path(local_directory)
         self.owner = uuid4().hex
@@ -77,7 +77,7 @@ class WorkspaceAI:
                                   CredentialStore(self.local / "credentials" / "nebius.dpapi"))
         self._credential_error = None
         self._remembered = False
-        environment_key = os.environ.get("NEBIUS_API_KEY") or None
+        environment_key = (os.environ.get("NEBIUS_API_KEY") or None) if allow_environment_key else None
         self._environment_key_configured = bool(environment_key)
         self._key = environment_key if valid_key(environment_key) else None
         self._key_source = "environment" if self._key else None
@@ -127,7 +127,7 @@ class WorkspaceAI:
     def _sources():
         folder = Path(__file__).resolve().parent
         names = ("workspace_ai.py", "whole_project_investigation.py", "ai_qualification.py", "workspace_qualification.py", "workspace_observability.py", "powered_flight.py", "guided_ascent.py", "staged_ascent.py", "attitude.py", "simulation.py", "orbital_adapter.py", "credential_store.py", "project_investigation.py", "source_context.py", "workspace_sources.py", "explanation_quality.py", "evidence_facts.py", "evidence_roles.py", "change_evidence.py", "evidence_evaluation.py", "workspace_evidence_evaluation.py", "test_evidence.py", "workspace_test_data.py", "model_evaluation.py", "workspace_evaluation.py", "workflow_evaluation.py", "workspace_workflow_evaluation.py", "providers.py", "action_selection.py", "workspace.py", "engineering.py", "lifecycle.py", "__init__.py")
-        names += ("service_credentials.py",)
+        names += ("service_credentials.py", "hosted_server.py", "hosted_runtime.py", "hosted_limits.py")
         return {name: sha256((folder / name).read_bytes()).hexdigest() for name in names if (folder / name).is_file()}
 
     def _config(self):

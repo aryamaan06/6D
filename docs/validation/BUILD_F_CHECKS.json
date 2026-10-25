@@ -1,0 +1,168 @@
+{
+  "schema": "sixd.build-f-checks.v1",
+  "date": "2026-10-25",
+  "status": "locally_verified_preparation_public_deployment_pending",
+  "distinct_methods": 106,
+  "distinct_modules": {
+    "test_hosted_limits": 18,
+    "test_hosted_runtime": 7,
+    "test_hosted_packaging": 3,
+    "test_workspace_api": 15,
+    "test_workspace_ai_api": 7,
+    "test_optional_connection_api": 11,
+    "test_release_connection_api": 5,
+    "test_source_research_api": 6,
+    "test_workspace_simulation_api": 7,
+    "test_guided_ascent_api": 1,
+    "test_staged_ascent_api": 1,
+    "test_ai_quality_api": 2,
+    "test_project_authoring_api": 5,
+    "test_hosted_server": 18
+  },
+  "regression": {
+    "modules": [
+      {
+        "module": "test_hosted_limits",
+        "tests": 18
+      },
+      {
+        "module": "test_hosted_runtime",
+        "tests": 7
+      },
+      {
+        "module": "test_hosted_packaging",
+        "tests": 3
+      },
+      {
+        "module": "test_workspace_api",
+        "tests": 15
+      },
+      {
+        "module": "test_workspace_ai_api",
+        "tests": 7
+      },
+      {
+        "module": "test_optional_connection_api",
+        "tests": 11
+      },
+      {
+        "module": "test_release_connection_api",
+        "tests": 5
+      },
+      {
+        "module": "test_source_research_api",
+        "tests": 6
+      },
+      {
+        "module": "test_workspace_simulation_api",
+        "tests": 7
+      },
+      {
+        "module": "test_guided_ascent_api",
+        "tests": 1
+      },
+      {
+        "module": "test_staged_ascent_api",
+        "tests": 1
+      },
+      {
+        "module": "test_ai_quality_api",
+        "tests": 2
+      },
+      {
+        "module": "test_project_authoring_api",
+        "tests": 5
+      }
+    ],
+    "tests": 88,
+    "failures": 0,
+    "errors": 0,
+    "skips": [
+      {
+        "test": "test_real_compose_configuration_keeps_app_port_and_keys_private (test_hosted_packaging.HostedPackagingTests.test_real_compose_configuration_keeps_app_port_and_keys_private)",
+        "reason": "Docker CLI unavailable: native Compose parsing remains pending."
+      }
+    ],
+    "elapsed_seconds": 72.91,
+    "passed": true
+  },
+  "final_affected": {
+    "modules": [
+      {
+        "module": "test_hosted_server",
+        "tests": 18
+      },
+      {
+        "module": "test_hosted_runtime",
+        "tests": 7
+      },
+      {
+        "module": "test_workspace_api",
+        "tests": 15
+      },
+      {
+        "module": "test_workspace_ai_api",
+        "tests": 7
+      },
+      {
+        "module": "test_optional_connection_api",
+        "tests": 11
+      }
+    ],
+    "tests": 58,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "passed": true,
+    "elapsed_seconds": 48.763
+  },
+  "browser": {
+    "build_id": "0f85bf3c7477",
+    "offline": true,
+    "synthetic_invitation": true,
+    "groups": [
+      "Invitation creates one populated isolated rocket workspace; ambient key and owner controls are absent",
+      "Independent browser cannot read or mutate another visitor project even with its ID",
+      "Actual UI stages/saves/reruns thrust reduction; unmet finding appears while other visitor baseline stays unchanged",
+      "Export stays session-scoped; key, shutdown, research, upload and qualification endpoints reject visitor requests",
+      "Hosted restrictions survive dynamic Source library and AI quality view changes",
+      "Real backend restart preserves both authenticated sessions, revisions and exact receipts without recalculation",
+      "Session controls remain accessible at narrow width; cookie is HttpOnly/Strict and secrets stay out of browser storage",
+      "Sign-out revokes only its own session and returns to invitation screen",
+      "Zero JavaScript errors, external browser requests or provider action requests"
+    ],
+    "javascript_errors": [],
+    "external_requests": 0,
+    "provider_action_requests": 0
+  },
+  "actual_owner_delivery": {
+    "address": "http://127.0.0.1:8768/",
+    "build_id": "0f85bf3c7477",
+    "restart_required": false,
+    "existing_nebius_restored": true,
+    "optional_remember_unchecked": true,
+    "connection_controls_loaded": true,
+    "post_requests": 0,
+    "external_browser_requests": 0,
+    "javascript_errors": 0
+  },
+  "preservation": {
+    "workspace_tables_unchanged": true,
+    "budget_tables_unchanged": true,
+    "private_configs_and_ciphertext_unchanged": true,
+    "tables_checked": 22,
+    "rows_checked": 80,
+    "private_files_checked": 3
+  },
+  "paid_provider_calls": 0,
+  "cloud_resources_created": 0,
+  "native_linux_container_execution": "pending_remote_ci",
+  "remaining": [
+    "Hosting provider and actual cost review",
+    "Operational budget and hostname/TLS approval",
+    "Actual deployment and persistent-state checks",
+    "Explicit inference budget/key/ledger handoff and current-build live tests",
+    "Owner-led UI refinement and walkthrough",
+    "Independent human/user review and submission packaging"
+  ]
+}

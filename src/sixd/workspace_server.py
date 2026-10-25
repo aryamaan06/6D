@@ -60,7 +60,8 @@ CODE_FILES += [Path(__file__).with_name("staged_ascent.py")]
 BUILD_FILES += [WEB / name for name in ("guided-ascent.js", "guided-ascent.css")]
 BUILD_FILES += [WEB / name for name in ("staged-ascent.js", "staged-ascent.css")]
 CODE_FILES += [Path(__file__).with_name("workspace_series.py")]
-CODE_FILES += [Path(__file__).with_name("service_credentials.py")]
+CODE_FILES += [Path(__file__).with_name(name) for name in ("service_credentials.py", "hosted_server.py", "hosted_runtime.py", "hosted_limits.py")]
+BUILD_FILES += [WEB / name for name in ("hosted-login.html", "hosted-login.js", "hosted-login.css", "hosted-mode.js", "hosted-mode.css")]
 CODE_FILES += [Path(__file__).with_name(name) for name in ("ai_qualification.py", "workspace_qualification.py", "workspace_observability.py")]
 BUILD_FILES += [WEB / name for name in ("ai-quality.js", "ai-quality.css")]
 
@@ -93,10 +94,10 @@ def build_status():
             "updated_at": datetime.fromtimestamp(modified, timezone.utc).isoformat()}
 
 
-class WorkspaceHTTPServer(ThreadingHTTPServer):
-    daemon_threads = True
-
-    def __init__(self, address, db_path, *, ai_local_directory=None, provider_factory=None, research_transport=None, observability_transport=None):
+class WorkspaceRuntime:
+    """One isolated workspace service bundle, independent of a listening socket."""
+    def __init__(self, db_path, *, ai_local_directory=None, provider_factory=None,
+                 research_transport=None, observability_transport=None, allow_environment_key=True):
         self._post_lock = threading.RLock()
         self._stopping = False
         self.store = WorkspaceStore(db_path)
@@ -114,7 +115,7 @@ class WorkspaceHTTPServer(ThreadingHTTPServer):
         self.comparison = WorkspaceComparison(self.store, self.scenarios)
         self.review_workspace = WorkspaceReview(self.store, self.coverage, self.actions, self.sources, self.series, self.scenarios)
         self.ai = WorkspaceAI(self.store, ai_local_directory or Path(db_path).parent,
-                              provider_factory=provider_factory)
+                              provider_factory=provider_factory, allow_environment_key=allow_environment_key)
         self.evaluation = WorkspaceEvaluation(self.ai)
         self.workflow_evaluation = WorkflowEvaluation(self.ai)
         self.ultra_diagnostic = UltraDiagnostic(self.ai)
@@ -122,7 +123,17 @@ class WorkspaceHTTPServer(ThreadingHTTPServer):
         self.qualification = WorkspaceQualification(self.ai)
         self.observability = WorkspaceObservability(self.ai, self.qualification,
             transport=observability_transport, local_directory=self.ai.local)
-        super().__init__(address, WorkspaceHandler)
+
+
+class WorkspaceHTTPServer(WorkspaceRuntime, ThreadingHTTPServer):
+    daemon_threads = True
+
+    def __init__(self, address, db_path, *, ai_local_directory=None, provider_factory=None,
+                 research_transport=None, observability_transport=None):
+        WorkspaceRuntime.__init__(self, db_path, ai_local_directory=ai_local_directory,
+            provider_factory=provider_factory, research_transport=research_transport,
+            observability_transport=observability_transport)
+        ThreadingHTTPServer.__init__(self, address, WorkspaceHandler)
 
 
 class WorkspaceHandler(BaseHTTPRequestHandler):
@@ -185,6 +196,8 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
             if route == "/health":
                 self._reply(200, {key: value for key, value in build_status().items()
                                   if key in {"service", "server_version", "workspace", "build_id", "runtime_id", "restart_required"}})
+            elif route == "/api/hosted/status":
+                self._reply(200, {"hosted": False})
             elif route == "/api/status":
                 status = build_status()
                 status["inference_mode"] = "on_request" if self.server.ai.status()["configured"] else "off"
@@ -321,7 +334,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
             elif route.startswith("/api/ai-quality/runs/"):
                 detail = self.server.qualification.get(route.removeprefix("/api/ai-quality/runs/"))
                 self._reply(200, detail, filename=f"6d-ai-qualification-{detail['qualification_id']}.json")
-            elif route in {"/ai-quality.js", "/ai-quality.css"}:
+            elif route in {"/ai-quality.js", "/ai-quality.css", "/hosted-mode.js", "/hosted-mode.css"}:
                 path = WEB / route[1:]
                 self._reply(200, path.read_bytes(), "text/javascript; charset=utf-8" if path.suffix == ".js" else "text/css; charset=utf-8")
             elif route == "/api/ultra-diagnostic/status":

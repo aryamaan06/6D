@@ -203,3 +203,11 @@ These additions preserve the original inventory baseline and historical result d
 - [Results and boundaries](BUILD_E_RESULTS.md)
 - [Remember/restore/forget guide](REMEMBERED_SERVICE_CONNECTIONS.md)
 - [Scoped machine-readable checks](validation/BUILD_E_CHECKS.json)
+
+## October 25 Build F preparation records
+
+- [Acceptance](BUILD_F_ACCEPTANCE.md)
+- [Local results and pending deployment](BUILD_F_RESULTS.md)
+- [Operator deployment and spending handoff](HOSTED_DEPLOYMENT.md)
+- [Scoped machine-readable checks](validation/BUILD_F_CHECKS.json)
+- [Linux/container verification workflow](../.github/workflows/hosted-checks.yml)

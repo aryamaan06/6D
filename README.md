@@ -10,7 +10,7 @@
 
 ## Try it
 
-**Current delivery:** local desktop/browser application. A hosted judge URL is not available yet; protected judge access is tracked under Build F in the [submission checklist](docs/SUBMISSION_CHECKLIST.md). Opening localhost from another computer will not reach the developer's instance.
+**Current delivery:** local desktop/browser application. A hosted judge URL is not available yet. Build F now provides an invitation-protected server, isolated visitor workspaces and a CPU-container/HTTPS deployment recipe; actual public deployment remains pending cost approval and platform checks. [Preparation results](docs/BUILD_F_RESULTS.md) · [Operator guide](docs/HOSTED_DEPLOYMENT.md) · [Submission checklist](docs/SUBMISSION_CHECKLIST.md). Opening localhost from another computer will not reach the developer's instance.
 
 Python **3.10+** is required; the application runtime uses the standard library.
 
@@ -98,7 +98,7 @@ The broader 6D concept predates some of this code. The repository history alone 
 
 ## Limits
 
-The ten bounded models cover ideal propulsion, static beams, steady radiative equilibrium, single-condition drag, unforced two-body orbits, supplied power/energy budgets, single-axis spacecraft pointing, vertical ascent/coast, prescribed planar ascent and variable-thrust serial staged ascent. These are not complete engineering disciplines. Scalar links do not create simultaneous multiphysics coupling. Prescribed steering is not closed-loop guidance/control. Whole-project AI reviews the captured scalar evidence and declared gaps, with the exclusions in its guide. E remembered optional-service connections are implemented; F protected hosting remains planned.
+The ten bounded models cover ideal propulsion, static beams, steady radiative equilibrium, single-condition drag, unforced two-body orbits, supplied power/energy budgets, single-axis spacecraft pointing, vertical ascent/coast, prescribed planar ascent and variable-thrust serial staged ascent. These are not complete engineering disciplines. Scalar links do not create simultaneous multiphysics coupling. Prescribed steering is not closed-loop guidance/control. Whole-project AI reviews the captured scalar evidence and declared gaps, with the exclusions in its guide. E remembered optional-service connections are implemented; F protected hosting is prepared/tested locally; public deployment remains pending.
 
 There is no complete launch-to-orbit, reentry or landing simulator, hardware/flight qualification, customer validation or launch authorization. Current data/examples are constructed unless explicitly classified otherwise. Recorded playback is historical evidence, not a new live inference. The local loopback server must not simply be exposed publicly; Build F must provide appropriate access, isolation and spending controls.
 

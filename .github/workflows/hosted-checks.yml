@@ -1,0 +1,40 @@
+name: Hosted preparation checks
+on:
+  push:
+    paths:
+      - src/**
+      - tests/test_hosted*.py
+      - tools/serve_hosted.py
+      - tools/check_hosted_container.py
+      - deployment/**
+      - .dockerignore
+      - .github/workflows/hosted-checks.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  linux-container:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Linux scoped hosting tests
+        run: |
+          mkdir -p work
+          python3 -m unittest discover -s tests -p 'test_hosted*.py' -v
+          python3 tools/check_source_consistency.py --git-ref HEAD
+      - name: Build and exercise isolated container
+        run: |
+          mkdir -p work/hosted-ci
+          printf '%s' 'synthetic-linux-ci-invitation-code-not-for-deployment' > work/hosted-ci/invitation
+          chmod 444 work/hosted-ci/invitation
+          docker build -t sixd-hosted-check -f deployment/Dockerfile .
+          docker run -d --name sixd-hosted-check --read-only --cap-drop ALL --security-opt no-new-privileges --memory 512m --cpus 2 --pids-limit 128 -p 127.0.0.1:18080:8080 --mount type=volume,src=sixd-hosted-ci-state,dst=/var/lib/sixd --mount type=bind,src="$PWD/work/hosted-ci/invitation",dst=/run/secrets/judge-access-code,readonly --tmpfs /tmp:rw,noexec,nosuid,size=64m -e SIXD_PUBLIC_ORIGIN=https://review.example.com -e SIXD_JUDGE_ACCESS_CODE_FILE=/run/secrets/judge-access-code sixd-hosted-check
+          python3 tools/check_hosted_container.py --phase before
+          docker restart sixd-hosted-check
+          python3 tools/check_hosted_container.py --phase after
+      - name: Remove CI-only containers
+        if: always()
+        run: |
+          docker rm -f sixd-hosted-check || true
+          docker volume rm sixd-hosted-ci-state || true
