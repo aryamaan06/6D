@@ -67,7 +67,7 @@ Invitation rotation, session expiry, retention and incident recovery must be tes
 
 ## Current limits
 
-This is one bounded hosted demonstration instance. It does not provide production organization accounts, SSO, role administration, contractual data isolation, regional compliance assurances, broad abuse resistance or mission certification. A public working URL, native Linux execution, real TLS and production observability are separate evidence requirements.
+This is one bounded hosted demonstration instance. It does not provide production organization accounts, SSO, role administration, contractual data isolation, regional compliance assurances, broad abuse resistance or mission certification. Native Linux and constrained container execution passed in [the recorded CI run](https://github.com/aryamaan06/6D/actions/runs/40161774801). A public working URL, real TLS, provider billing and production observability remain separate evidence requirements.
 
 [Build F acceptance](BUILD_F_ACCEPTANCE.md) · [Current scope](HACKATHON_BUILD_SCOPE.md) · [Local connection guide](REMEMBERED_SERVICE_CONNECTIONS.md)
 

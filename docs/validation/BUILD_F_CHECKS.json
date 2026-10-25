@@ -156,7 +156,57 @@
   },
   "paid_provider_calls": 0,
   "cloud_resources_created": 0,
-  "native_linux_container_execution": "pending_remote_ci",
+  "native_linux_container_execution": {
+    "run": {
+      "id": 40161774801,
+      "name": "Hosted preparation checks",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/aryamaan06/6D/actions/runs/40161774801",
+      "head_sha": "a30d2e4a5224ac8a82d4ce29b42250cabac9271e",
+      "created_at": "2026-10-25T04:24:37Z",
+      "updated_at": "2026-10-25T04:25:36Z"
+    },
+    "jobs": [
+      {
+        "name": "linux-container",
+        "status": "completed",
+        "conclusion": "success",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Linux scoped hosting tests",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build and exercise isolated container",
+            "conclusion": "success"
+          },
+          {
+            "name": "Remove CI-only containers",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ],
+    "meaning": "Successful Linux scoped tests and actual constrained image login/restart/signout; no public deployment or provider qualification implied.",
+    "linux_aggregate_test_count": "not independently extracted from public logs; local scoped counts remain separate"
+  },
   "remaining": [
     "Hosting provider and actual cost review",
     "Operational budget and hostname/TLS approval",
