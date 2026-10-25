@@ -20,3 +20,7 @@ Build D may present a captured failure and a guarded replay, with their actual d
 Build F must not expose the current local key, shutdown, backup or writable workspace endpoints by changing the bind address alone. No automatic cloud spending or public deployment follows from this plan. Deployment and ongoing operation require a concrete reviewed configuration and an approved budget.
 
 October 25 correction pass is delivered within A–D: faster history verification/copying, consistent status/direction checks and LF checkout consistency. It adds no G/H feature scope. See [correction results](CORRECTIVE_BUILD_RESULTS.md). E is delivered; F preparation is implemented locally and public deployment remains pending. Current-source live qualification must be distinguished from historical AI receipts after these changes.
+
+## October 25 feature freeze
+
+Arya requested that today be the last feature-building day and that the remaining days focus on verification, corrections, interface refinement and walkthrough. [The final audit](FINAL_BUILD_AUDIT.md) recommends completing the existing F deployment without adding G/H or another physics/integration milestone for this submission. A discovered defect is corrected within its existing feature, with evidence retained; the broader future 6D vision remains separate. No public hosting/spend follows from the audit.

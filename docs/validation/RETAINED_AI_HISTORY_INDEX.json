@@ -1,0 +1,821 @@
+{
+  "schema": "sixd.sanitized-retained-ai-history.v1",
+  "audit_date": "2026-10-25",
+  "source_commit": "5daa0a56d87832e663b222a1e0b080971e10bb6a",
+  "record_location_count": 48,
+  "distinct_saved_record_identities": 37,
+  "directly_referenced_locations_before_audit": 43,
+  "newly_individually_indexed_failure_identities": [
+    "ce9ec2c95b6c9f98cb7c-20261014T071437028113Z",
+    "ce9ec2c95b6c9f98cb7c-20261014T103417295273Z",
+    "ce9ec2c95b6c9f98cb7c-20261014T111453571427Z",
+    "ce9ec2c95b6c9f98cb7c-20261014T111456933441Z",
+    "ce9ec2c95b6c9f98cb7c-20261014T111616322918Z"
+  ],
+  "meaning": "Index of retained CLI/provider/pack/investigation records, including duplicate locations. States are original saved states, not semantic quality grades or counts of paid requests. A completed comparison may contain failed/untested candidates. Raw records remain private.",
+  "excluded": [
+    "keys and credential digests",
+    "questions/prompts and source excerpts",
+    "free-form explanations/rejected model output",
+    "private project inputs, names and workspace identifiers"
+  ],
+  "unrecoverable_history": [
+    "Intermediate edits never committed cannot be reconstructed as a daily source timeline.",
+    "Some earliest failures did not retain provider error/response details; no exact cause is inferred from a later run."
+  ],
+  "entries": [
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T071437028113Z",
+      "created_at": "2026-10-14T07:14:37.028113+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/ce9ec2c95b6c9f98cb7c-20261014T071437028113Z.json",
+          "record_sha256": "bb0325d5cbfd9f79b0d1c1b0045442dae8156480d8d04547d7de3cd3fa583070"
+        }
+      ],
+      "request_attempts": 1,
+      "accepted_live_responses": 0
+    },
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T072104201008Z",
+      "created_at": "2026-10-14T07:21:04.201008+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "docs/LIVE_INTEGRATION_STATUS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/ce9ec2c95b6c9f98cb7c-20261014T072104201008Z.json",
+          "record_sha256": "9b658d2a0ca852973cda4563005807d65acc8d141ce43e208eb32ef230597e44"
+        }
+      ],
+      "request_attempts": 1,
+      "accepted_live_responses": 0
+    },
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T081510132299Z",
+      "created_at": "2026-10-14T08:15:10.132299+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "docs/LIVE_INTEGRATION_STATUS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/ce9ec2c95b6c9f98cb7c-20261014T081510132299Z.json",
+          "record_sha256": "f2a362274b2b6990eda30f8e7d459407fec453d3dc0ee02afa3e0780b5dfe12a"
+        }
+      ],
+      "request_attempts": 1,
+      "accepted_live_responses": 0
+    },
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T083917308009Z",
+      "created_at": "2026-10-14T08:39:17.308009+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "docs/LIVE_INTEGRATION_STATUS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/ce9ec2c95b6c9f98cb7c-20261014T083917308009Z.json",
+          "record_sha256": "7fc5e3b42713376097cecd5f73b22ce819d8b69b93d8ce683448b8b97fc11bf1"
+        }
+      ],
+      "request_attempts": 1,
+      "accepted_live_responses": 1
+    },
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T103417295273Z",
+      "created_at": "2026-10-14T10:34:17.295273+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/ce9ec2c95b6c9f98cb7c-20261014T103417295273Z.json",
+          "record_sha256": "2640dc711f0547395a16697080497acb83be1304ab93f557b59c4d6a1e86a28b"
+        }
+      ],
+      "request_attempts": 1,
+      "accepted_live_responses": 0
+    },
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T103655559051Z",
+      "created_at": "2026-10-14T10:36:55.559051+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "docs/LIVE_INTEGRATION_STATUS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/ce9ec2c95b6c9f98cb7c-20261014T103655559051Z.json",
+          "record_sha256": "b3fb077d15b07a7fadecd1a7d388329c8e38e9668b5a9e80e025218bb35196cc"
+        }
+      ],
+      "request_attempts": 1,
+      "accepted_live_responses": 0
+    },
+    {
+      "identity": "validation-20261014T111452267736Z",
+      "created_at": "2026-10-14T11:14:52.267736+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "docs/LIVE_INTEGRATION_STATUS.md",
+        "docs/LIVE_VALIDATION.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/provider-validation/validation-20261014T111452267736Z.json",
+          "record_sha256": "2f0e0ac7e8495db1266b8adfd655767fb5d5e588cb92742d7a7ed5c79d9846bf"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null,
+      "aggregate_history_reference": "docs/LIVE_INTEGRATION_STATUS.md#profile-session-and-forced-action-redesign"
+    },
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T111453571427Z",
+      "created_at": "2026-10-14T11:14:53.571427+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/provider-validation/ce9ec2c95b6c9f98cb7c-20261014T111453571427Z.json",
+          "record_sha256": "2a01c5484903d56dfa553e9e9697db97d6a5af7d69111be186db8d759e2dc164"
+        }
+      ],
+      "request_attempts": 1,
+      "accepted_live_responses": 0,
+      "aggregate_history_reference": "docs/LIVE_INTEGRATION_STATUS.md#profile-session-and-forced-action-redesign"
+    },
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T111456933441Z",
+      "created_at": "2026-10-14T11:14:56.933441+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/provider-validation/ce9ec2c95b6c9f98cb7c-20261014T111456933441Z.json",
+          "record_sha256": "bd462942c37ccdd87023363fbf6aca030c017683f0938cc23713b47f6557a196"
+        }
+      ],
+      "request_attempts": 2,
+      "accepted_live_responses": 2,
+      "aggregate_history_reference": "docs/LIVE_INTEGRATION_STATUS.md#profile-session-and-forced-action-redesign"
+    },
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T111616322918Z",
+      "created_at": "2026-10-14T11:16:16.322918+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/provider-validation/ce9ec2c95b6c9f98cb7c-20261014T111616322918Z.json",
+          "record_sha256": "95615f7e6e8b11435c1b6ebe9f82a47336576e3186bf999b01840b50f69df256"
+        }
+      ],
+      "request_attempts": 1,
+      "accepted_live_responses": 0,
+      "aggregate_history_reference": "docs/LIVE_INTEGRATION_STATUS.md#profile-session-and-forced-action-redesign"
+    },
+    {
+      "identity": "validation-20261014T131555019716Z",
+      "created_at": "2026-10-14T13:15:55.019716+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "PROJECT_BRIEF.md",
+        "docs/LIVE_INTEGRATION_STATUS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/provider-validation/validation-20261014T131555019716Z.json",
+          "record_sha256": "179322706be3f141bfffd87a863d3e0360fd76e54918c85268f176440d25e346"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T131608213263Z",
+      "created_at": "2026-10-14T13:16:08.213263+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "docs/LIVE_INTEGRATION_STATUS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/provider-validation/ce9ec2c95b6c9f98cb7c-20261014T131608213263Z.json",
+          "record_sha256": "450dd24a2f5c19226217918ae379e2bab665f20e31ecca5be1b00c1eebdfddf3"
+        }
+      ],
+      "request_attempts": 1,
+      "accepted_live_responses": 0
+    },
+    {
+      "identity": "validation-20261014T180051678689Z",
+      "created_at": "2026-10-14T18:00:51.678689+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "PROJECT_BRIEF.md",
+        "docs/LIVE_INTEGRATION_STATUS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/provider-validation/validation-20261014T180051678689Z.json",
+          "record_sha256": "c5df5ed179e4a66d046af29faf547b856279ebd403a890fb43deb82c9caa9574"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T180053881185Z",
+      "created_at": "2026-10-14T18:00:53.881185+00:00",
+      "state": "failed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "docs/LIVE_INTEGRATION_STATUS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/provider-validation/ce9ec2c95b6c9f98cb7c-20261014T180053881185Z.json",
+          "record_sha256": "2578059172e00bb3b4364e4c307b4cc899bf08c1f936163e87e85c7211b172db"
+        }
+      ],
+      "request_attempts": 1,
+      "accepted_live_responses": 0
+    },
+    {
+      "identity": "validation-20261014T181514388787Z",
+      "created_at": "2026-10-14T18:15:14.388787+00:00",
+      "state": "completed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "PROJECT_BRIEF.md",
+        "RELEASE_PLAN.md",
+        "docs/LIVE_INTEGRATION_STATUS.md",
+        "docs/LIVE_VALIDATION.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/provider-validation/validation-20261014T181514388787Z.json",
+          "record_sha256": "ac9c7ed6d177a7318c3c55cf4c6661de522839a29ea8853ea8906906eba283bb"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "ce9ec2c95b6c9f98cb7c-20261014T181519125190Z",
+      "created_at": "2026-10-14T18:15:19.125190+00:00",
+      "state": "completed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "docs/LIVE_INTEGRATION_STATUS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/provider-validation/ce9ec2c95b6c9f98cb7c-20261014T181519125190Z.json",
+          "record_sha256": "4d1b0f2edbb615a87da05bf953ca6533124fd912cbbd0a7203c59dc860687cba"
+        }
+      ],
+      "request_attempts": 3,
+      "accepted_live_responses": 3
+    },
+    {
+      "identity": "59d9c02430bc2cfb85ef-20261014T181525508833Z",
+      "created_at": "2026-10-14T18:15:25.508833+00:00",
+      "state": "completed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "docs/LIVE_INTEGRATION_STATUS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "passed",
+          "relative_path": "artifacts/provider-validation/59d9c02430bc2cfb85ef-20261014T181525508833Z.json",
+          "record_sha256": "b20ba9f84f7cfe6604443bcbea5882b325d9e83192244fe05ebaec829ceb401b"
+        }
+      ],
+      "request_attempts": 4,
+      "accepted_live_responses": 4
+    },
+    {
+      "identity": "6c16e09a75af42f28be58ffd765bc4cc",
+      "created_at": "2026-10-16T03:47:17.417386+00:00",
+      "state": "completed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "docs/PROJECT_ASSISTANT_LIVE_ACCEPTANCE.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/project-assistant-live/6c16e09a75af42f28be58ffd765bc4cc-acceptance.json",
+          "record_sha256": "f93e206c2bccb6e39244dc10899ee034e67d454707fa3bd110587c43d5af59a5"
+        },
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/project-assistant-live/6c16e09a75af42f28be58ffd765bc4cc.json",
+          "record_sha256": "1131b3791fb65e8f0336a5cb07422d588f9a892f7b6490df116be1f9deecec97"
+        },
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "project_investigations",
+          "record_digest": "65caff960145dc1e617c9407b4eeb90beb8e65b1cc5f34c81812aead1625b638"
+        }
+      ],
+      "request_attempts": 4,
+      "accepted_live_responses": 4,
+      "created_at_origin": "retained_database_row"
+    },
+    {
+      "identity": "ff9bfdd852b54f978ba38b0e364bf7f7",
+      "created_at": "2026-10-16T03:47:57.775893+00:00",
+      "state": "completed",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "public_references_before_audit": [
+        "docs/PROJECT_ASSISTANT_LIVE_ACCEPTANCE.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/project-assistant-live/ff9bfdd852b54f978ba38b0e364bf7f7-acceptance.json",
+          "record_sha256": "a6082c0aba4f98c86588892c45ea6c9db7e077efbc48283a32527c5d0ca6d9c1"
+        },
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/project-assistant-live/ff9bfdd852b54f978ba38b0e364bf7f7.json",
+          "record_sha256": "8221f83fd0c5087b3a78ecec148c579e3bdb51e58f9c4073a46d191638d949ab"
+        },
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "project_investigations",
+          "record_digest": "ab23e7b0622b8c38dd949efb3dcbfb45fdd2c86d7a57b8e7388dbb3bfb66b8b2"
+        }
+      ],
+      "request_attempts": 3,
+      "accepted_live_responses": 3,
+      "created_at_origin": "retained_database_row"
+    },
+    {
+      "identity": "288882027b464e858a32ee0cbb81c2a7",
+      "created_at": "2026-10-16T08:41:07.044827+00:00",
+      "state": "completed",
+      "model": null,
+      "public_references_before_audit": [
+        "PROJECT_BRIEF.md",
+        "RELEASE_PLAN.md",
+        "docs/BUILD_PLAN.md",
+        "docs/MODEL_COMPARISON_ACCEPTANCE.md",
+        "docs/MODEL_STRATEGY.md",
+        "docs/development/CHECKPOINTS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/model-comparison/288882027b464e858a32ee0cbb81c2a7.json",
+          "record_sha256": "06055c3c0918ead8641f47a14078c6f53ddad06ecd5a8896d8c469af8bcc9c1d"
+        },
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "model_comparisons",
+          "record_digest": "49bd1397cd5b0d625969147aa9d1bb9ce65f543e05dfb8581d8b54f3c5d35fc5"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "5f1c35cfd6b245168496c4dce1ce9828",
+      "created_at": "2026-10-16T09:33:39.138508+00:00",
+      "state": "completed",
+      "model": null,
+      "public_references_before_audit": [
+        "PROJECT_BRIEF.md",
+        "RELEASE_PLAN.md",
+        "docs/BUILD_PLAN.md",
+        "docs/INVESTIGATION_RELIABILITY.md",
+        "docs/MODEL_STRATEGY.md",
+        "docs/RELIABILITY_LIVE_ACCEPTANCE.md",
+        "docs/development/CHECKPOINTS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/model-comparison/5f1c35cfd6b245168496c4dce1ce9828.json",
+          "record_sha256": "225348824a582196b760c3ba95f98f021f340eb616c54aae5f7861abd537ffe9"
+        },
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "model_comparisons",
+          "record_digest": "029a6211e81de40e2311b3a381331ea8dda40cc947766b7e496e67e9b0048333"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "7a98c717b19c4ea995c2845d5e418304",
+      "created_at": "2026-10-19T19:06:50.025959+00:00",
+      "state": "completed",
+      "model": null,
+      "public_references_before_audit": [
+        "docs/LIVE_WORKFLOW_RESULTS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/live-workflow/7a98c717b19c4ea995c2845d5e418304.json",
+          "record_sha256": "7f595c86e01e3b88311826354f55802f35ee2639628d0de7a5345fef4ba52df1"
+        },
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "workflow_evaluations",
+          "record_digest": "dbf12e295a981425b05cdb6c741ae9f3584521beffdb451ef55a8ddae8092c55"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "c0ae01d07c904b2e9673014bac23ce1d",
+      "created_at": "2026-10-19T19:40:25.130709+00:00",
+      "state": "failed",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "public_references_before_audit": [
+        "docs/ULTRA_DIAGNOSTIC_RESULTS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/ultra-diagnostic/c0ae01d07c904b2e9673014bac23ce1d.json",
+          "record_sha256": "e8b843e12bfed959ba04c38636096a73e091e4c2d70baf42da4931b957f59cec"
+        },
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "ultra_diagnostics",
+          "record_digest": "0be3d573d6eb39aaf3ae8b680a5e2cda06d3e0ba891ba1c47293023e2987c042"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "18c796f6f5e74e918c3e4e3e37d11a51",
+      "created_at": "2026-10-19T19:46:58.824383+00:00",
+      "state": "failed",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "public_references_before_audit": [
+        "PROJECT_BRIEF.md",
+        "RELEASE_PLAN.md",
+        "docs/BUILD_PLAN.md",
+        "docs/ULTRA_DIAGNOSTIC_RESULTS.md",
+        "docs/development/CHECKPOINTS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/ultra-diagnostic/18c796f6f5e74e918c3e4e3e37d11a51.json",
+          "record_sha256": "1ef06a4c28ecbed6f1a5b1d19d2d0b01d742375aed0e3335b8b01b843d6b03ea"
+        },
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "ultra_diagnostics",
+          "record_digest": "db131e40745fefb1be38fdbe4c71ed1f9cd9e277e7b4009127b73c0ad063967a"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "566a4f53acab47e5b6d8fce6bb7068f7",
+      "created_at": "2026-10-20T08:50:40.122881+00:00",
+      "state": "completed",
+      "model": null,
+      "public_references_before_audit": [
+        "PROJECT_BRIEF.md",
+        "RELEASE_PLAN.md",
+        "docs/EVIDENCE_LINKS_LIVE_RESULTS.md",
+        "docs/development/CHECKPOINTS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/evidence-links/566a4f53acab47e5b6d8fce6bb7068f7.json",
+          "record_sha256": "de7edbe47f83896d9c0f42b3118b4a540fd84c423e0cf884f63467acb83320b4"
+        },
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "evidence_evaluations",
+          "record_digest": "e4e8e81f71f93569fff3207a325c4574eb03007f28852b2cb21121c21acb585f"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "44e03643f53f480c94df66aa1f87765b",
+      "created_at": "2026-10-20T10:08:47.911425+00:00",
+      "state": "completed",
+      "model": null,
+      "public_references_before_audit": [
+        "PROJECT_BRIEF.md",
+        "RELEASE_PLAN.md",
+        "docs/APPLICATION_ROLES_LIVE_RESULTS.md",
+        "docs/RELEASE_EVIDENCE.json",
+        "docs/development/CHECKPOINTS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "artifact",
+          "payload_integrity": "not_applicable",
+          "relative_path": "artifacts/application-roles/44e03643f53f480c94df66aa1f87765b.json",
+          "record_sha256": "d3bab58a60267e1d684669ef412e65d35e2f41fb535f9ccc7fd633a41ddc54cd"
+        },
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "evidence_evaluations",
+          "record_digest": "a4a493a5d58f4f56980567981fe809a15ca1574724903d574ceab11231ac6727"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "cbdf8d2b3f864951bf313589c9e517be",
+      "created_at": "2026-10-23T18:58:57.944986+00:00",
+      "state": "stopped",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "public_references_before_audit": [
+        "docs/AI_QUALIFICATION_RESULTS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "ai_qualifications",
+          "record_digest": "495fb95f656076dabaa2f43f4635ae9f2088f4029ab238d0c97764bdfb7dfc1c"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "a348ec7d07044298807d8c7acc354f6f",
+      "created_at": "2026-10-23T19:01:57.810117+00:00",
+      "state": "completed",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "public_references_before_audit": [
+        "docs/AI_QUALIFICATION_RESULTS.md"
+      ],
+      "retained_locations": [
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "ai_qualifications",
+          "record_digest": "a4163c2aeca07620576b22a011319ddd4259efaac071f758284a4a462c34f96a"
+        }
+      ],
+      "request_attempts": null,
+      "accepted_live_responses": null
+    },
+    {
+      "identity": "fd2414f3de4d444b98cf042df634a781",
+      "created_at": "2026-10-24T14:42:53.499810+00:00",
+      "state": "failed",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "public_references_before_audit": [
+        "docs/validation/BUILD_D_CHECKS.json"
+      ],
+      "retained_locations": [
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "project_investigations",
+          "record_digest": "826eea05eb2b7d424a04f483b63d1147c99ada2caf0aff237b4e68b181689329"
+        }
+      ],
+      "request_attempts": 1,
+      "accepted_live_responses": 0
+    },
+    {
+      "identity": "ee70564560224b17b959aa5d26f729b1",
+      "created_at": "2026-10-24T14:44:20.484063+00:00",
+      "state": "failed",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "public_references_before_audit": [
+        "docs/validation/BUILD_D_CHECKS.json"
+      ],
+      "retained_locations": [
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "project_investigations",
+          "record_digest": "80e914f6359709a857e81792c532d0e399489e99503f99a3764380d1679ca6cf"
+        }
+      ],
+      "request_attempts": 4,
+      "accepted_live_responses": 4
+    },
+    {
+      "identity": "6381beb4068f409f9a088e9ebbfe6299",
+      "created_at": "2026-10-24T14:45:45.920709+00:00",
+      "state": "completed",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "public_references_before_audit": [
+        "docs/validation/BUILD_D_CHECKS.json"
+      ],
+      "retained_locations": [
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "project_investigations",
+          "record_digest": "91499c4eeffbbf1b35acbe2c4f9160cade5954289f7eafdb550b57a330caf28e"
+        }
+      ],
+      "request_attempts": 4,
+      "accepted_live_responses": 4
+    },
+    {
+      "identity": "71733c84c11d4ccb893c57291f7a7d69",
+      "created_at": "2026-10-24T14:46:14.585710+00:00",
+      "state": "failed",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "public_references_before_audit": [
+        "docs/validation/BUILD_D_CHECKS.json"
+      ],
+      "retained_locations": [
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "project_investigations",
+          "record_digest": "8d6dc52750651578f94bc2a4e0a9cda954c2a78429a9d102bd4dfd2c852fc6fd"
+        }
+      ],
+      "request_attempts": 3,
+      "accepted_live_responses": 3
+    },
+    {
+      "identity": "2e21847a4dd04742b81fd927e534482a",
+      "created_at": "2026-10-24T14:49:46.466474+00:00",
+      "state": "failed",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "public_references_before_audit": [
+        "docs/validation/BUILD_D_CHECKS.json"
+      ],
+      "retained_locations": [
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "project_investigations",
+          "record_digest": "ab85677470a6e1e4aafb85da333240f2014ffc57799b93e2ffe0c6b128469457"
+        }
+      ],
+      "request_attempts": 4,
+      "accepted_live_responses": 4
+    },
+    {
+      "identity": "25559e1dc77d45999cf6344fc0a4210d",
+      "created_at": "2026-10-24T14:52:23.091678+00:00",
+      "state": "completed",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "public_references_before_audit": [
+        "docs/validation/BUILD_D_CHECKS.json"
+      ],
+      "retained_locations": [
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "project_investigations",
+          "record_digest": "b6cb5ee4202de26645c93e7d34d7c1dd0281177f2da514def5d126f7f90a05fb"
+        }
+      ],
+      "request_attempts": 4,
+      "accepted_live_responses": 4
+    },
+    {
+      "identity": "e835deedcabb48918961d2e6a2b731d2",
+      "created_at": "2026-10-24T14:52:43.200678+00:00",
+      "state": "completed",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "public_references_before_audit": [
+        "docs/validation/BUILD_D_CHECKS.json"
+      ],
+      "retained_locations": [
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "project_investigations",
+          "record_digest": "29d1bdde06b66883258d6c84b9f24c987bc73c9343499951284e1e3caa280cf8"
+        }
+      ],
+      "request_attempts": 4,
+      "accepted_live_responses": 4
+    },
+    {
+      "identity": "02693011590a4ac9987063f875c178b8",
+      "created_at": "2026-10-24T14:55:54.007363+00:00",
+      "state": "failed",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "public_references_before_audit": [
+        "docs/validation/BUILD_D_CHECKS.json"
+      ],
+      "retained_locations": [
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "project_investigations",
+          "record_digest": "133736624738fe1fc55c7b19e197a2cb663f18a71669ae35cc9bd362d30d4444"
+        }
+      ],
+      "request_attempts": 4,
+      "accepted_live_responses": 4
+    },
+    {
+      "identity": "e8f328aa6d5c4167915275841cef42b6",
+      "created_at": "2026-10-24T14:57:49.784713+00:00",
+      "state": "completed",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "public_references_before_audit": [
+        "docs/validation/BUILD_D_CHECKS.json"
+      ],
+      "retained_locations": [
+        {
+          "source": "private_workspace_table",
+          "payload_integrity": "passed",
+          "table": "project_investigations",
+          "record_digest": "8a389d07db25cb4420b4cd48c4cfe0619527a71042affa6b451461146fa370cc"
+        }
+      ],
+      "request_attempts": 4,
+      "accepted_live_responses": 4
+    }
+  ]
+}

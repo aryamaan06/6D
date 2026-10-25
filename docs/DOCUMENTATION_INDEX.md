@@ -211,3 +211,9 @@ These additions preserve the original inventory baseline and historical result d
 - [Operator deployment and spending handoff](HOSTED_DEPLOYMENT.md)
 - [Scoped machine-readable checks](validation/BUILD_F_CHECKS.json)
 - [Linux/container verification workflow](../.github/workflows/hosted-checks.yml)
+
+## October 25 final build/history audit
+
+- [Freeze decision and Git/history findings](FINAL_BUILD_AUDIT.md)
+- [Machine-readable scoped audit](validation/FINAL_BUILD_AUDIT.json)
+- [Sanitized retained AI-record provenance index](validation/RETAINED_AI_HISTORY_INDEX.json)

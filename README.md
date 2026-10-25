@@ -40,6 +40,8 @@ For horizontal motion, open **Powered flight → Planar ascent & steering** and 
 
 For serial stages and variable thrust, select **Powered flight → Variable thrust & staging**. Its constructed reference includes editable stage/thrust forms, exact fuel/separation/ignition events, mass accounting and saved reports. [Build C walkthrough and checks](docs/BUILD_C_RESULTS.md).
 
+The [October 25 final audit](docs/FINAL_BUILD_AUDIT.md) records the current feature-freeze decision, full-test caveat and October 14–20 history trace. A [sanitized retained AI-record index](docs/validation/RETAINED_AI_HISTORY_INDEX.json) preserves failure/success provenance without publishing private raw receipts.
+
 ## The engineering workflow
 
 Judge-email recommendations and their concrete 6D actions, evidence and remaining gaps are tracked in [Judge guidance and remaining outcomes](docs/JUDGE_GUIDANCE_ACTIONS.md).

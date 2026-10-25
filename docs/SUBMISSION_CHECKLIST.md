@@ -11,7 +11,7 @@ Deadline: October 30, 2026,22:30 IST. Testing access must remain available throu
 | Open-source license | Owner approved MIT; root LICENSE added. |
 | Setup | Current README has direct commands and supported-platform qualification limits. |
 | Judge-accessible demo/test build | Pending F. Localhost alone does not provide judge access. No hosted URL is claimed. |
-| Populated hero path | A–C are implemented locally with explicit constructed references, saved changes, targeted reruns and playback. README screenshot shows A. Hosted default entry and timed unaided walkthrough remain to be verified. |
+| Populated hero path | A–C are implemented locally with explicit constructed references, saved changes, targeted reruns and playback. README screenshot shows A. The protected hosted entry passed local/browser and Linux-container checks; actual public access and a timed unaided walkthrough remain pending. |
 | Demo/video/submission form | Owner to review and publish later. No video or Devpost form was submitted here. |
 | Tool feedback | Factual draft in TOOL_FEEDBACK_DRAFT.md; owner must review/submit it. |
 | Development history | SUBMISSION_PERIOD.md distinguishes tracked dates from unverified earlier history. |
@@ -19,4 +19,4 @@ Deadline: October 30, 2026,22:30 IST. Testing access must remain available throu
 
 Current readiness is incomplete. Cosmetic repository changes do not resolve hosting, user evidence, real mission-data availability or all engineering-validation questions.
 
-The entrant-provided October 22 judge-email guidance is mapped to concrete outcomes and remaining work in [JUDGE_GUIDANCE_ACTIONS.md](JUDGE_GUIDANCE_ACTIONS.md). D project-wide AI, E remembered optional connections and F hosting remain planned; interface refinement, founder walkthrough and final materials remain separately acknowledged.
+The entrant-provided October 22 judge-email guidance is mapped to concrete outcomes and remaining work in [JUDGE_GUIDANCE_ACTIONS.md](JUDGE_GUIDANCE_ACTIONS.md). D project-wide AI and E remembered connections are delivered; F protected-server preparation is verified and public deployment remains pending; interface refinement, founder walkthrough and final materials remain separately acknowledged.
