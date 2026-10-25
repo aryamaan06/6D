@@ -1,0 +1,57 @@
+/* Workspace hierarchy: a project, a work area, then one task. */
+#sixd-workspace .sd-sidebar{padding-top:16px;gap:0}
+#sixd-workspace .sd-primary-nav{display:grid;gap:4px;margin:10px 0 16px;padding-top:12px;border-top:1px solid var(--sd-border)}
+#sixd-workspace .sd-area-link{display:flex;align-items:center;gap:10px;min-height:40px;width:100%;padding:9px 10px;border-radius:8px;font-weight:550;white-space:normal}
+#sixd-workspace .sd-area-link:hover,#sixd-workspace .sd-section-link:hover{background:rgba(29,29,31,.04)}
+#sixd-workspace .sd-area-link[aria-current]{background:var(--sd-bg);box-shadow:0 1px 3px #00000008;color:var(--sd-ink)}
+#sixd-workspace .sd-section-menu{display:grid;gap:3px;margin-bottom:18px;padding:4px 6px 12px;border-bottom:1px solid var(--sd-border)}
+#sixd-workspace .sd-section-menu>.sd-label{margin:0 4px 6px}
+#sixd-workspace .sd-section-link{min-height:34px;padding:7px 9px;border-radius:6px;white-space:normal;font-size:12px;line-height:1.4}
+#sixd-workspace .sd-section-link[aria-current]{color:var(--sd-blue);background:var(--sd-blue-soft);font-weight:600}
+#sixd-workspace .sd-projects-link{display:flex;align-items:center;gap:8px;padding:5px 8px 14px;font-weight:600}
+#sixd-workspace .sd-breadcrumb{align-items:center;min-height:52px;gap:10px;height:auto;padding-block:12px}
+#sixd-workspace #sd-location-trail{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;font-size:12px}
+#sixd-workspace #sd-location-trail button,#sixd-workspace #sd-location-trail span{overflow-wrap:anywhere;white-space:normal}
+#sixd-workspace #sd-location-trail button{padding:2px 0;color:var(--sd-soft)}
+#sixd-workspace #sd-location-trail button:hover{color:var(--sd-ink);text-decoration:underline;text-underline-offset:3px}
+#sixd-workspace #sd-location-trail [aria-current]{font-weight:600;color:var(--sd-ink)}
+#sixd-workspace .sd-crumb-separator{color:var(--sd-border)}
+#sixd-workspace .sd-location-item{color:var(--sd-soft);font-size:11px}
+#sixd-workspace .sd-project-actions{position:relative}
+#sixd-workspace .sd-project-actions>summary{list-style:none;cursor:pointer}
+#sixd-workspace .sd-project-actions>summary::-webkit-details-marker{display:none}
+#sixd-workspace .sd-project-actions>nav{position:absolute;right:0;top:calc(100% + 7px);z-index:25;width:200px;display:grid;gap:5px;padding:8px;background:var(--sd-bg);border:1px solid var(--sd-border);border-radius:10px;box-shadow:0 12px 30px #1d1d1f14}
+#sixd-workspace .sd-project-actions>nav>.sd-button{justify-content:flex-start}
+#sixd-workspace.sd-navigation-hub .sd-shell{grid-template-columns:214px minmax(0,1fr)}
+#sixd-workspace.sd-navigation-hub .sd-inspector,#sixd-workspace.sd-navigation-hub .sd-toolbar{display:none}
+#sixd-workspace.sd-navigation-hub .sd-main{border-right:0}
+#sixd-workspace.sd-navigation-hub #sd-view-content{padding:0;background:transparent;min-height:500px}
+#sixd-workspace.sd-navigation-hub #sd-view-content{padding:4px 26px 34px}
+#sixd-workspace.sd-navigation-hub #sd-review-guide{display:none}
+#sixd-workspace .sd-home-intro{max-width:620px;padding:4px 0 26px}
+#sixd-workspace .sd-home-intro h2{font-size:28px;font-weight:600;line-height:1.2;margin:10px 0}
+#sixd-workspace .sd-home-intro p,#sixd-workspace .sd-area-intro{color:var(--sd-soft);font-size:14px;line-height:1.7;max-width:660px}
+#sixd-workspace .sd-project-grid,#sixd-workspace .sd-destination-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+#sixd-workspace .sd-project-card{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:22px;border:1px solid var(--sd-border);border-radius:14px;background:var(--sd-bg);min-height:160px;transition:box-shadow .15s,border-color .15s;min-width:0}
+#sixd-workspace .sd-project-card:hover,#sixd-workspace .sd-destination:hover{border-color:#b9c3d7;box-shadow:0 4px 15px #1d1d1f08}
+#sixd-workspace .sd-project-card strong{font-size:17px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+#sixd-workspace .sd-project-meta{color:var(--sd-soft);font-family:var(--font-geist-mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace);font-size:11px}
+#sixd-workspace .sd-project-open{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sd-blue);margin-top:auto}
+#sixd-workspace .sd-home-start{margin-top:36px;padding-top:28px;border-top:1px solid var(--sd-border)}
+#sixd-workspace .sd-home-start h3{font-size:18px;margin-bottom:16px}
+#sixd-workspace .sd-destination{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px;border:1px solid var(--sd-border);border-radius:12px;background:var(--sd-bg);min-height:110px;min-width:0}
+#sixd-workspace .sd-destination-copy{display:grid;gap:9px;min-width:0}
+#sixd-workspace .sd-destination strong{font-size:15px;line-height:1.4;font-weight:600}
+#sixd-workspace .sd-destination-copy>span{font-size:12px;line-height:1.65;color:var(--sd-soft)}
+#sixd-workspace .sd-destination svg{margin-top:3px;color:var(--sd-soft)}
+#sixd-workspace .sd-area-intro{margin:0 0 22px}
+#sixd-workspace .sd-area-note{margin-top:24px;color:var(--sd-soft);font-size:12px}
+#sixd-workspace.sd-projects-home .sd-primary-nav,#sixd-workspace.sd-projects-home .sd-project-context,#sixd-workspace.sd-projects-home .sd-side-bottom,#sixd-workspace.sd-projects-home #sd-scope-chip,#sixd-workspace.sd-projects-home #sd-review-guide{display:none}
+#sixd-workspace.sd-projects-home .sd-projects-link{color:var(--sd-blue)}
+#sixd-workspace .sd-top .sd-brand{cursor:pointer;padding:0}
+#sixd-workspace .sd-top-right{gap:10px}
+#sixd-workspace .sd-navigation-hint{display:block;color:var(--sd-soft);font-size:11px;line-height:1.6;padding:10px}
+@media(min-width:951px){#sixd-workspace:not(.sd-navigation-hub) .sd-shell{grid-template-columns:214px minmax(0,1fr) 282px}#sixd-workspace.sd-simulation-open .sd-shell{grid-template-columns:214px minmax(0,1fr)}}
+@media(max-width:950px){#sixd-workspace.sd-navigation-hub .sd-shell{grid-template-columns:190px minmax(0,1fr)}#sixd-workspace .sd-destination-grid,#sixd-workspace .sd-project-grid{grid-template-columns:1fr}}
+@media(max-width:650px){#sixd-workspace.sd-navigation-hub .sd-shell{display:block}#sixd-workspace.sd-navigation-hub #sd-view-content{padding:4px 16px 26px}#sixd-workspace .sd-top{padding:12px}#sixd-workspace .sd-preview-tag,#sixd-workspace .sd-separator,#sixd-workspace #sd-ai-header-status{display:none}#sixd-workspace .sd-main{padding:0 0 24px}#sixd-workspace .sd-top-right{gap:6px}#sixd-workspace .sd-top-right .sd-button{padding:7px 9px;font-size:11px}#sixd-workspace .sd-project-card,#sixd-workspace .sd-destination{padding:18px}#sixd-workspace .sd-home-intro h2{font-size:24px}#sixd-workspace .sd-location-item{display:none}#sixd-workspace .sd-sidebar{display:none}#sixd-workspace.sd-tree-open .sd-sidebar{display:flex}}
+@media print{#sixd-workspace .sd-primary-nav,#sixd-workspace .sd-section-menu,#sixd-workspace .sd-breadcrumb{display:none}}

@@ -97,3 +97,7 @@ This audit provides an index for **every published file at the baseline** and a 
 - Automatic general CAD/code ingestion, coupled high-fidelity disciplines, full launch-to-landing qualification and a production multi-user platform are not implied by the long-term feature catalogue.
 
 Future completed milestones should update this chronology and the relevant guide, acceptance/result evidence, current scope and validation index, then be privacy-checked and pushed. Preserve older records as dated history instead of silently replacing their outcomes.
+
+## October 25 workspace navigation and typography
+
+Arya explicitly authorized UI Build 1 plus the Apple × Notion font specification after the founder could not follow the original navigation. The delivery adds Projects and five contextual work areas, saved-view URLs, Back/Forward and project/profile draft guards, while preserving the bounded engineering capabilities and current Super selection. Native font stacks and quantitative mono styling require no external fonts. [Guide](WORKSPACE_NAVIGATION.md) · [Acceptance](WORKSPACE_NAVIGATION_ACCEPTANCE.md) · [Results and limits](WORKSPACE_NAVIGATION_RESULTS.md). Three-model selection, owner accounting-display changes, later polish/walkthrough and F public deployment remain separate.

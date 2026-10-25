@@ -1,0 +1,130 @@
+/* Shared editorial type system. Native fonts keep the workspace private/offline;
+   a locally supplied Geist variable may take precedence without a network fetch. */
+:root {
+  --sd-font-sans: var(--font-geist-sans, -apple-system), BlinkMacSystemFont,
+    "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --sd-font-mono: var(--font-geist-mono, ui-monospace), SFMono-Regular, Menlo,
+    Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+html, body {
+  background: #fbfbfd;
+  color: #1d1d1f;
+  font-family: var(--sd-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+#sixd-workspace {
+  --sd-bg: #fbfbfd;
+  --sd-side: #f5f5f7;
+  --sd-canvas: #fbfbfd;
+  --sd-ink: #1d1d1f;
+  /* Essential secondary copy remains readable at small sizes. The lighter Apple
+     gray is reserved for decorative rules, rather than essential instructions. */
+  --sd-soft: #67676b;
+  --sd-faint: #86868b;
+  --sd-border: rgb(0 0 0 / 8%);
+  --sd-shadow: 0 2px 8px rgb(0 0 0 / 4%);
+  font-family: var(--sd-font-sans);
+  font-synthesis: none;
+  color: var(--sd-ink);
+  background: var(--sd-bg);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+#sixd-workspace :is(h1, h2, h3) {
+  letter-spacing: -0.025em !important;
+  text-wrap: balance;
+}
+
+#sixd-workspace :is(.sd-label, .rw-eyebrow, .aq-eyebrow, .dc-eyebrow,
+  .ec-eyebrow, .pb-eyebrow, .sl-eyebrow, .sr-eyebrow, .si-eyebrow,
+  .sy-eyebrow, .sd-canvas-meta) {
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+#sixd-workspace :is(.sd-tree-item, .sd-tree-root) {
+  color: var(--sd-ink);
+}
+#sixd-workspace :is(.sd-tree-item, .sd-tree-root):hover {
+  background: rgb(0 0 0 / 4%);
+}
+#sixd-workspace :is(.sd-tree-item, .sd-tree-root)[aria-current="true"] {
+  background: rgb(0 0 0 / 6%);
+  color: var(--sd-ink);
+}
+#sixd-workspace :is(.sd-node, .sd-inspector, .sd-review-guide) {
+  background-color: var(--sd-bg);
+  border-color: var(--sd-border);
+}
+#sixd-workspace .sd-view-tabs {
+  background: var(--sd-side);
+  border-color: var(--sd-border);
+}
+#sixd-workspace .sd-view-tab[aria-selected="true"] {
+  background: var(--sd-bg);
+}
+#sixd-workspace :is(.sd-heading p, .sd-project-note, .sd-table-note,
+  .sim-caption, .aq-caption, .aq-muted, .rw-caption, .si-muted, .si-note) {
+  color: var(--sd-soft);
+}
+
+/* Identity strings and quantitative readouts use tabular, aligned typography.
+   Human descriptions, requirement titles and editable source prose stay sans. */
+#sixd-workspace :is(code, pre, .sd-receipt, .aq-mono, .dc-identity,
+  .en-identity, .sc-identity, .sy-identity, .td-identity, .si-identity,
+  .te-identities dd, .sy-provenance dd, .sim-diagnostics dd, .rw-footer dd,
+  .sl-identity, .sl-identity-text, .sr-identity, .aq-identity,
+  .ec-identity, .td-csv, .sd-ai-fact-value, .sd-ai-source-value,
+  .sd-change-values, .sd-plot-record > strong, .sd-note-number,
+  .rw-quantity, .rw-step-number, .sd-tree-count, .aq-count, .sl-count,
+  .te-count, .sd-zoom span, .sd-chip, .aq-badge, .dc-badge, .ec-badge,
+  .en-badge, .sc-badge, .rw-badge, .sl-badge, .sr-badge, .sy-badge,
+  .td-badge, .te-badge) {
+  font-family: var(--sd-font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: 11px;
+  letter-spacing: -0.01em;
+}
+
+#sixd-workspace :is(input[type="number"], [data-field="value"],
+  [data-field="unit"], .sim-playback output, .ga-playback-controls > [data-ga-sample],
+  .sa-playback-controls > [data-sa-sample], .te-values dd, .sy-values dd,
+  .sr-budget dd, .ga-table td, .sa-table td) {
+  font-family: var(--sd-font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: 12px;
+}
+
+/* Prominent findings retain their hierarchy; only their font family changes. */
+#sixd-workspace :is(.sd-finding-value, .sd-node-value, .rw-count-value,
+  .sim-metrics strong, .aq-metrics dd) {
+  font-family: var(--sd-font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  letter-spacing: -0.025em;
+}
+#sixd-workspace .rw-rocket-result > span:nth-child(2) {
+  font-family: var(--sd-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+#sixd-workspace .sd-table :is(td, th) {
+  font-variant-numeric: tabular-nums;
+}
+#sixd-workspace :is(.sd-chart, .en-chart, .sc-chart, .td-chart) text {
+  font-family: var(--sd-font-mono);
+}
+
+/* Hosted access uses the same native family without importing a web font. */
+.sixd-hosted-banner {
+  font-family: var(--sd-font-sans);
+}
+
+@media print {
+  #sixd-workspace { --sd-bg: #fff; --sd-side: #f5f5f7; }
+}

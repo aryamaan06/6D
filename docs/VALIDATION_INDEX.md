@@ -48,3 +48,7 @@ Build A's integrated rocket reference passed **55 affected Python tests**, inclu
 | Browser groups/assertions | Each feature's dated results | Interaction checks; they are not extra Python test methods or physical-model benchmarks. |
 
 Older741-style figures may remain in dated historical notes. They are not current totals. No historical count is silently edited into a new one. Independent human engineering review, customer validation and real flight-data validation remain unestablished.
+
+## October 25 UI navigation/font scope
+
+[Delivery](WORKSPACE_NAVIGATION_RESULTS.md): 77 scoped Python methods (76 passed, one hosted Docker-environment skip), six Node history contracts and isolated browser acceptance. These overlap existing suites and are not a new full discovery total. Navigation tests use constructed projects and forbidden external transports. No live AI qualification is established by these checks.

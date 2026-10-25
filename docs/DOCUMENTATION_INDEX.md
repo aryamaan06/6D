@@ -217,3 +217,10 @@ These additions preserve the original inventory baseline and historical result d
 - [Freeze decision and Git/history findings](FINAL_BUILD_AUDIT.md)
 - [Machine-readable scoped audit](validation/FINAL_BUILD_AUDIT.json)
 - [Sanitized retained AI-record provenance index](validation/RETAINED_AI_HISTORY_INDEX.json)
+
+## October 25 navigation and typography refinement
+
+- [Navigation guide](WORKSPACE_NAVIGATION.md)
+- [Acceptance](WORKSPACE_NAVIGATION_ACCEPTANCE.md)
+- [Results, data preservation and remaining scope](WORKSPACE_NAVIGATION_RESULTS.md)
+- [Reproducible isolated browser acceptance](../tools/check_navigation_browser.mjs)

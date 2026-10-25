@@ -1,0 +1,66 @@
+{
+  "schema": "sixd.navigation-browser-acceptance.v1",
+  "checks": [
+    "Selected project and saved revision have an addressable overview",
+    "Five broad work areas are reachable without a flat list of every tool",
+    "Native browser Back and Forward restore internal locations",
+    "Reload preserves the routed project, saved revision and work area",
+    "A deep link to a historical revision survives reload",
+    "System Table, selected requirement and evidence panel survive deep reload with a parent breadcrumb",
+    "Same-project page navigation and Back retain the unsaved shared draft without a database write",
+    "Cancelled project switch preserves draft; confirmed switch explicitly discards it",
+    "Cancelling browser Back across project context preserves URL, displayed project and draft",
+    "Accepting browser Back loads the previous saved project and discards only the unsaved draft",
+    "Back during a delayed project load leaves URL and displayed project in the same context",
+    "Unapplied stage-profile values survive blocked area, project and revision navigation",
+    "Browser Back cannot remount or discard an unapplied stage-profile form",
+    "Explicit profile cancellation restores navigation while saved staged inputs stay unchanged",
+    "Requested local editorial typography, ink and soft canvas are applied without remote fonts",
+    "Navigation layout stays within a narrow viewport",
+    "Original fixture receipts unchanged; no provider, search, upload, calculation or save POSTs; no browser errors"
+  ],
+  "errors": [],
+  "unexpected_responses": [],
+  "external_requests": 0,
+  "post_routes": [
+    "/api/impact",
+    "/api/interfaces/preview",
+    "/api/test-evidence/impact",
+    "/api/impact",
+    "/api/interfaces/preview",
+    "/api/test-evidence/impact"
+  ],
+  "aborted_stale_requests": 33,
+  "synthetic_fixture": true,
+  "paid_calls": 0,
+  "typography": {
+    "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+    "color": "rgb(29, 29, 31)",
+    "background": "rgb(251, 251, 253)",
+    "headingTracking": "-0.625px",
+    "metricFont": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", monospace"
+  },
+  "build_id": "ddf25eff8f3f",
+  "date": "2026-10-25",
+  "browser_groups_passed": 17,
+  "python_checks": {
+    "methods": 77,
+    "passed": 76,
+    "skipped": 1,
+    "scope": [
+      "navigation_static_assets",
+      "workspace_api",
+      "rocket_reference",
+      "hosted_regressions"
+    ],
+    "full_discovery": false
+  },
+  "node_history_contracts_passed": 6,
+  "owner_state_preservation": {
+    "matched": true,
+    "private_database_credential_objects": 5,
+    "raw_hashes_published": false
+  },
+  "public_hosted_deployment": false,
+  "current_build_live_ai_qualification": false
+}

@@ -4,6 +4,7 @@
   const $ = s => document.querySelector(s);
   const root = $('#sixd-workspace');
   const state = {data:null, projects:[], templates:[], draft:null, impact:null, system:'overview', selected:null, view:'canvas', page:'review-home', panel:'details', busy:false, importing:null, trajectory:null, camera:{x:15,y:35,scale:1}, request:0};
+  let navigation=null, navigationStarting=true;
   const author = {catalog:null, preflight:null, snapshot:'', serial:0, loading:false, error:'', timer:null, editor:null};
   // Credentials are never assigned to application state or persistent browser storage.
   const ai = {scope:'requirement',status:null, statusError:'', statusLoading:false, evaluation:null, evaluationError:'', evaluationLoading:false, requirementId:null, question:'', records:[], error:'', loading:false, loadedContext:'', starting:false, connecting:false, context:'', generation:0, timer:null, controller:null};
@@ -466,6 +467,59 @@
     const html=window.SixDReviewGuide.render({view:state.data,draft:state.draft,dirty:dirty(),isLatest:latest(),busy:state.busy,impactVerified:!!state.impact,page:state.page,viewMode:state.view,exportedRun:reviewGuide.exportedRun});
     if(host.dataset.rendered!==html){host.innerHTML=html;host.dataset.rendered=html;}
   }
+  function locationSnapshot() {
+    if(state.page==='projects')return {page:'projects'};
+    return {projectId:state.data.project_id,revision:state.data.revision,page:state.page,
+      system:state.system,view:state.view,panel:state.panel,
+      ...(state.page==='system'&&state.selected?{selected:{...state.selected}}:{}),
+      ...(state.panel==='assistant'?{aiScope:ai.scope}:{}),
+      ...(state.page==='simulation'&&state.trajectory?{trajectory:{...state.trajectory}}:{})};
+  }
+  function selectedLocationLabel() {
+    const item=state.selected;
+    return !item?null:item.kind==='requirement'?req(item.id)?.title:item.kind==='model'?model(item.id)?.title||human(item.id):human(item.id);
+  }
+  function renderLocation() {
+    if(!state.data)return;
+    window.SixDWorkspaceShell.renderChrome({page:state.page,project:project(),revision:state.data.revision,
+      system:activeSystem(),selected:selectedLocationLabel(),backEnabled:navigation?.canBack});
+    icons();
+  }
+  function closeNavigationDialogs() {
+    for(const dialog of root.querySelectorAll('dialog[open]'))dialog.close();
+    author.editor=null;$('#sd-ai-key').value='';
+  }
+  async function restoreLocation(route,initial=false) {
+    if(state.busy&&!initial){message('Wait for the current operation to finish before navigating.');return false;}
+    if(state.stagedProfileEdit){message('Apply or cancel the open thrust-profile edit before navigating. Your edits are still open.');return false;}
+    if(author.editor&&!window.confirm('Leave the open record editor? Changes not applied to the draft will be lost.'))return false;
+    const switching=route.page!=='projects'&&(state.data?.project_id!==route.projectId||state.data?.revision!==route.revision);
+    if(switching&&dirty()&&!window.confirm('Discard unsaved draft changes and open this saved project revision?'))return false;
+    closeNavigationDialogs();
+    if(!initial)setBusy(true);
+    try{
+    if(switching)await load(route.projectId,route.revision);
+    if(!state.data)return false;
+    stopInvestigationPolling();
+    state.page=route.page;
+    if(route.page!=='projects'){
+      state.system=systems().some(s=>s.id===route.system)?route.system:'overview';
+      state.view=route.view||'canvas';state.panel=route.panel||'details';
+      state.selected=route.selected&&validSelection(route.selected)?route.selected:defaultSelection();
+      ai.scope=route.aiScope||'requirement';ai.testSelection=null;
+      state.trajectory=route.page==='simulation'&&route.trajectory?{...route.trajectory}:null;
+      state.testEvidenceTarget=null;state.stagedProfileEdit=null;
+    }
+    resetCamera();render();
+    if(state.page==='authoring')void loadCatalog().then(()=>{if(state.page==='authoring')render();}).catch(showError);
+    if(state.page==='system'&&state.panel==='assistant')void refreshAiStatus();
+    return true;
+    }finally{if(!initial){setBusy(false);if(state.data)render();}}
+  }
+  function unmountWorkspaceViews() {
+    for(const name of ['SixDReviewWorkspace','SixDEnvelopes','SixDSimulationImports','SixDPoweredFlight','SixDGuidedAscent','SixDStagedAscent','SixDSimulation','SixDTestData','SixDScenarios','SixDActions','SixDSources','SixDChains','SixDAttitude','SixDPowerBudget','SixDSystems','SixDAIQuality'])window[name]?.unmount?.();
+    for(const context of [coverageLinks,comparisonView,researchView,actionLinks,sourceLinks]){context.dispose?.();context.dispose=null;}
+  }
   function render() {
     if(!state.data)return; const p=project();
     repairContext();
@@ -561,7 +615,8 @@
     $('#sd-run-trigger').innerHTML=icon('play')+(currentRun()?'Run checks again':'Run checks');
     root.querySelectorAll('[data-view]').forEach(button=>button.setAttribute('aria-selected',String(button.dataset.view===state.view && state.page==='system')));
     $('#sd-view-content').setAttribute('aria-labelledby',state.page==='system'?'sd-tab-'+state.view:'sd-page-title');
-    renderTree();renderDraft();renderMain();renderPanel();icons();
+    renderTree();renderDraft();renderMain();renderPanel();renderLocation();icons();
+    if(!navigationStarting)navigation?.sync();
   }
   function systemDepth(s){let n=0,parent=s.parent_id,seen=new Set([s.id]);while(parent&&!seen.has(parent)){seen.add(parent);n++;parent=systems().find(row=>row.id===parent)?.parent_id;}return n;}
   function orderedSystems(){const rows=systems(),ordered=[],seen=new Set();function visit(parent){for(const s of rows.filter(row=>(row.parent_id||null)===parent)){if(seen.has(s.id))continue;seen.add(s.id);ordered.push(s);visit(s.id);}}visit(null);rows.filter(s=>!seen.has(s.id)).forEach(s=>ordered.push(s));return ordered;}
@@ -723,6 +778,11 @@
     return '<article class="sd-reader"><span class="sd-label">'+(state.draft?'R'+state.data.revision+' → draft':'Revision R'+state.data.revision)+'</span><h2>Review the difference.</h2><p class="sd-lead">A changed input identifies dependencies needing review. New calculation outcomes appear only after checks run.</p>'+(!state.draft&&priorRun()?'<p class="sd-table-note">Compared with the nearest earlier recorded review: R'+priorRun().revision+'.</p>':!state.draft&&state.data.configuration_base?'<p class="sd-table-note">Compared with saved configuration R'+state.data.configuration_base.revision+'. This comparison describes supplied record changes only.</p>':'')+structuralChanges(info)+(rows.length?rows.map(row=>'<div class="sd-change-card"><strong>'+esc(row.title)+'</strong><div class="sd-change-values"><span class="sd-before">'+measure(row.before)+'</span><span>→</span><span class="sd-after">'+measure(row.after)+'</span></div>'+(row.before?.unit!==row.after?.unit?'<p class="sd-small sd-muted">Unit changed; no implicit conversion.</p>':'')+(!same(row.before?.source,row.after?.source)?'<p class="sd-small sd-muted">Source: '+esc(row.before?.source || '—')+' → '+esc(row.after?.source || '—')+'</p>':'')+'</div>').join(''):'<div class="sd-notice">No changed input records in this comparison. '+(!state.draft?'Create a draft from the latest revision to review a new change.':'Edit any input value, unit or source.')+'</div>')+interfaceSlot('changes')+sourceSlot('changes')+actionSlot('changes')+testEvidenceSlot('changes',[])+'<h3>Calculator dependency impact</h3><p>'+(state.draft?(state.impact?'Server-checked draft preview.':'Local draft preview; use Preview impact to validate with the server.'):'Saved revision dependency comparison.')+'</p><div class="sd-affected-list">'+(info.affected_model_ids||[]).map(id=>'<button type="button" data-kind="model" data-id="'+esc(id)+'">'+esc(human(id))+'<span class="sd-chip sd-pending">Model dependency</span></button>').join('')+(info.affected_requirement_ids||[]).map(id=>'<button type="button" data-kind="requirement" data-id="'+esc(id)+'">'+esc(req(id)?.title || id)+chip(reqStatus(id))+'</button>').join('')+'</div>'+(!(info.affected_requirement_ids||[]).length?'<p>No calculator requirement dependencies are affected by the supplied edits. Interface review flags are shown separately above.</p>':'')+receiptInfo()+'<div class="sd-action-row">'+(state.draft?'<button type="button" class="sd-button sd-primary" data-action="save" '+(!dirty()||editErrors().length?'disabled':'')+'>Save revision</button>':!currentRun()?'<button type="button" class="sd-button sd-primary" data-action="run">Rerun affected checks</button>':'<button type="button" class="sd-button" data-action="report">Open revised report</button>')+'<button type="button" class="sd-button sd-quiet" data-action="back">Return to system</button></div></article>';
   }
   function renderMain() {
+    if(window.SixDWorkspaceShell.hubs.has(state.page)){
+      unmountWorkspaceViews();
+      $('#sd-view-content').innerHTML=window.SixDWorkspaceShell.hub(state.page,state.projects,state.data.project_id);
+      return;
+    }
     window.SixDGuidedAscent?.unmount();window.SixDStagedAscent?.unmount();
     window.SixDAIQuality?.unmount();
     if(state.page==='ai-quality'){
@@ -1423,7 +1483,7 @@
   const reviewGuide={open:true,exportedRun:null};
   try{reviewGuide.open=localStorage.getItem('sixd.review-guide.dismissed')!=='yes';}catch{}
     if(requirementId&&req(requirementId))state.selected={kind:'requirement',id:requirementId};
-    syncAssistantContext();state.panel='assistant';renderPanel();icons();
+    syncAssistantContext();state.panel='assistant';renderPanel();navigation?.sync();icons();
     await refreshAiStatus();
   }
   async function loadInvestigations() {
@@ -1542,6 +1602,12 @@
     },'Empty R1 saved locally. Choose Edit draft to add your explicit engineering setup.');
   }
   async function action(name) {
+    const pageAction=['projects','engineering','analysis','evidence','setup','system','review-home','guided-overview','guided-table','guided-latest','report','changes','back','systems','chains','attitude','powered-flight','vertical-mode','guided-ascent','staged-ascent','power','sources','actions','coverage','comparison','simulation','scenarios','envelopes','simulation-imports','test-data','author-project','project-investigate','new-project','import','rocket-reference','ai-quality'];
+    if(state.stagedProfileEdit&&pageAction.includes(name)){message('Apply or cancel the open thrust-profile edit before navigating. Your edits are still open.');return;}
+    if(name==='navigation-back'){if(navigation?.canBack)navigation.back();return;}
+    if(['projects','engineering','analysis','evidence','setup','system'].includes(name)){
+      state.page=name;state.panel='details';stopInvestigationPolling();root.classList.remove('sd-tree-open');render();return;
+    }
     root.querySelectorAll('details.sd-tool-menu[open]').forEach(el=>el.open=false);
     if(name==='ai-quality'){state.page='ai-quality';stopInvestigationPolling();render();return;}
     if(name==='review-home'){state.page='review-home';stopInvestigationPolling();render();return;}
@@ -1688,6 +1754,13 @@
   });
   root.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button||button.disabled||state.busy)return;
+    if(button.dataset.openProject){
+      if(state.stagedProfileEdit){message('Apply or cancel the open thrust-profile edit before changing projects.');return;}
+      const id=button.dataset.openProject;
+      if(id===state.data?.project_id){state.page='review-home';state.panel='details';root.classList.remove('sd-tree-open');render();return;}
+      if(id!==state.data?.project_id&&dirty()&&!window.confirm('Discard unsaved draft changes and open this project?'))return;
+      void perform(async()=>{await load(id);state.page='review-home';state.panel='details';root.classList.remove('sd-tree-open');render();});return;
+    }
     if(button.dataset.authorAdd){openEditor(button.dataset.authorAdd);return;}
     if(button.dataset.authorEdit){openEditor(button.dataset.authorEdit,button.dataset.id);return;}
     if(button.dataset.authorRemove){
@@ -1713,16 +1786,17 @@
       return;
     }
     if(button.dataset.template!==undefined){try{stageImport(state.templates[Number(button.dataset.template)].project,true);}catch(error){importError(error);}return;}
-    if(button.dataset.view){state.view=button.dataset.view;state.page='system';render();return;}
+    if(button.dataset.view){if(state.stagedProfileEdit){message('Apply or cancel the open thrust-profile edit before changing views.');return;}state.view=button.dataset.view;state.page='system';render();return;}
     if(button.dataset.panel){
       if(button.dataset.panel==='assistant'){void openAssistant(state.selected?.kind==='requirement'?state.selected.id:null);return;}
-      stopInvestigationPolling();ai.loadedContext='';state.panel=button.dataset.panel;renderPanel();icons();return;
+      stopInvestigationPolling();ai.loadedContext='';state.panel=button.dataset.panel;renderPanel();navigation?.sync();icons();return;
     }
-    if(button.dataset.system){state.system=button.dataset.system;state.page='system';state.selected=defaultSelection();resetCamera();render();return;}
+    if(button.dataset.system){if(state.stagedProfileEdit){message('Apply or cancel the open thrust-profile edit before changing systems.');return;}state.system=button.dataset.system;state.page='system';state.selected=defaultSelection();resetCamera();render();return;}
     if(button.dataset.investigate){select('requirement',button.dataset.investigate,true);return;}
     if(button.dataset.kind)select(button.dataset.kind,button.dataset.id);
   });
   root.addEventListener('input',event=>{
+    if(state.busy)return;
     const el=event.target;
     if(el.id==='sd-ai-question'){ai.question=el.value;updateAiControls();return;}
     if(state.draft&&el.dataset.projectField){state.draft[el.dataset.projectField]=el.value;draftChanged(false);return;}
@@ -1734,6 +1808,7 @@
     renderDraft();root.querySelectorAll('[data-status-for]').forEach(cell=>{cell.innerHTML=chip(reqStatus(cell.dataset.statusFor));});$('#sd-save-state').textContent='Unsaved draft · saved revision preserved';
   });
   root.addEventListener('change',event=>{
+    if(state.busy)return;
     const el=event.target;
     if(el.closest('#sd-author-form')&&el.matches('select[name="type"],select[name="model_id"],select[name="metric"]')){
       const values=Object.fromEntries(new FormData($('#sd-author-form'))),context=author.editor;
@@ -1744,8 +1819,10 @@
     if(state.draft&&el.dataset.projectField){state.draft[el.dataset.projectField]=el.value;draftChanged(false);return;}
     if(state.draft&&el.dataset.requirement){const r=req(el.dataset.requirement);r[el.dataset.reqField]=el.dataset.reqField==='critical'?el.value==='true':el.value;draftChanged(false);return;}
     if(el.id==='sd-project-picker'||el.id==='sd-revision-picker'){
+      if(state.stagedProfileEdit){message('Apply or cancel the open thrust-profile edit before switching saved records.');el.value=el.id==='sd-project-picker'?state.data.project_id:String(state.data.revision);return;}
       if(dirty()&&!window.confirm('Discard unsaved draft changes and switch the saved project view?')){render();return;}
-      void perform(()=>load(el.id==='sd-project-picker'?el.value:state.data.project_id,el.id==='sd-revision-picker'?Number(el.value):undefined));
+      const changingProject=el.id==='sd-project-picker';
+      void perform(async()=>{if(changingProject){state.page='review-home';state.system='overview';state.panel='details';}await load(changingProject?el.value:state.data.project_id,changingProject?undefined:Number(el.value));});
     }
     if(el.id==='sd-import-file'){
       const file=el.files[0];if(!file)return;if(file.size>2*1024*1024){importError(new Error('Project JSON must be no larger than 2 MiB.'));return;}
@@ -1758,12 +1835,22 @@
     if(!event.target.matches('[role="tab"]')||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
     const tabs=[...event.target.closest('[role="tablist"]').querySelectorAll('[role="tab"]')];let index=tabs.indexOf(event.target);index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:tabs.length-1))%tabs.length;event.preventDefault();tabs[index].focus();tabs[index].click();
   });
-  window.addEventListener('beforeunload',event=>{if(dirty()){event.preventDefault();event.returnValue='';}});
+  window.addEventListener('beforeunload',event=>{if(dirty()||author.editor||state.stagedProfileEdit){event.preventDefault();event.returnValue='';}});
   $('#sd-ai-connect-dialog').addEventListener('cancel',()=>{$('#sd-ai-key').value='';});
   $('#sd-ai-connect-dialog').addEventListener('close',()=>{$('#sd-ai-key').value='';});
   async function init() {
+    navigation=window.SixDNavigation.create({read:locationSnapshot,apply:restoreLocation,onError:showError,onChange:renderLocation});
     icons();let last=null;try{last=localStorage.getItem('sixd.workspace.last-project');}catch{}
-    await perform(async()=>{try{await load(last || undefined);}catch(error){if(!last)throw error;await load();}});
+    let initial=null;
+    try{initial=navigation.getInitial();}catch(error){showError(error);}
+    await perform(async()=>{
+      if(initial&&initial.page!=='projects'){
+        try{await load(initial.projectId,initial.revision);await restoreLocation(initial,true);}
+        catch(error){state.page='projects';await load(last||undefined);showError(error);}
+      }else{state.page='projects';try{await load(last||undefined);}catch(error){if(!last)throw error;await load();}}
+    });
+    navigationStarting=false;
+    if(state.data){navigation.start();renderLocation();icons();}
     try{await loadCatalog();if(state.data)render();}catch{message('Current model catalog context is unavailable. Saved evidence remains readable; no catalog reference proof is inferred.');}
     await refreshAiStatus();
     try{const status=await api('/api/status');$('#sd-build').textContent='Build '+status.build_id+' · Updated '+new Date(status.updated_at).toLocaleString();}catch{$('#sd-build').textContent='Build identity unavailable';}
