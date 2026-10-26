@@ -57,7 +57,7 @@
         '<p class="aq-caption">The configured Nemotron model performs these live investigations. Local calculators supply numerical evidence. Connecting a key makes no inference call.</p>' +
         (budget.allowance_usd !== undefined || budget.cap_usd !== undefined || budget.reserved_usd !== undefined ? '<p class="aq-caption">Cumulative application ceiling: ' + money(budget.allowance_usd ?? budget.cap_usd ?? budget.ceiling_usd) + ' · Reserved: ' + money(budget.reserved_usd) + '. Reservations are not billed charges.</p>' : '') +
         (connection.restart_required ? '<p class="aq-warning">The server needs a restart before live checks can run.</p>' : '') +
-        (!connection.key_present ? '<p class="aq-caption">Use Connect AI in the top bar to connect your Nebius key privately.</p>' : '');
+        (!connection.key_present ? '<p class="aq-caption">Open Owner settings → Manage Nebius connection to connect your key privately.</p>' : '');
     }
 
     function renderCases() {

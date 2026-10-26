@@ -61,13 +61,15 @@
   }
   function draw(s){
     if(!active(s))return;
-    s.host.innerHTML='<section class="sr-page" aria-label="Optional reference research"><header class="sr-page-header"><div><span class="sr-eyebrow">Optional research · saved project R'+esc(s.ctx.revision)+'</span><h3>Find additional references.</h3><p>Search deliberately, inspect the passage, then choose whether it belongs in your source library.</p></div>'+button('refresh','Refresh saved searches')+'</header><p class="sr-notice">'+(s.ctx.hasDraft?'This is the saved project context. Save or discard the draft before searching or using a preview.':s.ctx.canEdit===false?'Historical revisions are read-only. You can inspect saved research; select the latest revision to search or use a preview.':'Web references supplement engineering review. They never change calculation results, requirement verdicts or the scope that remains unassessed.')+'</p>'+connection(s)+((s.status?.usage_review_required||s.profile?.usage_review_required)?'<p class="sr-error" role="alert">Research is paused because recorded provider usage exceeded the expected basic-request reservation. Review the captured receipt and provider/account settings. Reconnecting does not clear this flag.</p>':'')+'<p class="sr-live" data-sr-status role="status" aria-live="polite"></p><p class="sr-error" data-sr-error role="alert" hidden></p>'+(s.profile?searchForm(s)+history(s):'<p class="sr-small">Loading research settings…</p>')+result(s)+preview(s)+'</section>';
+    if(s.ctx.connectionOnly){s.host.innerHTML='<section class="sr-page"><h3>Owner Tavily connection</h3>'+connection(s)+'<p data-sr-status role="status"></p><p data-sr-error class="sr-error" role="alert" hidden></p></section>';const disclosure=s.host.querySelector('details');if(disclosure)disclosure.open=true;controls(s);return;}
+    s.host.innerHTML='<section class="sr-page" aria-label="Optional reference research"><header class="sr-page-header"><div><span class="sr-eyebrow">Optional research · saved project R'+esc(s.ctx.revision)+'</span><h3>Find additional references.</h3><p>Search deliberately, inspect the passage, then choose whether it belongs in your source library.</p></div>'+button('refresh','Refresh saved searches')+'</header><p class="sr-notice">'+(s.ctx.hasDraft?'This is the saved project context. Save or discard the draft before searching or using a preview.':s.ctx.canEdit===false?'Historical revisions are read-only. You can inspect saved research; select the latest revision to search or use a preview.':'Web references supplement engineering review. They never change calculation results, requirement verdicts or the scope that remains unassessed.')+'</p>'+'<p class="sr-small">Connection and usage are managed in Owner settings.</p>'+button('owner-settings','Open owner settings','data-owner-only')+((s.status?.usage_review_required||s.profile?.usage_review_required)?'<p class="sr-error" role="alert">Research is paused because recorded provider usage exceeded the expected basic-request reservation. Review the captured receipt and provider/account settings. Reconnecting does not clear this flag.</p>':'')+'<p class="sr-live" data-sr-status role="status" aria-live="polite"></p><p class="sr-error" data-sr-error role="alert" hidden></p>'+(s.profile?searchForm(s)+history(s):'<p class="sr-small">Loading research settings…</p>')+result(s)+preview(s)+'</section>';
     controls(s);
   }
   async function load(s,{preserve=false}={}){
     if(s.busy||!active(s))return;
     const serial=++s.serial;s.controller?.abort();s.controller=new AbortController();s.busy='load';s.error='';s.notice='';controls(s);
     try{
+      if(s.ctx.connectionOnly){s.status=await s.ctx.api('/api/research/status',undefined,{signal:s.controller.signal});return;}
       const [status,profile]=await Promise.all([s.ctx.api('/api/research/status',undefined,{signal:s.controller.signal}),s.ctx.api('/api/research'+query(s),undefined,{signal:s.controller.signal})]);
       if(!active(s)||serial!==s.serial)return;
       s.status=status;s.profile=checkProfile(s,profile);
@@ -98,6 +100,7 @@
       const value=await s.ctx.api('/api/research/search',{project_id:s.ctx.projectId,revision:s.ctx.revision,target_id:s.target,query:s.query.trim(),expected_digest:s.profile.library_digest},{signal:s.controller.signal});
       if(!active(s)||serial!==s.serial)return;s.receipt=checkReceipt(s,value);
       s.notice=value.state==='completed'?'Search captured. Review a result before choosing to use it. Nothing was added to the source library.':'Search outcome saved. Its request reservation remains; no automatic retry was made.';
+      if(s.ctx.connectionOnly){s.status=await s.ctx.api('/api/research/status',undefined,{signal:s.controller.signal});return;}
       const [status,profile]=await Promise.all([s.ctx.api('/api/research/status'),s.ctx.api('/api/research'+query(s))]);
       if(!active(s)||serial!==s.serial)return;s.status=status;s.profile=checkProfile(s,profile);
     }catch(error){if(active(s)&&serial===s.serial&&error.name!=='AbortError')s.error='The search outcome could not be confirmed. Refresh saved searches before starting another. '+(error.message||'');}
@@ -127,6 +130,7 @@
     unmount();const s={host,ctx,status:null,profile:null,receipt:null,preview:null,target:'',query:'',busy:'',error:'',notice:'',serial:0,controller:null,disposed:false};mounted=s;
     const input=event=>{const field=event.target.dataset.srField;if(field==='query')s.query=event.target.value;if(field==='target')s.target=event.target.value;controls(s);};
     const click=event=>{const control=event.target.closest('[data-sr-action]');if(!control||!host.contains(control)||control.disabled)return;const action=control.dataset.srAction;
+      if(action==='owner-settings'){s.ctx.onOwnerSettings?.();return;}
       if(action==='refresh'){void load(s);return;}if(['connect','forget','disconnect'].includes(action)){void connect(s,action);return;}if(action==='search'){void search(s);return;}if(action==='load-record'){void openRecord(s,control.dataset.srId);return;}if(action==='preview'){void openPreview(s,Number(control.dataset.srIndex));return;}if(action==='close-preview'){s.preview=null;draw(s);return;}
       if(action==='use'&&s.preview&&!readOnly(s)&&!s.busy){
         const draft=clone(s.preview.source);

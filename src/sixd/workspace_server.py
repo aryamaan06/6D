@@ -33,6 +33,7 @@ from .workspace_series import WorkspaceSeries
 from .workspace_review import WorkspaceReview
 from .workspace_qualification import WorkspaceQualification
 from .workspace_observability import WorkspaceObservability
+from .workspace_ultra_workflow import UltraWorkflow
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -52,8 +53,8 @@ CODE_FILES = [Path(__file__).with_name(name) for name in (
 
 
 BUILD_FILES += [WEB / name for name in ("simulation-imports.js", "simulation-imports.css", "envelopes.js", "envelopes.css")]
-BUILD_FILES += [WEB / name for name in ("workspace-navigation.js", "workspace-shell.js", "navigation.css", "typography.css", "review-workspace.js", "review-workspace.css", "units.js", "connected-review.css")]
-CODE_FILES += [Path(__file__).with_name("workspace_review.py")]
+BUILD_FILES += [WEB / name for name in ("workspace-navigation.js", "workspace-shell.js", "overlay-dismiss.js", "owner-settings.js", "clarity.css", "navigation.css", "typography.css", "review-workspace.js", "review-workspace.css", "units.js", "connected-review.css")]
+CODE_FILES += [Path(__file__).with_name("workspace_review.py"), Path(__file__).with_name("workspace_ultra_workflow.py")]
 CODE_FILES += [Path(__file__).with_name("rocket_reference.py")]
 CODE_FILES += [Path(__file__).with_name("guided_ascent.py")]
 CODE_FILES += [Path(__file__).with_name("staged_ascent.py")]
@@ -121,6 +122,7 @@ class WorkspaceRuntime:
         self.ultra_diagnostic = UltraDiagnostic(self.ai)
         self.evidence_evaluation = EvidenceEvaluation(self.ai)
         self.qualification = WorkspaceQualification(self.ai)
+        self.ultra_workflow = UltraWorkflow(self.ai)
         self.observability = WorkspaceObservability(self.ai, self.qualification,
             transport=observability_transport, local_directory=self.ai.local)
 
@@ -297,7 +299,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 if _code_fingerprint() != RUNTIME_ID:
                     raise ConflictError("Application code changed. Restart 6D before loading the connected review.")
                 self._reply(200, self.server.review_workspace.summary(self._one(query, "project_id"), self._revision(self._one(query, "revision"))))
-            elif route in {"/workspace-navigation.js", "/workspace-shell.js", "/navigation.css", "/typography.css", "/review-workspace.js", "/review-workspace.css", "/units.js", "/connected-review.css", "/guided-ascent.js", "/guided-ascent.css", "/staged-ascent.js", "/staged-ascent.css"}:
+            elif route in {"/overlay-dismiss.js", "/owner-settings.js", "/clarity.css", "/workspace-navigation.js", "/workspace-shell.js", "/navigation.css", "/typography.css", "/review-workspace.js", "/review-workspace.css", "/units.js", "/connected-review.css", "/guided-ascent.js", "/guided-ascent.css", "/staged-ascent.js", "/staged-ascent.css"}:
                 path = WEB / route[1:]
                 self._reply(200, path.read_bytes(), "application/javascript; charset=utf-8" if path.suffix == ".js" else "text/css; charset=utf-8")
             elif route == "/api/envelopes/summary":
@@ -330,6 +332,10 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 self._reply(200, self.server.evaluation.get(route.removeprefix("/api/model-evaluation/comparisons/")))
             elif route == "/api/workflow-evaluation/status":
                 self._reply(200, self.server.workflow_evaluation.status())
+            elif route == "/api/ultra-workflow/status":
+                self._reply(200, self.server.ultra_workflow.status())
+            elif route.startswith("/api/ultra-workflow/runs/"):
+                self._reply(200, self.server.ultra_workflow.get(route.removeprefix("/api/ultra-workflow/runs/")))
             elif route == "/api/ai-quality/status":
                 self._reply(200, {"schema": "sixd.ai-quality-status.v1", "connection": self.server.ai.status(),
                     "qualification": self.server.qualification.status(), "observability": self.server.observability.status(),
@@ -472,7 +478,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 return
             if _code_fingerprint() != RUNTIME_ID:
                 raise ConflictError("6D application code has changed. Restart the local workspace server before saving or running checks.")
-            if route not in {"/api/envelopes/preview", "/api/simulation-imports", "/api/simulation-imports/preview", "/api/projects", "/api/revisions", "/api/impact", "/api/run", "/api/ai/connect", "/api/ai/disconnect", "/api/ai/forget", "/api/investigations", "/api/model-evaluation/start", "/api/workflow-evaluation/start", "/api/ultra-diagnostic/start", "/api/evidence-evaluation/prepare", "/api/evidence-evaluation/start", "/api/simulations", "/api/authoring/preflight", "/api/scenarios", "/api/test-data/preview", "/api/test-comparisons", "/api/test-evidence/impact", "/api/interfaces/preview", "/api/project-intake/inspect", "/api/project-intake/preview", "/api/sources", "/api/source-links", "/api/source-links/confirm", "/api/actions", "/api/actions/update", "/api/actions/review", "/api/design-comparison", "/api/research/connect", "/api/research/forget", "/api/research/disconnect", "/api/research/search", "/api/coverage/save", "/api/ai-quality/prepare", "/api/ai-quality/start", "/api/observability/connect", "/api/observability/forget", "/api/observability/disconnect", "/api/observability/preview", "/api/observability/export"}:
+            if route not in {"/api/envelopes/preview", "/api/simulation-imports", "/api/simulation-imports/preview", "/api/projects", "/api/revisions", "/api/impact", "/api/run", "/api/ai/connect", "/api/ai/disconnect", "/api/ai/forget", "/api/investigations", "/api/model-evaluation/start", "/api/workflow-evaluation/start", "/api/ultra-diagnostic/start", "/api/evidence-evaluation/prepare", "/api/evidence-evaluation/start", "/api/simulations", "/api/authoring/preflight", "/api/scenarios", "/api/test-data/preview", "/api/test-comparisons", "/api/test-evidence/impact", "/api/interfaces/preview", "/api/project-intake/inspect", "/api/project-intake/preview", "/api/sources", "/api/source-links", "/api/source-links/confirm", "/api/actions", "/api/actions/update", "/api/actions/review", "/api/design-comparison", "/api/research/connect", "/api/research/forget", "/api/research/disconnect", "/api/research/search", "/api/coverage/save", "/api/ai-quality/prepare", "/api/ai-quality/start", "/api/ultra-workflow/prepare", "/api/ultra-workflow/start", "/api/observability/connect", "/api/observability/forget", "/api/observability/disconnect", "/api/observability/preview", "/api/observability/export"}:
                 self._error(404, "This workspace action is not available.")
                 return
             if route in {"/api/source-links", "/api/source-links/confirm"}:
@@ -558,6 +564,12 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
             elif route == "/api/workflow-evaluation/start":
                 self._fields(value, {"allow_spend", "allowance_usd"})
                 view = self.server.workflow_evaluation.start(allow_spend=value["allow_spend"], allowance_usd=value["allowance_usd"])
+            elif route == "/api/ultra-workflow/prepare":
+                self._fields(value, set())
+                view = self.server.ultra_workflow.prepare()
+            elif route == "/api/ultra-workflow/start":
+                self._fields(value, {"allow_spend", "allowance_usd"})
+                view = self.server.ultra_workflow.start(allow_spend=value["allow_spend"], allowance_usd=value["allowance_usd"])
             elif route == "/api/ai-quality/prepare":
                 self._fields(value, set())
                 view = self.server.qualification.prepare()

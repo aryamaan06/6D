@@ -1,0 +1,31 @@
+/* Clear next steps, ordinary engineering review and separate owner controls. */
+#sixd-workspace .sd-project-journey{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 22px;padding:12px;border:1px solid var(--sd-border);border-radius:10px;background:var(--sd-side)}
+#sixd-workspace .sd-project-journey button{padding:7px 10px;border-radius:7px;font-size:13px;background:var(--sd-bg);border:1px solid var(--sd-border)}
+#sixd-workspace .sd-project-journey [aria-current]{font-weight:600;color:var(--sd-blue)}
+#sixd-workspace .sd-result-legend{margin:20px 0;padding:18px;border:1px solid var(--sd-border);border-radius:10px;background:var(--sd-bg)}
+#sixd-workspace .sd-result-legend h3{font-size:16px;margin-bottom:12px}
+#sixd-workspace .sd-legend-explanations{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+#sixd-workspace .sd-legend-explanations p{margin-top:8px;font-size:13px;line-height:1.65;color:var(--sd-soft)}
+#sixd-workspace .sd-owner-page{max-width:920px;margin:0 auto;padding:0 0 35px}
+#sixd-workspace .sd-owner-page header>p,#sixd-workspace .sd-owner-page section>p,#sixd-workspace .sd-owner-disclosure p{color:var(--sd-soft);font-size:14px;line-height:1.65;margin:10px 0}
+#sixd-workspace .sd-owner-page h2{font-size:25px;margin-top:8px}
+#sixd-workspace .sd-owner-page h3{font-size:18px;margin-bottom:12px}
+#sixd-workspace .sd-owner-page>section{margin-top:26px;padding:22px;border:1px solid var(--sd-border);border-radius:12px;background:var(--sd-bg)}
+#sixd-workspace .sd-owner-connections{display:grid;gap:14px}
+#sixd-workspace .sd-owner-connection{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--sd-border)}
+#sixd-workspace .sd-owner-connection>strong{min-width:85px}
+#sixd-workspace .sd-owner-connection>span{color:var(--sd-soft);flex:1}
+#sixd-workspace .sd-owner-disclosure{margin-top:20px;border:1px solid var(--sd-border);border-radius:10px;padding:15px}
+#sixd-workspace .sd-owner-disclosure>summary{font-weight:600;cursor:pointer}
+#sixd-workspace .sd-owner-approval{display:flex;align-items:flex-start;gap:9px;line-height:1.6;font-size:14px;margin:16px 0}
+#sixd-workspace .sd-owner-score strong{font-size:22px;font-family:var(--sd-font-mono)}
+#sixd-workspace .sd-owner-page .sd-receipt{overflow-wrap:anywhere;white-space:normal}
+#sixd-workspace .sd-owner-only-link{display:inline-flex;gap:6px;margin-top:10px;font-size:13px;color:var(--sd-soft)}
+#sixd-workspace .sd-teaching-note{font-size:13px;line-height:1.7;padding:12px 14px;background:var(--sd-bg);border:1px solid var(--sd-border);border-radius:8px;margin-top:15px}
+#sixd-workspace .sd-ai-status .sd-ai-connection{margin-bottom:6px}
+#sixd-workspace .sd-ai-scope{margin-top:16px}
+#sixd-workspace .rw-findings-table td.rw-quantity{white-space:nowrap;overflow-wrap:normal;word-break:normal}
+#sixd-workspace .rw-table-scroll{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+#sixd-workspace .sd-owner-page .sd-details-grid dd{font-family:var(--sd-font-mono);font-size:14px}
+@media(max-width:700px){#sixd-workspace .sd-legend-explanations{grid-template-columns:1fr;gap:14px}#sixd-workspace .sd-owner-page>section{padding:16px}#sixd-workspace .sd-owner-connection>.sd-button{white-space:normal}#sixd-workspace .sd-project-journey{gap:6px}#sixd-workspace .sd-project-journey button{font-size:13px;padding:7px 8px}}
+@media print{#sixd-workspace .sd-project-journey,#sixd-workspace .sd-owner-page{display:none!important}}

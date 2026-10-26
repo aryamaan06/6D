@@ -1,5 +1,7 @@
 # Documentation index
 
+Latest UI delivery: [Build 3 guide](BUILD3_CLARITY.md), [acceptance](BUILD3_CLARITY_ACCEPTANCE.md), [results](BUILD3_CLARITY_RESULTS.md) and [sanitized checks](validation/BUILD3_CLARITY_CHECKS.json). Owner controls and outside dismissal are implemented; fresh Ultra passed six constructed workflows. Public deployment and independent human validation remain pending.
+
 Audited October 24, 2026. Start with the [project record](PROJECT_RECORD.md) for the complete preserved feature, decision and failure chronology; use [current A–F scope](HACKATHON_BUILD_SCOPE.md) for delivered versus pending work.
 
 This index lists all 137 Markdown files published at baseline `b1242046c9230a2b2918250f10d236b1def6fa8d`. A dated document describes its own checkpoint, not necessarily current status. Broader plans are not implemented capabilities. The [machine-readable inventory](PROJECT_RECORD_INVENTORY.json) covers all 412 baseline files, including source, tests, tools and assets, with Git identities and SHA-256 hashes. The three audit files are new records outside that immutable baseline.

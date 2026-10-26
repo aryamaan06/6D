@@ -4,7 +4,7 @@
   const PAGES = new Set(['projects','review-home','engineering','analysis','evidence','setup',
     'system','systems','chains','attitude','power','powered-flight','guided-ascent','staged-ascent',
     'simulation','scenarios','envelopes','simulation-imports','test-data','coverage','sources',
-    'actions','comparison','changes','report','authoring','ai-quality']);
+    'actions','comparison','changes','report','authoring','ai-quality','owner-settings']);
   const PARAMS = new Set(['system','view','kind','item','panel','scope','trajectory','run']);
   const VIEWS = new Set(['canvas','table','reader']);
   const PANELS = new Set(['details','evidence','assistant']);

@@ -152,6 +152,17 @@ class WorkspaceEvaluation:
         active_model = self.ai.status().get("model")
         active_candidate = next((c for c in CANDIDATES if c["model"] == active_model), None)
         actual_total = len(latest.get("plan", {}).get("cases", [])) * len(latest.get("plan", {}).get("candidates", [])) if latest else 18
+        planned_per_candidate = len(latest.get("plan", {}).get("cases", [])) or 6 if latest else 6
+
+        def candidate_result(candidate):
+            rows = [row for row in latest.get("rows", []) if row["candidate_id"] == candidate["id"]]
+            attempted = sum(row["state"] != "not_run" for row in rows)
+            return {"candidate_id": candidate["id"], "name": candidate["label"],
+                "completed": sum(row["state"] == "completed" for row in rows),
+                "workflow_passes": sum(bool((row.get("score") or {}).get("workflow_gate_pass")) for row in rows),
+                "total": planned_per_candidate, "attempted": attempted,
+                "failed": sum(row["state"] == "failed" for row in rows),
+                "not_run": max(0, planned_per_candidate - attempted)}
         return {"stage": ("running" if latest and latest["state"] in {"queued", "running"} else
                           "evaluated" if latest and latest.get("report") else "comparison_pending"),
                 "active_model": {"name": active_candidate["label"] if active_candidate else "Nano", "id": active_model}, "case_count": 6,
@@ -164,6 +175,9 @@ class WorkspaceEvaluation:
                 "batch_cap_usd": BATCH_CAP_USD, "max_request_reservations": BATCH_REQUESTS,
                 "latest_comparison": None if not latest else {
                     "comparison_id": latest["comparison_id"], "state": latest["state"],
+                    "created_at": latest.get("created_at"), "completed_at": latest.get("completed_at"),
+                    "current_sources_match": latest.get("agent_sources") == self.ai._runtime and self.ai._sources() == self.ai._runtime,
+                    "historical_context": "Recorded checkpoint, not a current model-availability verdict. Failed cases and untested cases are different.",
                     "policy_version": latest.get("plan", {}).get("schema"),
                     "model_decision": latest.get("model_decision"),
                     "batch_cap_usd": latest.get("batch_cap_usd"),
@@ -173,10 +187,7 @@ class WorkspaceEvaluation:
                     "completed_cases": sum(r["state"] == "completed" for r in latest.get("rows", [])),
                     "total_cases": actual_total, "attempted_cases": sum(r["state"] != "not_run" for r in latest.get("rows", [])),
                     "reserved_usd": latest.get("reserved_usd", 0), "error": latest.get("error"),
-                    "candidate_results": [{"name": c["label"],
-                        "completed": sum(r["state"] == "completed" for r in latest.get("rows", []) if r["candidate_id"] == c["id"]),
-                        "workflow_passes": sum(bool((r.get("score") or {}).get("workflow_gate_pass")) for r in latest.get("rows", []) if r["candidate_id"] == c["id"]),
-                        "total": 6} for c in CANDIDATES]}}
+                    "candidate_results": [candidate_result(c) for c in CANDIDATES]}}
 
     def start(self, *, allowance_usd, allow_spend):
         if allow_spend is not True or type(allowance_usd) not in (int, float) or allowance_usd != BATCH_CAP_USD:

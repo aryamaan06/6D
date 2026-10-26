@@ -1,0 +1,184 @@
+{
+  "schema": "sixd.build3-clarity-delivery.v1",
+  "date": "2026-10-26",
+  "build_id": "eee28a7fcd10",
+  "python_regressions": {
+    "ran": 126,
+    "passed": 125,
+    "skipped": 1,
+    "skip_reason": "Windows Docker unavailable",
+    "full_discovery": false
+  },
+  "node_history_contracts_passed": 6,
+  "browsers": {
+    "popup": {
+      "groups_passed": 7,
+      "checks": [
+        "Project actions stays open for an inside field or inside-to-outside drag and closes on an outside click",
+        "Menu action/trigger toggles work; ordinary explanatory disclosures are not dismissed",
+        "Outside pointer closes a native modal through its close hook, clears its key and cannot click through",
+        "Dragging from inside to outside does not close a dialog; Escape retains native cancellation",
+        "A cancelable dismissal guard preserves unapplied record edits for both outside click and Escape",
+        "Dynamically created dialogs retain module-specific cancel cleanup",
+        "Older requestClose fallback and menu Escape dismissal work"
+      ],
+      "synthetic": true,
+      "external_provider_calls": 0
+    },
+    "clarity": {
+      "groups_passed": 11,
+      "checks": [
+        "Overview explains all three result meanings and the main journey while preserving engineering values",
+        "Review report retains quantitative criteria and unassessed scope without changing their meaning",
+        "Normal requirement investigation keeps all models and history without visible financial accounting",
+        "Whole-project investigation also keeps owner accounting out of the working view",
+        "Detailed connection and spend controls remain available in the explicit owner surface",
+        "Clicking outside owner connection dialog dismisses it and clears the unsaved key field",
+        "Dynamically created Tavily settings dismiss outside, destroy the private field and reopen empty without connecting",
+        "Outside, close-button and Escape dismissal preserve edited project-form entries when declined; explicit discard closes the form",
+        "Clear overview and result explanations fit a narrow mobile viewport",
+        "Protected visitor session has financial-status redaction and cannot execute or read owner administrative diagnostics",
+        "Navigation/settings made no inference/search/upload/save calls and left the owner fixture unchanged"
+      ],
+      "synthetic": true,
+      "external_provider_calls": 0
+    },
+    "model_choices": {
+      "groups_passed": 8,
+      "checks": [
+        "Requirement Assistant offers Nano, Super and Ultra; retained records name their actual models",
+        "Choosing every model retains the question and history, updates consent, and makes no POST or provider request",
+        "Changing investigation scope while a requirement job runs retains the global busy guard without another POST",
+        "Explicit requirement start reaches Ultra; switching is disabled while running and never creates a second request",
+        "A new chosen-model job does not rewrite historical Nano, Super or Ultra receipts",
+        "Whole-project Assistant retains all choices and sends the explicitly selected Nano with project scope",
+        "Assistant body and helper type meet readable sizes; mobile fields are at least sixteen pixels without page overflow",
+        "Shared synthetic allowance is preserved, canonical engineering unchanged, and only the two explicit investigation POSTs occur"
+      ],
+      "synthetic": true,
+      "external_provider_calls": 0
+    },
+    "navigation": {
+      "groups_passed": 17,
+      "checks": [
+        "Selected project and saved revision have an addressable overview",
+        "Five broad work areas are reachable without a flat list of every tool",
+        "Native browser Back and Forward restore internal locations",
+        "Reload preserves the routed project, saved revision and work area",
+        "A deep link to a historical revision survives reload",
+        "System Table, selected requirement and evidence panel survive deep reload with a parent breadcrumb",
+        "Same-project page navigation and Back retain the unsaved shared draft without a database write",
+        "Cancelled project switch preserves draft; confirmed switch explicitly discards it",
+        "Cancelling browser Back across project context preserves URL, displayed project and draft",
+        "Accepting browser Back loads the previous saved project and discards only the unsaved draft",
+        "Back during a delayed project load leaves URL and displayed project in the same context",
+        "Unapplied stage-profile values survive blocked area, project and revision navigation",
+        "Browser Back cannot remount or discard an unapplied stage-profile form",
+        "Explicit profile cancellation restores navigation while saved staged inputs stay unchanged",
+        "Requested local editorial typography, ink and soft canvas are applied without remote fonts",
+        "Navigation layout stays within a narrow viewport",
+        "Original fixture receipts unchanged; no provider, search, upload, calculation or save POSTs; no browser errors"
+      ],
+      "synthetic": true,
+      "external_provider_calls": 0
+    }
+  },
+  "browser_groups_passed": 43,
+  "runtime_python_source_files_checked": 64,
+  "historical_ultra": {
+    "comparison_id": "5f1c35cfd6b245168496c4dce1ce9828",
+    "attempted": 3,
+    "completed": 2,
+    "failed_or_blocked": 1,
+    "not_run": 3,
+    "preserved": true,
+    "cause": "Negation wording-check false positive stopped the historical batch; untouched cases were untested."
+  },
+  "fresh_ultra": {
+    "comparison_id": "291038383c1642ab952a98b246dd5dde",
+    "provider": "live_token_factory",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "created_at": "2026-10-25T17:04:22.772887+00:00",
+    "completed_at": "2026-10-25T17:05:07.414310+00:00",
+    "batch_ceiling_usd": 2.1,
+    "batch_request_ceiling": 36,
+    "request_reservations": 24,
+    "reserved_usd": 0.748055,
+    "automatic_retries": 0,
+    "active_model_changed": false,
+    "planned": 6,
+    "attempted": 6,
+    "completed": 6,
+    "failed": 0,
+    "not_run": 0,
+    "workflow_passes": 6,
+    "semantic_accuracy_established": false,
+    "human_review": "pending",
+    "cases": [
+      {
+        "case_id": "thermal-met",
+        "state": "completed",
+        "workflow_pass": true,
+        "error_code": null
+      },
+      {
+        "case_id": "thermal-exceeded",
+        "state": "completed",
+        "workflow_pass": true,
+        "error_code": null
+      },
+      {
+        "case_id": "unsupported-control",
+        "state": "completed",
+        "workflow_pass": true,
+        "error_code": null
+      },
+      {
+        "case_id": "invalid-unit",
+        "state": "completed",
+        "workflow_pass": true,
+        "error_code": null
+      },
+      {
+        "case_id": "limit-only-change",
+        "state": "completed",
+        "workflow_pass": true,
+        "error_code": null
+      },
+      {
+        "case_id": "held-out-drag",
+        "state": "completed",
+        "workflow_pass": true,
+        "error_code": null
+      }
+    ],
+    "current_sources_match": true,
+    "ai_review": "No concrete contradictions detected in the six accepted explanations. Not independent human validation."
+  },
+  "preservation": {
+    "original_state_checks_matched": 25,
+    "all_original_state_checks_matched": true,
+    "new_ultra_screen_records": 1,
+    "allowance_approval_and_default_preserved": true,
+    "reservations_increase_matches_live_record": true,
+    "live_reservations_usd": 0.7480549999999999,
+    "live_request_reservations": 24,
+    "cumulative_reserved_usd": 4.774540900000002,
+    "cumulative_allowance_usd": 29.5,
+    "raw_data_published": false
+  },
+  "remembered_connections_restored": {
+    "connection": true,
+    "research": true,
+    "observability": true
+  },
+  "public_hosting_delivered": false,
+  "paid_searches": 0,
+  "metrics_uploads": 0,
+  "raw_private_records_published": false,
+  "final_review_corrections": [
+    "Close-button dismissal now uses the same dirty-form confirmation as outside click and Escape.",
+    "Inside-to-outside floating-menu drags no longer dismiss the menu.",
+    "Browser assertion waits for asynchronous dynamic-dialog cleanup before checking field disposal."
+  ]
+}

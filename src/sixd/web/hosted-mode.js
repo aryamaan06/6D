@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const restricted = [
-    '[data-action="ai-settings"]', '#sd-ai-connect-dialog', '#sd-ai-key', '#sd-ai-connect-button',
+    '[data-owner-only]', '[data-action="owner-settings"]', '[data-action="manage-nebius"]', '[data-action="ai-settings"]', '#sd-ai-connect-dialog', '#sd-ai-key', '#sd-ai-connect-button',
     '[data-action="ai-disconnect"]', '[data-action="ai-forget"]',
     '[data-aq-connect-form]', '.sr-connection', '[data-sr-action="search"]',
     '[data-aq="start"]', '[data-aq="preview"]', '[data-aq="export"]',
@@ -49,13 +49,8 @@
     if (typeof value.expires_at === 'string' && Number.isFinite(Date.parse(value.expires_at))) detail.textContent += ' Session expires ' + new Date(value.expires_at).toLocaleString() + '.';
     const copy = document.createElement('div');copy.append(notice, detail);
     if (value.live_ai_enabled === true) {
-      const budget = value.inference_budget;
-      const remaining = ['total_remaining_usd','daily_remaining_usd','session_remaining_usd'];
-      const budgetNote = document.createElement('p');
-      budgetNote.className = 'sixd-hosted-detail sixd-hosted-budget';
-      budgetNote.textContent = budget && remaining.every(key => typeof budget[key] === 'number' && Number.isFinite(budget[key]) && budget[key] >= 0)
-        ? 'Inference allowance remaining at page load: cumulative $' + budget.total_remaining_usd.toFixed(4) + ' · UTC day $' + budget.daily_remaining_usd.toFixed(4) + ' · this session $' + budget.session_remaining_usd.toFixed(4) + '. Conservative reservations, not provider billed balance.'
-        : 'Live inference uses server-controlled cumulative, UTC-day and session reservation limits. Remaining allowance could not be displayed.';
+      const budgetNote = document.createElement('p');budgetNote.className='sixd-hosted-detail';
+      budgetNote.textContent=value.inference_available===false?'AI usage is currently paused by the workspace limits.':'AI usage is managed by the workspace owner.';
       copy.append(budgetNote);
     }
     logout = document.createElement('button');

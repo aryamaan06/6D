@@ -31,15 +31,17 @@
       ['rocket-reference','Rocket reference','Create a constructed baseline, thrust-change and correction example.'],
       ['import','Import or use a template','Start from a supported file or another reference template.'],
       ['new-project','New project','Create an empty engineering project.'],
-      ['ai-quality','AI quality & tools','Inspect qualification and optional LangSmith settings.'] ]}
+      ['owner-settings','Owner settings','Manage connections, usage and verification tools.'] ]}
   ];
-  const hubs = new Set(['projects','engineering','analysis','evidence','setup']);
+  const hubs = new Set(['projects','engineering','analysis','evidence','setup','owner-settings']);
   function areaFor(page) {
     if (page === 'projects') return null;
+    if(page==='ai-quality')return areas.find(a=>a.id==='setup');
     return areas.find(a => a.id === page || a.items.some(i => (i[3] || i[0]) === page)) || areas[0];
   }
   function labelFor(page) {
     if (page === 'projects') return 'Projects';
+    if(page==='ai-quality')return 'Owner AI quality & tools';
     const area = areaFor(page);
     return area.items.find(i => (i[3] || i[0]) === page)?.[1] || area.label;
   }

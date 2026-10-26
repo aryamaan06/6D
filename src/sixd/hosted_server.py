@@ -314,7 +314,7 @@ class HostedHandler(WorkspaceHandler):
         c = self._hosted.config
         value = {'hosted': True, 'mode': 'hosted_judge', 'authenticated': session is not None,
                  'admin_controls': False, 'external_research_enabled': False, 'metrics_upload_enabled': False,
-                 'live_ai_enabled': False, 'inference_budget': None,
+                 'live_ai_enabled': False, 'inference_available': False,
                  'limits': {'max_sessions': c.max_sessions, 'get_requests_per_minute': c.get_limit,
                     'post_requests_per_minute': c.post_limit, 'max_workspace_bytes': c.max_state_bytes,
                     'session_ttl_seconds': c.session_ttl_seconds}}
@@ -324,7 +324,9 @@ class HostedHandler(WorkspaceHandler):
             value['live_ai_enabled'] = runtime.ai.status()['configured'] is True
             spending = getattr(runtime, 'hosted_spending', None)
             if callable(spending):
-                value['inference_budget'] = spending()
+                limits = spending()
+                value['inference_available'] = value['live_ai_enabled'] and all(
+                    limits.get(key, 0) > 0 for key in ('total_remaining_usd', 'daily_remaining_usd', 'session_remaining_usd'))
         return value
 
     def _dispatch(self, method):
@@ -386,6 +388,29 @@ class HostedHandler(WorkspaceHandler):
             self._reply(200, (WEB / route[1:]).read_bytes(), HOSTED_ASSETS[route])
             return
         runtime = manager.runtime(session)
+        owner_paths = ('/api/ai-quality', '/api/model-evaluation', '/api/workflow-evaluation',
+                       '/api/evidence-evaluation', '/api/ultra-diagnostic', '/api/ultra-workflow',
+                       '/api/observability')
+        if method == 'GET' and any(route == path or route.startswith(path + '/') for path in owner_paths):
+            self._error(403, 'Owner diagnostics are unavailable in the hosted review workspace.')
+            return
+        if method == 'GET' and route == '/api/ai/status':
+            status = runtime.ai.status()
+            budget = status.pop('budget', None) or {}
+            status['spend_available'] = budget.get('remaining_usd', 0) > 0
+            hosted_limits = budget.get('hosted_limits') or {}
+            if hosted_limits:
+                status['spend_available'] = status['spend_available'] and all(
+                    hosted_limits.get(key, 0) > 0 for key in ('total_remaining_usd', 'daily_remaining_usd', 'session_remaining_usd'))
+            status.pop('max_job_reservation_usd', None)
+            for option in status.get('available_models', []):
+                option.pop('max_job_reservation_usd', None)
+            for key in ('key_source', 'key_remembered', 'credential_error', 'environment_key_configured'):
+                status.pop(key, None)
+            status.update(owner_controls=False, usage_managed=True, remember_supported=False,
+                          note='AI connection and usage are managed by the workspace owner.')
+            self._reply(200, status)
+            return
         if method == 'POST' and route == '/api/investigations' and not runtime.ai.status()['configured']:
             self._error(403, 'Live AI is disabled for this hosted deployment. Saved engineering work remains available.')
             return

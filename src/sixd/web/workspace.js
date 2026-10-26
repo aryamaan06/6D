@@ -10,6 +10,8 @@
   const ai = {scope:'requirement',status:null, statusError:'', statusLoading:false, evaluation:null, evaluationError:'', evaluationLoading:false, requirementId:null, question:'', records:[], error:'', loading:false, loadedContext:'', starting:false, connecting:false, context:'', generation:0, timer:null, controller:null};
   ai.testSelection=null;
   ai.modelChoice=null;
+  state.hosted=true;
+  const editedDialogs=new WeakSet();
   const reviewGuide={open:true,exportedRun:null};
   try{reviewGuide.open=localStorage.getItem('sixd.review-guide.dismissed')!=='yes';}catch{}
   const testLinks={key:'',pending:'',profile:null,error:'',serial:0,controller:null,timer:null};
@@ -335,7 +337,8 @@
   function chip(status) {
     const labels={met:'Met',not_met:'Not met',not_assessed:'Not assessed',insufficient_accuracy:'Insufficient accuracy',accuracy_not_assessed:'Accuracy not assessed',supported:'Grid agreement supported',stale:'Needs recheck',pending:'Not run',draft:'Draft · needs recheck',completed:'Calculated',invalid_inputs:'Invalid inputs'};
     const cls=status==='met'||status==='completed'?'sd-met':status==='not_met'||status==='invalid_inputs'?'sd-fail':['stale','draft','pending','insufficient_accuracy','accuracy_not_assessed'].includes(status)?'sd-pending':'';
-    return '<span class="sd-chip '+cls+'">'+esc(labels[status]||human(status))+'</span>';
+    const meanings={met:'The saved calculation meets the declared condition within its model scope.',not_met:'The saved calculation misses the declared condition. Inspect its value, limit and assumptions.',not_assessed:'There is not enough applicable evidence to decide; this is not automatically a failed design.',pending:'Run checks for this saved revision before drawing a conclusion.'};
+    return '<span class="sd-chip '+cls+'"'+(meanings[status]?' title="'+esc(meanings[status])+'"':'')+'>'+esc(labels[status]||human(status))+'</span>';
   }
   function modelStatus(r) {return r?.status==='completed'&&r.numerical_accuracy&&r.numerical_accuracy.status!=='supported'?(r.numerical_accuracy.status==='insufficient_accuracy'?'insufficient_accuracy':'accuracy_not_assessed'):r?.status||'pending';}
   function historicalAccuracyNotice(modelId,run=currentRun()) {
@@ -484,6 +487,7 @@
     if(!state.data)return;
     window.SixDWorkspaceShell.renderChrome({page:state.page,project:project(),revision:state.data.revision,
       system:activeSystem(),selected:selectedLocationLabel(),backEnabled:navigation?.canBack});
+    root.querySelectorAll('[data-owner-only],[data-action="owner-settings"],[data-action="ai-quality"]').forEach(el=>el.hidden=state.hosted);
     icons();
   }
   function closeNavigationDialogs() {
@@ -518,7 +522,7 @@
     }finally{if(!initial){setBusy(false);if(state.data)render();}}
   }
   function unmountWorkspaceViews() {
-    for(const name of ['SixDReviewWorkspace','SixDEnvelopes','SixDSimulationImports','SixDPoweredFlight','SixDGuidedAscent','SixDStagedAscent','SixDSimulation','SixDTestData','SixDScenarios','SixDActions','SixDSources','SixDChains','SixDAttitude','SixDPowerBudget','SixDSystems','SixDAIQuality'])window[name]?.unmount?.();
+    for(const name of ['SixDReviewWorkspace','SixDEnvelopes','SixDSimulationImports','SixDPoweredFlight','SixDGuidedAscent','SixDStagedAscent','SixDSimulation','SixDTestData','SixDScenarios','SixDActions','SixDSources','SixDChains','SixDAttitude','SixDPowerBudget','SixDSystems','SixDAIQuality','SixDOwnerSettings'])window[name]?.unmount?.();
     for(const context of [coverageLinks,comparisonView,researchView,actionLinks,sourceLinks]){context.dispose?.();context.dispose=null;}
   }
   function render() {
@@ -779,6 +783,14 @@
     return '<article class="sd-reader"><span class="sd-label">'+(state.draft?'R'+state.data.revision+' → draft':'Revision R'+state.data.revision)+'</span><h2>Review the difference.</h2><p class="sd-lead">A changed input identifies dependencies needing review. New calculation outcomes appear only after checks run.</p>'+(!state.draft&&priorRun()?'<p class="sd-table-note">Compared with the nearest earlier recorded review: R'+priorRun().revision+'.</p>':!state.draft&&state.data.configuration_base?'<p class="sd-table-note">Compared with saved configuration R'+state.data.configuration_base.revision+'. This comparison describes supplied record changes only.</p>':'')+structuralChanges(info)+(rows.length?rows.map(row=>'<div class="sd-change-card"><strong>'+esc(row.title)+'</strong><div class="sd-change-values"><span class="sd-before">'+measure(row.before)+'</span><span>→</span><span class="sd-after">'+measure(row.after)+'</span></div>'+(row.before?.unit!==row.after?.unit?'<p class="sd-small sd-muted">Unit changed; no implicit conversion.</p>':'')+(!same(row.before?.source,row.after?.source)?'<p class="sd-small sd-muted">Source: '+esc(row.before?.source || '—')+' → '+esc(row.after?.source || '—')+'</p>':'')+'</div>').join(''):'<div class="sd-notice">No changed input records in this comparison. '+(!state.draft?'Create a draft from the latest revision to review a new change.':'Edit any input value, unit or source.')+'</div>')+interfaceSlot('changes')+sourceSlot('changes')+actionSlot('changes')+testEvidenceSlot('changes',[])+'<h3>Calculator dependency impact</h3><p>'+(state.draft?(state.impact?'Server-checked draft preview.':'Local draft preview; use Preview impact to validate with the server.'):'Saved revision dependency comparison.')+'</p><div class="sd-affected-list">'+(info.affected_model_ids||[]).map(id=>'<button type="button" data-kind="model" data-id="'+esc(id)+'">'+esc(human(id))+'<span class="sd-chip sd-pending">Model dependency</span></button>').join('')+(info.affected_requirement_ids||[]).map(id=>'<button type="button" data-kind="requirement" data-id="'+esc(id)+'">'+esc(req(id)?.title || id)+chip(reqStatus(id))+'</button>').join('')+'</div>'+(!(info.affected_requirement_ids||[]).length?'<p>No calculator requirement dependencies are affected by the supplied edits. Interface review flags are shown separately above.</p>':'')+receiptInfo()+'<div class="sd-action-row">'+(state.draft?'<button type="button" class="sd-button sd-primary" data-action="save" '+(!dirty()||editErrors().length?'disabled':'')+'>Save revision</button>':!currentRun()?'<button type="button" class="sd-button sd-primary" data-action="run">Rerun affected checks</button>':'<button type="button" class="sd-button" data-action="report">Open revised report</button>')+'<button type="button" class="sd-button sd-quiet" data-action="back">Return to system</button></div></article>';
   }
   function renderMain() {
+    window.SixDOwnerSettings?.unmount();
+    if(state.hosted&&['owner-settings','ai-quality'].includes(state.page)){
+      unmountWorkspaceViews();$('#sd-view-content').innerHTML='<article class="sd-reader"><h2>Owner settings are unavailable here.</h2><p>This is an isolated reviewer workspace. Its owner manages connections, usage and diagnostics.</p><button class="sd-button" data-action="review-home">Return to overview</button></article>';return;
+    }
+    if(state.page==='owner-settings'){
+      unmountWorkspaceViews();$('#sd-view-content').innerHTML='<div id="sd-owner-host"></div>';
+      window.SixDOwnerSettings.mount($('#sd-owner-host'),{api,records:ai.records,onNebius:()=>void action('manage-nebius'),onTavily:()=>void action('manage-tavily'),onNavigate:name=>void action(name)});return;
+    }
     if(window.SixDWorkspaceShell.hubs.has(state.page)){
       unmountWorkspaceViews();
       $('#sd-view-content').innerHTML=window.SixDWorkspaceShell.hub(state.page,state.projects,state.data.project_id);
@@ -872,7 +884,7 @@
         if(state.data?.project_id!==projectId||state.data?.revision!==revision)return;
         sourceLinks.serial++;sourceLinks.controller?.abort();sourceLinks.pending='';sourceLinks.profile=profile;sourceLinks.key=sourceLinkKey();sourceLinks.error='';hydrateSourceLinks();void refreshActionLinks(true);
       }});
-      researchView.dispose=window.SixDResearch.mount($('#sd-source-research'),{api,projectId,revision,hasDraft:!!state.draft,canEdit:latest(),
+      researchView.dispose=window.SixDResearch.mount($('#sd-source-research'),{api,projectId,revision,hasDraft:!!state.draft,canEdit:latest(),onOwnerSettings:()=>void action('owner-settings'),
         onUseReference:(source,context)=>{
           if(state.data?.project_id!==projectId||state.data?.revision!==revision)return false;
           const copied=window.SixDSources.prefill(source,context?.target_id);
@@ -1157,11 +1169,12 @@
     const next=state.data?JSON.stringify([state.data.project_id,state.data.revision,currentRun()?.run_id||null,ai.scope,ai.requirementId,ai.testSelection?.comparisonId||null,ai.testSelection?.rowNumber||null]):'';
     if(next!==ai.context){stopInvestigationPolling();ai.context=next;ai.question='';ai.records=[];ai.error='';ai.loading=false;ai.loadedContext='';ai.starting=false;}
   }
-  function aiStatusMarkup() {
-    const s=ai.status;
-    if(!s)return '<p class="sd-small sd-muted">'+esc(ai.statusError || 'Reading local AI configuration…')+'</p>';
-    const connectionNote=s.credential_error?'<p class="sd-notice">The saved connection could not be restored or updated. Re-enter the key privately, or forget the saved copy. No provider request was made.</p>':s.key_remembered?'<p class="sd-small sd-muted">Saved encrypted on this device. 6D restores the key on startup without making an inference call.</p>':s.key_source==='environment'?'<p class="sd-small sd-muted">Connected from the NEBIUS_API_KEY environment variable. Remove that variable to prevent its use on a later start.</p>':s.key_present?'<p class="sd-small sd-muted">Connected for this server session only. The key is not remembered.</p>':'';
-    return connectionNote+'<div class="sd-ai-connection"><span class="sd-dot '+(s.key_present?'sd-green':'sd-amber')+'"></span><strong>'+(s.key_present?'Key connected locally':'No key connected')+'</strong></div><p class="sd-small sd-muted">'+esc(selectedAIModel()?.model?providerModelLabel(selectedAIModel().model):s.model?providerModelLabel(s.model):'Model not configured')+' · Nebius Token Factory</p><dl class="sd-details-grid sd-ai-budget"><dt>Approved development allowance</dt><dd>'+dollars(s.budget?.cap_usd)+'</dd><dt>Cumulative reservations</dt><dd>'+dollars(s.budget?.reserved_usd)+'</dd><dt>Reservation capacity remaining</dt><dd>'+dollars(s.budget?.remaining_usd)+'</dd></dl><p class="sd-small sd-muted">Per investigation: at most '+esc(s.max_job_requests ?? 6)+' requests and '+dollars(selectedAIModel()?.max_job_reservation_usd ?? s.max_job_reservation_usd ?? .10)+' reserved. These conservative reservations track the application’s allowance; your Nebius console shows the actual balance and billed usage.</p>'+(!s.configured?'<p class="sd-notice">Live provider setup is not ready. '+esc(s.note || '')+'</p>':s.provider_mode&&s.provider_mode!=='live_token_factory'?'<p class="sd-notice">Offline test provider · no live NVIDIA inference.</p>':!(ai.scope==='project'?s.whole_project_live_validated:s.live_validated)?'<p class="sd-small sd-muted">This investigation scope has no completed live record matching its source versions and provider settings. Earlier live receipts remain available in saved history.</p>':'');
+  function aiStatusMarkup(owner=false) {
+    const s=ai.status;if(!s)return '<p class="sd-small sd-muted">Reading AI connection status…</p>';
+    const name=providerModelLabel(selectedAIModel()?.model||s.model);
+    const basic='<div class="sd-ai-connection"><span class="sd-dot '+(s.key_present?'sd-green':'sd-amber')+'"></span><strong>'+(s.key_present?'AI connected':'AI not connected')+'</strong></div><p class="sd-small sd-muted">'+esc(name)+' · Nebius Token Factory</p>';
+    if(!owner)return basic+(!s.configured?'<p class="sd-notice">AI is unavailable. Your saved calculations and evidence remain accessible.</p>':'')+(s.provider_mode&&s.provider_mode!=='live_token_factory'?'<p class="sd-notice">Offline test provider · no live inference.</p>':'');
+    return basic+'<p class="sd-small">'+(s.key_remembered?'The key is remembered in encrypted local storage.':'The connection is managed for this server session.')+'</p><dl class="sd-details-grid sd-ai-budget"><dt>Approved development allowance</dt><dd>'+dollars(s.budget?.cap_usd)+'</dd><dt>Cumulative reservations</dt><dd>'+dollars(s.budget?.reserved_usd)+'</dd><dt>Reservation capacity remaining</dt><dd>'+dollars(s.budget?.remaining_usd)+'</dd></dl><p class="sd-small">These are conservative application reservations, not your Nebius wallet balance or bill.</p>';
   }
   async function refreshAiStatus() {
     if(ai.statusLoading)return;
@@ -1170,9 +1183,9 @@
     catch(error){ai.status=null;ai.statusError='AI configuration could not be read. Local calculation records remain available.';}
     finally{ai.statusLoading=false;}
     $('#sd-ai-header-status').textContent=ai.status?.key_present?'Local records · AI on request':'Local records · AI key not connected';
-    $('#sd-ai-connect-label').textContent=ai.status?.key_present?'AI connected':'Connect AI';
+    $('#sd-ai-connect-label').textContent='Owner settings';
     const status=$('#sd-ai-status');if(status)status.innerHTML=aiStatusMarkup();
-    const settings=$('#sd-ai-settings-status');if(settings)settings.innerHTML=aiStatusMarkup();
+    const settings=$('#sd-ai-settings-status');if(settings)settings.innerHTML=aiStatusMarkup(true);
     updateModelChoiceControls();
     $('#sd-ai-disconnect-button').disabled=(!ai.status?.key_present&&!ai.status?.key_remembered)||ai.connecting;
     $('#sd-ai-disconnect-button').textContent=ai.status?.key_remembered?'Disconnect & forget':'Disconnect key';
@@ -1238,7 +1251,7 @@
     if(!ai.status.key_present)return 'Connect your Nebius key to enable a live investigation.';
     if(!ai.status.configured)return 'Live provider setup is not ready.';
     if(!selectedAIModel())return 'Choose an available investigation model before starting.';
-    if(!(ai.status.budget?.remaining_usd>0))return 'The approved cumulative allowance has no remaining capacity.';
+    if(!(typeof ai.status.spend_available==='boolean'?ai.status.spend_available:ai.status.budget?.remaining_usd>0))return 'AI usage is currently paused by the workspace limits.';
     if(ai.status.investigation_active)return 'An AI investigation is running. Wait for it to finish before starting another.';
     if(ai.records.some(investigationActive))return 'An investigation is still running for this scope.';
     if(ai.loading)return 'Reading saved investigations before allowing a new request.';
@@ -1261,7 +1274,7 @@
   function wholeProjectEvidenceMarkup(record) {
     const findings=record.canonical_findings||{}, rows=record.priorities||[], deps=record.evidence?.dependencies, changes=record.evidence?.changes;
     const context=(deps?'<p class="sd-small"><strong>Calculated:</strong> '+esc((deps.executed_model_ids||[]).join(', ')||'None')+'<br><strong>Reused:</strong> '+esc((deps.reused_model_ids||[]).join(', ')||'None')+'</p>':'')+(changes?'<details class="sd-source"><summary>Application-owned revision changes</summary><p>'+esc(changes.note)+'</p>'+(changes.comparison?'<p>Changed inputs: '+esc(changes.comparison.changed_inputs.join(', ')||'None')+'<br>Findings needing recheck after the change: '+esc(changes.comparison.previous_evidence_needs_rechecking.join(', ')||'None')+'</p>':'')+Object.entries(changes.requirement_directions||{}).map(([id,c])=>'<details><summary>'+esc(id)+'</summary>'+c.comparisons.filter(r=>r.direction!=='unchanged').map(r=>'<p><strong>'+esc(r.label)+'</strong> · '+esc(human(r.direction))+'<br>'+measure(r.before)+' → '+measure(r.after)+'</p>').join('')+'</details>').join('')+'</details>':'');
-    return '<section class="sd-source"><h3>Application-owned project evidence</h3><p class="sd-small">'+esc(record.priority_policy||'Review queue; not a failure-risk ranking.')+'</p>'+rows.map(row=>'<details class="sd-source"><summary>'+chip(row.status)+' '+esc(row.title||row.requirement_id)+'</summary><p>'+esc(findings[row.requirement_id]?.reason||'')+'</p><dl class="sd-details-grid"><dt>Saved metric</dt><dd>'+measure(findings[row.requirement_id]?.evidence?.metric)+'</dd><dt>Declared criterion</dt><dd>'+esc(findings[row.requirement_id]?.evidence?.operator||'')+' '+measure(findings[row.requirement_id]?.evidence?.limit)+'</dd></dl>'+row.review_actions.map(a=>'<p><strong>'+esc(a.title)+'</strong><br>'+esc(a.action)+'</p>').join('')+'</details>').join('')+context+'<p class="sd-small">Elapsed: '+(typeof record.elapsed_seconds==='number'?esc(record.elapsed_seconds.toFixed(2))+' s':'Pending')+' · Reservations: '+dollars(record.reserved_usd)+' · Provider token usage: '+esc(record.usage_complete?record.usage?.total_tokens:'Unavailable / incomplete')+'. Usage-based estimate at configured price ceilings: '+dollars(record.usage_estimate_usd)+'. Neither this estimate nor reservations are a provider invoice.</p><p class="sd-small sd-muted">Limited explanation guards do not establish semantic correctness. Independent human review remains pending.</p></section>';
+    return '<section class="sd-source"><h3>Application-owned project evidence</h3><p class="sd-small">'+esc(record.priority_policy||'Review queue; not a failure-risk ranking.')+'</p>'+rows.map(row=>'<details class="sd-source"><summary>'+chip(row.status)+' '+esc(row.title||row.requirement_id)+'</summary><p>'+esc(findings[row.requirement_id]?.reason||'')+'</p><dl class="sd-details-grid"><dt>Saved metric</dt><dd>'+measure(findings[row.requirement_id]?.evidence?.metric)+'</dd><dt>Declared criterion</dt><dd>'+esc(findings[row.requirement_id]?.evidence?.operator||'')+' '+measure(findings[row.requirement_id]?.evidence?.limit)+'</dd></dl>'+row.review_actions.map(a=>'<p><strong>'+esc(a.title)+'</strong><br>'+esc(a.action)+'</p>').join('')+'</details>').join('')+context+'<p class="sd-small sd-muted">Limited explanation guards do not establish semantic correctness. Independent human review remains pending.</p></section>';
   }
   function renderAssistant() {
     syncAssistantContext();if(ai.scope==='project'){renderProjectAssistant();return;}const r=req(ai.requirementId);
@@ -1547,6 +1560,11 @@
     }catch(error){if(context===ai.context){ai.error='The investigation was not started or could not be confirmed. Refresh saved investigations before trying again. '+error.message;renderAiHistory();}}
     finally{if(context===ai.context){ai.starting=false;updateAiControls();}}
   }
+  function openTavilySettings(){
+    let dialog=$('#sd-tavily-dialog');
+    if(!dialog){dialog=document.createElement('dialog');dialog.id='sd-tavily-dialog';dialog.setAttribute('aria-label','Owner Tavily connection');dialog.innerHTML='<div class="sd-dialog-header"><h2>Tavily connection</h2><button type="button" class="sd-icon-button" data-tavily-close aria-label="Close Tavily connection">×</button></div><div id="sd-tavily-settings"></div>';root.append(dialog);dialog.querySelector('[data-tavily-close]').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{window.SixDResearch.unmount();$('#sd-tavily-settings').replaceChildren();});}
+    window.SixDResearch.mount($('#sd-tavily-settings'),{api,connectionOnly:true,projectId:state.data.project_id,revision:state.data.revision,hasDraft:!!state.draft,canEdit:latest()});dialog.showModal();
+  }
   async function showAiSettings() {
     $('#sd-ai-key').value='';$('#sd-ai-remember').checked=false;$('#sd-ai-connect-error').hidden=true;$('#sd-ai-evaluation-status').innerHTML=evaluationStatusMarkup();$('#sd-ai-connect-dialog').showModal();await Promise.all([refreshAiStatus(),refreshEvaluationStatus()]);
   }
@@ -1624,7 +1642,7 @@
     },'Empty R1 saved locally. Choose Edit draft to add your explicit engineering setup.');
   }
   async function action(name) {
-    const pageAction=['projects','engineering','analysis','evidence','setup','system','review-home','guided-overview','guided-table','guided-latest','report','changes','back','systems','chains','attitude','powered-flight','vertical-mode','guided-ascent','staged-ascent','power','sources','actions','coverage','comparison','simulation','scenarios','envelopes','simulation-imports','test-data','author-project','project-investigate','new-project','import','rocket-reference','ai-quality'];
+    const pageAction=['projects','engineering','analysis','evidence','setup','owner-settings','ai-settings','system','review-home','guided-overview','guided-table','guided-latest','report','changes','back','systems','chains','attitude','powered-flight','vertical-mode','guided-ascent','staged-ascent','power','sources','actions','coverage','comparison','simulation','scenarios','envelopes','simulation-imports','test-data','author-project','project-investigate','new-project','import','rocket-reference','ai-quality'];
     if(state.stagedProfileEdit&&pageAction.includes(name)){message('Apply or cancel the open thrust-profile edit before navigating. Your edits are still open.');return;}
     if(name==='navigation-back'){if(navigation?.canBack)navigation.back();return;}
     if(['projects','engineering','analysis','evidence','setup','system'].includes(name)){
@@ -1645,10 +1663,12 @@
 
     if(name==='tree'){root.classList.toggle('sd-tree-open');return;}
     if(name==='new-project'){await showNewProject();return;}
-    if(name==='close-new'){$('#sd-new-dialog').close();return;}
-    if(name==='close-author-editor'){$('#sd-author-dialog').close();author.editor=null;return;}
+    if(name==='close-new'){window.SixDOverlayDismiss.requestClose($('#sd-new-dialog'),'close-button');return;}
+    if(name==='close-author-editor'){window.SixDOverlayDismiss.requestClose($('#sd-author-dialog'),'close-button');return;}
     if(name==='close-import'){$('#sd-import-dialog').close();return;}
-    if(name==='ai-settings'){await showAiSettings();return;}
+    if(name==='owner-settings'||name==='ai-settings'){state.page='owner-settings';state.panel='details';stopInvestigationPolling();render();return;}
+    if(name==='manage-nebius'){if(!state.hosted)await showAiSettings();return;}
+    if(name==='manage-tavily'){if(!state.hosted)openTavilySettings();return;}
     if(name==='ai-source-question'){
       syncAssistantContext();if(!req(ai.requirementId))return;
       ai.question='Explain this saved finding and how its linked references relate to the declared requirement and model assumptions. Identify stale links, missing support and a concrete next engineering check. Treat references as unverified supplemental context; preserve the recorded finding.';
@@ -1820,6 +1840,7 @@
   root.addEventListener('input',event=>{
     if(state.busy)return;
     const el=event.target;
+    const dialog=el.closest('dialog');if(dialog)editedDialogs.add(dialog);
     if(el.id==='sd-ai-question'){ai.question=el.value;updateAiControls();return;}
     if(state.draft&&el.dataset.projectField){state.draft[el.dataset.projectField]=el.value;draftChanged(false);return;}
     if(!state.draft||!el.dataset.input)return;
@@ -1863,10 +1884,16 @@
     const tabs=[...event.target.closest('[role="tablist"]').querySelectorAll('[role="tab"]')];let index=tabs.indexOf(event.target);index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:tabs.length-1))%tabs.length;event.preventDefault();tabs[index].focus();tabs[index].click();
   });
   window.addEventListener('beforeunload',event=>{if(dirty()||author.editor||state.stagedProfileEdit){event.preventDefault();event.returnValue='';}});
+  root.addEventListener('sixd:before-dismiss',event=>{
+    const dialog=event.target;
+    if((dialog.id==='sd-author-dialog'||dialog.id==='sd-new-dialog')&&editedDialogs.has(dialog)&&!window.confirm('Close this form and discard its unapplied entries? Saved project data and applied draft changes remain intact.'))event.preventDefault();
+  });
+  for(const dialog of root.querySelectorAll('dialog'))dialog.addEventListener('close',()=>{editedDialogs.delete(dialog);if(dialog.id==='sd-author-dialog')author.editor=null;});
   $('#sd-ai-connect-dialog').addEventListener('cancel',()=>{$('#sd-ai-key').value='';});
   $('#sd-ai-connect-dialog').addEventListener('close',()=>{$('#sd-ai-key').value='';});
   async function init() {
     navigation=window.SixDNavigation.create({read:locationSnapshot,apply:restoreLocation,onError:showError,onChange:renderLocation});
+    try{state.hosted=(await api('/api/hosted/status')).hosted!==false;}catch{state.hosted=true;}
     icons();let last=null;try{last=localStorage.getItem('sixd.workspace.last-project');}catch{}
     let initial=null;
     try{initial=navigation.getInitial();}catch(error){showError(error);}

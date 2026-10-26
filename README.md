@@ -36,6 +36,8 @@ Windows users can opt into **Remember on this device** separately for Nebius, Ta
 
 The application opens on **Projects**. Select a saved project, then choose **Overview**, **Engineering**, **Simulations & studies**, **Evidence & review** or **Project setup**. Breadcrumbs and browser Back/Forward retain the saved-view location. [Navigation and typography guide](docs/WORKSPACE_NAVIGATION.md).
 
+Overview connects the main design/change/recalculation journey and explains result states. **Owner settings** separates service management and development accounting from engineering work. Popups support outside-click/Escape dismissal, with confirmation before discarding edited authoring forms. Ultra's fresh six-case workflow screen passed all six constructed cases; the old 2/6 record remains dated history with three cases explicitly untested. [Build 3 guide](docs/BUILD3_CLARITY.md) · [Measured results and limits](docs/BUILD3_CLARITY_RESULTS.md).
+
 For a connected rocket example, choose **Try the rocket example** on Projects or **Project setup → Rocket reference**, create the project and calculate its baseline. Review overview stages a thrust reduction and correction through the normal preview/save/rerun controls. Five bounded calculations share explicit inputs and scalar links; launch guidance stays unassessed. [Reference walkthrough and verification](docs/BUILD_A_RESULTS.md).
 
 A fresh checkout opens without saved private project data or provider credentials. Use **Import project** to choose a constructed reference, explicitly create it, and **Run checks**. **Guided review** follows a design change; **Powered flight** offers its existing vertical-ascent reference. Loading a page never silently calculates a new verdict. [Powered-flight walkthrough](docs/POWERED_FLIGHT.md).
@@ -64,15 +66,15 @@ The contextual Assistant calls **NVIDIA Nemotron through Nebius Token Factory** 
 
 | Candidate | Recorded evidence | Current use |
 | --- | --- | --- |
-| Nano | Completed earlier case packs; rejected its first read action in the corrected October 20 three-case comparison, leaving two tasks untested. | Historical CLI configuration; not the selected browser Assistant. |
+| Nano | Completed earlier case packs; rejected its first read action in the corrected October 20 three-case comparison, leaving two tasks untested. Build 2 records later corrected-protocol completions and source limits. | Available per investigation; not the default. |
 | Super | Selected from earlier reviewed comparison evidence. An October 20 explanation reversed a limit-change direction; a separate offline replay under the new guard rejects it. Four earlier constructed qualification cases completed after that correction. Build D separately records a current-source project-specific changed-rocket check, historical generic replies and preserved rejections. | Selected project Assistant. |
-| Ultra | Completed all three October 20 corrected-contract cases; earlier failures and skipped cases remain recorded. It has not completed the current four-case pack. | Evaluated candidate; not enabled as an automatic deep mode. |
+| Ultra | Completed all three October 20 corrected-contract cases and all six Build 3 constructed workflow cases. Earlier failures/skipped cases remain intact; the separate current four-case quality pack is not established by these results. | Available per investigation; no automatic promotion or escalation. |
 
 These observations concern particular protocols, cases and settings; they are not a universal model ranking. [Comparison results](docs/APPLICATION_ROLES_LIVE_RESULTS.md) · [Direction guard and replay](docs/CHANGE_DIRECTION_RESULTS.md) · [Recorded requirement qualification](docs/AI_QUALIFICATION_RESULTS.md).
 
-Earlier live receipts retain their original policies and source identities. Current-build live qualification is pending after the source/guard corrections; offline tests do not replace it.
+Earlier live receipts retain their original policies and source identities. Build 3 adds a source-current Ultra six-case workflow result; this does not qualify every model/scope on the final source or replace human semantic validation. [Fresh and historical evidence](docs/BUILD3_CLARITY_RESULTS.md).
 
-Connect a Nebius key privately through **Connect AI** after configuring an approved provider allowance. [Provider setup](docs/PROVIDER_SETUP.md). Local engineering calculations and saved evidence work without inference; new AI investigations require a usable Token Factory connection. No paid call occurs on startup or connection. The cumulative reservation ledger, per-job ceilings and no-retry policy remain enforced; reservations are not a provider invoice.
+Connect a Nebius key privately through **Owner settings → Manage Nebius connection** after configuring an approved provider allowance. [Provider setup](docs/PROVIDER_SETUP.md). Local engineering calculations and saved evidence work without inference; new AI investigations require a usable Token Factory connection. No paid call occurs on startup or connection. The cumulative reservation ledger, per-job ceilings and no-retry policy remain enforced; reservations are not a provider invoice.
 
 Tavily supplies explicit reference searches followed by human review/save/link steps. LangSmith receives only an explicitly approved, previewed metrics record. [Tavily live result](docs/TAVILY_LIVE_RESULTS.md) · [Connection and privacy details](docs/AI_QUALIFICATION.md). Each service has a separate private key form.
 
