@@ -30,7 +30,7 @@ Python **3.10+** is required; the application runtime uses the standard library.
 
 On Windows, `Setup-6D.cmd`, `Open-6D.cmd` and `Stop-6D.cmd` provide the same workflow; `py -3` may be used in place of `python`. On Linux/macOS, use `python3`. Windows has native launcher verification; the other platforms still need native qualification. [Setup, backup and recovery details](docs/RELEASE_HANDOVER.md).
 
-The Assistant offers **Nano, Super and Ultra per investigation**, with the chosen model recorded in history and the same shared spending controls. Selecting a model sends nothing; explicit Start runs it. [Model guide](docs/THREE_MODEL_CHOICES.md) · [Measured results and preserved failures](docs/THREE_MODEL_RESULTS.md).
+The animated **Ask 6D rocket** stays available throughout the workspace and opens a centered conversation for **Nemotron investigations** or **Tavily reference search**. It offers **Nano, Super and Ultra per investigation**, with the chosen model recorded in history and the same shared spending controls. Selecting a model sends nothing; explicit Start runs it. Inspector/Evidence now sits in the central workspace with folded technical detail; there is no separate right-hand Assistant section. [Rocket guide](docs/ROCKET_ASSISTANT.md) · [Delivery checks](docs/ROCKET_ASSISTANT_RESULTS.md) · [Measured model results and preserved failures](docs/THREE_MODEL_RESULTS.md).
 
 Windows users can opt into **Remember on this device** separately for Nebius, Tavily and LangSmith. Protected keys restore locally after restart without provider calls. Tavily reservations and LangSmith preview/upload approval remain intact; credential files are excluded from backups. [Connection controls and limits](docs/REMEMBERED_SERVICE_CONNECTIONS.md) · [Build E checks](docs/BUILD_E_RESULTS.md).
 
@@ -56,7 +56,7 @@ Judge-email recommendations and their concrete 6D actions, evidence and remainin
 2. Calculate a saved baseline and inspect its findings, assumptions, numerical support and exclusions.
 3. Edit a draft and preview the declared dependencies affected by a change.
 4. Save the revision and explicitly rerun affected checks. Inspect calculation/reuse origins and compare retained runs.
-5. Investigate a finding or choose **Investigate project** to review related saved findings, changes and next checks with Nemotron; review references, track follow-up actions and export the evidence.
+5. Click the **Ask 6D rocket**, choose a requirement or whole-project scope, and explicitly investigate saved findings/changes with Nemotron. Its **Find references** tab searches with Tavily; review passages before manually saving/linking them in Source library. Track follow-up actions and export the evidence.
 
 Working views include the system canvas/table/reader, review overview, change comparison, coverage, action queue, reports, orbital, vertical, planar and staged-flight playback, simulation-history imports and sampled operating-envelope studies. [Current capabilities and boundaries](docs/CONNECTED_REVIEW.md) · [Agreed A–F build scope](docs/HACKATHON_BUILD_SCOPE.md).
 

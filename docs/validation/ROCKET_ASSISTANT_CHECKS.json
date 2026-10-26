@@ -1,0 +1,133 @@
+{
+  "schema": "sixd.rocket-companion-delivery.v1",
+  "date": "2026-10-26",
+  "build_id": "e92a749b1f48",
+  "python_regressions": {
+    "ran": 48,
+    "passed": 47,
+    "skipped": 1,
+    "skip_reason": "Windows Docker unavailable",
+    "full_discovery": false
+  },
+  "node_history_contracts_passed": 6,
+  "browsers": {
+    "rocket": {
+      "groups_passed": 12,
+      "checks": [
+        "One animated rocket is available on Projects, overview, systems, planar/staged analysis and sources without standalone AI tabs or service calls",
+        "Rocket exhaust and hover honor reduced-motion preferences",
+        "Requirement facts are centred in the main workspace with technical detail folded, and the third/right column is gone",
+        "Nemotron opens in the centred rocket conversation with all three models and no ordinary financial accounting",
+        "Model choice, close/reopen, Escape and outside dismissal preserve the unsent question without making requests",
+        "Only explicit Start invokes the chosen Ultra model through the unchanged requirement evidence workflow",
+        "Whole-project review remains accessible inside the same rocket, retaining explicit model choice and one request start",
+        "A delayed Tavily profile stays bound to its captured project; reopening on Projects cannot activate the old form and resolves to a choose-project notice",
+        "Tavily requires one explicit search; preview and copy hand off to an unsaved Source library form without automatic source saving",
+        "The centred rocket dialog fits a narrow mobile viewport without horizontal overflow",
+        "Hosted reviewers get the rocket while owner controls, financial amounts and administrative service routes remain protected",
+        "Canonical engineering and the shared cap remain unchanged; only deliberate synthetic investigations/search and visitor login posted"
+      ],
+      "synthetic_providers": true,
+      "external_requests": 0,
+      "browser_errors": [],
+      "unexpected_http": []
+    },
+    "model_choices": {
+      "groups_passed": 8,
+      "checks": [
+        "Requirement Assistant offers Nano, Super and Ultra; retained records name their actual models",
+        "Choosing every model retains the question and history, updates consent, and makes no POST or provider request",
+        "Changing investigation scope while a requirement job runs retains the global busy guard without another POST",
+        "Explicit requirement start reaches Ultra; switching is disabled while running and never creates a second request",
+        "A new chosen-model job does not rewrite historical Nano, Super or Ultra receipts",
+        "Whole-project Assistant retains all choices and sends the explicitly selected Nano with project scope",
+        "Assistant body and helper type meet readable sizes; mobile fields are at least sixteen pixels without page overflow",
+        "Shared synthetic allowance is preserved, canonical engineering unchanged, and only the two explicit investigation POSTs occur"
+      ],
+      "synthetic_providers": true,
+      "external_requests": 0,
+      "browser_errors": [],
+      "unexpected_http": []
+    },
+    "clarity": {
+      "groups_passed": 11,
+      "checks": [
+        "Overview explains all three result meanings and the main journey while preserving engineering values",
+        "Review report retains quantitative criteria and unassessed scope without changing their meaning",
+        "Normal requirement investigation keeps all models and history without visible financial accounting",
+        "Whole-project investigation also keeps owner accounting out of the working view",
+        "Detailed connection and spend controls remain available in the explicit owner surface",
+        "Clicking outside owner connection dialog dismisses it and clears the unsaved key field",
+        "Dynamically created Tavily settings dismiss outside, destroy the private field and reopen empty without connecting",
+        "Outside, close-button and Escape dismissal preserve edited project-form entries when declined; explicit discard closes the form",
+        "Clear overview and result explanations fit a narrow mobile viewport",
+        "Protected visitor session has financial-status redaction and cannot execute or read owner administrative diagnostics",
+        "Navigation/settings made no inference/search/upload/save calls and left the owner fixture unchanged"
+      ],
+      "synthetic_providers": true,
+      "external_requests": 0,
+      "browser_errors": [],
+      "unexpected_http": []
+    },
+    "navigation": {
+      "groups_passed": 17,
+      "checks": [
+        "Selected project and saved revision have an addressable overview",
+        "Five broad work areas are reachable without a flat list of every tool",
+        "Native browser Back and Forward restore internal locations",
+        "Reload preserves the routed project, saved revision and work area",
+        "A deep link to a historical revision survives reload",
+        "System Table, selected requirement and evidence panel survive deep reload with a parent breadcrumb",
+        "Same-project page navigation and Back retain the unsaved shared draft without a database write",
+        "Cancelled project switch preserves draft; confirmed switch explicitly discards it",
+        "Cancelling browser Back across project context preserves URL, displayed project and draft",
+        "Accepting browser Back loads the previous saved project and discards only the unsaved draft",
+        "Back during a delayed project load leaves URL and displayed project in the same context",
+        "Unapplied stage-profile values survive blocked area, project and revision navigation",
+        "Browser Back cannot remount or discard an unapplied stage-profile form",
+        "Explicit profile cancellation restores navigation while saved staged inputs stay unchanged",
+        "Requested local editorial typography, ink and soft canvas are applied without remote fonts",
+        "Navigation layout stays within a narrow viewport",
+        "Original fixture receipts unchanged; no provider, search, upload, calculation or save POSTs; no browser errors"
+      ],
+      "synthetic_providers": true,
+      "external_requests": 0,
+      "browser_errors": [],
+      "unexpected_http": []
+    }
+  },
+  "live_provider_calls": 0,
+  "paid_tavily_searches": 0,
+  "metrics_uploads": 0,
+  "numerical_solver_sources_changed": false,
+  "default_model_changed": false,
+  "provider_acceptance_policy_changed": false,
+  "public_hosting_delivered": false,
+  "privacy": {
+    "private_raw_records_published": false,
+    "real_credential_candidates": 0,
+    "known_synthetic_test_literals_reviewed": 1,
+    "private_runtime_files_tracked": 0
+  },
+  "browser_groups_passed": 48,
+  "preservation": {
+    "all_original_checks_matched": true,
+    "checks_matched": 27,
+    "owner_data_changed": false,
+    "approval_and_reservations_preserved": true,
+    "encrypted_credentials_preserved": true,
+    "configuration_preserved": true
+  },
+  "restored_services": {
+    "connection": true,
+    "research": true,
+    "observability": true
+  },
+  "retained_ultra_workflow_passes": 6,
+  "ultra_source_current": true,
+  "synthetic_rocket_exercises": {
+    "nemotron_starts": 2,
+    "tavily_searches": 1,
+    "automatic_source_saves": 0
+  }
+}

@@ -1,5 +1,7 @@
 # Documentation index
 
+Current ordinary AI access/layout: [Rocket guide](ROCKET_ASSISTANT.md), [acceptance](ROCKET_ASSISTANT_ACCEPTANCE.md), [delivery/results](ROCKET_ASSISTANT_RESULTS.md) and [sanitized checks](validation/ROCKET_ASSISTANT_CHECKS.json). The animated companion replaces standalone question/search sections; selected-item details/evidence are central. Older dated interface documents retain their historical layout.
+
 Latest UI delivery: [Build 3 guide](BUILD3_CLARITY.md), [acceptance](BUILD3_CLARITY_ACCEPTANCE.md), [results](BUILD3_CLARITY_RESULTS.md) and [sanitized checks](validation/BUILD3_CLARITY_CHECKS.json). Owner controls and outside dismissal are implemented; fresh Ultra passed six constructed workflows. Public deployment and independent human validation remain pending.
 
 Audited October 24, 2026. Start with the [project record](PROJECT_RECORD.md) for the complete preserved feature, decision and failure chronology; use [current A–F scope](HACKATHON_BUILD_SCOPE.md) for delivered versus pending work.

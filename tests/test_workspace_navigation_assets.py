@@ -65,11 +65,13 @@ class WorkspaceNavigationAssetTests(unittest.TestCase):
         assets.feed(body.decode("utf-8"))
         self.assertLess(assets.scripts.index("/workspace-navigation.js"), assets.scripts.index("/workspace.js"))
         self.assertLess(assets.scripts.index("/workspace-shell.js"), assets.scripts.index("/workspace.js"))
-        self.assertEqual(assets.styles[-1], "/typography.css")
+        self.assertLess(assets.scripts.index("/rocket-assistant.js"), assets.scripts.index("/workspace.js"))
+        self.assertLess(assets.styles.index("/typography.css"), assets.styles.index("/rocket-assistant.css"))
+        self.assertEqual(assets.styles[-1], "/rocket-assistant.css")
         self.assertIn("/navigation.css", assets.styles)
         self.assertTrue(all(path.startswith("/") and not path.startswith("//")
                             for path in assets.scripts + assets.styles))
-        for path in ["/workspace-navigation.js", "/workspace-shell.js", "/navigation.css", "/typography.css"]:
+        for path in ["/workspace-navigation.js", "/workspace-shell.js", "/navigation.css", "/typography.css", "/rocket-assistant.js", "/rocket-assistant.css"]:
             status, mime, body = self.request(path)
             self.assertEqual(status, 200, path)
             self.assertTrue(body, path)
