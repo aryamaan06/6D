@@ -14,7 +14,7 @@
   function measure(record){
     if(!record||typeof record.value!=='number'||!Number.isFinite(record.value))return 'No numeric evidence';
     if(Number.isInteger(record.value)&&!Number.isSafeInteger(record.value))return 'Exact value withheld in browser; inspect source JSON precision';
-    return esc(String(record.value)+' '+record.unit);
+    return window.SixDUnits?.value(record.value,record.unit)??esc(String(record.value)+' '+record.unit);
   }
   const list=items=>'<ul>'+arr(items).map(item=>'<li>'+esc(typeof item==='string'?item:item.message||item.code||'Unspecified issue')+'</li>').join('')+'</ul>';
   function identities(profile){

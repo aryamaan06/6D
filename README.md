@@ -10,6 +10,8 @@
 
 ## Try it
 
+**Part 2 readability update:** long authoring records and project context are grouped into expandable sections, repeated page introductions are reduced, compact quantities share SI typography with exact evidence still available, and similarly named projects show distinct ID-based labels without renaming or deleting records. [Guide](docs/PART2_READABILITY.md) · [Verification and preservation audit](docs/PART2_READABILITY_RESULTS.md). Companion refinements remain Part 3.
+
 **Part 1 navigation/clarity update:** pages start at their headings, component names remain distinct in topic choices, Overview explains model-fit gaps separately from calculated criteria, and tool cards show evidence/configuration for the selected saved revision. [Guide](docs/PART1_NAVIGATION_CLARITY.md) · [Scoped checks](docs/PART1_NAVIGATION_CLARITY_RESULTS.md). The next two interface correction parts remain separate.
 
 **Earlier companion/workflow update:** Calculate/Recalculate shows an explicit run's progress and completion, and Guided review opens in place. Drag the metallic 3D **Ask 6D** rocket to move it; click it for the simplified Nemotron or Tavily conversation. Source topics use grouped names with exact targets in Advanced, Source library has a progressive save/link flow, and shared typography covers the workspace. [Usage](docs/SIX_ISSUE_USABILITY.md) · [Scoped checks and limits](docs/SIX_ISSUE_USABILITY_RESULTS.md). No paid calls or physics changes were made by that refinement.

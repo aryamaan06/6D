@@ -6,7 +6,7 @@
   const clone=value=>JSON.parse(JSON.stringify(value));
   const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
   const title=value=>String(value??'').replace(/_/g,' ').replace(/^./,c=>c.toUpperCase());
-  const quantity=value=>value&&typeof value==='object'?esc(value.display_value??String(value.value??'—'))+' '+esc(value.unit??''):'—';
+  const quantity=value=>value&&typeof value==='object'?(value.display_value!==undefined?esc(value.display_value)+' '+esc(window.SixDUnits?.format(value.unit??'')??value.unit??''):window.SixDUnits?.value(value.value,value.unit??'')??esc(String(value.value??'—'))+' '+esc(value.unit??'')):'—';
   const stateLabels={met:'Meets declared criterion',not_met:'Does not meet criterion',not_assessed:'Not assessed'};
   const trendLabels={improved:'Improved criterion margin',worsened:'Reduced criterion margin',unchanged:'Unchanged margin',criterion_changed:'Criterion changed',not_comparable:'Not comparable',added:'Added requirement',removed:'Removed requirement'};
   const badge=(value,labels,kind='')=>'<span class="dc-badge dc-'+esc(kind)+esc(String(value??'unknown').replace(/[^a-z_]/g,''))+'">'+esc(labels[value]||title(value)||'Not supplied')+'</span>';

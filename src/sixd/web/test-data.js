@@ -6,8 +6,8 @@
   const mappingFields=['measurement_id','requirement_id','value','unit','tolerance'];
   const fieldLabels={measurement_id:'Measurement ID',requirement_id:'Requirement ID',value:'Measured value',unit:'Unit',tolerance:'Absolute agreement tolerance (optional)'};
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const num=value=>value===null||value===undefined?'—':String(value);
-  const measure=record=>record&&Number.isFinite(record.value)?esc(num(record.value)+' '+record.unit):'No numeric evidence';
+  const num=value=>value===null||value===undefined?'—':typeof value==='number'?(window.SixDUnits?.number(value)??String(value)):String(value);
+  const measure=record=>record&&Number.isFinite(record.value)?(window.SixDUnits?.value(record.value,record.unit)??esc(num(record.value)+' '+record.unit)):'No numeric evidence';
   const labels={met:'Meets criterion',not_met:'Does not meet',not_assessed:'Not assessed',within_tolerance:'Within supplied tolerance',outside_tolerance:'Outside supplied tolerance'};
   const badge=status=>'<span class="td-badge td-'+esc(status)+'">'+esc(labels[status]||status)+'</span>';
   const option=(value,label,selected)=>'<option value="'+esc(value)+'" '+(value===selected?'selected':'')+'>'+esc(label)+'</option>';

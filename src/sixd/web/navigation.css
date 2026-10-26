@@ -36,6 +36,9 @@
 #sixd-workspace .sd-project-card:hover,#sixd-workspace .sd-destination:hover{border-color:#b9c3d7;box-shadow:0 4px 15px #1d1d1f08}
 #sixd-workspace .sd-project-card strong{font-size:17px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
 #sixd-workspace .sd-project-meta{color:var(--sd-soft);font-family:var(--font-geist-mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace);font-size:13px}
+#sixd-workspace .sd-project-id{font-family:var(--font-geist-mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace);font-size:13px;color:var(--sd-soft);overflow-wrap:anywhere;text-align:left}
+#sixd-workspace .sd-project-hint{font-size:13px;line-height:1.6;color:var(--sd-soft);overflow-wrap:anywhere;text-align:left}
+#sixd-workspace .sd-project-created{display:block;margin-top:5px;font-size:13px;line-height:1.5}
 #sixd-workspace .sd-project-open{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--sd-blue);margin-top:auto}
 #sixd-workspace .sd-home-start{margin-top:36px;padding-top:28px;border-top:1px solid var(--sd-border)}
 #sixd-workspace .sd-home-start h3{font-size:18px;margin-bottom:16px}

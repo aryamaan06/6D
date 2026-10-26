@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
-import {mkdtemp, mkdir, writeFile} from 'node:fs/promises';
+import {mkdtemp, mkdir, writeFile, readFile} from 'node:fs/promises';
 import {resolve, join} from 'node:path';
 
 const root=process.cwd(), output=resolve(root,'work/navigation-browser');
@@ -38,6 +38,9 @@ with create_server(port=0,db_path=folder/'workspace.sqlite3',ai_local_directory=
   if suffix=='a':
    p=deepcopy(view['project']);p['name']+=' revision 2'
    server.store.save_revision(p['project_id'],1,p);server.store.run(p['project_id'],2)
+  if suffix=='b':
+   for label in ('alpha','beta'):
+    duplicate=integrated_rocket_review();duplicate['project_id']='duplicate-'+label+'-common';duplicate['name']='Repeated reference';server.store.create_project(duplicate)
  p=staged_ascent_review();p['project_id']='navigation-staged';p['name']='Navigation staged profile'\n view=server.store.create_project(p);p=deepcopy(view['project']);p['name']+=' revision 2';server.store.save_revision(p['project_id'],1,p)\n server.store.ensure_default=lambda:'navigation-a'
  print(json.dumps({'url':'http://127.0.0.1:'+str(server.server_port)}),flush=True)
  server.serve_forever()
@@ -68,9 +71,15 @@ try {
  const click=async action=>{await page.locator('[data-action="'+action+'"]:visible').first().click();await idle();};
  const route=()=>page.evaluate(()=>decodeURIComponent(location.hash));
  const ensureProject=async id=>{await page.locator('#sd-project-picker').selectOption(id);await idle();};
- const initialA=await view(),initialB=await view('navigation-b',1),initialStaged=await view('navigation-staged',2);
+ const initialA=await view(),initialB=await view('navigation-b',1),initialStaged=await view('navigation-staged',2),initialProjects=await api('/api/projects');
  await page.goto(origin);await idle();
  await page.screenshot({path:join(output,'projects-desktop.png'),fullPage:true});
+ const duplicateCards=page.locator('[data-open-project^="duplicate-"]');
+ const duplicateNames=await duplicateCards.locator('strong').allTextContents();
+ assert.equal(duplicateNames.length,2);assert.equal(new Set(duplicateNames).size,2);
+ assert.ok(duplicateNames.every(name=>name.includes('Repeated reference')));
+ for(const id of ['duplicate-alpha-common','duplicate-beta-common'])assert.match(await page.locator('[data-open-project="'+id+'"]').getAttribute('title'),new RegExp(id));
+ pass('Repeated project names are visibly distinct through stable real identities without renaming, deleting or hiding records');
  await page.locator('[data-open-project="navigation-a"]').click();await idle();await click('review-home');
  await page.locator('.rw-workspace[aria-busy="false"]').waitFor();
  assert.match(await route(),/navigation-a/);
@@ -117,6 +126,46 @@ try {
  await page.locator('#sd-rocket-dialog [data-rocket-close]').click();
  await ensureProject('navigation-a');await click('review-home');await page.locator('.rw-workspace[aria-busy="false"]').waitFor();
  pass('The actual assistant picker distinguishes battery and engine temperature checks while retaining their exact requirement IDs without inference');
+ const exactAltitude=initialA.run.review.findings.burnout_height.evidence.metric.value;
+ const altitudeRow=page.locator('.rw-findings-table tr').filter({has:page.locator('[data-rw-requirement="burnout_height"]')});
+ assert.match(await altitudeRow.locator('td.rw-quantity').first().innerText(),/6,126\.146 m/);
+ assert.match(await altitudeRow.locator('.sd-number').first().evaluate(el=>getComputedStyle(el).fontFamily),/mono|Consolas/i);
+ await page.locator('[data-rw-requirement="burnout_height"]').click();
+ assert.ok((await page.locator('[data-exact-values]').innerText()).includes(String(exactAltitude)));
+ assert.equal(await page.locator('h1:visible').count(),1);
+ pass('Overview uses compact shared precision while a selected finding exposes exact values and preserves its canonical status');
+ await click('setup');await click('author-project');await page.locator('.sd-authoring').waitFor();
+ assert.equal(await page.locator('details.sd-author-group').count(),3);
+ assert.equal(await page.locator('details.sd-author-group[open]').count(),0);
+ const inputsGroup=page.locator('details[data-disclosure-key*="author-group:inputs"]');await inputsGroup.locator(':scope > summary').click();
+ const thrustRecord=page.locator('details[data-disclosure-key*="author-record:input:thrust"]');await thrustRecord.locator(':scope > summary').click();
+ assert.ok((await thrustRecord.innerText()).includes(initialA.project.inputs.thrust.source));
+ const downloadPromise=page.waitForEvent('download');await page.locator('[data-action="export-project"]:visible').first().click();const download=await downloadPromise;
+ assert.deepEqual(JSON.parse(await readFile(await download.path(),'utf8')),initialA.project);
+ pass('Authoring groups retain every input source and record action, and project export preserves original names, SI unit strings and full numeric values');
+ await click('author-edit');
+ assert.equal(await inputsGroup.evaluate(el=>el.open),true);assert.equal(await thrustRecord.evaluate(el=>el.open),true);
+ await thrustRecord.locator('[data-author-edit="input"]').click();await page.locator('#sd-author-dialog[open]').waitFor();
+ await page.locator('#sd-author-dialog [name="value"]').fill('19500');await page.locator('#sd-author-dialog button[type="submit"]').click();
+ await page.locator('#sd-author-dialog').waitFor({state:'hidden'});
+ assert.equal(await inputsGroup.evaluate(el=>el.open),true);assert.equal(await thrustRecord.evaluate(el=>el.open),true);assert.match(await thrustRecord.locator(':scope > summary').innerText(),/19,500/);
+ await page.locator('#sd-setup-validation').waitFor();assert.equal((await view()).project.inputs.thrust.value,20000);
+ page.once('dialog',dialog=>dialog.accept());await ensureProject('navigation-b');await ensureProject('navigation-a');await click('analysis');await click('scenarios');
+ const muChoice=page.locator('#sd-view-content option[value="gravitational_parameter"]');await muChoice.waitFor({state:'attached'});
+ assert.match(await muChoice.innerText(),/m³\/s²/);assert.equal(await muChoice.getAttribute('value'),'gravitational_parameter');
+ pass('Draft edits keep their grouped section open without saving, and readable native unit labels retain canonical selection values');
+ await click('analysis');await click('vertical-mode');
+ assert.equal(await page.locator('#sd-page-title').innerText(),'Vertical flight');assert.equal(await page.locator('.pf-page > h2:visible').count(),0);
+ assert.equal(await page.locator('h1:visible').count(),1);assert.equal(await page.locator('.pf-page details').filter({hasText:'Assumptions and exclusions'}).count(),1);
+ const exactFlight=page.locator('.pf-page details').filter({has:page.locator('summary').filter({hasText:'Exact saved metrics and numerical diagnostics'})});await exactFlight.locator(':scope > summary').click();
+ assert.ok((await exactFlight.innerText()).includes(String(exactAltitude)));
+ await page.getByRole('button',{name:'Open full report',exact:true}).click();await idle();const scopeDetails=page.locator('.sd-reader details[data-disclosure-key*="project-description"]');
+ assert.equal(await scopeDetails.evaluate(el=>el.open),false);assert.equal(await page.locator('.sd-reader > h2:visible').count(),0);assert.equal(await page.locator('h1:visible').count(),1);
+ assert.equal(await page.locator('.sd-reader > .sd-accuracy-warning').isVisible(),true);
+ await page.evaluate(()=>dispatchEvent(new Event('beforeprint')));assert.equal(await scopeDetails.evaluate(el=>el.open),true);
+ await page.evaluate(()=>dispatchEvent(new Event('afterprint')));assert.equal(await scopeDetails.evaluate(el=>el.open),false);
+ await click('review-home');await page.locator('.rw-workspace[aria-busy="false"]').waitFor();
+ pass('Pages keep one visible primary heading, preserve flight exclusions and exact diagnostics, and expand then restore folded project scope for printing');
  const home=page.url();
  for(const area of ['engineering','analysis','evidence','setup']){
   await click(area);assert.match(await route(),new RegExp(area));
@@ -233,8 +282,9 @@ try {
  await page.screenshot({path:join(output,'mobile.png'),fullPage:true});
  pass('Navigation layout stays within a narrow viewport');
  assert.deepEqual(await view(),initialA);assert.deepEqual(await view('navigation-b',1),initialB);assert.deepEqual(await view('navigation-staged',2),initialStaged);
+ assert.deepEqual(await api('/api/projects'),initialProjects);
  assert.deepEqual(external,[]);assert.deepEqual(errors,[]);assert.deepEqual(unexpectedResponses,[]);
- const readOnlyPreviews=new Set(['/api/impact','/api/interfaces/preview','/api/test-evidence/impact']);
+ const readOnlyPreviews=new Set(['/api/impact','/api/interfaces/preview','/api/test-evidence/impact','/api/authoring/preflight']);
  assert.ok(posts.every(path=>readOnlyPreviews.has(path)),'Only read-only draft previews may POST: '+posts.join(','));
  assert.deepEqual(failedRequests.filter(request=>request.error!=='net::ERR_ABORTED'),[]);
  pass('Original fixture receipts unchanged; no provider, search, upload, calculation or save POSTs; no browser errors');

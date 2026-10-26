@@ -4,8 +4,9 @@
   let active=null;
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const human=v=>String(v??'').replace(/_/g,' ');
-  const unit=v=>String(v??'').replace(/\^2/g,'²').replace(/\^3/g,'³');
-  const short=v=>Number.isFinite(v)?Number(v.toPrecision(5)).toString():'—';
+  const unit=v=>window.SixDUnits.format(v);
+  const short=v=>window.SixDUnits.number(v);
+  const value=(v,u='')=>window.SixDUnits.value(v,u);
   const table=(headers,rows)=>'<div class="pf-table" tabindex="0"><table class="sd-table"><thead><tr>'+headers.map(x=>'<th scope="col">'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   const list=rows=>'<ul>'+rows.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
   const button=(action,title,disabled=false)=>'<button type="button" class="sd-button" data-pf-action="'+action+'" '+(disabled?'disabled':'')+'>'+esc(title)+'</button>';
@@ -27,8 +28,9 @@
     const a=result.flight_response;
     if(result.status!=='completed'||!a)return '<p class="sd-notice">Flight response unavailable. This model/input gap does not establish a failed vehicle.</p>'+list(result.issues||[]);
     const d=a.diagnostics;
-    return '<p class="pf-diagnostic" data-pf-agreement="'+d.grid_agreement_met+'"><strong>'+ (d.grid_agreement_met?'Declared grid agreement met':'Diagnostic result · grid agreement not met')+'</strong><br>'+esc(d.reason)+'</p>'+table(['Saved metric','Value','Unit','Numerical allowance'],Object.entries(result.metrics).map(([name,q])=>[esc(human(name)),esc(q.value),esc(unit(q.unit)),esc(d.metric_allowances[name])]))+
-      '<p class="pf-note">Allowances combine declared state tolerances and observed grid differences. They are not proven error bounds. Extrema cover saved samples; lines join selected samples for readability.</p><div class="pf-charts">'+charts.map(([title,units,series])=>chart(a,title,units,series)).join('')+'</div>'+table(['Grid pair · steps/segment','Maximum altitude difference · m','Maximum velocity difference · m/s'],d.level_differences.map(row=>[row.coarse_steps+' → '+row.fine_steps,esc(row.max_altitude_difference_m),esc(row.max_velocity_difference_m_s)]))+
+    return '<p class="pf-diagnostic" data-pf-agreement="'+d.grid_agreement_met+'"><strong>'+ (d.grid_agreement_met?'Declared grid agreement met':'Diagnostic result · grid agreement not met')+'</strong><br>'+esc(d.reason)+'</p>'+table(['Saved metric','Value','Unit','Numerical allowance'],Object.entries(result.metrics).map(([name,q])=>[esc(human(name)),value(q.value),esc(unit(q.unit)),value(d.metric_allowances[name])]))+
+      '<p class="pf-note">Values use compact display precision; exact metrics and diagnostics are available below. Allowances combine declared state tolerances and observed grid differences. They are not proven error bounds. Extrema cover saved samples; lines join selected samples for readability.</p><div class="pf-charts">'+charts.map(([title,units,series])=>chart(a,title,units,series)).join('')+'</div>'+table(['Grid pair · steps/segment','Maximum altitude difference · m','Maximum velocity difference · m/s'],d.level_differences.map(row=>[row.coarse_steps+' → '+row.fine_steps,value(row.max_altitude_difference_m),value(row.max_velocity_difference_m_s)]))+
+      '<details class="sd-source" data-preserve-notation><summary>Exact saved metrics and numerical diagnostics</summary><pre>'+esc(JSON.stringify({metrics:result.metrics,diagnostics:d},null,2))+'</pre></details>'+
       '<details class="sd-source"><summary>Inputs, method and retained sample events</summary><p>Classical RK4, order 4; analytical mass depletion. Burn and coast have separate grids, joined at exact fuel exhaustion. '+esc(a.samples.length)+' fine-grid samples retained; intermediate grids remain in JSON.</p>'+table(['Parameter','Supplied value'],Object.entries(a.parameters).map(([key,v])=>[esc(human(key)),esc(v)]))+table(['Event','Sample index','Time · s'],a.events.map(e=>[esc(human(e.event)),e.sample_index,esc(e.time_s)]))+'</details><details class="sd-source"><summary>Assumptions and exclusions</summary><h4>Assumptions</h4>'+list(a.assumptions)+'<h4>Not assessed</h4>'+list(a.not_assessed)+'</details><p class="sd-receipt">Project '+esc(ctx.projectId)+' · revision R'+esc(ctx.revision)+'<br>Run '+esc(ctx.runId)+'<br>Review '+esc(ctx.reviewDigest)+'<br>Solver SHA-256 '+esc(a.source_fingerprint)+(ctx.origin?'<br>'+esc(human(ctx.origin.disposition))+' from R'+esc(ctx.origin.revision)+' · '+esc(ctx.origin.run_id):'')+'</p>';
   }
   function report(result,ctx={}){return '<section class="pf-evidence" data-powered-flight-evidence="'+esc(ctx.modelId||result?.model_id)+'"><h3>Powered vertical-flight evidence</h3>'+evidence(result,ctx)+'</section>';}
@@ -44,7 +46,7 @@
       const y=260-220*row.altitude_m/Math.max(1,...a.samples.map(r=>r.altitude_m));
       host.querySelector('[data-pf-vehicle]').setAttribute('transform','translate(90 '+y+')');
       host.querySelector('[data-pf-sample]').textContent='Sample '+state.index+' / '+(a.samples.length-1)+' · '+short(row.time_s)+' s · '+human(row.event||row.phase);
-      host.querySelector('[data-pf-state]').innerHTML=table(['Quantity','Saved value'],[['Altitude',row.altitude_m,'m'],['Vertical velocity',row.velocity_m_s,'m/s'],['Mass',row.mass_kg,'kg'],['Thrust',row.thrust_n,'N'],['Signed drag',row.drag_n,'N'],['Gravity',row.gravity_m_s2,'m/s²'],['Upward acceleration',row.acceleration_m_s2,'m/s²']].map(([key,v,u])=>[key,esc(short(v)+' '+u)]));
+      host.querySelector('[data-pf-state]').innerHTML=table(['Quantity','Saved value'],[['Altitude',row.altitude_m,'m'],['Vertical velocity',row.velocity_m_s,'m/s'],['Mass',row.mass_kg,'kg'],['Thrust',row.thrust_n,'N'],['Signed drag',row.drag_n,'N'],['Gravity',row.gravity_m_s2,'m/s²'],['Upward acceleration',row.acceleration_m_s2,'m/s²']].map(([key,v,u])=>[key,value(v,u)]))+'<details class="sd-source" data-preserve-notation><summary>Exact recorded sample</summary><pre>'+esc(JSON.stringify(row,null,2))+'</pre></details>';
       const x=65+440*row.time_s/a.samples.at(-1).time_s;
       for(const line of host.querySelectorAll('[data-pf-cursor]')){line.setAttribute('x1',x);line.setAttribute('x2',x);}
     }

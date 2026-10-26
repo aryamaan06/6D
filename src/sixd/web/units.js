@@ -21,6 +21,25 @@
     return value.replace(power, (_, boundary, unit, exponent) => boundary + unit + Array.from(exponent, char => superscripts[char]).join(''));
   }
 
+  // Presentation only: never coerce input text or round a value used by a calculation.
+  // Significant digits preserve tiny nonzero values; fixed decimal places do not.
+  function number(value) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) return '—';
+    if (value === 0) return '0';
+    const magnitude = Math.abs(value);
+    return magnitude < 1e-4 || magnitude >= 1e7
+      ? value.toExponential(5)
+      : value.toLocaleString('en-US', {maximumSignificantDigits:7});
+  }
+
+  const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  function value(amount, unit = '') {
+    const valid = typeof amount === 'number' && Number.isFinite(amount);
+    const suffix = typeof unit === 'string' && unit ? ' ' + unit : '';
+    const exact = valid ? 'Exact: ' + String(amount) + suffix : 'Numeric value unavailable';
+    return '<span class="sd-number" title="' + escape(exact) + '">' + escape(number(amount) + format(suffix)) + '</span>';
+  }
+
   function eligible(node) {
     const parent = node.parentElement;
     return parent && !parent.closest(excluded) && !parent.closest('[hidden],[aria-hidden="true"]');
@@ -57,5 +76,5 @@
     return observer;
   }
 
-  window.SixDUnits = {format, decorate, observe};
+  window.SixDUnits = {format, number, value, decorate, observe};
 })();

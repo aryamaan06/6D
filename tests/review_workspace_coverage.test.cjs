@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../src/sixd/web/review-workspace.js'),'utf8');
+const unitsSource=fs.readFileSync(path.join(__dirname,'../src/sixd/web/units.js'),'utf8');
 
 function snapshot(counts,checks){
   const findings=[];
@@ -15,6 +16,7 @@ async function render(data,extra={}){
   const window={},targets=new Map([['[data-rw-findings]',{innerHTML:''}],['[data-rw-match-count]',{textContent:''}]]);
   const host={innerHTML:'',querySelector:selector=>targets.get(selector)||null,querySelectorAll:()=>[],contains:()=>true,replaceChildren(){this.innerHTML='';}};
   const navigation=[],requests=[];
+  vm.runInNewContext(unitsSource,{window});
   vm.runInNewContext(source,{window,AbortController,encodeURIComponent});
   window.SixDReviewWorkspace.mount(host,{projectId:data.project_id,revision:data.revision,currentRunId:data.run_id,onNavigate:route=>navigation.push(route),onRun:()=>{},api:async(...args)=>{requests.push(args[0]);return data;},...extra});
   await new Promise(resolve=>setImmediate(resolve));
@@ -26,6 +28,17 @@ function count(html,status){
   assert.ok(result,'Missing canonical '+status+' count');return result[1];
 }
 const coveragePanel=html=>html.match(/<section class="rw-coverage-context"[\s\S]*?<\/section>/)?.[0]||'';
+
+test('rounded equal-looking values retain the original unmet finding and expandable exact evidence',async()=>{
+  const data=snapshot({met:0,not_met:1,not_assessed:0,not_run:0},[]),row=data.findings[0];
+  row.metric={value:1.00000004,unit:'m^2'};row.limit={value:1,unit:'m^2'};row.operator='<=';
+  const before=JSON.stringify(data),view=await render(data);
+  assert.match(view.findings.innerHTML,/rw-not_met/);assert.match(view.findings.innerHTML,/1 m²/);
+  assert.match(view.findings.innerHTML,/Values are rounded for reading/);
+  view.click({rwRequirement:row.requirement_id});
+  const exact=view.findings.innerHTML.match(/data-exact-values>[\s\S]*?<\/dl>/)?.[0]||'';
+  assert.match(exact,/1\.00000004 m²/);assert.match(exact,/1 m²/);assert.equal(JSON.stringify(data),before);view.unmount();
+});
 
 test('nine met criteria and ten missing fit declarations remain distinct with an actionable reason',async()=>{
   const checks=Array.from({length:10},(_,i)=>({row_id:'requirement:'+i,coverage_status:'applicability_unknown',criterion_status:i===9?'not_assessed':'met',reason:'Model applicability has not been declared. A numerical result cannot resolve this gap.'}));

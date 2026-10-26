@@ -1,5 +1,7 @@
 # Documentation index
 
+Latest Part 2 readability delivery: [guide](PART2_READABILITY.md), [acceptance](PART2_READABILITY_ACCEPTANCE.md), [results](PART2_READABILITY_RESULTS.md) and [sanitized checks](validation/PART2_READABILITY_CHECKS.json). Covers counted authoring disclosures, retained scope/exact evidence, shared display notation and distinct project identities. The state audit preserves separately recorded concurrent owner activity. Part 3 is unstarted.
+
 Latest Part 1 navigation/clarity delivery: [guide](PART1_NAVIGATION_CLARITY.md), [acceptance](PART1_NAVIGATION_CLARITY_ACCEPTANCE.md), [results](PART1_NAVIGATION_CLARITY_RESULTS.md) and [sanitized checks](validation/PART1_NAVIGATION_CLARITY_CHECKS.json). Corrects page scroll, component-label ambiguity, calculation-versus-model-fit messaging and project-scoped tool status. Parts 2/3 are separate and unstarted.
 
 Latest usability refinement: [guide](SIX_ISSUE_USABILITY.md), [acceptance](SIX_ISSUE_USABILITY_ACCEPTANCE.md), [results](SIX_ISSUE_USABILITY_RESULTS.md) and [sanitized checks](validation/SIX_ISSUE_USABILITY_CHECKS.json). Explicit calculation feedback, in-place Guided review, draggable metallic 3D companion, simpler question/reference flows and complete human-readable typography preserve the existing engineering and owner boundaries. Earlier interface records below are dated history.

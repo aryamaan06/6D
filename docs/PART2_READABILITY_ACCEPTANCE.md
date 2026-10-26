@@ -1,0 +1,10 @@
+# Part 2 — readability and organization acceptance
+
+Authorized October 26, 2026 after Part 1 delivery. This part refines the existing interface; Part 3 rocket/context/handoff changes remain separate.
+
+1. Each work page has a clear primary heading and concise introduction. Repeated decorative module headings/lead paragraphs should not consume the first screen. Breadcrumbs, saved-revision identity, actions, essential model-scope notices and accessible heading structure remain available.
+2. Long technical project descriptions, input/limit lists, model definitions and requirement definitions are grouped behind clear counted disclosures. Every source, exact field, record action, validation result and export remains reachable. Same-page draft edits/preflight rerenders preserve open groups, values and navigation guards; no automatic saves/reruns occur.
+3. Ordinary numeric displays share a compact precision policy and SI exponent notation. Tiny nonzero and extreme finite numbers stay finite/nonzero in display. Display rounding never changes a status, comparison, original input, stored finding, receipt, source quotation, CSV or export. Exact values remain available through explicit detail and export, including on narrow/touch layouts. Native option labels use readable notation while option values and editable canonical units remain exact.
+4. Similarly named project cards and project-picker choices have stable, distinguishable display identities based on actual project IDs, with full identity available. Names, IDs, revisions, ordering, selection and all persisted records remain unchanged. No project is silently deleted, renamed or hidden.
+
+Verify representative desktop/mobile authoring, saved overview/report, flight/playback/study/import views, exact-data access, duplicate-project selection, existing navigation/draft guards, and explicit Nemotron/Tavily workflows using isolated synthetic services. Preserve original owner data, encrypted credentials, approvals and reservations. No paid requests, physics changes or hosted-budget changes. Document accurate scoped results, restart/verify the actual app, privacy-check and push the completed part.

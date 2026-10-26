@@ -28,8 +28,8 @@
   const copy = value => JSON.parse(JSON.stringify(value));
   const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
   const human = value => String(value ?? '').replace(/_/g,' ').replace(/^./,s=>s.toUpperCase());
-  const num = value => typeof value === 'number' && Number.isFinite(value) ? (value !== 0 && (Math.abs(value) < 0.0001 || Math.abs(value) >= 1e7) ? value.toExponential(5) : Number(value.toPrecision(7)).toLocaleString('en-US',{maximumFractionDigits:8})) : '—';
-  const measure = item => item && typeof item.value === 'number' ? num(item.value)+' '+esc(window.SixDUnits?.format(item.unit)??item.unit) : '—';
+  const num = value => window.SixDUnits?.number(value) ?? (typeof value === 'number' && Number.isFinite(value) ? String(value) : '—');
+  const measure = item => item && typeof item.value === 'number' ? (window.SixDUnits?.value(item.value,item.unit) ?? num(item.value)+' '+esc(window.SixDUnits?.format(item.unit)??item.unit)) : '—';
   const icon = name => '<i data-lucide="'+name+'" aria-hidden="true"></i>';
   const project = () => state.draft || state.data?.project;
   function testLinkKey(){return state.data?JSON.stringify([state.data.project_id,state.data.revision,currentRun()?.run_id||null,project()]):'';}
@@ -398,15 +398,45 @@
     const reason=deletionReason(kind,id);
     return '<div class="sd-action-row"><button type="button" class="sd-button" data-author-edit="'+kind+'" data-id="'+esc(id)+'" '+(!state.draft?'disabled':'')+'>Edit</button><button type="button" class="sd-button sd-quiet" data-author-remove="'+kind+'" data-id="'+esc(id)+'" '+(!state.draft||reason?'disabled':'')+' title="'+esc(reason)+'">Remove</button></div>'+(reason&&state.draft?'<p class="sd-small sd-muted">'+esc(reason)+'</p>':'');
   }
+  // Disclosure state is presentation-only and scoped to this saved page context.
+  // It never writes a project, a draft, or browser storage.
+  const pageDisclosures=new Map();
+  function disclosureKey(id) {return JSON.stringify([state.data.project_id,state.data.revision,state.page,state.system,id]);}
+  function rememberDisclosures() {
+    root.querySelectorAll('details[data-disclosure-key]').forEach(el=>pageDisclosures.set(el.dataset.disclosureKey,el.open));
+  }
+  function disclosure(id,title,body,{className='sd-context-disclosure',open=false,summary=''}={}) {
+    const key=disclosureKey(id),expanded=pageDisclosures.has(key)?pageDisclosures.get(key):open;
+    return '<details class="'+className+'" data-disclosure-key="'+esc(key)+'"'+(expanded?' open':'')+'><summary>'+title+(summary?'<span class="sd-disclosure-meta">'+summary+'</span>':'')+'</summary><div class="sd-disclosure-body">'+body+'</div></details>';
+  }
+  function projectDescription() {
+    const description=project().description;
+    return description?disclosure('project-description','Project purpose, assumptions and scope','<p class="sd-preserve">'+esc(description)+'</p>',{summary:'Read the supplied project context'}):'';
+  }
+  function authorGroup(id,title,count,body,actions='') {
+    return disclosure('author-group:'+id,'<h2>'+title+'</h2>','<div class="sd-action-row">'+actions+'</div>'+body,{className:'sd-author-section sd-author-group',open:!count,summary:count+' '+(count===1?'record':'records')});
+  }
+  function authorRecord(kind,id,title,summary,body) {
+    return disclosure('author-record:'+kind+':'+id,'<span class="sd-author-record-title">'+esc(title)+'</span>',body+recordActions(kind,id),{className:'sd-author-record',summary});
+  }
   function authoring() {
-    const p=project(),disabled=!state.draft?'disabled':'';
-    return '<article class="sd-authoring"><div class="sd-notice">'+(state.draft?'Authoring the shared draft. Save revision records these changes; calculations run only when requested.':'Saved configuration R'+state.data.revision+'. Choose Edit draft to change its setup.')+'</div>'+(!state.draft?'<button type="button" class="sd-button" data-action="author-edit" '+(!latest()?'disabled':'')+'>Edit draft</button>':'')+'<section class="sd-author-section"><h2>Project details</h2><p class="sd-small sd-muted">Project ID '+esc(p.project_id)+' is fixed. Describe the purpose, assumptions and intended scope.</p><label class="sd-field">Project name<input class="sd-input" data-project-field="name" value="'+esc(p.name)+'" required '+disabled+'></label><label class="sd-field">Purpose and assumptions<textarea class="sd-input" data-project-field="description" rows="4" required '+disabled+'>'+esc(p.description)+'</textarea></label><label class="sd-field">Lifecycle stage<select class="sd-input" data-project-field="lifecycle_stage" '+disabled+'>'+ (author.catalog?.lifecycle_stages || ['design','simulation','physical_test','operation']).map(stage=>option(stage,human(stage),p.lifecycle_stage)).join('')+'</select></label><p class="sd-small sd-muted">The stage records your context. Physical-test and operational evidence integrations are not supplied by these calculators.</p></section><section class="sd-author-section"><div class="sd-section-heading"><h2>Inputs and limits</h2><button type="button" class="sd-button" data-author-add="input" '+disabled+'>Add input</button></div><p class="sd-small sd-muted">Enter every value, exact unit and source explicitly. A blank value is never interpreted as zero.</p>'+(Object.entries(p.inputs).map(([id,input])=>'<div class="sd-author-record"><h3>'+esc(id)+'</h3><p><strong>'+measure(input)+'</strong></p><p class="sd-small">'+esc(input.source)+'</p>'+recordActions('input',id)+'</div>').join('') || '<p class="sd-empty-record">No inputs yet. Add your supplied parameters and requirement limits.</p>')+'</section><section class="sd-author-section"><div class="sd-section-heading"><h2>Model definitions</h2><button type="button" class="sd-button" data-action="chains">Calculation chains</button><button type="button" class="sd-button" data-author-add="model" '+(!state.draft||!author.catalog?'disabled':'')+'>Add model</button></div><p class="sd-small sd-muted">Select a maintained model and bind supplied input records using its exact units. Missing parameters may be saved for later completion.</p>'+(allModels().map(m=>'<div class="sd-author-record"><h3>'+esc(m.id)+'</h3><p>'+esc(catalogModel(m.type)?.title || human(m.type))+'</p><p class="sd-small">'+esc(m.description || '')+'</p><ul class="sd-scope-list">'+Object.entries(m.inputs).map(([parameter,id])=>'<li>'+esc(human(parameter))+' → '+esc(id)+' · '+measure(p.inputs[id])+'</li>').join('')+'</ul>'+(!Object.keys(m.inputs).length&&!Object.keys(m.links||{}).length?'<p class="sd-small sd-muted">No parameter bindings yet.</p>':'')+Object.entries(m.links||{}).map(([role,l])=>'<p class="sd-small">'+esc(role)+' ← '+esc(l.model_id+'.'+l.metric)+' · '+esc(l.unit)+'</p>').join('')+recordActions('model',m.id)+'</div>').join('') || '<p class="sd-empty-record">No models yet. Add a supported model to declare its input bindings.</p>')+'</section><section class="sd-author-section"><div class="sd-section-heading"><h2>Requirements</h2><button type="button" class="sd-button" data-author-add="requirement" '+(!state.draft||!allModels().length||!Object.keys(p.inputs).length?'disabled':'')+'>Add requirement</button></div><p class="sd-small sd-muted">Add a model and a supplied limit input first. Criteria use a named metric, operator and limit; criticality is explicit.</p>'+(allReqs().map(r=>'<div class="sd-author-record"><h3>'+esc(r.title)+'</h3><p class="sd-small sd-muted">'+esc(r.id)+'</p><p>'+esc(r.model_id)+' · '+esc(catalogModel(model(r.model_id)?.type)?.metrics.find(m=>m.name===r.metric)?.label || r.metric)+' '+esc(r.operator)+' '+esc(r.limit_input)+' · '+(r.critical?'Critical':'Noncritical')+'</p>'+recordActions('requirement',r.id)+'</div>').join('') || '<p class="sd-empty-record">No requirements yet. Declare a criterion to assess against calculated evidence.</p>')+'</section><section class="sd-author-section" id="sd-setup-validation" aria-live="polite">'+preflightMarkup()+'</section><div class="sd-action-row"><button type="button" class="sd-button" data-action="export-project">Export project JSON</button><button type="button" class="sd-button sd-quiet" data-action="back">Return to systems</button></div></article>';
+    const p=project(),disabled=!state.draft?'disabled':'',inputs=Object.entries(p.inputs),requirements=allReqs(),models=allModels();
+    const limits=new Set(requirements.map(r=>r.limit_input));
+    const inputRecords=entries=>entries.map(([id,input])=>authorRecord('input',id,human(id),measure(input),'<p class="sd-small sd-muted">Input ID '+esc(id)+'</p><p class="sd-small sd-preserve"><strong>Source</strong><br>'+esc(input.source)+'</p>')).join('');
+    const inputGroups=inputs.length?[
+      ['parameters','Model inputs',inputs.filter(([id])=>!limits.has(id))],
+      ['limits','Requirement limits',inputs.filter(([id])=>limits.has(id))]
+    ].filter(([, ,entries])=>entries.length).map(([id,title,entries])=>disclosure('author-inputs:'+id,'<h3>'+title+'</h3>',inputRecords(entries),{className:'sd-author-input-group',open:true,summary:entries.length+' '+(entries.length===1?'input':'inputs')})).join(''):'<p class="sd-empty-record">No inputs yet. Add your supplied parameters and requirement limits.</p>';
+    const inputSection=authorGroup('inputs','Inputs and limits',inputs.length,'<p class="sd-small sd-muted">Enter every value, exact unit and source explicitly. A blank value is never interpreted as zero. Limit records may also be bound to models.</p>'+inputGroups,'<button type="button" class="sd-button" data-author-add="input" '+disabled+'>Add input</button>');
+    const modelSection=authorGroup('models','Model definitions',models.length,'<p class="sd-small sd-muted">Select a maintained model and bind supplied input records using its exact units. Missing parameters may be saved for later completion.</p>'+(models.map(m=>authorRecord('model',m.id,human(m.id),esc(catalogModel(m.type)?.title || human(m.type)),'<p class="sd-small sd-muted">Model ID '+esc(m.id)+'</p><p class="sd-small sd-preserve">'+esc(m.description || '')+'</p><ul class="sd-scope-list">'+Object.entries(m.inputs).map(([parameter,id])=>'<li>'+esc(human(parameter))+' → '+esc(id)+' · '+measure(p.inputs[id])+'</li>').join('')+'</ul>'+(!Object.keys(m.inputs).length&&!Object.keys(m.links||{}).length?'<p class="sd-small sd-muted">No parameter bindings yet.</p>':'')+Object.entries(m.links||{}).map(([role,l])=>'<p class="sd-small">'+esc(role)+' ← '+esc(l.model_id+'.'+l.metric)+' · '+esc(window.SixDUnits?.format(l.unit)??l.unit)+'</p>').join(''))).join('') || '<p class="sd-empty-record">No models yet. Add a supported model to declare its input bindings.</p>'),'<button type="button" class="sd-button" data-action="chains">Calculation chains</button><button type="button" class="sd-button" data-author-add="model" '+(!state.draft||!author.catalog?'disabled':'')+'>Add model</button>');
+    const requirementSection=authorGroup('requirements','Requirements',requirements.length,'<p class="sd-small sd-muted">Add a model and a supplied limit input first. Criteria use a named metric, operator and limit; criticality is explicit.</p>'+(requirements.map(r=>authorRecord('requirement',r.id,r.title,esc(r.critical?'Critical':'Noncritical'),'<p class="sd-small sd-muted">Requirement ID '+esc(r.id)+'</p><p>'+esc(r.model_id)+' · '+esc(catalogModel(model(r.model_id)?.type)?.metrics.find(m=>m.name===r.metric)?.label || r.metric)+' '+esc(r.operator)+' '+esc(r.limit_input)+' · '+measure(p.inputs[r.limit_input])+'</p>')).join('') || '<p class="sd-empty-record">No requirements yet. Declare a criterion to assess against calculated evidence.</p>'),'<button type="button" class="sd-button" data-author-add="requirement" '+(!state.draft||!models.length||!inputs.length?'disabled':'')+'>Add requirement</button>');
+    return '<article class="sd-authoring"><div class="sd-notice">'+(state.draft?'Authoring the shared draft. Save revision records these changes; calculations run only when requested.':'Saved configuration R'+state.data.revision+'. Choose Edit draft to change its setup.')+'</div>'+(!state.draft?'<button type="button" class="sd-button" data-action="author-edit" '+(!latest()?'disabled':'')+'>Edit draft</button>':'')+'<section class="sd-author-section"><h2>Project details</h2><p class="sd-small sd-muted">Project ID '+esc(p.project_id)+' is fixed.</p><label class="sd-field">Project name<input class="sd-input" data-project-field="name" value="'+esc(p.name)+'" required '+disabled+'></label><label class="sd-field">Lifecycle stage<select class="sd-input" data-project-field="lifecycle_stage" '+disabled+'>'+ (author.catalog?.lifecycle_stages || ['design','simulation','physical_test','operation']).map(stage=>option(stage,human(stage),p.lifecycle_stage)).join('')+'</select></label>'+disclosure('author-description','Purpose, assumptions and intended scope','<label class="sd-field">Purpose and assumptions<textarea class="sd-input" data-project-field="description" rows="4" required '+disabled+'>'+esc(p.description)+'</textarea></label>',{open:!p.description.trim(),summary:'Read or edit the supplied context'})+'<p class="sd-small sd-muted">The stage records your context. Physical-test and operational evidence integrations are not supplied by these calculators.</p></section>'+inputSection+modelSection+requirementSection+'<section class="sd-author-section" id="sd-setup-validation" aria-live="polite">'+preflightMarkup()+'</section><div class="sd-action-row"><button type="button" class="sd-button" data-action="export-project">Export project JSON</button><button type="button" class="sd-button sd-quiet" data-action="back">Return to systems</button></div></article>';
   }
   function editorError(error) {$('#sd-author-error').textContent=error.message || String(error);$('#sd-author-error').hidden=false;}
   function editorField(label,name,value='',attributes='') {return '<label class="sd-field">'+label+'<input class="sd-input" name="'+name+'" value="'+esc(value)+'" '+attributes+'></label>';}
   function inputOptions(unit,selected='') {
     let choices=option('','Select a supplied input',selected);
-    for(const [id,input] of Object.entries(project().inputs))choices+=option(id,id+' · '+input.unit+(unit&&input.unit!==unit?' · incompatible unit':''),selected,!!unit&&input.unit!==unit);
+    for(const [id,input] of Object.entries(project().inputs))choices+=option(id,id+' · '+(window.SixDUnits?.format(input.unit)??input.unit)+(unit&&input.unit!==unit?' · incompatible unit':''),selected,!!unit&&input.unit!==unit);
     return choices;
   }
   function renderEditor(kind,id,values={}) {
@@ -417,7 +447,7 @@
       const type=v.type || '',c=catalogModel(type);
       body+='<label class="sd-field">Supported model<select class="sd-input" name="type" '+(id?'disabled':'required')+'>'+option('','Select a model',type)+(author.catalog?.models || []).map(m=>option(m.type,m.title+(m.type==='power_energy_budget'?' · use Power & energy':''),type,m.type==='power_energy_budget'&&!id)).join('')+(!c&&type?option(type,human(type)+' · unsupported import',type):'')+'</select></label><p class="sd-small sd-muted">The ID and selected adapter remain fixed after adding. To replace an adapter, add another model and explicitly remap its requirements.</p><label class="sd-field">Model context and assumptions<textarea class="sd-input" name="description" rows="3">'+esc(v.description || '')+'</textarea></label>';
       if(v.links&&Object.keys(v.links).length)body+='<p class="sd-notice">Calculated parameter bindings are retained below. Edit or remove them in <button type="button" class="sd-mini-action" data-action="chains">Calculation chains</button>.</p>';
-      if(c)body+='<p>'+esc(c.description)+' <span class="sd-small sd-muted">Adapter '+esc(c.version)+'</span></p><h3>Parameter bindings</h3><p class="sd-small sd-muted">Only inputs with the exact required unit can be selected. Leave a parameter unbound to complete it later.</p>'+c.parameters.map(parameter=>v.links?.[parameter.name]?'<div class="sd-field"><strong>'+esc(human(parameter.name))+' · '+esc(parameter.unit)+'</strong><p>Calculated from '+esc(v.links[parameter.name].model_id+'.'+v.links[parameter.name].metric)+'</p></div>':'<label class="sd-field">'+esc(human(parameter.name))+' · '+esc(parameter.unit)+'<select class="sd-input" name="binding:'+esc(parameter.name)+'">'+inputOptions(parameter.unit,v.inputs?.[parameter.name])+'</select></label>').join('')+'<h3>Assumptions</h3><ul class="sd-scope-list">'+c.assumptions.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul><h3>Not assessed</h3><ul class="sd-scope-list">'+c.not_assessed.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul>';
+      if(c)body+='<p>'+esc(c.description)+' <span class="sd-small sd-muted">Adapter '+esc(c.version)+'</span></p><h3>Parameter bindings</h3><p class="sd-small sd-muted">Only inputs with the exact required unit can be selected. Leave a parameter unbound to complete it later.</p>'+c.parameters.map(parameter=>v.links?.[parameter.name]?'<div class="sd-field"><strong>'+esc(human(parameter.name))+' · '+esc(window.SixDUnits?.format(parameter.unit)??parameter.unit)+'</strong><p>Calculated from '+esc(v.links[parameter.name].model_id+'.'+v.links[parameter.name].metric)+'</p></div>':'<label class="sd-field">'+esc(human(parameter.name))+' · '+esc(window.SixDUnits?.format(parameter.unit)??parameter.unit)+'<select class="sd-input" name="binding:'+esc(parameter.name)+'">'+inputOptions(parameter.unit,v.inputs?.[parameter.name])+'</select></label>').join('')+'<h3>Assumptions</h3><ul class="sd-scope-list">'+c.assumptions.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul><h3>Not assessed</h3><ul class="sd-scope-list">'+c.not_assessed.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul>';
       if(type==='orbital_trajectory')body+='<fieldset class="sd-accuracy-editor"><legend>Declared orbital numerical accuracy</legend><p class="sd-small sd-muted">Optional, user-supplied accuracy criteria. Enter both positive tolerances and their source, or leave all three blank. No default tolerance is inferred. Grid agreement is checked at aligned saved samples; it is not a true error bound or physical validation.</p>'+editorField('Position tolerance · m','accuracy_position_m',values.accuracy_position_m??v.accuracy?.position_tolerance_m??'','type="number" step="any" min="0"')+editorField('Velocity tolerance · m/s','accuracy_velocity_m_s',values.accuracy_velocity_m_s??v.accuracy?.velocity_tolerance_m_s??'','type="number" step="any" min="0"')+editorField('Accuracy criteria source / rationale','accuracy_source',values.accuracy_source??v.accuracy?.source??'')+'</fieldset>';
       if(c?.applicability)body+=applicabilityMarkup(c.applicability,'Current model catalog context; no run is being validated in this editor.');
       body+=c?.profile?.editor==='staged_ascent'?'<p class="sd-small">Stage masses and thrust rows are authored in <button type="button" class="sd-mini-action" data-action="staged-ascent">Variable thrust &amp; staging</button>.</p>':'<p class="sd-small">Named power modes and equipment rows are authored in <button type="button" class="sd-mini-action" data-action="power">Power &amp; energy</button>.</p>';
@@ -426,7 +456,7 @@
     }
     if(kind==='requirement'){
       const modelId=v.model_id || '',c=catalogModel(model(modelId)?.type),metric=v.metric || '',known=c?.metrics.find(m=>m.name===metric);
-      body+=editorField('Requirement title','title',v.title || '', 'required')+'<label class="sd-field">Model<select class="sd-input" name="model_id" required>'+option('','Select a model',modelId)+allModels().map(m=>option(m.id,m.id+' · '+(catalogModel(m.type)?.title || human(m.type)),modelId)).join('')+'</select></label><label class="sd-field">Metric<select class="sd-input" name="metric" required>'+option('','Select a metric',metric)+(c?.metrics || []).map(m=>option(m.name,m.label+' · '+m.unit,metric)).join('')+(!known&&metric?option(metric,metric+' · unknown metric',metric):'')+'</select></label>'+(!c&&modelId?'<p class="sd-notice">This imported model has no supported metric catalog. Existing criteria remain unassessed until mapped to a supported model.</p>':'')+'<label class="sd-field">Operator<select class="sd-input" name="operator" required>'+option('','Select an operator',v.operator || '')+(author.catalog?.operators || ['<=','>=','==']).map(op=>option(op,op,v.operator)).join('')+'</select></label><label class="sd-field">Limit input'+(known?' · '+esc(known.unit):'')+'<select class="sd-input" name="limit_input" required>'+inputOptions(known?.unit,v.limit_input)+'</select></label><label class="sd-field">Critical requirement<select class="sd-input" name="critical" required>'+option('','Select criticality',v.critical===undefined?'':String(v.critical))+option('true','Yes',String(v.critical))+option('false','No',String(v.critical))+'</select></label>';
+      body+=editorField('Requirement title','title',v.title || '', 'required')+'<label class="sd-field">Model<select class="sd-input" name="model_id" required>'+option('','Select a model',modelId)+allModels().map(m=>option(m.id,m.id+' · '+(catalogModel(m.type)?.title || human(m.type)),modelId)).join('')+'</select></label><label class="sd-field">Metric<select class="sd-input" name="metric" required>'+option('','Select a metric',metric)+(c?.metrics || []).map(m=>option(m.name,m.label+' · '+(window.SixDUnits?.format(m.unit)??m.unit),metric)).join('')+(!known&&metric?option(metric,metric+' · unknown metric',metric):'')+'</select></label>'+(!c&&modelId?'<p class="sd-notice">This imported model has no supported metric catalog. Existing criteria remain unassessed until mapped to a supported model.</p>':'')+'<label class="sd-field">Operator<select class="sd-input" name="operator" required>'+option('','Select an operator',v.operator || '')+(author.catalog?.operators || ['<=','>=','==']).map(op=>option(op,op,v.operator)).join('')+'</select></label><label class="sd-field">Limit input'+(known?' · '+esc(window.SixDUnits?.format(known.unit)??known.unit):'')+'<select class="sd-input" name="limit_input" required>'+inputOptions(known?.unit,v.limit_input)+'</select></label><label class="sd-field">Critical requirement<select class="sd-input" name="critical" required>'+option('','Select criticality',v.critical===undefined?'':String(v.critical))+option('true','Yes',String(v.critical))+option('false','No',String(v.critical))+'</select></label>';
     }
     $('#sd-author-title').textContent=(id?'Edit ':'Add ')+kind;$('#sd-author-fields').innerHTML=body;$('#sd-author-error').hidden=true;
   }
@@ -548,6 +578,37 @@
     for(const name of ['SixDReviewWorkspace','SixDEnvelopes','SixDSimulationImports','SixDPoweredFlight','SixDGuidedAscent','SixDStagedAscent','SixDSimulation','SixDTestData','SixDScenarios','SixDActions','SixDSources','SixDChains','SixDAttitude','SixDPowerBudget','SixDSystems','SixDAIQuality','SixDOwnerSettings'])window[name]?.unmount?.();
     for(const context of [coverageLinks,comparisonView,researchView,actionLinks,sourceLinks]){context.dispose?.();context.dispose=null;}
   }
+  // The shell owns the single page heading and lead. Module introductions retain
+  // their controls, revision/status badges, and all distinct applicability notes.
+  const pagePresentation={
+    report:['Review report','Requirements, calculated evidence and unresolved scope for this saved configuration.'],
+    changes:['Changes','A changed input identifies dependencies needing review. New calculation outcomes appear only after checks run.'],
+    coverage:['Engineering coverage','Connect mission phases to engineering checks. Keep calculated findings, model assumptions and missing analysis visible together.'],
+    comparison:['Compare designs','Select two recorded reviews or scenario cases. Explore their inputs, criteria and evidence without rerunning anything.'],
+    actions:['Engineering actions','Track the next check, the missing evidence and the conditions for completing the task.'],
+    sources:['Source library','Keep the passages behind your project decisions, then connect them to the checks they support.'],
+    chains:['Calculation chains','Connect a calculated scalar to a declared parameter. Upstream calculations run first; the saved evidence shows which values were passed along.'],
+    'powered-flight':['Vertical flight','Inspect recorded altitude, velocity, mass and forces through a constant-thrust burn and above-surface coast.'],
+    'guided-ascent':['Planar ascent','Replay recorded horizontal motion and altitude through a declared pitch programme, burnout and above-surface coast.'],
+    'staged-ascent':['Variable thrust & staging','Replay saved variable-thrust flight, exact fuel cutoff, dry-mass separation and upper-stage ignition.'],
+    attitude:['Guidance & control','Review how a declared single-axis controller turns toward a fixed target, responds to a constant disturbance and reaches its torque limit.'],
+    power:['Power & energy','Check simultaneous power demand and energy required across a declared operating sequence.'],
+    systems:['Systems & interfaces','Organize the actual project and declare the scalar contracts between its systems.'],
+    simulation:['Orbital simulation','Explore recorded position and velocity in three dimensions, then inspect the evidence at any instant.'],
+    scenarios:['Scenarios','Compare explicit hypothetical inputs against a saved baseline, with calculated findings and traceable margins.'],
+    'ai-quality':['AI quality & tools','Current-model qualification, retained results and explicit optional metrics export.'],
+    'review-home':['Overview','Understand the saved design, examine its evidence and follow the unresolved work.'],
+    envelopes:['Envelope studies','Explore explicit combinations of model parameters against the saved revision. Preview the exact samples before running the study.'],
+    'simulation-imports':['Simulation imports','Inspect imported simulation or measurement histories, then compare compatible samples against a frozen project calculation.'],
+    'test-data':['Test data','Import supplied scalar measurements and compare them with this exact saved design. Measurement compliance and prediction agreement are separate findings.'],
+    authoring:['Author project','Supply inputs, connect supported models and declare the criteria you want to assess.']
+  };
+  function renderPageHeading() {
+    const presentation=pagePresentation[state.page] || [activeSystem()?.title || 'Systems workspace','Explore declared inputs, model mappings, requirements and their evidence.'];
+    $('#sd-breadcrumb-current').textContent=presentation[0];
+    $('#sd-page-title').textContent=presentation[0];
+    $('#sd-page-description').textContent=presentation[1];
+  }
   function render() {
     if(!state.data)return; const p=project();
     repairContext();
@@ -555,82 +616,13 @@
     root.querySelectorAll('.sd-sidebar [data-action]').forEach(el=>{if(el.dataset.action===state.page)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
     root.classList.toggle('sd-simulation-open',['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','guided-ascent','staged-ascent','chains','comparison','coverage','ai-quality'].includes(state.page));
     try{localStorage.setItem('sixd.workspace.last-project',state.data.project_id);}catch{}
-    const picker=$('#sd-project-picker');picker.innerHTML=state.projects.map(item=>'<option value="'+esc(item.project_id)+'" '+(item.project_id===state.data.project_id?'selected':'')+'>'+esc(item.name || (item.project_id===p.project_id?p.name:item.project_id))+'</option>').join('');
+    const picker=$('#sd-project-picker');picker.innerHTML=window.SixDWorkspaceShell.projectChoices(state.projects).map(item=>'<option value="'+esc(item.project_id)+'" title="'+esc(item.project_id)+'" '+(item.project_id===state.data.project_id?'selected':'')+'>'+esc(item.display_name)+'</option>').join('');
     $('#sd-revision-picker').innerHTML=state.data.revisions.map(r=>'<option value="'+r.revision+'" '+(r.revision===state.data.revision?'selected':'')+'>R'+r.revision+' · '+(r.has_current_run?'review recorded':'awaiting checks')+'</option>').join('');
     $('#sd-project-note').textContent=p.lifecycle_stage+' · '+allModels().length+' model mappings';
     $('#sd-project-name').textContent=p.name;
-    $('#sd-breadcrumb-current').textContent=state.page==='report'?'Review report':state.page==='changes'?'Revision review':activeSystem()?.title || 'Systems overview';
-    $('#sd-page-title').textContent=state.page==='report'?'Engineering review':state.page==='changes'?'Understand the change':activeSystem()?.title || 'Connected systems';
-    $('#sd-page-description').textContent=state.page==='report'?'Requirements, calculated evidence and unresolved scope for this saved configuration.':state.page==='changes'?'Explicit dependencies show which evidence needs review after a change.':state.system==='overview'?p.description:'Explore declared inputs, model mappings, requirements and their evidence.';
-    if(state.page==='coverage'){
-      $('#sd-breadcrumb-current').textContent='Engineering coverage';
-      $('#sd-page-title').textContent='See what still needs engineering.';
-      $('#sd-page-description').textContent='Map mission checks to saved requirements and record model applicability alongside calculated findings.';
-    }
-    if(state.page==='comparison'){
-      $('#sd-breadcrumb-current').textContent='Compare designs';
-      $('#sd-page-title').textContent='See the engineering tradeoffs.';
-      $('#sd-page-description').textContent='Compare exact saved records, criterion margins and gaps without recalculating or ranking a winning design.';
-    }
-    if(state.page==='actions'){
-      $('#sd-breadcrumb-current').textContent='Engineering actions';
-      $('#sd-page-title').textContent='Turn findings into next steps.';
-      $('#sd-page-description').textContent='Track engineering follow-up, supporting records and changes that need review.';
-    }
-    if(state.page==='sources'){
-      $('#sd-breadcrumb-current').textContent='Source library';
-      $('#sd-page-title').textContent='Keep references connected.';
-      $('#sd-page-description').textContent='Versioned user-supplied references, explicit links and review flags for this saved project.';
-    }
-    if(state.page==='chains'){
-      $('#sd-breadcrumb-current').textContent='Calculation chains';
-      $('#sd-page-title').textContent='Connect engineering calculations.';
-      $('#sd-page-description').textContent='Follow explicit scalar outputs through downstream checks and their saved evidence.';
-    }
-    if(['powered-flight','guided-ascent','staged-ascent'].includes(state.page)){
-      const guided=state.page==='guided-ascent',staged=state.page==='staged-ascent';
-      $('#sd-breadcrumb-current').textContent=staged?'Variable thrust & staging':guided?'Ascent & steering':'Powered flight';
-      $('#sd-page-title').textContent=staged?'Follow thrust, fuel and stage events.':guided?'Follow the declared steering programme.':'Follow the flight through burnout.';
-      $('#sd-page-description').textContent=staged?'Saved serial-stage ascent with explicit thrust profiles, propellant accounting and event-side mass changes.':guided?'Saved planar ascent with horizontal motion, supplied thrust direction and explicit numerical support.':'Saved vertical ascent and coast with thrust, mass, gravity and drag.';
-    }
-    if(state.page==='attitude'){
-      $('#sd-breadcrumb-current').textContent='Guidance & control';
-      $('#sd-page-title').textContent='Understand the pointing response.';
-      $('#sd-page-description').textContent='Inspect saved single-axis error, angular rate and actuator torque against declared sampled criteria.';
-    }
-    if(state.page==='power'){
-      $('#sd-breadcrumb-current').textContent='Power & energy';
-      $('#sd-page-title').textContent='Power through the operating modes.';
-      $('#sd-page-description').textContent='Check simultaneous power capacity and usable energy separately against explicit operating assumptions.';
-    }
-    if(state.page==='systems'){
-      $('#sd-breadcrumb-current').textContent='Systems & interfaces';
-      $('#sd-page-title').textContent='Connect the engineering.';
-      $('#sd-page-description').textContent='Organize subsystems, declare scalar interface contracts and review connected evidence.';
-    }
-    if(state.page==='simulation'){
-      $('#sd-breadcrumb-current').textContent='Simulation';
-      $('#sd-page-title').textContent='Orbital simulation';
-      $('#sd-page-description').textContent='Follow saved trajectories into their requirements, input revisions and engineering evidence.';
-    }
-    if(state.page==='scenarios'){
-      $('#sd-breadcrumb-current').textContent='Scenarios';$('#sd-page-title').textContent='Explore design alternatives';
-      $('#sd-page-description').textContent='Compare explicit hypothetical inputs against a saved baseline, with calculated findings and traceable margins.';
-    }
+    renderPageHeading();
     root.querySelector('[data-action="scenarios"]').setAttribute('aria-pressed',String(state.page==='scenarios'));
-    if(state.page==='ai-quality'){$('#sd-breadcrumb-current').textContent='AI quality & tools';$('#sd-page-title').textContent='Inspect the Assistant’s evidence.';$('#sd-page-description').textContent='Current-model qualification, retained results and explicit optional metrics export.';}
-    if(state.page==='review-home'){$('#sd-breadcrumb-current').textContent='Review overview';$('#sd-page-title').textContent='Review overview';$('#sd-page-description').textContent='Follow current findings, analysis and supplemental evidence in one saved context.';}
-    if(state.page==='envelopes'){$('#sd-breadcrumb-current').textContent='Envelope studies';$('#sd-page-title').textContent='Explore declared operating conditions';$('#sd-page-description').textContent='Calculate explicit combinations and inspect worst observed margins, violations and unresolved cases.';}
-    if(state.page==='simulation-imports'){$('#sd-breadcrumb-current').textContent='Simulation imports';$('#sd-page-title').textContent='Inspect specialist simulation results';$('#sd-page-description').textContent='Import recorded time histories, replay samples and compare compatible saved evidence.';}
-    if(state.page==='test-data'){
-      $('#sd-breadcrumb-current').textContent='Test data';$('#sd-page-title').textContent='Compare predictions with measurements';
-      $('#sd-page-description').textContent='Inspect supplied scalar test data against the exact saved prediction and its declared requirements.';
-    }
     root.querySelector('[data-action="test-data"]').setAttribute('aria-pressed',String(state.page==='test-data'));
-    if(state.page==='authoring'){
-      $('#sd-breadcrumb-current').textContent='Author project';$('#sd-page-title').textContent='Define your engineering project';
-      $('#sd-page-description').textContent='Supply inputs, connect supported models and declare the criteria you want to assess.';
-    }
     $('#sd-edit-trigger').hidden=['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','guided-ascent','staged-ascent','chains','comparison','coverage'].includes(state.page);
     $('#sd-run-trigger').hidden=['simulation','envelopes','simulation-imports','scenarios','test-data','systems','power','attitude','powered-flight','guided-ascent','staged-ascent','chains','comparison','coverage'].includes(state.page);
     root.querySelector('[data-action="simulation"]').setAttribute('aria-pressed',String(state.page==='simulation'));
@@ -714,7 +706,7 @@
       typeof e.metric.unit==='string' && e.metric.unit.length>0 && e.metric.unit===e.limit.unit &&
       ['<=','>=','=='].includes(e.operator);
   }
-  const plotMeasure = (item,exact=false) => item && Number.isFinite(item.value) ? esc(exact?String(item.value):num(item.value))+' '+esc(window.SixDUnits?.format(item.unit)??item.unit) : '—';
+  const plotMeasure = (item,exact=false) => item && Number.isFinite(item.value) ? (exact?esc(String(item.value))+' '+esc(window.SixDUnits?.format(item.unit)??item.unit):measure(item)) : '—';
   function comparisonNeedsExact(e) {
     return Number.isFinite(e?.metric?.value) && Number.isFinite(e?.limit?.value) &&
       (e.operator==='==' || (e.metric.value!==e.limit.value && num(e.metric.value)===num(e.limit.value)));
@@ -779,7 +771,7 @@
   }
   function reader(report=false) {
     const requirements=report?allReqs():selectedReqs();const p=project();
-    return '<article class="sd-reader"><span class="sd-label">'+(report?'Saved project · engineering review':esc(p.lifecycle_stage)+' · system reader')+'</span><h2>'+esc(report?p.name:activeSystem()?.title || p.name)+'</h2><p class="sd-lead">'+esc(p.description)+'</p>'+(!currentRun()||state.draft?'<div class="sd-notice">'+(state.draft?'Draft edits are not calculated. Displayed recorded values still belong to saved R'+state.data.revision+'.':'Awaiting a review of this revision.')+'</div>':'')+'<p class="sd-report-context">Project '+esc(state.data.project_id)+' · '+(state.draft?'Draft based on saved':'Saved')+' revision R'+state.data.revision+'</p>'+stats(requirements)+receiptInfo()+engineeringPlots(requirements)+(report?allModels():selectedModels()).filter(m=>result(m.id)?.simulation).map(m=>'<h3>'+esc(human(m.id))+' trajectory evidence</h3>'+trajectoryContext(m.id)).join('')+'<h3>Requirement findings</h3>'+requirementTable(requirements)+'<h3>Model evidence</h3>'+ (report?allModels():selectedModels()).map(m=>{const r=result(m.id);return '<details class="sd-source"><summary>'+esc(human(m.id))+' · '+(r?esc(human(r.status)):'Not run')+'</summary>'+modelEvidence(m.id)+'</details>';}).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='power_energy_budget').map(m=>powerEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='attitude_control').map(m=>attitudeEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>['powered_flight','guided_ascent','staged_ascent'].includes(m.type)).map(m=>flightEvidence(m.id)).join('')+interfaceSlot('report',report?null:selectedModels().map(m=>m.id))+sourceSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+actionSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+testEvidenceSlot('report',report?null:requirements.map(r=>r.id))+(report?coverageSlot()+seriesSlot()+envelopeSlot():'')+'<h3>Scope of this review</h3><ul class="sd-scope-list">'+(currentRun()?.review?.exclusions || ['Only explicitly bound models and supplied requirements can be assessed.','Physical tests, operational performance and whole-mission readiness are not verified.']).map(item=>'<li>'+esc(item)+'</li>').join('')+'</ul><div class="sd-action-row">'+(report?'<button type="button" class="sd-button sd-primary" data-action="export" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('download')+'Export evidence JSON</button><button type="button" class="sd-button" data-action="export-review" disabled>Export combined review JSON</button><button type="button" class="sd-button" data-action="print-report" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('printer')+'Print report / Save PDF</button>':'<button type="button" class="sd-button" data-action="report">'+icon('file-text')+'Open full report</button>')+'<button type="button" class="sd-button" data-action="export-project">Export project JSON</button></div>'+(currentRun()?'<details class="sd-source"><summary>Receipt identity and verification sources</summary><p class="sd-receipt">Review '+esc(currentRun().review.digest)+'</p>'+Object.entries(currentRun().review.verification_sources || {}).map(([file,digest])=>'<p class="sd-receipt">'+esc(file)+': '+esc(digest)+'</p>').join('')+'</details>':'')+'</article>';
+    return '<article class="sd-reader"><span class="sd-label">'+(report?'Saved project · engineering review':esc(p.lifecycle_stage)+' · system reader')+'</span><h2>'+esc(report?p.name:activeSystem()?.title || p.name)+'</h2>'+projectDescription()+'<p class="sd-small sd-accuracy-warning">Calculated findings apply to declared models and criteria. Physical applicability and whole-mission readiness require external engineering evidence.</p>'+(!currentRun()||state.draft?'<div class="sd-notice">'+(state.draft?'Draft edits are not calculated. Displayed recorded values still belong to saved R'+state.data.revision+'.':'Awaiting a review of this revision.')+'</div>':'')+'<p class="sd-report-context">Project '+esc(state.data.project_id)+' · '+(state.draft?'Draft based on saved':'Saved')+' revision R'+state.data.revision+'</p>'+stats(requirements)+receiptInfo()+engineeringPlots(requirements)+(report?allModels():selectedModels()).filter(m=>result(m.id)?.simulation).map(m=>'<h3>'+esc(human(m.id))+' trajectory evidence</h3>'+trajectoryContext(m.id)).join('')+'<h3>Requirement findings</h3><p class="sd-small sd-muted sd-number-note">Values are rounded for reading. Hover a value for its original precision, open exact table values, or export the saved evidence.</p>'+requirementTable(requirements)+'<h3>Model evidence</h3>'+ (report?allModels():selectedModels()).map(m=>{const r=result(m.id);return '<details class="sd-source"><summary>'+esc(human(m.id))+' · '+(r?esc(human(r.status)):'Not run')+'</summary>'+modelEvidence(m.id)+'</details>';}).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='power_energy_budget').map(m=>powerEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='attitude_control').map(m=>attitudeEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>['powered_flight','guided_ascent','staged_ascent'].includes(m.type)).map(m=>flightEvidence(m.id)).join('')+interfaceSlot('report',report?null:selectedModels().map(m=>m.id))+sourceSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+actionSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+testEvidenceSlot('report',report?null:requirements.map(r=>r.id))+(report?coverageSlot()+seriesSlot()+envelopeSlot():'')+'<h3>Scope of this review</h3><ul class="sd-scope-list">'+(currentRun()?.review?.exclusions || ['Only explicitly bound models and supplied requirements can be assessed.','Physical tests, operational performance and whole-mission readiness are not verified.']).map(item=>'<li>'+esc(item)+'</li>').join('')+'</ul><div class="sd-action-row">'+(report?'<button type="button" class="sd-button sd-primary" data-action="export" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('download')+'Export evidence JSON</button><button type="button" class="sd-button" data-action="export-review" disabled>Export combined review JSON</button><button type="button" class="sd-button" data-action="print-report" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('printer')+'Print report / Save PDF</button>':'<button type="button" class="sd-button" data-action="report">'+icon('file-text')+'Open full report</button>')+'<button type="button" class="sd-button" data-action="export-project">Export project JSON</button></div>'+(currentRun()?'<details class="sd-source"><summary>Receipt identity and verification sources</summary><p class="sd-receipt">Review '+esc(currentRun().review.digest)+'</p>'+Object.entries(currentRun().review.verification_sources || {}).map(([file,digest])=>'<p class="sd-receipt">'+esc(file)+': '+esc(digest)+'</p>').join('')+'</details>':'')+'</article>';
   }
   function changeRecords() {
     const before=state.draft?state.data.project:priorRun()?.review?.project || state.data.configuration_base?.project;
@@ -807,6 +799,9 @@
     return '<article class="sd-reader"><span class="sd-label">'+(state.draft?'R'+state.data.revision+' → draft':'Revision R'+state.data.revision)+'</span><h2>Review the difference.</h2><p class="sd-lead">A changed input identifies dependencies needing review. New calculation outcomes appear only after checks run.</p>'+(!state.draft&&priorRun()?'<p class="sd-table-note">Compared with the nearest earlier recorded review: R'+priorRun().revision+'.</p>':!state.draft&&state.data.configuration_base?'<p class="sd-table-note">Compared with saved configuration R'+state.data.configuration_base.revision+'. This comparison describes supplied record changes only.</p>':'')+structuralChanges(info)+(rows.length?rows.map(row=>'<div class="sd-change-card"><strong>'+esc(row.title)+'</strong><div class="sd-change-values"><span class="sd-before">'+measure(row.before)+'</span><span>→</span><span class="sd-after">'+measure(row.after)+'</span></div>'+(row.before?.unit!==row.after?.unit?'<p class="sd-small sd-muted">Unit changed; no implicit conversion.</p>':'')+(!same(row.before?.source,row.after?.source)?'<p class="sd-small sd-muted">Source: '+esc(row.before?.source || '—')+' → '+esc(row.after?.source || '—')+'</p>':'')+'</div>').join(''):'<div class="sd-notice">No changed input records in this comparison. '+(!state.draft?'Create a draft from the latest revision to review a new change.':'Edit any input value, unit or source.')+'</div>')+interfaceSlot('changes')+sourceSlot('changes')+actionSlot('changes')+testEvidenceSlot('changes',[])+'<h3>Calculator dependency impact</h3><p>'+(state.draft?(state.impact?'Server-checked draft preview.':'Local draft preview; use Preview impact to validate with the server.'):'Saved revision dependency comparison.')+'</p><div class="sd-affected-list">'+(info.affected_model_ids||[]).map(id=>'<button type="button" data-kind="model" data-id="'+esc(id)+'">'+esc(human(id))+'<span class="sd-chip sd-pending">Model dependency</span></button>').join('')+(info.affected_requirement_ids||[]).map(id=>'<button type="button" data-kind="requirement" data-id="'+esc(id)+'">'+esc(req(id)?.title || id)+chip(reqStatus(id))+'</button>').join('')+'</div>'+(!(info.affected_requirement_ids||[]).length?'<p>No calculator requirement dependencies are affected by the supplied edits. Interface review flags are shown separately above.</p>':'')+receiptInfo()+'<div class="sd-action-row">'+(state.draft?'<button type="button" class="sd-button sd-primary" data-action="save" '+(!dirty()||editErrors().length?'disabled':'')+'>Save revision</button>':!currentRun()?'<button type="button" class="sd-button sd-primary" data-action="run">Rerun affected checks</button>':'<button type="button" class="sd-button" data-action="report">Open revised report</button>')+'<button type="button" class="sd-button sd-quiet" data-action="back">Return to system</button></div></article>';
   }
   function renderMain() {
+    rememberDisclosures();
+    if(state.page==='review-home')delete $('#sd-view-content').dataset.shellTitle;
+    else $('#sd-view-content').dataset.shellTitle='true';
     window.SixDOwnerSettings?.unmount();
     if(state.hosted&&['owner-settings','ai-quality'].includes(state.page)){
       unmountWorkspaceViews();$('#sd-view-content').innerHTML='<article class="sd-reader"><h2>Owner settings are unavailable here.</h2><p>This is an isolated reviewer workspace. Its owner manages connections, usage and diagnostics.</p><button class="sd-button" data-action="review-home">Return to overview</button></article>';return;
@@ -1035,7 +1030,7 @@
       });
       return;
     }
-    $('#sd-view-content').innerHTML=state.page==='report'?reader(true):state.page==='changes'?changes():state.view==='canvas'?canvas():state.view==='table'?table():reader();
+    $('#sd-view-content').innerHTML=(state.page==='system'&&state.view!=='reader'?'<div class="sd-system-context">'+projectDescription()+'</div>':'')+(state.page==='report'?reader(true):state.page==='changes'?changes():state.view==='canvas'?canvas():state.view==='table'?table():reader());
     if(state.page==='system'&&state.view==='canvas'){applyCamera();bindPan();}
   }
   function trajectoryButton(modelId,run=currentRun(),label='View trajectory') {
@@ -1977,6 +1972,7 @@
     root.querySelectorAll('input[data-input]').forEach(other=>{if(other!==el&&other.dataset.input===el.dataset.input&&other.dataset.field===el.dataset.field)other.value=el.value;});
     renderDraft();root.querySelectorAll('[data-status-for]').forEach(cell=>{cell.innerHTML=chip(reqStatus(cell.dataset.statusFor));});$('#sd-save-state').textContent='Unsaved draft · saved revision preserved';
   });
+  root.addEventListener('toggle',event=>{const el=event.target;if(el.matches?.('details[data-disclosure-key]')&&el.isConnected)pageDisclosures.set(el.dataset.disclosureKey,el.open);},true);
   root.addEventListener('change',event=>{
     if(state.busy)return;
     const el=event.target;

@@ -1,0 +1,159 @@
+{
+  "schema": "sixd.part2-readability-checks.v1",
+  "date": "2026-10-26",
+  "build_id": "4e50d1e86a6c",
+  "scope": "Second agreed correction part: grouped records/technical detail, primary page headings, compact numeric/SI display with exact evidence, duplicate project display identities.",
+  "python": {
+    "methods_run": 81,
+    "passed": 80,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0,
+    "skip_reason": "Docker unavailable on this Windows environment",
+    "full_suite": false
+  },
+  "node": {
+    "contracts_passed": 35,
+    "files": {
+      "tests/display_units.test.cjs": 5,
+      "tests/workspace_project_choices.test.cjs": 6,
+      "tests/review_workspace_coverage.test.cjs": 5,
+      "tests/source_targets.test.mjs": 7,
+      "tests/workspace_navigation.test.cjs": 7,
+      "tests/workspace_tool_status.test.cjs": 5
+    }
+  },
+  "browser": {
+    "groups_passed": 39,
+    "packs": {
+      "navigation": {
+        "groups_passed": 26,
+        "checks": [
+          "Repeated project names are visibly distinct through stable real identities without renaming, deleting or hiding records",
+          "Selected project and saved revision have an addressable overview",
+          "Passing calculation criteria remain separate from nine missing fit declarations and one unsupported analysis, with a working coverage action",
+          "Opening a report from lower Overview and accepted Back/Forward start at the page heading instead of inheriting a deep scroll",
+          "Tool badges distinguish recorded flight, absent mappings and uncalculated staging, and update across projects and historical revisions",
+          "The actual assistant picker distinguishes battery and engine temperature checks while retaining their exact requirement IDs without inference",
+          "Overview uses compact shared precision while a selected finding exposes exact values and preserves its canonical status",
+          "Authoring groups retain every input source and record action, and project export preserves original names, SI unit strings and full numeric values",
+          "Draft edits keep their grouped section open without saving, and readable native unit labels retain canonical selection values",
+          "Pages keep one visible primary heading, preserve flight exclusions and exact diagnostics, and expand then restore folded project scope for printing",
+          "Five broad work areas are reachable without a flat list of every tool",
+          "Native browser Back and Forward restore internal locations",
+          "Reload preserves the routed project, saved revision and work area",
+          "A deep link to a historical revision survives reload",
+          "System Table, selected requirement and evidence panel survive deep reload with a parent breadcrumb",
+          "Same-project page navigation and Back retain the unsaved shared draft without a database write",
+          "Cancelled project switch preserves draft; confirmed switch explicitly discards it",
+          "Cancelling browser Back across project context preserves URL, displayed project and draft",
+          "Accepting browser Back loads the previous saved project and discards only the unsaved draft",
+          "Back during a delayed project load leaves URL and displayed project in the same context",
+          "Unapplied stage-profile values survive blocked area, project and revision navigation",
+          "Browser Back cannot remount or discard an unapplied stage-profile form",
+          "Explicit profile cancellation restores navigation while saved staged inputs stay unchanged",
+          "Requested local editorial typography, ink and soft canvas are applied without remote fonts",
+          "Navigation layout stays within a narrow viewport",
+          "Original fixture receipts unchanged; no provider, search, upload, calculation or save POSTs; no browser errors"
+        ],
+        "errors": [],
+        "unexpected_responses": [],
+        "external_requests": 0,
+        "post_routes": [
+          "/api/authoring/preflight",
+          "/api/authoring/preflight",
+          "/api/authoring/preflight",
+          "/api/test-evidence/impact",
+          "/api/interfaces/preview",
+          "/api/impact",
+          "/api/interfaces/preview",
+          "/api/test-evidence/impact",
+          "/api/impact"
+        ],
+        "synthetic_fixture": true
+      },
+      "usability": {
+        "groups_passed": 13,
+        "checks": [
+          "Guided review opens and closes in place from Projects, work-area hubs, Overview and Systems without hidden navigation or provider calls",
+          "Calculate and Recalculate each save a new review on an already calculated revision, show progress/completion and prevent duplicate in-flight starts",
+          "The companion draws actual local WebGL geometry rather than the previous SVG, with frames rendered before interaction",
+          "Pointer dragging repositions without opening AI, restores its saved position after reload, and retains normal click and keyboard repositioning",
+          "Reduced motion pauses the rocket animation without removing its functional launcher",
+          "Nemotron keeps the primary question/model/start controls and all three models, makes no selection-triggered call, and preserves a completed evidence-backed answer",
+          "Tavily starts with a small duplicate-free human-readable list, while Advanced preserves exact finding/assumption targets without starting a search",
+          "The spaced Source library explains missing form fields, receives an unsaved Tavily preview, and saves/links only through two separate explicit actions",
+          "Project names, source text, native controls and Nemotron dialog copy share the global UI font rather than local module-specific stacks",
+          "Dragged companion and simplified conversation remain inside a narrow mobile viewport with no page-wide horizontal overflow",
+          "Simplified hosted conversation preserves the existing owner-only controls and financial-status boundary",
+          "Only explicit isolated actions posted; original design, numerical results and allowance remain unchanged, with no external provider traffic",
+          "Graphics-context loss exposes the honest local fallback while the draggable assistant remains functional"
+        ],
+        "errors": [],
+        "unexpected_responses": [],
+        "external_requests": 0,
+        "post_routes": [
+          "/api/run",
+          "/api/run",
+          "/api/investigations",
+          "/api/research/search",
+          "/api/sources",
+          "/api/source-links",
+          "/api/hosted/login"
+        ],
+        "synthetic_fixture": true
+      }
+    },
+    "external_requests": 0
+  },
+  "owner_preservation": {
+    "baseline_table_file_checks": 27,
+    "unchanged_checks": 25,
+    "preservation_verified": true,
+    "concurrent_activity": {
+      "added_investigations": 1,
+      "all_added_completed": true,
+      "models": [
+        "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+      ],
+      "original_investigation_rows": 26,
+      "original_investigation_rows_match": true,
+      "approval_and_cap_unchanged": true,
+      "reservation_increase_matches_added_records": true,
+      "build_initiated_provider_requests": 0
+    },
+    "connections": {
+      "nebius": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      },
+      "tavily": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      },
+      "langsmith": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      }
+    },
+    "default_model_choice": "super",
+    "hosted_limits_unchanged": true,
+    "actual_project_cards": 13,
+    "actual_authoring_inputs": 34,
+    "actual_model_inputs": 24,
+    "actual_requirement_limits": 10
+  },
+  "runtime_source_policy": {
+    "python_files_checked": 64,
+    "lf_passed": true,
+    "committed_bytes": "tools/check_source_consistency.py --git-ref HEAD after commit"
+  },
+  "paid_requests_initiated_by_build": 0,
+  "live_semantic_evaluation_performed": false,
+  "physics_changed": false,
+  "public_hosting_performed": false,
+  "part3_started": false
+}

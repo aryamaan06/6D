@@ -15,7 +15,7 @@
   function numeric(value){
     if(typeof value!=='number'||!Number.isFinite(value))return 'Not available';
     if(Number.isInteger(value)&&!Number.isSafeInteger(value))return 'Outside browser exact-integer range';
-    return String(value);
+    return window.SixDUnits?.number(value)??String(value);
   }
   function measure(record){
     if(!record||typeof record.value!=='number'||!Number.isFinite(record.value)||typeof record.unit!=='string'||!record.unit)return 'No usable numeric record';

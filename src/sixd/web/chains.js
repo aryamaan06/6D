@@ -4,7 +4,7 @@
   let active=null;
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clone=v=>JSON.parse(JSON.stringify(v));
-  const value=v=>typeof v==='number'&&Number.isFinite(v)&&(!Number.isInteger(v)||Number.isSafeInteger(v))?String(v):'See exact JSON value';
+  const value=v=>typeof v==='number'&&Number.isFinite(v)&&(!Number.isInteger(v)||Number.isSafeInteger(v))?(window.SixDUnits?.number(v)??String(v)):'See exact JSON value';
   const option=(id,label,selected)=>'<option value="'+esc(id)+'" '+(id===selected?'selected':'')+'>'+esc(label)+'</option>';
   const button=(action,label,disabled=false)=>'<button type="button" class="sd-button" data-chain="'+esc(action)+'" '+(disabled?'disabled':'')+'>'+esc(label)+'</button>';
   function bindings(model){return Object.entries(model.links||{});}

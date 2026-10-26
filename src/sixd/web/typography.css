@@ -175,7 +175,7 @@ html, body {
  .sr-identity,.aq-identity,.ec-identity,.td-csv,.sd-ai-fact-value,.sd-ai-source-value,
  .sd-change-values,.sd-plot-record>strong,.sd-note-number,.rw-quantity,.rw-step-number,
  .sd-tree-count,.aq-count,.sl-count,.te-count,.sd-zoom span,.sd-finding-value,.sd-node-value,
- .rw-count-value,.sim-metrics strong,.aq-metrics dd,input[type="number"],
+ .rw-count-value,.sim-metrics strong,.aq-metrics dd,.sd-number,.sd-project-id,.rw-exact-values dd,input[type="number"],
  [data-field="value"],[data-field="unit"],.sim-playback output,.te-values dd,
  .sy-values dd,.sr-budget dd,.ga-table td,.sa-table td) {
   font-family:var(--sd-font-mono)!important;

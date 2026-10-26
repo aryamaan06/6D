@@ -314,6 +314,46 @@ html,body{margin:0;min-height:100%;background:#fbfbfd}body{overflow-x:hidden}
 #sixd-workspace #sd-author-form textarea,#sixd-workspace #sd-new-form textarea{resize:vertical;line-height:1.7;width:100%}
 #sixd-workspace #sd-author-fields>p{font-size:13px;line-height:1.75;margin-top:12px}
 #sixd-workspace .sd-authoring>.sd-action-row{margin-top:24px}
+/* One shell page title/lead. These selectors cover only known decorative module
+   introductions, so asynchronous module redraws retain the same hierarchy.
+   Action rows, revision/status badges and distinct scope warnings stay visible. */
+#sixd-workspace #sd-view-content[data-shell-title] :is(.sy-page-heading,.pb-page-heading,.ec-page-header,.dc-page-header,.aq-page-header,.si-heading) h2,
+#sixd-workspace #sd-view-content[data-shell-title] :is(.sy-page-heading,.pb-page-heading,.ec-page-header,.dc-page-header,.aq-page-header,.si-heading)>div>p,
+#sixd-workspace #sd-view-content[data-shell-title] :is(.sim-intro,.cc-intro,.ac-intro) h2,
+#sixd-workspace #sd-view-content[data-shell-title] .sim-intro>div>p,
+#sixd-workspace #sd-view-content[data-shell-title] .cc-intro>p,
+#sixd-workspace #sd-view-content[data-shell-title] .ac-intro>h2+p,
+#sixd-workspace #sd-view-content[data-shell-title] :is(.pf-page,.ga-page,.sa-page) > :is(h2,.sd-lead),
+#sixd-workspace #sd-view-content[data-shell-title] .td-builder>.sd-section-heading h2,
+#sixd-workspace #sd-view-content[data-shell-title] .td-builder>.sd-section-heading+p,
+#sixd-workspace #sd-view-content[data-shell-title] .en-builder>.sd-section-heading h2,
+#sixd-workspace #sd-view-content[data-shell-title] .en-builder>.sd-section-heading+p,
+#sixd-workspace #sd-view-content[data-shell-title] .sl-intro>p,
+#sixd-workspace #sd-view-content[data-shell-title] .rw-header :is(h1,p,.rw-eyebrow),
+#sixd-workspace #sd-view-content[data-shell-title] .sd-reader>:is(h2,.sd-lead){display:none}
+#sixd-workspace .sd-preserve{white-space:pre-wrap;overflow-wrap:anywhere}
+#sixd-workspace .sd-context-disclosure{border:1px solid var(--sd-border);border-radius:8px;margin:16px 0;background:#fff}
+#sixd-workspace :is(.sd-context-disclosure,.sd-author-group,.sd-author-input-group,.sd-author-record)>summary{cursor:pointer;line-height:1.55;padding:13px 16px;overflow-wrap:anywhere}
+#sixd-workspace :is(.sd-context-disclosure,.sd-author-group,.sd-author-input-group,.sd-author-record)>summary:focus-visible{outline:2px solid var(--sd-blue);outline-offset:3px;border-radius:6px}
+#sixd-workspace :is(.sd-author-group,.sd-author-input-group)>summary :is(h2,h3){display:inline;font-size:17px;font-weight:600;margin:0}
+#sixd-workspace .sd-disclosure-meta{display:block;font-size:13px;font-weight:400;color:var(--sd-soft);margin:5px 0 0 17px}
+#sixd-workspace .sd-disclosure-body{padding:0 16px 16px}
+#sixd-workspace .sd-context-disclosure .sd-field{margin-top:8px}
+#sixd-workspace .sd-author-group{padding:0;border:1px solid var(--sd-border);border-radius:9px;margin-top:15px;background:#fff}
+#sixd-workspace .sd-author-group>.sd-disclosure-body>.sd-action-row{margin:4px 0 12px}
+#sixd-workspace .sd-author-input-group{border-top:1px solid var(--sd-border);margin-top:16px}
+#sixd-workspace .sd-author-input-group>.sd-disclosure-body{padding-left:0;padding-right:0}
+#sixd-workspace .sd-author-record{padding:0;margin-top:10px}
+#sixd-workspace .sd-author-record-title{font-size:15px;font-weight:550}
+#sixd-workspace .sd-author-record>summary .sd-disclosure-meta{font-variant-numeric:tabular-nums}
+#sixd-workspace .sd-author-record>.sd-disclosure-body{padding-top:4px;border-top:1px solid var(--sd-border)}
+#sixd-workspace .sd-system-context{padding:0 22px}
+#sixd-workspace .sd-system-context .sd-context-disclosure{margin-top:12px;margin-bottom:12px}
+@media(max-width:700px){#sixd-workspace .sd-author-record{padding:0}#sixd-workspace .sd-system-context{padding:0 16px}}
+@media print{
+  #sixd-workspace #sd-view-content[data-shell-title] .sd-reader>h2{display:block}
+  #sixd-workspace .sd-context-disclosure>summary{font-weight:600}
+}
 #sixd-workspace .sd-tool-actions{flex-wrap:wrap;justify-content:flex-end}
 #sixd-workspace .sd-draft-strip{flex-wrap:wrap;gap:10px}
 #sixd-workspace .sd-draft-actions{flex-wrap:wrap}
@@ -461,3 +501,6 @@ html,body{margin:0;min-height:100%;background:#fbfbfd}body{overflow-x:hidden}
   #sixd-workspace .sd-reference-list a{color:#111}
   #sixd-workspace .sd-accuracy-table{min-width:0}
 }
+
+/* The area introduction is already present in the shell header. */
+#sixd-workspace .sd-area-home>.sd-area-intro{display:none}
