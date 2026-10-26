@@ -70,7 +70,7 @@
   }
   function create({read,apply,onError=()=>{},onChange=()=>{}}) {
     let started=false, disposed=false, applying=false, current=null, maximum=0, pending=null, scheduled=false;
-    let settled=Promise.resolve(), release=null, restoring=null;
+    let settled=Promise.resolve(), release=null, restoring=null, previousScrollRestoration=null;
     const indexOf = state => Number.isSafeInteger(state?.[SLOT]?.index) && state[SLOT].index >= 0 ? state[SLOT].index : null;
     function stateFor(index) {
       const base = window.history.state;
@@ -94,6 +94,7 @@
     function start() {
       if (started || disposed) return;
       const route=normalize(read()),index=indexOf(window.history.state) ?? 0;
+      if('scrollRestoration' in window.history){previousScrollRestoration=window.history.scrollRestoration;window.history.scrollRestoration='manual';}
       started=true;adopt(route,index,true);
       window.addEventListener('popstate',changed);window.addEventListener('hashchange',changed);
     }
@@ -152,7 +153,7 @@
       get canBack(){return !!current && current.index > 0;},
       get canForward(){return !!current && current.index < maximum;},
       get applying(){return applying || !!restoring;},get settled(){return settled;},
-      dispose(){disposed=true;window.removeEventListener('popstate',changed);window.removeEventListener('hashchange',changed);const done=release;release=null;done?.();}};
+      dispose(){disposed=true;window.removeEventListener('popstate',changed);window.removeEventListener('hashchange',changed);if(previousScrollRestoration!==null)window.history.scrollRestoration=previousScrollRestoration;const done=release;release=null;done?.();}};
   }
   window.SixDNavigation={parse,format,create};
 })();

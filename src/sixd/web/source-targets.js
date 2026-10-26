@@ -5,32 +5,30 @@
   const list=value=>Array.isArray(value)?value:[];
   function topic(target){
     const text=String(target.label||target.target_id||'').toLowerCase();
-    if(/propellant|fuel|burn.duration|specific impulse|delta.?v|thrust|engine/.test(text))return 'Engine & fuel';
     if(/stress|deflection|bending|drag|dynamic pressure|density|structur/.test(text))return 'Forces & structure';
     if(/thermal|radiat|temperature|heat|emissiv/.test(text))return 'Heating';
     if(/pointing|tracking|guidance|control|angular|torque/.test(text))return 'Guidance';
+    if(/propellant|fuel|burn.duration|specific impulse|delta.?v|thrust/.test(text))return 'Engine & fuel';
     if(/power|energy|battery|electric/.test(text))return 'Power';
     if(/altitude|height|acceleration|flight|orbit|position|velocity|speed/.test(text))return 'Flight path';
+    if(/engine/.test(text))return 'Engine & fuel';
     return 'Other project checks';
   }
   function shortLabel(target){
     const original=String(target.label||target.target_id||'Project check');
-    const text=original.toLowerCase();
-    let label;
-    if(/burnout.*(height|altitude)|(height|altitude).*burnout/.test(text))label='Altitude at engine cutoff';
-    else if(/propellant.*margin|fuel.*margin/.test(text))label='Fuel margin';
-    else if(/burn.duration/.test(text))label='Engine burn time';
-    else if(/dynamic pressure/.test(text))label='Pressure from airflow';
-    else if(/upward acceleration/.test(text))label='Upward acceleration';
-    else if(/drag.force/.test(text))label='Drag force';
-    else if(/stress/.test(text))label='Structural stress';
-    else if(/deflection|bending/.test(text))label='Structural bending';
-    else if(/temperature/.test(text))label='Temperature';
-    else if(/tracking/.test(text))label='Guidance tracking';
-    else if(/pointing/.test(text))label='Pointing accuracy';
-    else label=original.replace(/\s*· saved finding$/i,'').replace(/^declared\s+/i,'').replace(/\breference-density\s+|\bindependent\s+|\btheoretical\s+|\btransverse\s+|\bscreening\s+/gi,'').trim();
-    if(label!==original && /minimum|required minimum/.test(text)&&!/^minimum/i.test(label))label='Minimum '+label.charAt(0).toLowerCase()+label.slice(1);
-    if(label!==original && /maximum/.test(text)&&!/^maximum/i.test(label))label='Maximum '+label.charAt(0).toLowerCase()+label.slice(1);
+    // Rewrite metric phrases in place. The surrounding words can identify a
+    // component, stage, load case or bound and must survive the shorter label.
+    let label=original.replace(/\s*· saved finding$/i,'').replace(/^declared\s+/i,'').trim()
+      .replace(/\bburnout[\s-]+(?:height|altitude)\b/gi,'altitude at engine cutoff')
+      .replace(/\b(?:height|altitude)(?:\s+at)?[\s-]+burnout\b/gi,'altitude at engine cutoff')
+      .replace(/\bpropellant[\s-]+margin\b/gi,'fuel margin')
+      .replace(/\bburn[\s-]+duration\b/gi,'burn time')
+      .replace(/\bdynamic pressure\b/gi,'pressure from airflow')
+      .replace(/\bdrag-force\b/gi,'drag force');
+    if(/^burn time$/i.test(label))label='Engine burn time';
+    else if(/^stress$/i.test(label))label='Structural stress';
+    else if(/^tracking$/i.test(label))label='Guidance tracking';
+    else if(/^pointing$/i.test(label))label='Pointing accuracy';
     return label.charAt(0).toUpperCase()+label.slice(1);
   }
   function requirements(targets,selected){

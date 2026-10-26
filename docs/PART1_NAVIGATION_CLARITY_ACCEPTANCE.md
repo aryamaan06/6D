@@ -1,0 +1,10 @@
+# Part 1 — navigation and clarity acceptance
+
+Authorized October 26, 2026. This is the first of three agreed interface correction parts. Part 2 readability/organization and Part 3 companion refinements are outside this delivery.
+
+1. Opening a different work page, project or saved revision starts at its heading instead of inheriting a deep scroll position. In-place selections and refreshes must not jump unnecessarily. Back/Forward, deep links, delayed loads and cancelled draft/profile navigation must retain consistent URL/project/revision context; cancelled navigation must not move or discard the current work.
+2. Simplified requirement/source labels retain the component/context that distinguishes otherwise similar checks. Two temperature, stress or fuel-margin requirements must remain distinguishable, with their exact IDs and Advanced records unchanged.
+3. Overview clearly distinguishes calculated criterion results from coverage/applicability/model-fit declarations. Nine passing numeric criteria and ten missing scope/model-fit declarations must be explained without changing any finding or automatically asserting model suitability. Show the appropriate next action.
+4. Engineering and analysis navigation indicates which tools have a mapped model or recorded calculation for the selected saved project/revision. Unconfigured tools remain accessible for authoring, with clear empty-state expectations. A declaration, unsupported placeholder and completed evidence are not interchangeable. Switching projects/revisions must update the labels.
+
+Verify the report-from-lower-Overview reproduction, long-to-long page changes, Back/Forward and draft guards, two distinct components, calculated/unrun/unsupported tool states, and the existing question/reference workflows. Preserve owner projects, runs, histories, credentials, approvals and reservations. No paid provider calls, new numerical models, automatic reruns or hosted-limit changes. Restart and verify the actual local build, document scoped results, privacy-check and push the completed part to GitHub.

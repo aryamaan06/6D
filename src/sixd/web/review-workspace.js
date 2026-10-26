@@ -12,6 +12,26 @@
   const button = (action, text, primary = false, disabled = false) => '<button type="button" class="sd-button' + (primary ? ' sd-primary' : '') + '" data-rw="' + esc(action) + '"' + (disabled ? ' disabled' : '') + '>' + esc(text) + '</button>';
   const navButton = (action, text) => '<button type="button" class="rw-text-link" data-rw-nav="' + esc(action) + '">' + esc(text) + '<span aria-hidden="true"> ↗</span></button>';
   const routes = new Set(['edit','author-project','coverage','systems','simulation','powered-flight','guided-ascent','staged-ascent','attitude','power','chains','envelopes','simulation-imports','scenarios','comparison','actions','sources','report','changes']);
+  const coverageKinds = [
+    ['applicability_unknown','Model fit not declared','Review whether the model assumptions fit the intended use. Numerical results cannot supply this declaration.'],
+    ['outside_assumptions','Outside model assumptions','The supplied model-fit review identifies conditions outside the model assumptions.'],
+    ['missing_analysis','Analysis missing or unsupported','A check has no linked supported calculation. Define an applicable analysis and criterion.'],
+    ['undecided','Scope undecided','Decide whether the check is required for the declared mission and phase.'],
+    ['needs_review','Declaration context changed','Review the declaration against changed requirements, inputs or model context.'],
+    ['unassessed','Analysis not assessed','The linked analysis does not supply a current assessed finding. Open coverage for the recorded reason.'],
+    ['criterion_unmet','Linked criterion unmet','The linked calculated criterion is unmet; the supplied model-fit declaration is unverified.'],
+    ['criterion_met','Criterion met with supplied fit declaration','The calculated criterion is met. The supplied fit declaration remains unverified.'],
+    ['excluded','Excluded by supplied rationale','The declared scope excludes this check. Any linked calculated finding remains unchanged.']
+  ];
+  function coverageSummary(data) {
+    const checks = list(data.coverage?.checks);
+    const groups = coverageKinds.map(([status,label,reason]) => ({status,label,reason,count:checks.filter(row => row.coverage_status === status).length})).filter(group => group.count);
+    const other = checks.filter(row => !coverageKinds.some(([status]) => status === row.coverage_status)).length;
+    if (other) groups.push({status:'unavailable',label:'Coverage status unavailable',reason:'Open engineering coverage to inspect the saved check context.',count:other});
+    const pending = checks.filter(row => !['criterion_met','excluded'].includes(row.coverage_status)).length;
+    const headline = checks.length + ' scope ' + (checks.length === 1 ? 'check' : 'checks') + ' · ' + pending + (pending === 1 ? ' needs' : ' need') + ' attention';
+    return {checks,groups,pending,headline};
+  }
 
   function unmount() {
     if (!mounted) return;
@@ -49,14 +69,14 @@
       if (!hasRun(data)) return '<div class="rw-next"><div><span class="rw-eyebrow">Next step</span><h2>Calculate this saved configuration.</h2><p>No current calculation is available for this revision. Run the affected checks to populate its findings and recorded simulations.</p></div>' + button('run','Run affected checks',true,!ctx.onRun) + '</div>';
       if (failed) return '<div class="rw-next"><div><span class="rw-eyebrow">Next step</span><h2>Inspect ' + failed + ' unmet ' + (failed === 1 ? 'criterion' : 'criteria') + '.</h2><p>Read the calculated values, stated limits and assumptions. Use follow-up actions to record the next engineering check.</p></div>' + button('filter-unmet','Review unmet criteria',true) + '</div>';
       if (unknown) return '<div class="rw-next"><div><span class="rw-eyebrow">Next step</span><h2>Resolve ' + unknown + ' unassessed ' + (unknown === 1 ? 'requirement' : 'requirements') + '.</h2><p>Missing evidence or model limitations leave these requirements unresolved. Open a finding to see the recorded reason.</p></div>' + button('filter-unassessed','Review evidence gaps',true) + '</div>';
-      return '<div class="rw-next"><div><span class="rw-eyebrow">Next step</span><h2>Review the coverage behind these results.</h2><p>The calculated criteria meet their declared limits. Check scope, assumptions and missing analyses before sharing the report.</p></div>' + button('coverage','Open engineering coverage',true) + '</div>';
+      return '<div class="rw-next"><div><span class="rw-eyebrow">Next step</span><h2>Review the coverage behind these results.</h2><p>The calculated criteria meet their declared limits. Review model-fit declarations, scope and missing analyses before sharing the report.</p></div>' + button('coverage','Open engineering coverage',true) + '</div>';
     }
 
     function journey(data){
       return '<nav id="sd-project-journey" class="sd-project-journey" aria-label="Project review workflow">'+navButton('author-project','1. Design')+button('run','2. Calculate',false,!ctx.onRun||isDraft()||!list(data.models).length||!list(data.findings).length)+navButton('edit','3. Change inputs')+button('run','4. Recalculate',false,!ctx.onRun||isDraft()||!list(data.models).length||!list(data.findings).length)+navButton('changes','5. Review changes')+navButton('report','6. Report')+'</nav>';
     }
     function resultLegend(){
-      return '<section id="sd-result-legend" class="sd-result-legend" aria-labelledby="sd-result-legend-title"><h3 id="sd-result-legend-title">What the results mean</h3><div class="sd-legend-explanations"><div>'+badge('met')+'<p>The applicable saved calculation satisfies the declared condition. This covers the stated model and inputs.</p></div><div>'+badge('not_met')+'<p>The applicable saved calculation misses the declared condition. Inspect its value, limit and assumptions.</p></div><div>'+badge('not_assessed')+'<p>There is not enough applicable evidence to decide. Missing analysis or numerical uncertainty is not a failed design.</p></div></div><p class="rw-caption">Not calculated means this saved revision still needs its checks run. Save draft changes before recalculating.</p></section>';
+      return '<section id="sd-result-legend" class="sd-result-legend" aria-labelledby="sd-result-legend-title"><h3 id="sd-result-legend-title">What the results mean</h3><div class="sd-legend-explanations"><div>'+badge('met')+'<p>The saved calculation satisfies the declared condition for its stated model and inputs. Model applicability is reviewed separately.</p></div><div>'+badge('not_met')+'<p>The saved calculation misses the declared condition. Inspect its value, limit and assumptions.</p></div><div>'+badge('not_assessed')+'<p>There is not enough applicable evidence to decide. Missing analysis or numerical uncertainty is not a failed design.</p></div></div><p class="rw-caption">Not calculated means this saved revision still needs its checks run. Save draft changes before recalculating.</p></section>';
     }
     function rocketReference(data) {
       const ref = data.rocket_reference;
@@ -82,11 +102,17 @@
       return '<button type="button" class="rw-count rw-count-' + key + '" data-rw-filter="' + key + '"' + (!hasRun(data) ? ' disabled' : '') + '><span class="rw-count-value">' + value + '</span><span><strong>' + esc(title) + '</strong><small>' + esc(note) + '</small></span></button>';
     }
 
+    function coverageContext(data) {
+      const summary = coverageSummary(data);
+      return '<section class="rw-coverage-context" aria-labelledby="rw-coverage-title"><div class="rw-section-heading"><div><h2 id="rw-coverage-title">Coverage and model applicability</h2><p>' + summary.headline + '</p></div>' + navButton('coverage','Review declarations & model fit') + '</div><p class="rw-coverage-explanation">Criterion counts above describe calculated requirements. Coverage records whether a check is included and whether its model assumptions fit the intended use. A met numerical criterion cannot resolve a missing model-fit declaration.</p>' +
+        (summary.groups.length ? '<dl class="rw-coverage-breakdown">' + summary.groups.map(group => '<div data-rw-coverage-status="' + esc(group.status) + '"><dt><span>' + group.count + '</span> ' + esc(group.label) + '</dt><dd>' + esc(group.reason) + '</dd></div>').join('') + '</dl>' : '<p class="rw-caption">No scope checks are recorded in this snapshot.</p>') +
+        '<p class="rw-caption">Coverage can include additional declared checks, so its total may differ from requirement findings. Fit declarations and exclusions are supplied, unverified context; they do not change calculated findings. These counts are not a mission-completeness measure.</p></section>';
+    }
+
     function map(data) {
-      const models = list(data.models), coverage = list(data.coverage?.checks), actions = list(data.actions?.actions);
+      const models = list(data.models), scope = coverageSummary(data), actions = list(data.actions?.actions);
       const sims = data.simulations || {}, imports = list(sims.imports), envelopes = list(sims.envelopes), scenarios = list(sims.scenarios);
       const openActions = actions.filter(item => item.status !== 'closed').length;
-      const pendingCoverage = coverage.filter(item => !['criterion_met','excluded'].includes(item.coverage_status)).length;
       const savedSimulations = integer(sims.canonical_orbits) + integer(sims.canonical_flights);
       const links = list(data.sources?.links);
       const entry = (number, title, text, linksHtml) => '<section class="rw-map-step"><span class="rw-step-number">' + number + '</span><h3>' + title + '</h3><p>' + esc(text) + '</p><div class="rw-step-links">' + linksHtml + '</div></section>';
@@ -100,7 +126,7 @@
       playbackLinks += navButton('simulation-imports', 'Simulation imports');
       return '<section class="rw-section" aria-labelledby="rw-map-title"><div class="rw-section-heading"><div><h2 id="rw-map-title">Review map</h2><p>Move from declared design to traceable evidence.</p></div></div><div class="rw-map">' +
         entry('01','Design',models.length + ' configured ' + (models.length === 1 ? 'model' : 'models'),navButton('author-project','Design & requirements')) +
-        entry('02','Coverage',coverage.length + ' checks · ' + pendingCoverage + ' require attention',navButton('coverage','Engineering coverage')) +
+        entry('02','Coverage',scope.headline,navButton('coverage','Engineering coverage')) +
         entry('03','Calculations',hasRun(data) ? list(data.findings).length + ' recorded findings' : 'No current calculation',navButton('systems','Systems canvas') + navButton('chains','Linked calculations')) +
         entry('04','Simulation',savedSimulations + ' recorded trajectories · ' + imports.length + ' imports',playbackLinks) +
         entry('05','Studies',envelopes.length + ' envelope studies · ' + scenarios.length + ' scenario studies',navButton('envelopes','Envelope studies') + navButton('scenarios','Scenario studies') + navButton('comparison','Compare designs')) +
@@ -110,15 +136,15 @@
     }
 
     function attention(data) {
-      const checks = list(data.coverage?.checks);
+      const scope = coverageSummary(data), checks = scope.checks;
       const changedChecks = checks.filter(item => item.needs_review).length;
-      const missing = checks.filter(item => ['missing_analysis','outside_assumptions','applicability_unknown','undecided','unassessed'].includes(item.coverage_status)).length;
+      const unresolved = scope.groups.filter(group => !['criterion_met','excluded'].includes(group.status)).map(group => group.count + ' ' + group.label.toLocaleLowerCase()).join('; ');
       const actions = list(data.actions?.actions), changedActions = actions.filter(item => item.review_status && item.review_status !== 'current').length;
       const openActions = actions.filter(item => item.status !== 'closed').length;
       const links = list(data.sources?.links), changedLinks = links.filter(item => item.status && item.status !== 'linked').length;
       const line = (name, explanation, action, label) => '<li><div><strong>' + esc(name) + '</strong><p>' + esc(explanation) + '</p></div>' + navButton(action,label) + '</li>';
       return '<section class="rw-section rw-attention" aria-labelledby="rw-attention-title"><div class="rw-section-heading"><div><h2 id="rw-attention-title">What needs attention</h2><p>Declarations and follow-up stay separate from calculated findings.</p></div></div><ul>' +
-        line('Engineering coverage',changedChecks + ' changed declarations; ' + missing + ' missing, uncertain or unassessed checks. This is not a mission-completeness measure.','coverage','Review coverage') +
+        line('Engineering coverage',scope.pending + (scope.pending === 1 ? ' scope check needs attention' : ' scope checks need attention') + (unresolved ? ': ' + unresolved : '') + '. ' + changedChecks + ' declarations flagged for changed context. This does not add to or change the calculated criterion counts.','coverage','Review coverage') +
         line('Follow-up actions',openActions + ' open actions; ' + changedActions + ' actions with changed or unavailable context. Closing an action does not change a calculation.','actions','Open actions') +
         line('Source context',links.length + ' pinned source links; ' + changedLinks + ' need review or have unavailable targets. A link is not independent verification.','sources','Inspect sources') +
         '</ul></section>';
@@ -153,9 +179,9 @@
       host.innerHTML = '<article class="rw-workspace" aria-label="Review workspace" aria-busy="' + String(state.loading) + '"><header class="rw-header"><div><span class="rw-eyebrow">Review workspace</span><h1>' + esc(data?.project_name || 'Project review') + '</h1><p>Understand the saved design, examine its evidence and follow the unresolved work.</p></div><div>' + button('refresh',state.loading ? 'Refreshing…' : 'Refresh snapshot',false,state.loading) + '</div></header>' +
         (state.error ? '<div class="rw-error" role="alert"><strong>Review snapshot unavailable.</strong><p>' + esc(state.error) + '</p>' + (data ? '<p>The previously captured snapshot remains below. Refresh to check for newer evidence.</p>' : '') + button('refresh','Try again') + button('reload','Reload saved context') + '</div>' : '') +
         (!data ? (state.loading ? '<div class="rw-loading" role="status"><span class="rw-loading-mark" aria-hidden="true"></span><strong>Reading the saved revision…</strong><p>Collecting calculations, coverage and supplemental evidence in one snapshot.</p></div>' : '') : context(data) + journey(data) + rocketReference(data) + (data.rocket_reference?.recognized ? '' : nextStep(data)) +
-          '<section class="rw-counts" aria-label="Canonical requirement findings">' + countCard(data,'met','Meet their criteria','Within declared model and limits') + countCard(data,'not_met','Criteria unmet','Calculated limits exceeded') + countCard(data,'not_assessed','Not assessed','Evidence or model gaps') + '</section>' +
-          '<p class="rw-caption rw-count-caption">' + (hasRun(data) ? 'These findings concern the saved configuration and declared criteria. They are not launch approval or a whole-system safety assessment.' : integer(data.counts?.not_run) + ' requirements not calculated. No results are counted until this saved revision has a current calculation.') + '</p>' +
-          resultLegend() + map(data) +
+          '<section class="rw-counts" aria-label="Canonical requirement findings">' + countCard(data,'met','Meet their criteria','Calculated values within declared limits') + countCard(data,'not_met','Criteria unmet','Calculated limits exceeded') + countCard(data,'not_assessed','Not assessed','Evidence or model gaps') + '</section>' +
+          '<p class="rw-caption rw-count-caption">' + (hasRun(data) ? 'These calculated findings concern the saved configuration and declared criteria. Model applicability is reviewed separately below. They are not launch approval or a whole-system safety assessment.' : integer(data.counts?.not_run) + ' requirements not calculated. No results are counted until this saved revision has a current calculation.') + '</p>' +
+          coverageContext(data) + resultLegend() + map(data) +
           '<section class="rw-section" aria-labelledby="rw-findings-title"><div class="rw-section-heading"><div><h2 id="rw-findings-title">Requirement findings</h2><p>Exact recorded values and limits. Select a requirement for its assumptions and exclusions.</p></div><span class="rw-caption" data-rw-match-count></span></div><div class="rw-findings-toolbar"><div class="rw-filters" role="group" aria-label="Filter requirements"><button type="button" data-rw-filter="all" aria-pressed="true">All requirements</button><button type="button" data-rw-filter="not_met" aria-pressed="false">Criteria unmet</button><button type="button" data-rw-filter="not_assessed" aria-pressed="false">Not assessed</button></div><label class="rw-search"><span class="rw-sr-only">Search requirements</span><input type="search" placeholder="Search requirements or reasons…" value="' + esc(state.query) + '" data-rw-search></label></div><div data-rw-findings></div></section>' +
           attention(data) +
           '<footer class="rw-footer"><details><summary>Snapshot identity and assessment limits</summary><dl><div><dt>Saved revision</dt><dd>' + esc(data.revision) + '</dd></div><div><dt>Calculation</dt><dd>' + esc(data.run_id || 'No current calculation') + '</dd></div><div><dt>Review digest</dt><dd>' + esc(data.review_digest || 'Unavailable') + '</dd></div><div><dt>Snapshot digest</dt><dd>' + esc(data.digest || 'Unavailable') + '</dd></div></dl><ul>' + list(data.limitations).map(text => '<li>' + esc(text) + '</li>').join('') + '</ul></details><p>Read-only snapshot · actions open the corresponding workspace · refresh explicitly after changes</p></footer>') + '</article>';

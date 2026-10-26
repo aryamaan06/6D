@@ -6,7 +6,7 @@
 #sixd-workspace .sd-area-link[aria-current]{background:var(--sd-bg);box-shadow:0 1px 3px #00000008;color:var(--sd-ink)}
 #sixd-workspace .sd-section-menu{display:grid;gap:3px;margin-bottom:18px;padding:4px 6px 12px;border-bottom:1px solid var(--sd-border)}
 #sixd-workspace .sd-section-menu>.sd-label{margin:0 4px 6px}
-#sixd-workspace .sd-section-link{min-height:34px;padding:7px 9px;border-radius:6px;white-space:normal;font-size:13px;line-height:1.4}
+#sixd-workspace .sd-section-link{display:grid;justify-items:start;gap:3px;text-align:left;min-height:34px;padding:7px 9px;border-radius:6px;white-space:normal;font-size:13px;line-height:1.4}
 #sixd-workspace .sd-section-link[aria-current]{color:var(--sd-blue);background:var(--sd-blue-soft);font-weight:600}
 #sixd-workspace .sd-projects-link{display:flex;align-items:center;gap:8px;padding:5px 8px 14px;font-weight:600}
 #sixd-workspace .sd-breadcrumb{align-items:center;min-height:52px;gap:10px;height:auto;padding-block:12px}
@@ -43,6 +43,11 @@
 #sixd-workspace .sd-destination-copy{display:grid;gap:9px;min-width:0}
 #sixd-workspace .sd-destination strong{font-size:15px;line-height:1.4;font-weight:600}
 #sixd-workspace .sd-destination-copy>span{font-size:13px;line-height:1.65;color:var(--sd-soft)}
+#sixd-workspace .sd-tool-status,#sixd-workspace .sd-destination-copy>.sd-tool-status{display:inline-block;justify-self:start;max-width:100%;padding:3px 8px;border:1px solid var(--sd-border);border-radius:6px;font-size:13px;font-weight:550;line-height:1.4;color:var(--sd-soft);background:var(--sd-bg);white-space:normal;text-align:left}
+#sixd-workspace .sd-tool-recorded,#sixd-workspace .sd-tool-partial,#sixd-workspace .sd-destination-copy>.sd-tool-recorded,#sixd-workspace .sd-destination-copy>.sd-tool-partial{color:var(--sd-blue);background:var(--sd-blue-soft);border-color:transparent}
+#sixd-workspace .sd-section-link .sd-tool-status{padding:0;border:0;border-radius:0;background:transparent;font-size:13px;font-weight:400}
+#sixd-workspace .sd-destination-copy>.sd-tool-detail{font-size:13px;line-height:1.55}
+#sixd-workspace .sd-tool-context{margin:-8px 0 22px;max-width:720px;color:var(--sd-soft);font-size:13px;line-height:1.65}
 #sixd-workspace .sd-destination svg{margin-top:3px;color:var(--sd-soft)}
 #sixd-workspace .sd-area-intro{margin:0 0 22px}
 #sixd-workspace .sd-area-note{margin-top:24px;color:var(--sd-soft);font-size:13px}

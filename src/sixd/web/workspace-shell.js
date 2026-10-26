@@ -34,6 +34,52 @@
       ['owner-settings','Owner settings','Manage connections, usage and verification tools.'] ]}
   ];
   const hubs = new Set(['projects','engineering','analysis','evidence','setup','owner-settings']);
+  const toolTypes = [
+    ['power','power_energy_budget','power_budget'],
+    ['attitude','attitude_control','attitude_response'],
+    ['vertical-mode','powered_flight','flight_response'],
+    ['guided-ascent','guided_ascent','guided_response'],
+    ['staged-ascent','staged_ascent','staged_response'],
+    ['simulation','orbital_trajectory','simulation']
+  ];
+  // A display summary of the selected saved view. Receipt validation remains on
+  // the server; declarations and older receipts never become completed results.
+  function toolSummary(view,{hasDraft=false}={}) {
+    if(!view?.project)return null;
+    const models=Array.isArray(view.project.models)?view.project.models:[];
+    const revision=view.revision,run=view.run;
+    const receipt=run?.schema==='sixd.workspace-run.v1'&&run.run_id&&run.review?.digest&&
+      run.project_id===view.project_id&&Number(run.revision)===Number(revision)&&!run.stale&&
+      run.review.project?.project_id===view.project_id&&Number(run.review.project?.revision)===Number(revision)?run:null;
+    const byAction={};
+    for(const [action,type,artifact] of toolTypes) {
+      const configured=models.filter(model=>model.type===type);
+      let recorded=0,blocked=0;
+      for(const model of configured) {
+        const result=receipt?.model_results?.[model.id];
+        if(result?.model_id!==model.id||result?.model_type!==type)continue;
+        if(result.status==='completed'&&result[artifact]&&typeof result[artifact]==='object')recorded++;
+        else if(['invalid_inputs','not_assessed'].includes(result.status))blocked++;
+      }
+      const count=configured.length;
+      const state=!count?'unconfigured':recorded===count?'recorded':recorded?'partial':blocked?'blocked':'configured';
+      const label={unconfigured:'Not configured for this project',configured:'Configured · not calculated',
+        blocked:'Configured · calculation blocked',partial:'Recorded calculation · partial',recorded:'Recorded calculation'}[state];
+      const navLabel={unconfigured:'Not configured',configured:'Not calculated',blocked:'Calculation blocked',
+        partial:'Some recorded',recorded:'Recorded'}[state]+(count?' · R'+revision:'');
+      const detail=count?count+' configured '+(count===1?'model':'models')+' · '+recorded+' completed '+(recorded===1?'result':'results')+' in saved R'+revision+'.'+
+        (blocked?' '+blocked+' '+(blocked===1?'calculation is':'calculations are')+' blocked or unassessed; open the tool for the recorded reason.':''):
+        'Available to configure in this project.';
+      byAction[action]={state,label,navLabel,detail,configured:count,recorded,blocked};
+    }
+    return {projectId:view.project_id,revision,latestRevision:view.latest_revision,
+      historical:Number(revision)!==Number(view.latest_revision),hasDraft,byAction,
+      priorRevision:!receipt&&view.prior_run?.project_id===view.project_id?view.prior_run.revision:null};
+  }
+  function scopedTools(tools,projectId,revision) {
+    return tools?.projectId===projectId&&(revision===undefined||Number(tools.revision)===Number(revision))?tools:null;
+  }
+  const toolBadge = (status,compact=false) => status?'<span class="sd-tool-status sd-tool-'+esc(status.state)+'" title="'+esc(status.label+'. '+status.detail)+'">'+esc(compact?status.navLabel:status.label)+'</span>':'';
   function areaFor(page) {
     if (page === 'projects') return null;
     if(page==='ai-quality')return areas.find(a=>a.id==='setup');
@@ -45,20 +91,24 @@
     const area = areaFor(page);
     return area.items.find(i => (i[3] || i[0]) === page)?.[1] || area.label;
   }
-  const button = (action,label,description,icon='arrow-up-right') => '<button type="button" class="sd-destination" data-action="'+esc(action)+'"><span class="sd-destination-copy"><strong>'+esc(label)+'</strong><span>'+esc(description)+'</span></span><i data-lucide="'+icon+'" aria-hidden="true"></i></button>';
-  function hub(page,projects,currentId) {
+  const button = (action,label,description,icon='arrow-up-right',status=null) => '<button type="button" class="sd-destination" data-action="'+esc(action)+'"><span class="sd-destination-copy"><strong>'+esc(label)+'</strong>'+toolBadge(status)+'<span>'+esc(description)+'</span>'+(status?'<span class="sd-tool-detail">'+esc(status.detail)+'</span>':'')+'</span><i data-lucide="'+icon+'" aria-hidden="true"></i></button>';
+  function hub(page,projects,currentId,tools=null) {
     if (page === 'projects') return '<section class="sd-project-home" aria-label="Your projects"><div class="sd-home-intro"><span class="sd-label">Your workspace</span><h2>Choose a project to begin.</h2><p>Open a saved design, then choose the engineering or review task you want to work on.</p></div><div class="sd-project-grid">'+projects.map(p=>'<button type="button" class="sd-project-card" data-open-project="'+esc(p.project_id)+'"><span class="sd-label">Saved project'+(p.project_id===currentId?' · Current':'')+'</span><strong>'+esc(p.name||p.project_id)+'</strong><span class="sd-project-meta">Revision R'+esc(p.revision)+'</span><span class="sd-project-open">Open project <i data-lucide="arrow-right" aria-hidden="true"></i></span></button>').join('')+'</div><section class="sd-home-start"><h3>Start something new</h3><div class="sd-destination-grid">'+button('rocket-reference','Try the rocket example','Learn how a design change affects recorded conclusions.')+button('new-project','Create a project','Start empty and define your own supported checks.')+button('import','Import or use a template','Bring a supported file or choose another reference example.')+'</div></section></section>';
     const area = areaFor(page);
-    return '<section class="sd-area-home" aria-label="'+esc(area.label)+'"><p class="sd-area-intro">'+esc(area.description)+'</p><div class="sd-destination-grid">'+area.items.map(i=>button(i[0],i[1],i[2])).join('')+'</div><p class="sd-area-note">Opening a tool does not run calculations or start AI. Use its explicit action when you are ready.</p></section>';
+    tools=scopedTools(tools,currentId);
+    const showTools=tools&&['engineering','analysis'].includes(page);
+    const context=showTools?'<p class="sd-tool-context">Saved R'+esc(tools.revision)+(tools.historical?' · Historical revision; latest is R'+esc(tools.latestRevision):' · Selected project')+'. Tool status describes declared models and completed saved calculations.'+(tools.hasDraft?' Draft edits have not been calculated.':'')+(tools.priorRevision!==null?' Earlier calculation for R'+esc(tools.priorRevision)+' is retained in history and is not counted here.':'')+'</p>':'';
+    return '<section class="sd-area-home" aria-label="'+esc(area.label)+'"><p class="sd-area-intro">'+esc(area.description)+'</p>'+context+'<div class="sd-destination-grid">'+area.items.map(i=>button(i[0],i[1],i[2],'arrow-up-right',tools?.byAction[i[0]])).join('')+'</div><p class="sd-area-note">Opening a tool does not run calculations or start AI. Use its explicit action when you are ready.</p></section>';
   }
-  function renderChrome({page,project,revision,system,selected,backEnabled}) {
+  function renderChrome({page,project,revision,system,selected,backEnabled,tools=null}) {
     const area = areaFor(page), isHub=hubs.has(page), root=document.querySelector('#sixd-workspace');
+    tools=scopedTools(tools,project.project_id,revision);
     root.classList.toggle('sd-navigation-hub',isHub);
     root.classList.toggle('sd-projects-home',page==='projects');
     document.querySelector('#sd-primary-nav').innerHTML=areas.map(a=>'<button type="button" class="sd-area-link" data-action="'+a.id+'"'+(a===area?' aria-current="page"':'')+'><i data-lucide="'+a.icon+'" aria-hidden="true"></i>'+esc(a.label)+'</button>').join('');
     const menu=document.querySelector('#sd-section-menu');
     menu.hidden=!area||!area.items.length||isHub;
-    menu.innerHTML=area&&area.items.length?'<span class="sd-label">'+esc(area.label)+'</span>'+area.items.map(i=>'<button type="button" class="sd-section-link" data-action="'+i[0]+'"'+((i[3]||i[0])===page?' aria-current="page"':'')+'>'+esc(i[1])+'</button>').join(''):'';
+    menu.innerHTML=area&&area.items.length?'<span class="sd-label">'+esc(area.label)+'</span>'+area.items.map(i=>'<button type="button" class="sd-section-link" data-action="'+i[0]+'"'+((i[3]||i[0])===page?' aria-current="page"':'')+'><span>'+esc(i[1])+'</span>'+toolBadge(tools?.byAction[i[0]],true)+'</button>').join(''):'';
     document.querySelector('#sd-system-tree-section').hidden=page!=='system';
     document.querySelector('#sd-context-tools').hidden=page!=='system';
     document.querySelector('#sd-analysis-legacy').hidden=true;
@@ -79,5 +129,5 @@
     if(page!=='system') document.querySelector('#sd-page-title').dataset.location=labelFor(page)+' · R'+revision;
     document.title=page==='projects'?'Projects | 6D':labelFor(page)+' · '+project.name+' | 6D';
   }
-  window.SixDWorkspaceShell={areas,hubs,areaFor,labelFor,hub,renderChrome};
+  window.SixDWorkspaceShell={areas,hubs,areaFor,labelFor,toolSummary,hub,renderChrome};
 })();

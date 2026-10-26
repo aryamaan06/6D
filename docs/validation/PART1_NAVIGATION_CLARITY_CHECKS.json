@@ -1,0 +1,136 @@
+{
+  "schema": "sixd.part1-navigation-clarity-checks.v1",
+  "date": "2026-10-26",
+  "build_id": "281ddb417a69",
+  "scope": "First agreed correction part only: page scroll, component labels, calculation-versus-model-fit messaging and saved-revision tool statuses.",
+  "python": {
+    "methods_run": 81,
+    "passed": 80,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0,
+    "skip_reason": "Docker unavailable on this Windows environment",
+    "full_suite": false
+  },
+  "node": {
+    "contracts_passed": 23,
+    "files": {
+      "tests/workspace_navigation.test.cjs": 7,
+      "tests/source_targets.test.mjs": 7,
+      "tests/review_workspace_coverage.test.cjs": 4,
+      "tests/workspace_tool_status.test.cjs": 5
+    }
+  },
+  "browser": {
+    "groups_passed": 34,
+    "packs": {
+      "navigation": {
+        "groups_passed": 21,
+        "checks": [
+          "Selected project and saved revision have an addressable overview",
+          "Passing calculation criteria remain separate from nine missing fit declarations and one unsupported analysis, with a working coverage action",
+          "Opening a report from lower Overview and accepted Back/Forward start at the page heading instead of inheriting a deep scroll",
+          "Tool badges distinguish recorded flight, absent mappings and uncalculated staging, and update across projects and historical revisions",
+          "The actual assistant picker distinguishes battery and engine temperature checks while retaining their exact requirement IDs without inference",
+          "Five broad work areas are reachable without a flat list of every tool",
+          "Native browser Back and Forward restore internal locations",
+          "Reload preserves the routed project, saved revision and work area",
+          "A deep link to a historical revision survives reload",
+          "System Table, selected requirement and evidence panel survive deep reload with a parent breadcrumb",
+          "Same-project page navigation and Back retain the unsaved shared draft without a database write",
+          "Cancelled project switch preserves draft; confirmed switch explicitly discards it",
+          "Cancelling browser Back across project context preserves URL, displayed project and draft",
+          "Accepting browser Back loads the previous saved project and discards only the unsaved draft",
+          "Back during a delayed project load leaves URL and displayed project in the same context",
+          "Unapplied stage-profile values survive blocked area, project and revision navigation",
+          "Browser Back cannot remount or discard an unapplied stage-profile form",
+          "Explicit profile cancellation restores navigation while saved staged inputs stay unchanged",
+          "Requested local editorial typography, ink and soft canvas are applied without remote fonts",
+          "Navigation layout stays within a narrow viewport",
+          "Original fixture receipts unchanged; no provider, search, upload, calculation or save POSTs; no browser errors"
+        ],
+        "errors": [],
+        "unexpected_responses": [],
+        "external_requests": 0,
+        "post_routes": [
+          "/api/impact",
+          "/api/interfaces/preview",
+          "/api/test-evidence/impact",
+          "/api/impact"
+        ],
+        "synthetic_fixture": true
+      },
+      "usability": {
+        "groups_passed": 13,
+        "checks": [
+          "Guided review opens and closes in place from Projects, work-area hubs, Overview and Systems without hidden navigation or provider calls",
+          "Calculate and Recalculate each save a new review on an already calculated revision, show progress/completion and prevent duplicate in-flight starts",
+          "The companion draws actual local WebGL geometry rather than the previous SVG, with frames rendered before interaction",
+          "Pointer dragging repositions without opening AI, restores its saved position after reload, and retains normal click and keyboard repositioning",
+          "Reduced motion pauses the rocket animation without removing its functional launcher",
+          "Nemotron keeps the primary question/model/start controls and all three models, makes no selection-triggered call, and preserves a completed evidence-backed answer",
+          "Tavily starts with a small duplicate-free human-readable list, while Advanced preserves exact finding/assumption targets without starting a search",
+          "The spaced Source library explains missing form fields, receives an unsaved Tavily preview, and saves/links only through two separate explicit actions",
+          "Project names, source text, native controls and Nemotron dialog copy share the global UI font rather than local module-specific stacks",
+          "Dragged companion and simplified conversation remain inside a narrow mobile viewport with no page-wide horizontal overflow",
+          "Simplified hosted conversation preserves the existing owner-only controls and financial-status boundary",
+          "Only explicit isolated actions posted; original design, numerical results and allowance remain unchanged, with no external provider traffic",
+          "Graphics-context loss exposes the honest local fallback while the draggable assistant remains functional"
+        ],
+        "errors": [],
+        "unexpected_responses": [],
+        "external_requests": 0,
+        "post_routes": [
+          "/api/run",
+          "/api/run",
+          "/api/investigations",
+          "/api/research/search",
+          "/api/sources",
+          "/api/source-links",
+          "/api/hosted/login"
+        ],
+        "synthetic_fixture": true
+      }
+    },
+    "external_requests": 0
+  },
+  "actual_owner": {
+    "restart_required": false,
+    "checks_matched": 27,
+    "all_matched": true,
+    "connections": {
+      "nebius": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      },
+      "tavily": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      },
+      "langsmith": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      }
+    },
+    "default_model_choice": "super",
+    "report_from_lower_overview": {
+      "scroll_y": 0,
+      "heading_top_px": 138.1875
+    },
+    "solver_inputs_results_histories_approvals_reservations_credentials_unchanged": true,
+    "hosted_limits_unchanged": true
+  },
+  "runtime_source_policy": {
+    "python_files_checked": 64,
+    "lf_passed": true,
+    "committed_bytes": "tools/check_source_consistency.py --git-ref HEAD after commit"
+  },
+  "paid_calls": 0,
+  "live_semantic_evaluation_performed": false,
+  "physics_changed": false,
+  "public_hosting_performed": false,
+  "parts_2_and_3_started": false
+}

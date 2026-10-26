@@ -30,6 +30,10 @@ def forbidden(*args,**kwargs):raise AssertionError('External service forbidden b
 with create_server(port=0,db_path=folder/'workspace.sqlite3',ai_local_directory=folder,provider_factory=forbidden,research_transport=forbidden,observability_transport=forbidden) as server:
  for suffix in ('a','b'):
   p=integrated_rocket_review();p['project_id']='navigation-'+suffix;p['name']='Navigation rocket '+suffix.upper()
+  if suffix=='b':
+   thermal=next(r for r in p['requirements'] if r['model_id']=='thermal')
+   for component in ('battery','engine'):
+    r=deepcopy(thermal);r['id']=component+'_temperature';r['title']=component.title()+' maximum temperature';p['requirements'].append(r)
   view=server.store.create_project(p);server.store.run(p['project_id'],1)
   if suffix=='a':
    p=deepcopy(view['project']);p['name']+=' revision 2'
@@ -72,6 +76,47 @@ try {
  assert.match(await route(),/navigation-a/);
  assert.match(await route(),/review-home/);
  pass('Selected project and saved revision have an addressable overview');
+ const coverage=page.locator('.rw-coverage-context');
+ assert.match(await coverage.innerText(),/Criterion counts above describe calculated requirements/);
+ assert.match(await coverage.innerText(),/model.fit declaration/i);
+ assert.match(await page.locator('[data-rw-coverage-status="applicability_unknown"]').innerText(),/9/);
+ assert.match(await page.locator('[data-rw-coverage-status="missing_analysis"]').innerText(),/1/);
+ assert.match(await page.locator('.rw-counts').innerText(),/9/);
+ await coverage.locator('[data-rw-nav="coverage"]').click();await idle();assert.match(await route(),/coverage/);
+ await click('review-home');await page.locator('.rw-workspace[aria-busy="false"]').waitFor();
+ pass('Passing calculation criteria remain separate from nine missing fit declarations and one unsupported analysis, with a working coverage action');
+ const reportLink=page.locator('.rw-map [data-rw-nav="report"]');
+ await reportLink.scrollIntoViewIfNeeded();assert.ok(await page.evaluate(()=>scrollY)>200);
+ await reportLink.click();await idle();await page.waitForFunction(()=>scrollY<2);
+ assert.ok(await page.locator('#sd-page-title').evaluate(el=>el.getBoundingClientRect().top)>=0);
+ const reportUrl=page.url();await page.evaluate(()=>scrollTo(0,1000));assert.ok(await page.evaluate(()=>scrollY)>200);
+ await page.goBack();await page.waitForFunction(()=>location.hash.includes('/review-home'));await page.waitForFunction(()=>scrollY<2);
+ await page.goForward();await page.waitForFunction(expected=>location.href===expected,reportUrl);await page.waitForFunction(()=>scrollY<2);
+ await click('review-home');await page.locator('.rw-workspace[aria-busy="false"]').waitFor();
+ await page.locator('.rw-map [data-rw-nav="report"]').click();await page.waitForFunction(()=>location.hash.endsWith('/report'));await page.waitForFunction(()=>scrollY<2);
+ await click('review-home');await page.locator('.rw-workspace[aria-busy="false"]').waitFor();
+ pass('Opening a report from lower Overview and accepted Back/Forward start at the page heading instead of inheriting a deep scroll');
+ await click('analysis');
+ assert.match(await page.locator('.sd-destination[data-action="vertical-mode"] .sd-tool-status').innerText(),/^Recorded calculation$/);
+ assert.match(await page.locator('.sd-destination[data-action="simulation"] .sd-tool-status').innerText(),/Not configured/);
+ assert.match(await page.locator('.sd-destination[data-action="guided-ascent"] .sd-tool-status').innerText(),/Not configured/);
+ await ensureProject('navigation-staged');await click('analysis');
+ assert.match(await page.locator('.sd-destination[data-action="staged-ascent"] .sd-tool-status').innerText(),/Configured · not calculated/);
+ assert.match(await page.locator('.sd-destination[data-action="vertical-mode"] .sd-tool-status').innerText(),/Not configured/);
+ await page.locator('#sd-revision-picker').selectOption('1');await idle();
+ assert.match(await page.locator('.sd-tool-context').innerText(),/Saved R1.*Historical/);
+ await ensureProject('navigation-a');await click('analysis');
+ assert.match(await page.locator('.sd-destination[data-action="vertical-mode"] .sd-tool-status').innerText(),/^Recorded calculation$/);
+ assert.match(await page.locator('.sd-tool-context').innerText(),/Saved R2/);
+ pass('Tool badges distinguish recorded flight, absent mappings and uncalculated staging, and update across projects and historical revisions');
+ await ensureProject('navigation-b');await click('review-home');await page.locator('#sd-rocket-launcher').click();
+ await page.locator('#sd-ai-scope').selectOption('requirement');
+ const battery=await page.locator('#sd-rocket-requirement option[value="battery_temperature"]').innerText();
+ const engine=await page.locator('#sd-rocket-requirement option[value="engine_temperature"]').innerText();
+ assert.match(battery,/Battery/i);assert.match(engine,/Engine/i);assert.notEqual(battery,engine);
+ await page.locator('#sd-rocket-dialog [data-rocket-close]').click();
+ await ensureProject('navigation-a');await click('review-home');await page.locator('.rw-workspace[aria-busy="false"]').waitFor();
+ pass('The actual assistant picker distinguishes battery and engine temperature checks while retaining their exact requirement IDs without inference');
  const home=page.url();
  for(const area of ['engineering','analysis','evidence','setup']){
   await click(area);assert.match(await route(),new RegExp(area));
@@ -160,9 +205,11 @@ try {
  await page.locator('#sd-revision-picker').selectOption('1');await idle();
  assert.equal(await page.locator('#sd-revision-picker').inputValue(),'2');assert.equal(await profileField.inputValue(),'12345');
  pass('Unapplied stage-profile values survive blocked area, project and revision navigation');
+ await page.evaluate(()=>scrollTo(0,600));const profileScroll=await page.evaluate(()=>scrollY);
  await page.goBack();await page.waitForFunction(expected=>location.href===expected,profileRoute);await page.waitForTimeout(150);
  assert.equal(page.url(),profileRoute);assert.equal(await profileField.inputValue(),'12345');
  assert.equal(await page.locator('#sd-project-picker').inputValue(),'navigation-staged');
+ assert.ok(Math.abs((await page.evaluate(()=>scrollY))-profileScroll)<2,'Blocked Back must not move the open profile');
  pass('Browser Back cannot remount or discard an unapplied stage-profile form');
  await page.locator('[data-sa-action="cancel-profile"]').click();assert.equal(await page.locator('[data-sa-profile-form]').count(),0);
  await click('engineering');assert.match(await route(),/engineering/);

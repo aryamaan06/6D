@@ -5,6 +5,7 @@
   const root = $('#sixd-workspace');
   const state = {data:null, projects:[], templates:[], draft:null, impact:null, system:'overview', selected:null, view:'canvas', page:'review-home', panel:'details', busy:false, importing:null, trajectory:null, camera:{x:15,y:35,scale:1}, request:0};
   let navigation=null, navigationStarting=true;
+  let renderedPageContext=null;
   const author = {catalog:null, preflight:null, snapshot:'', serial:0, loading:false, error:'', timer:null, editor:null};
   // Credentials are never assigned to application state or persistent browser storage.
   const ai = {scope:'requirement',status:null, statusError:'', statusLoading:false, evaluation:null, evaluationError:'', evaluationLoading:false, requirementId:null, question:'', records:[], error:'', loading:false, loadedContext:'', starting:false, connecting:false, context:'', generation:0, timer:null, controller:null};
@@ -495,10 +496,22 @@
   function renderLocation() {
     if(!state.data)return;
     window.SixDWorkspaceShell.renderChrome({page:state.page,project:project(),revision:state.data.revision,
-      system:activeSystem(),selected:selectedLocationLabel(),backEnabled:navigation?.canBack});
+      system:activeSystem(),selected:selectedLocationLabel(),backEnabled:navigation?.canBack,
+      tools:window.SixDWorkspaceShell.toolSummary(state.data,{hasDraft:!!state.draft})});
     root.querySelectorAll('[data-owner-only],[data-action="owner-settings"],[data-action="ai-quality"]').forEach(el=>el.hidden=state.hosted);
     root.querySelectorAll('[data-investigate],[data-test-evidence-investigate],[data-action="project-investigate"],[data-action="investigate"]').forEach(el=>{if(!el.closest('#sd-rocket-dialog'))el.hidden=true;});
     icons();
+  }
+  function pageContextKey(){
+    return state.page==='projects'?'projects':JSON.stringify([state.data?.project_id,state.data?.revision,state.page]);
+  }
+  function renderPagePosition(){
+    const key=pageContextKey();
+    if(key===renderedPageContext)return;
+    renderedPageContext=key;
+    // A new work page starts at its heading. Same-page selections/refreshes
+    // retain position; cancelled navigation never changes this context key.
+    window.scrollTo({left:0,top:0,behavior:'instant'});
   }
   function closeNavigationDialogs() {
     for(const dialog of root.querySelectorAll('dialog[open]'))dialog.close();
@@ -632,6 +645,7 @@
     $('#sd-view-content').setAttribute('aria-labelledby',state.page==='system'?'sd-tab-'+state.view:'sd-page-title');
     renderTree();renderDraft();renderMain();renderPanel();renderLocation();renderRocket();renderCalculationFeedback();icons();
     if(!navigationStarting)navigation?.sync();
+    renderPagePosition();
   }
   function systemDepth(s){let n=0,parent=s.parent_id,seen=new Set([s.id]);while(parent&&!seen.has(parent)){seen.add(parent);n++;parent=systems().find(row=>row.id===parent)?.parent_id;}return n;}
   function orderedSystems(){const rows=systems(),ordered=[],seen=new Set();function visit(parent){for(const s of rows.filter(row=>(row.parent_id||null)===parent)){if(seen.has(s.id))continue;seen.add(s.id);ordered.push(s);visit(s.id);}}visit(null);rows.filter(s=>!seen.has(s.id)).forEach(s=>ordered.push(s));return ordered;}
@@ -803,7 +817,8 @@
     }
     if(window.SixDWorkspaceShell.hubs.has(state.page)){
       unmountWorkspaceViews();
-      $('#sd-view-content').innerHTML=window.SixDWorkspaceShell.hub(state.page,state.projects,state.data.project_id);
+      $('#sd-view-content').innerHTML=window.SixDWorkspaceShell.hub(state.page,state.projects,state.data.project_id,
+        window.SixDWorkspaceShell.toolSummary(state.data,{hasDraft:!!state.draft}));
       return;
     }
     window.SixDGuidedAscent?.unmount();window.SixDStagedAscent?.unmount();

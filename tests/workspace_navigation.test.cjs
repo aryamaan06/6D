@@ -32,6 +32,12 @@ test('malformed locations and unsupported or repeated options are rejected',()=>
   const b=browser();
   for(const bad of ['#external','#/projects/a/r/0/system','#/projects/a/r/1/unknown','#/projects/a/r/1/system?view=table&view=reader','#/projects/a/r/1/system?key=secret','#/projects/a/r/1/system?kind=input','#/projects/%ZZ/r/1/system','#/projects/a/r/1/system?panel=credentials'])assert.throws(()=>b.api.parse(bad),undefined,bad);
 });
+test('the routed workspace owns page scroll while mounted and restores the browser policy on disposal',()=>{
+  const b=browser();let current=route();b.window.history.scrollRestoration='auto';
+  const c=b.api.create({read:()=>current,apply:async r=>{current=r;return true;}});
+  c.start();assert.equal(b.window.history.scrollRestoration,'manual');
+  c.dispose();assert.equal(b.window.history.scrollRestoration,'auto');
+});
 test('render syncing deduplicates entries and browser Back/Forward restores item context once',async()=>{
   const b=browser();let current=route(),applies=0;
   const c=b.api.create({read:()=>current,apply:async r=>{applies++;current=r;return true;}});c.start();c.sync();c.sync();

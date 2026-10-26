@@ -1,5 +1,7 @@
 # Documentation index
 
+Latest Part 1 navigation/clarity delivery: [guide](PART1_NAVIGATION_CLARITY.md), [acceptance](PART1_NAVIGATION_CLARITY_ACCEPTANCE.md), [results](PART1_NAVIGATION_CLARITY_RESULTS.md) and [sanitized checks](validation/PART1_NAVIGATION_CLARITY_CHECKS.json). Corrects page scroll, component-label ambiguity, calculation-versus-model-fit messaging and project-scoped tool status. Parts 2/3 are separate and unstarted.
+
 Latest usability refinement: [guide](SIX_ISSUE_USABILITY.md), [acceptance](SIX_ISSUE_USABILITY_ACCEPTANCE.md), [results](SIX_ISSUE_USABILITY_RESULTS.md) and [sanitized checks](validation/SIX_ISSUE_USABILITY_CHECKS.json). Explicit calculation feedback, in-place Guided review, draggable metallic 3D companion, simpler question/reference flows and complete human-readable typography preserve the existing engineering and owner boundaries. Earlier interface records below are dated history.
 
 Current local allowance approval and disabled-search explanation: [October 26 results](BALANCE_LIMITS_RESULTS.md) and [sanitized checks](validation/BALANCE_LIMITS_CHECKS.json). Historical lower ceilings remain documented at their original checkpoints; counters and provider receipts were not reset. Hosted/public budgets remain unchanged.
