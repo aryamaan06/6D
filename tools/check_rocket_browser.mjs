@@ -125,7 +125,7 @@ try{
  const requirementReceipt=await api(info.owner,'/api/investigations/'+requirementJob.investigation_id);assert.equal(requirementReceipt.state,'completed');assert.equal(requirementReceipt.requirement_id,'thermal_limit');
  assert.equal(posts.filter(p=>p.path==='/api/investigations').length,1);
  pass('Only explicit Start invokes the chosen Ultra model through the unchanged requirement evidence workflow');
- await click('project-investigate');await waitChoices();assert.match(await page.locator('#sd-rocket-ai-context').innerText(),/Whole-project/i);
+ await page.locator('#sd-ai-scope').selectOption('project');await waitChoices();assert.match(await page.locator('#sd-rocket-ai-context').innerText(),/Whole[ -]project/i);
  await page.locator('#sd-ai-model').selectOption('nano');await page.locator('#sd-ai-question').fill('Review the related findings and unresolved evidence.');
  const wholeStarted=page.waitForResponse(r=>r.url()===info.owner+'/api/investigations'&&r.request().method()==='POST');await page.locator('#sd-ai-start').click();const wholeResponse=await wholeStarted;assert.equal(wholeResponse.status(),200);const wholeJob=await wholeResponse.json();await waitChoices();
  const wholeReceipt=await api(info.owner,'/api/investigations/'+wholeJob.investigation_id);assert.equal(wholeReceipt.state,'completed');assert.equal(wholeReceipt.scope,'project');assert.equal(wholeReceipt.model_choice,'nano');

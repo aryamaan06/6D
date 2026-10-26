@@ -14,8 +14,8 @@
   const editedDialogs=new WeakSet();
   let rocket=null;
   const rocketUI={rendered:'',questionDrafts:new Map(),researchDrafts:new Map(),researchKey:'',researchDispose:null,researchBusy:false};
-  const reviewGuide={open:true,exportedRun:null};
-  try{reviewGuide.open=localStorage.getItem('sixd.review-guide.dismissed')!=='yes';}catch{}
+  const reviewGuide={open:false,exportedRun:null};
+  try{reviewGuide.open=localStorage.getItem('sixd.review-guide.open')==='yes';}catch{}
   const testLinks={key:'',pending:'',profile:null,error:'',serial:0,controller:null,timer:null};
   const interfaceLinks={key:'',pending:'',profile:null,error:'',serial:0,controller:null,timer:null};
   const sourceLinks={key:'',pending:'',profile:null,error:'',serial:0,controller:null,dispose:null};
@@ -466,10 +466,17 @@
       $('#sd-author-dialog').close();author.editor=null;state.selected={kind,id};draftChanged();message(human(kind)+' '+id+' updated in the shared draft. Save revision to retain it.');
     }catch(error){editorError(error);}
   }
+  function renderCalculationFeedback(){
+    const host=$('#sd-calculation-feedback'),entry=state.calculationFeedback;
+    host.hidden=!entry||entry.projectId!==state.data?.project_id||entry.revision!==state.data?.revision||state.page==='projects';
+    if(host.hidden)return;
+    host.textContent=entry.text;host.dataset.phase=entry.phase;host.setAttribute('aria-busy',String(entry.phase==='working'));
+  }
   function renderReviewGuide(){
     const host=$('#sd-review-guide');if(!host||!window.SixDReviewGuide)return;
-    host.hidden=!reviewGuide.open||['review-home','ai-quality'].includes(state.page);root.querySelector('[data-action="guided-toggle"]')?.setAttribute('aria-expanded',String(reviewGuide.open));
+    host.hidden=!reviewGuide.open;root.classList.toggle('sd-guide-visible',reviewGuide.open);root.querySelector('[data-action="guided-toggle"]')?.setAttribute('aria-expanded',String(reviewGuide.open));
     if(!reviewGuide.open)return;
+    if(state.page==='projects'){host.innerHTML='<div class="sd-guide-intro"><strong>Start with one project</strong><p>Choose a project below. Then calculate its saved design, change an input, recalculate and compare the results. Ask the rocket whenever you need an explanation.</p><button type="button" class="sd-mini-action" data-action="guided-close">Close guide</button></div>';delete host.dataset.rendered;return;}
     const html=window.SixDReviewGuide.render({view:state.data,draft:state.draft,dirty:dirty(),isLatest:latest(),busy:state.busy,impactVerified:!!state.impact,page:state.page,viewMode:state.view,exportedRun:reviewGuide.exportedRun});
     if(host.dataset.rendered!==html){host.innerHTML=html;host.dataset.rendered=html;}
   }
@@ -623,7 +630,7 @@
     $('#sd-run-trigger').innerHTML=icon('play')+(currentRun()?'Run checks again':'Run checks');
     root.querySelectorAll('[data-view]').forEach(button=>button.setAttribute('aria-selected',String(button.dataset.view===state.view && state.page==='system')));
     $('#sd-view-content').setAttribute('aria-labelledby',state.page==='system'?'sd-tab-'+state.view:'sd-page-title');
-    renderTree();renderDraft();renderMain();renderPanel();renderLocation();renderRocket();icons();
+    renderTree();renderDraft();renderMain();renderPanel();renderLocation();renderRocket();renderCalculationFeedback();icons();
     if(!navigationStarting)navigation?.sync();
   }
   function systemDepth(s){let n=0,parent=s.parent_id,seen=new Set([s.id]);while(parent&&!seen.has(parent)){seen.add(parent);n++;parent=systems().find(row=>row.id===parent)?.parent_id;}return n;}
@@ -821,7 +828,7 @@
         onRocketOpen:()=>{if(current()&&!state.draft)void action('rocket-reference');},
         onRocketStage:()=>{if(current()&&!state.draft)void action('rocket-stage');},
         onSelectRequirement:id=>{if(!current()||state.draft||!req(id))return;state.page='system';state.view='reader';state.system=owningSystem(req(id).model_id)?.id||'overview';state.panel='evidence';select('requirement',id,false);},
-        onRun:latest()&&!state.draft?()=>{if(current())void action('run');}:undefined,
+        onRun:latest()&&!state.draft?()=>{if(current())return action('run');}:undefined,
         onReload:()=>{if(current())void perform(()=>load(projectId,revision));}
       });return;
     }
@@ -1215,25 +1222,12 @@
     const signature=JSON.stringify([ai.context,!!state.draft]);
     if(force||rocketUI.rendered!==signature){
       rocketUI.rendered=signature;renderAssistant();compactRocketAssistant();
-      const context=$('#sd-rocket-ai-context');
-      context.insertAdjacentHTML('beforeend','<p class="sd-small sd-muted">Ask about this saved design. Choose a scope and model, then start explicitly.</p>');
-      if(ai.scope==='requirement')context.insertAdjacentHTML('beforeend','<label class="sd-field" for="sd-rocket-requirement">Requirement<select id="sd-rocket-requirement" class="sd-input">'+allReqs().map(r=>'<option value="'+esc(r.id)+'"'+(r.id===ai.requirementId?' selected':'')+'>'+esc(r.title)+'</option>').join('')+'</select></label>');
     }else{
       updateAiControls();if(ai.loadedContext!==ai.context&&!ai.loading)void loadInvestigations();
     }
   }
   function compactRocketAssistant(){
-    const body=$('#sd-rocket-ai-body'),start=body.querySelector('#sd-ai-start');
-    if(!start)return;
-    const notes=document.createElement('details');notes.className='sd-rocket-scope-notes';
-    const summary=document.createElement('summary');summary.textContent='Scope and data sent';notes.append(summary);
-    for(const node of [...body.children]){
-      if(node.matches('p:not(.sd-notice):not(.sd-error),.sd-ai-scope'))notes.append(node);
-    }
-    const consent=document.createElement('p');consent.className='sd-small sd-muted';
-    consent.textContent='Start sends your question and this scope’s saved evidence to the selected model on Nebius. AI explains; recorded calculations stay authoritative.';
-    start.before(consent,notes);
-    const owner=body.querySelector('[data-action="ai-settings"]');if(owner)owner.hidden=state.hosted;
+    const owner=$('#sd-rocket-ai-body [data-action="ai-settings"]');if(owner)owner.hidden=state.hosted;
   }
   function resetCamera() {state.camera={x:18,y:35,scale:0.9};}
   function applyCamera() {const stage=$('#sd-graph-stage');if(!stage)return;stage.style.transform='translate('+state.camera.x+'px,'+state.camera.y+'px) scale('+state.camera.scale+')';const label=$('#sd-zoom-value');if(label)label.textContent=Math.round(state.camera.scale*100)+'%';}
@@ -1258,7 +1252,7 @@
   function modelChoices() {return Array.isArray(ai.status?.available_models)?ai.status.available_models.filter(row=>['nano','super','ultra'].includes(row.id)):[];}
   function selectedAIModel() {return modelChoices().find(row=>row.id===ai.modelChoice)||modelChoices().find(row=>row.id===ai.status?.default_model_choice)||null;}
   function modelChoiceMarkup() {
-    return '<div class="sd-ai-model-picker"><label class="sd-field" for="sd-ai-model">Investigation model<select class="sd-input" id="sd-ai-model" aria-describedby="sd-ai-model-help"></select></label><p id="sd-ai-model-help" class="sd-small sd-muted"></p></div>';
+    return '<div class="sd-ai-model-picker"><label class="sd-field" for="sd-ai-model">Model<select class="sd-input" id="sd-ai-model" aria-describedby="sd-ai-model-help"></select></label><p id="sd-ai-model-help" class="sd-small sd-muted"></p></div>';
   }
   function updateModelChoiceControls() {
     const select=$('#sd-ai-model');if(!select)return;
@@ -1374,13 +1368,25 @@
     updateModelChoiceControls();
     const button=$('#sd-ai-start');if(!button)return;
     const blocked=aiBlockedReason();button.disabled=!!blocked||ai.starting||state.busy||!ai.question.trim();
-    button.textContent=ai.starting?'Starting…':'Start live investigation';
+    button.textContent=ai.starting?'Asking…':ai.status?.investigation_active?'Investigation running…':'Ask Nemotron';
+    const presence=$('#sd-ai-presence');if(presence)presence.textContent=ai.status?.key_present?'Connected · Nebius':'AI connection unavailable';
     $('#sd-ai-blocked').textContent=blocked;$('#sd-ai-blocked').hidden=!blocked;
     $('#sd-ai-question-count').textContent=ai.question.length+'/2000';
   }
-  function renderProjectAssistant() {
-    $('#sd-rocket-ai-context').innerHTML='<span class="sd-label">AI investigation · saved R'+esc(state.data.revision)+'</span><h2>Whole-project review</h2>';
-    $('#sd-rocket-ai-body').innerHTML='<div class="sd-action-row"><button type="button" class="sd-button sd-primary" disabled>Project</button><button type="button" class="sd-button" data-action="requirement-investigate">Requirement</button></div><div id="sd-ai-status">'+aiStatusMarkup()+'</div><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings</button><p>Investigate related saved findings, declared dependencies, executed/reused evidence and changes together. Canonical calculations stay authoritative.</p><p class="sd-small sd-muted">This reviews scalar findings and model scope. It does not analyze unselected test rows, imported histories, study records or unlinked sources, and does not rerun physics.</p>'+modelChoiceMarkup()+'<label class="sd-field">Your project question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="4" maxlength="2000">'+esc(ai.question)+'</textarea></label><span id="sd-ai-question-count" class="sd-small sd-muted"></span><button type="button" class="sd-button" data-action="ai-project-question">Ask what changed and what to check</button><p class="sd-small sd-ai-consent">Starting sends your question and the saved project findings, related inputs/model definitions, prior changes and pinned linked reference excerpts to <span id="sd-ai-consent-model">'+esc(providerModelLabel(selectedAIModel()?.model||ai.status?.model))+'</span> on Nebius. This uses the existing approved allowance. Opening this panel sends nothing.</p><p id="sd-ai-blocked" class="sd-notice" hidden></p><button type="button" id="sd-ai-start" class="sd-button sd-primary sd-full-width" data-action="ai-start">Start live investigation</button><div id="sd-ai-history" class="sd-ai-history" aria-live="polite"></div>';
+  function renderProjectAssistant() {renderUnifiedAssistant(null);}
+  function renderUnifiedAssistant(requirement){
+    const isProject=ai.scope==='project',requirements=allReqs();
+    const shortTitle=r=>window.SixDSourceTargets?.shortLabel({label:r.title,target_id:'requirement:'+r.id})||r.title;
+    $('#sd-rocket-ai-context').innerHTML='<div class="sd-assistant-scope-row"><label class="sd-field" for="sd-ai-scope">What should we discuss?<select id="sd-ai-scope" class="sd-input"><option value="project"'+(isProject?' selected':'')+'>Whole project</option><option value="requirement"'+(!isProject?' selected':'')+(requirements.length?'':' disabled')+'>One engineering check</option></select></label>'+(!isProject&&requirements.length?'<label class="sd-field" for="sd-rocket-requirement">Choose a check<select id="sd-rocket-requirement" class="sd-input">'+requirements.map(r=>'<option value="'+esc(r.id)+'"'+(r.id===ai.requirementId?' selected':'')+'>'+esc(shortTitle(r))+'</option>').join('')+'</select></label>':'')+'</div>';
+    const context=isProject?'Whole-project review: saved findings, declared dependencies and revision changes. It does not analyze unselected test rows, imported histories, studies or unlinked sources, and it does not rerun physics.':requirement?'Selected check: '+requirement.title+' ('+requirement.id+'). The saved finding remains authoritative. AI may inspect scoped evidence and request a supported recheck.':'No applicable check is selected. Choose the whole-project scope or define a requirement in Engineering.';
+    $('#sd-rocket-ai-body').innerHTML='<section class="sd-assistant-compose" aria-label="Ask about saved evidence">'+modelChoiceMarkup()+'<label class="sd-field" for="sd-ai-question">Your question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="3" maxlength="2000" placeholder="Explain this result in simple words, or tell me what to check next.">'+esc(ai.question)+'</textarea></label><div class="sd-assistant-suggestions" aria-label="Draft a question"><button type="button" class="sd-mini-action" data-action="ai-simple-question">Explain this simply</button><button type="button" class="sd-mini-action" data-action="ai-next-question">What should I check next?</button><button type="button" class="sd-mini-action" data-action="ai-project-question">What changed?</button></div><p id="sd-ai-blocked" class="sd-notice" hidden></p><div class="sd-assistant-send-row"><span id="sd-ai-presence" class="sd-small"></span><span id="sd-ai-question-count" class="sd-small sd-muted"></span><button type="button" id="sd-ai-start" class="sd-button sd-primary" data-action="ai-start">Ask Nemotron</button></div><p class="sd-assistant-consent sd-small sd-muted">Ask sends your question and the selected saved evidence to Nemotron through Nebius. AI explains; recorded calculations stay authoritative.</p></section><details id="sd-ai-advanced" class="sd-ai-advanced"><summary>Context, sources and settings</summary><div id="sd-ai-status">'+aiStatusMarkup()+'</div><div class="sd-ai-scope"><p>'+esc(context)+'</p><p class="sd-small sd-muted">'+esc(project().name)+' · R'+state.data.revision+'</p></div><p class="sd-small sd-ai-consent">The chosen model <span id="sd-ai-consent-model">'+esc(providerModelLabel(selectedAIModel()?.model||ai.status?.model))+'</span> receives the question and scoped saved inputs, findings, model definitions and relevant pinned reference excerpts. Starting uses the approved allowance. Opening this conversation and selecting a model send nothing.</p><div class="sd-action-row"><button type="button" class="sd-button" data-action="ai-source-question">Draft a question about references</button><button type="button" class="sd-button" data-action="sources">Open saved references</button><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings</button></div></details><details id="sd-ai-history-disclosure" class="sd-ai-history-disclosure"><summary>Saved answers and evidence</summary><div id="sd-ai-history" class="sd-ai-history" aria-live="polite"></div></details>';
+    const help=$('#sd-ai-model-help');if(help)$('#sd-ai-advanced').prepend(help);
+    const disclosure=$('#sd-ai-history-disclosure'),capturedContext=ai.context;
+    rocketUI.historyOpen??=new Map();disclosure.open=rocketUI.historyOpen.get(capturedContext)||ai.records.some(investigationActive);
+    disclosure.addEventListener('toggle',()=>{rocketUI.historyOpen.set(capturedContext,disclosure.open);if(rocketUI.historyOpen.size>50)rocketUI.historyOpen.delete(rocketUI.historyOpen.keys().next().value);});
+    if(ai.testSelection&&requirement){
+      $('#sd-rocket-ai-body .sd-ai-scope').insertAdjacentHTML('beforeend','<p class="sd-small">Includes selected test row '+esc(ai.testSelection.rowNumber)+' from comparison <span class="sd-receipt">'+esc(ai.testSelection.comparisonId)+'</span>, with its captured baseline and applicability.</p><button type="button" class="sd-mini-action" data-action="clear-test-selection">Clear selected test row</button>'+testEvidenceSlot('assistant',[requirement.id]));hydrateTestLinks();
+    }
     renderAiHistory();updateAiControls();
     if(ai.loadedContext!==ai.context&&!ai.loading)void loadInvestigations();
   }
@@ -1390,17 +1396,8 @@
     return '<section class="sd-source"><h3>Application-owned project evidence</h3><p class="sd-small">'+esc(record.priority_policy||'Review queue; not a failure-risk ranking.')+'</p>'+rows.map(row=>'<details class="sd-source"><summary>'+chip(row.status)+' '+esc(row.title||row.requirement_id)+'</summary><p>'+esc(findings[row.requirement_id]?.reason||'')+'</p><dl class="sd-details-grid"><dt>Saved metric</dt><dd>'+measure(findings[row.requirement_id]?.evidence?.metric)+'</dd><dt>Declared criterion</dt><dd>'+esc(findings[row.requirement_id]?.evidence?.operator||'')+' '+measure(findings[row.requirement_id]?.evidence?.limit)+'</dd></dl>'+row.review_actions.map(a=>'<p><strong>'+esc(a.title)+'</strong><br>'+esc(a.action)+'</p>').join('')+'</details>').join('')+context+'<p class="sd-small sd-muted">Limited explanation guards do not establish semantic correctness. Independent human review remains pending.</p></section>';
   }
   function renderAssistant() {
-    syncAssistantContext();if(ai.scope==='project'){renderProjectAssistant();return;}const r=req(ai.requirementId);
-    $('#sd-rocket-ai-context').innerHTML='<span class="sd-label">AI investigation · saved R'+state.data.revision+'</span><h2>'+esc(r?.title || 'Choose a requirement')+'</h2>'+(r?'<span class="sd-small sd-muted">'+esc(r.id)+'</span>':'');
-    if(!r){$('#sd-rocket-ai-body').innerHTML='<p>This project has no selected requirement. Review the whole project, or select a requirement in Engineering first.</p><button type="button" class="sd-button" data-action="project-investigate">Review whole project</button>';return;}
-    $('#sd-rocket-ai-body').innerHTML='<button type="button" class="sd-button" data-action="project-investigate">Review whole project</button><div id="sd-ai-status" class="sd-ai-status">'+aiStatusMarkup()+'</div><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings '+icon('plug')+'</button><div class="sd-ai-scope"><span class="sd-label">Investigation scope</span><p>'+esc(r.title)+'<br>Model: '+esc(human(r.model_id))+' · '+chip(reqStatus(r.id))+'</p><p class="sd-small sd-muted">The saved requirement result stays authoritative. AI can inspect records, request a supported recheck and explain findings; its prose cannot change the verdict.</p></div>'+modelChoiceMarkup()+'<label class="sd-field" for="sd-ai-question">Your question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="4" maxlength="2000" placeholder="What supports this result, and what remains unassessed?">'+esc(ai.question)+'</textarea></label><span id="sd-ai-question-count" class="sd-small sd-muted"></span><div class="sd-action-row"><button type="button" class="sd-button" data-action="ai-source-question">Ask about linked references</button><button type="button" class="sd-button" data-action="sources">Open source library</button></div><p class="sd-small sd-ai-consent">Starting sends your question and scoped project records, including linked inputs, model and requirement evidence and relevant saved reference excerpts, to <span id="sd-ai-consent-model">'+esc(providerModelLabel(ai.status?.model))+'</span> on Nebius. This consumes the existing approved allowance. Opening this panel and connecting a key make no inference calls.</p><p class="sd-notice" id="sd-ai-blocked" hidden></p><button type="button" class="sd-button sd-primary sd-full-width" data-action="ai-start" id="sd-ai-start">Start live investigation</button><div id="sd-ai-history" class="sd-ai-history" aria-live="polite" aria-relevant="additions text"></div>';
-    if(ai.testSelection){
-      const scope=$('#sd-rocket-ai-body .sd-ai-scope');
-      scope.insertAdjacentHTML('beforeend','<p class="sd-small">Selected CSV row '+esc(ai.testSelection.rowNumber)+' from comparison <span class="sd-receipt">'+esc(ai.testSelection.comparisonId)+'</span>. This recorded observation will be sent with its original baseline, conditions and applicability context.</p><button type="button" class="sd-mini-action" data-action="clear-test-selection">Clear selected test row</button>'+testEvidenceSlot('assistant',[r.id]));
-      hydrateTestLinks();
-    }
-    renderAiHistory();updateAiControls();
-    if(ai.loadedContext!==ai.context&&!ai.loading)void loadInvestigations();
+    syncAssistantContext();if(ai.scope==='project'){renderProjectAssistant();return;}
+    renderUnifiedAssistant(req(ai.requirementId));
   }
   function citationMarkup(id,record) {
     let label=id;const separator=id.indexOf(':'),kind=separator<0?id:id.slice(0,separator),item=separator<0?'':id.slice(separator+1);
@@ -1620,6 +1617,7 @@
   }
   function renderAiHistory() {
     const container=$('#sd-ai-history');if(!container)return;
+    const summary=$('#sd-ai-history-disclosure > summary');if(summary)summary.textContent='Saved answers and evidence ('+ai.records.length+')';
     const html='<div class="sd-section-heading"><h3>Saved investigations</h3><button type="button" class="sd-mini-action" data-action="ai-refresh">Refresh</button></div>'+(ai.error?'<p class="sd-error" role="alert">'+esc(ai.error)+'</p>':'')+(ai.loading&&!ai.records.length?'<p class="sd-small sd-muted">Reading saved investigations…</p>':'')+(!ai.records.length&&!ai.loading?'<p class="sd-small sd-muted">No investigation has been recorded for this scope and revision. Nothing is sent until you choose Start.</p>':'')+ai.records.map((record,index)=>index===0?investigationMarkup(record):'<details class="sd-rocket-past-answer"><summary>'+esc(providerModelLabel(record.model))+' · '+esc(human(record.state))+' · '+esc((record.created_at||'').slice(0,10))+'</summary>'+investigationMarkup(record)+'</details>').join('');
     if(container.dataset.rendered!==html){container.innerHTML=html;container.dataset.rendered=html;icons();}
     updateAiControls();
@@ -1656,7 +1654,7 @@
   async function startInvestigation() {
     syncAssistantContext();const blocked=aiBlockedReason();
     if(blocked||ai.starting||!ai.question.trim()){updateAiControls();return;}
-    const context=ai.context;ai.starting=true;ai.error='';updateAiControls();
+    const context=ai.context;ai.starting=true;ai.error='';rocketUI.historyOpen??=new Map();rocketUI.historyOpen.set(context,true);const history=$('#sd-ai-history-disclosure');if(history)history.open=true;updateAiControls();
     try{
       const selection=ai.testSelection;
       const chosen=selectedAIModel();
@@ -1762,10 +1760,10 @@
     root.querySelectorAll('details.sd-tool-menu[open]').forEach(el=>el.open=false);
     if(name==='ai-quality'){state.page='ai-quality';stopInvestigationPolling();render();return;}
     if(name==='review-home'){state.page='review-home';stopInvestigationPolling();render();return;}
-    if(name==='guided-toggle'&&['review-home','ai-quality'].includes(state.page)){state.page='system';reviewGuide.open=false;}
     if(name==='guided-toggle'||name==='guided-close'){
       reviewGuide.open=name==='guided-close'?false:!reviewGuide.open;
       try{localStorage.setItem('sixd.review-guide.dismissed',reviewGuide.open?'no':'yes');}catch{}
+      try{localStorage.setItem('sixd.review-guide.open',reviewGuide.open?'yes':'no');}catch{}
       render();if(reviewGuide.open)$('#sd-review-guide').scrollIntoView({block:'nearest'});return;
     }
     if(name==='guided-reference'){await showImport('baseline');return;}
@@ -1813,7 +1811,7 @@
     }
     if(name==='project-investigate'){openRocket({scope:'project'});return;}
     if(name==='requirement-investigate'){openRocket({scope:'requirement'});return;}
-    if(name==='ai-project-question'){ai.question='What changed in this saved design, which criteria or evidence gaps need attention, and what should we check next?';$('#sd-ai-question').value=ai.question;updateAiControls();return;}
+    if(name==='ai-simple-question'||name==='ai-next-question'||name==='ai-project-question'){ai.question=name==='ai-simple-question'?'Explain this saved evidence in simple words.':name==='ai-next-question'?'What should I check next, based on this saved evidence?':'What changed in this saved design, and why does it matter?';$('#sd-ai-question').value=ai.question;updateAiControls();return;}
     if(name==='ai-start'){await startInvestigation();return;}
     if(name==='ai-refresh'){await Promise.allSettled([refreshAiStatus(),loadInvestigations()]);return;}
     if(name==='rocket-reference'){await showImport('rocket_review');return;}
@@ -1888,9 +1886,12 @@
       if(state.draft){message('Save or discard the draft before running checks.');return;}
       if(!hasSetup()){state.page='authoring';render();message('Add a model and requirement in Author project before running checks.');return;}
       if(state.page==='authoring'&&(author.snapshot!==setupKey()||!author.preflight?.can_run)){await refreshPreflight();message('Resolve setup errors before running from Author project.');return;}
-      message('Running supported local adapters and recording requirement evidence…');
       const projectId=state.data.project_id,revision=state.data.revision;
-      await perform(async()=>{const data=await api('/api/run',{project_id:projectId,revision});if(state.data.project_id!==projectId||state.data.revision!==revision||state.draft)return;state.data=data;state.impact=null;repairContext();if(state.page==='simulation'){const modelId=state.trajectory?.modelId||allModels().find(m=>m.type==='orbital_trajectory')?.id;state.trajectory=modelId?{modelId,runId:state.data.run?.run_id}:null;}await refreshProjects();},'Checks completed and saved. Inspect findings and remaining unassessed requirements.');return;
+      let completed=false;
+      state.calculationFeedback={projectId,revision,phase:'working',text:'Calculating saved revision R'+revision+'… Local engineering checks only; no AI request.'};renderCalculationFeedback();
+      root.querySelectorAll('[data-rw="run"],[data-action="run"]').forEach(button=>{button.textContent='Calculating…';});
+      await perform(async()=>{const data=await api('/api/run',{project_id:projectId,revision});if(state.data.project_id!==projectId||state.data.revision!==revision||state.draft)return;state.data=data;state.impact=null;repairContext();if(state.page==='simulation'){const modelId=state.trajectory?.modelId||allModels().find(m=>m.type==='orbital_trajectory')?.id;state.trajectory=modelId?{modelId,runId:state.data.run?.run_id}:null;}await refreshProjects();completed=true;},'Checks completed and saved. Inspect findings and remaining unassessed requirements.');
+      state.calculationFeedback={projectId,revision,phase:completed?'done':'error',text:completed?'Calculation complete for R'+revision+'. Results are saved below; unchanged inputs can produce the same values.':'Calculation did not complete. Review the error message before trying again.'};renderCalculationFeedback();return;
     }
     if(name==='export'){if(state.draft||!hasSetup()||!currentRun()||currentRun().stale){message('Save a complete setup and run its checks before exporting review evidence. Project JSON remains available.');return;}await perform(async()=>{const key=JSON.stringify([state.data.project_id,state.data.revision,currentRun().run_id]);await download('/api/export'+query(state.data.project_id,state.data.revision),'6d-'+state.data.project_id+'-r'+state.data.revision+'-evidence.json');reviewGuide.exportedRun=key;},'Saved evidence export requested.');return;}
     if(name==='export-project'){saveBlob(new Blob([JSON.stringify(project(),null,2)],{type:'application/json'}),'6d-'+state.data.project_id+'-r'+state.data.revision+(state.draft?'-draft':'')+'-project.json');message('Project JSON downloaded'+(state.draft?' with unsaved draft edits.':'.'));return;}
@@ -1964,6 +1965,7 @@
   root.addEventListener('change',event=>{
     if(state.busy)return;
     const el=event.target;
+    if(el.id==='sd-ai-scope'){if(['project','requirement'].includes(el.value))openRocket({scope:el.value});return;}
     if(el.id==='sd-rocket-requirement'){if(req(el.value)){ai.rocketRequirementId=el.value;ai.testSelection=null;syncAssistantContext();renderRocket(true);}return;}
     if(el.id==='sd-ai-model'){
       if(ai.starting||ai.status?.investigation_active||ai.records.some(investigationActive)){updateModelChoiceControls();return;}

@@ -1,0 +1,163 @@
+{
+  "schema": "sixd.six-issue-usability-checks.v1",
+  "date": "2026-10-26",
+  "build_id": "0e93a5ca07d3",
+  "scope": "Six authorized interface usability corrections; no new physics, provider policy or spending approval.",
+  "python": {
+    "methods_run": 81,
+    "passed": 80,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0,
+    "skip_reason": "Docker unavailable on this Windows environment",
+    "full_suite": false,
+    "modules": [
+      "test_workspace_navigation_assets",
+      "test_workspace_api",
+      "test_connected_review",
+      "test_workspace_sources",
+      "test_workspace_sources_api",
+      "test_workspace_research",
+      "test_source_research_api",
+      "test_owner_settings_boundary",
+      "test_hosted_packaging"
+    ]
+  },
+  "browser": {
+    "groups_passed": 49,
+    "packs": {
+      "usability": {
+        "groups_passed": 13,
+        "checks": [
+          "Guided review opens and closes in place from Projects, work-area hubs, Overview and Systems without hidden navigation or provider calls",
+          "Calculate and Recalculate each save a new review on an already calculated revision, show progress/completion and prevent duplicate in-flight starts",
+          "The companion draws actual local WebGL geometry rather than the previous SVG, with frames rendered before interaction",
+          "Pointer dragging repositions without opening AI, restores its saved position after reload, and retains normal click and keyboard repositioning",
+          "Reduced motion pauses the rocket animation without removing its functional launcher",
+          "Nemotron keeps the primary question/model/start controls and all three models, makes no selection-triggered call, and preserves a completed evidence-backed answer",
+          "Tavily starts with a small duplicate-free human-readable list, while Advanced preserves exact finding/assumption targets without starting a search",
+          "The spaced Source library explains missing form fields, receives an unsaved Tavily preview, and saves/links only through two separate explicit actions",
+          "Project names, source text, native controls and Nemotron dialog copy share the global UI font rather than local module-specific stacks",
+          "Dragged companion and simplified conversation remain inside a narrow mobile viewport with no page-wide horizontal overflow",
+          "Simplified hosted conversation preserves the existing owner-only controls and financial-status boundary",
+          "Only explicit isolated actions posted; original design, numerical results and allowance remain unchanged, with no external provider traffic",
+          "Graphics-context loss exposes the honest local fallback while the draggable assistant remains functional"
+        ],
+        "errors": [],
+        "external_requests": 0,
+        "unexpected_responses": []
+      },
+      "model-choices": {
+        "groups_passed": 8,
+        "checks": [
+          "Requirement Assistant offers Nano, Super and Ultra; retained records name their actual models",
+          "Choosing every model retains the question and history, updates consent, and makes no POST or provider request",
+          "Changing investigation scope while a requirement job runs retains the global busy guard without another POST",
+          "Explicit requirement start reaches Ultra; switching is disabled while running and never creates a second request",
+          "A new chosen-model job does not rewrite historical Nano, Super or Ultra receipts",
+          "Whole-project Assistant retains all choices and sends the explicitly selected Nano with project scope",
+          "Assistant body and helper type meet readable sizes; mobile fields are at least sixteen pixels without page overflow",
+          "Shared synthetic allowance is preserved, canonical engineering unchanged, and only the two explicit investigation POSTs occur"
+        ],
+        "errors": [],
+        "external_requests": 0,
+        "unexpected_responses": []
+      },
+      "clarity": {
+        "groups_passed": 11,
+        "checks": [
+          "Overview explains all three result meanings and the main journey while preserving engineering values",
+          "Review report retains quantitative criteria and unassessed scope without changing their meaning",
+          "Normal requirement investigation keeps all models and history without visible financial accounting",
+          "Whole-project investigation also keeps owner accounting out of the working view",
+          "Detailed connection and spend controls remain available in the explicit owner surface",
+          "Clicking outside owner connection dialog dismisses it and clears the unsaved key field",
+          "Dynamically created Tavily settings dismiss outside, destroy the private field and reopen empty without connecting",
+          "Outside, close-button and Escape dismissal preserve edited project-form entries when declined; explicit discard closes the form",
+          "Clear overview and result explanations fit a narrow mobile viewport",
+          "Protected visitor session has financial-status redaction and cannot execute or read owner administrative diagnostics",
+          "Navigation/settings made no inference/search/upload/save calls and left the owner fixture unchanged"
+        ],
+        "errors": [],
+        "external_requests": 0,
+        "unexpected_responses": []
+      },
+      "navigation": {
+        "groups_passed": 17,
+        "checks": [
+          "Selected project and saved revision have an addressable overview",
+          "Five broad work areas are reachable without a flat list of every tool",
+          "Native browser Back and Forward restore internal locations",
+          "Reload preserves the routed project, saved revision and work area",
+          "A deep link to a historical revision survives reload",
+          "System Table, selected requirement and evidence panel survive deep reload with a parent breadcrumb",
+          "Same-project page navigation and Back retain the unsaved shared draft without a database write",
+          "Cancelled project switch preserves draft; confirmed switch explicitly discards it",
+          "Cancelling browser Back across project context preserves URL, displayed project and draft",
+          "Accepting browser Back loads the previous saved project and discards only the unsaved draft",
+          "Back during a delayed project load leaves URL and displayed project in the same context",
+          "Unapplied stage-profile values survive blocked area, project and revision navigation",
+          "Browser Back cannot remount or discard an unapplied stage-profile form",
+          "Explicit profile cancellation restores navigation while saved staged inputs stay unchanged",
+          "Requested local editorial typography, ink and soft canvas are applied without remote fonts",
+          "Navigation layout stays within a narrow viewport",
+          "Original fixture receipts unchanged; no provider, search, upload, calculation or save POSTs; no browser errors"
+        ],
+        "errors": [],
+        "external_requests": 0,
+        "unexpected_responses": []
+      }
+    },
+    "synthetic_transports": true
+  },
+  "history_contracts": {
+    "passed": 6,
+    "tool": "node --test tests/workspace_navigation.test.cjs"
+  },
+  "runtime_sources": {
+    "files_checked": 64,
+    "lf_policy_passed": true,
+    "committed_bytes_check": "Run tools/check_source_consistency.py --git-ref HEAD after commit."
+  },
+  "owner_preservation": {
+    "checks_matched": 27,
+    "all_matched": true,
+    "projects_history_settings_approval_reservations_and_encrypted_credentials_unchanged": true,
+    "default_model_choice": "super",
+    "connections": {
+      "nebius": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      },
+      "tavily": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      },
+      "langsmith": {
+        "key_present": true,
+        "key_remembered": true,
+        "credential_error": null
+      }
+    },
+    "hosted_limits_unchanged": true
+  },
+  "actual_owner_browser": {
+    "passed": true,
+    "build_id": "0e93a5ca07d3",
+    "projects_page": true,
+    "guide_in_place": true,
+    "rocket_opens_closes": true,
+    "renderer": {
+      "renderer": "webgl",
+      "frames": 8
+    },
+    "blocked_requests": [],
+    "errors": []
+  },
+  "paid_calls": 0,
+  "live_semantic_qualification_performed": false,
+  "public_hosting_performed": false,
+  "visual_acceptance": "Procedural metallic WebGL geometry, animated exhaust and bounded fallback inspected locally; final visual preference remains subject to founder review."
+}

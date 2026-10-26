@@ -85,7 +85,7 @@ try{
  assert.doesNotMatch(assistant,/Approved development allowance|Cumulative reservations|Reservation capacity remaining|\$\d/);
  assert.ok(await page.locator('#sd-ai-model').isVisible());assert.equal(await page.locator('#sd-ai-question').inputValue(),'');
  pass('Normal requirement investigation keeps all models and history without visible financial accounting');
- await click('project-investigate');await page.waitForFunction(()=>document.querySelectorAll('#sd-ai-model option').length===3);
+ await page.locator('#sd-ai-scope').selectOption('project');await page.waitForFunction(()=>document.querySelectorAll('#sd-ai-model option').length===3);
  assert.doesNotMatch(await page.locator('#sd-rocket-ai-body').innerText(),/Approved development allowance|Cumulative reservations|Reservation capacity remaining|\$\d/);
  pass('Whole-project investigation also keeps owner accounting out of the working view');
  await page.locator('#sd-rocket-dialog [data-rocket-close]').click();await page.waitForFunction(()=>!document.querySelector('#sd-rocket-dialog').open);

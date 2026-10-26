@@ -1,0 +1,12 @@
+# Six-issue usability refinement — acceptance
+
+Authorized October 26, 2026 after the founder supplied seven screenshots and selected Sol 6.1 Ultra. This milestone addresses the six reported issues, not an expansion of physics or hosted spending.
+
+1. Calculate/Recalculate must perform an explicit supported saved-revision run even when a prior result exists, with visible progress/completion and no duplicate accidental submission. Guided review must open/close consistently from the current work area, including hub pages, without silently disappearing through CSS.
+2. Replace the flat launcher with a locally rendered metallic 3D rocket and animated engine exhaust. Pointer dragging must move it smoothly, clamp to the viewport, retain only its normalized position and never open the conversation accidentally. Click/keyboard still open the centered dialog. Reduced motion and a truthful graphics fallback are required; visual quality is subject to founder review.
+3. Tavily's default engineering-context choices must be short, readable and deduplicated, with exact specialist finding/assumption targets available in Advanced. Preserve actual backend IDs and saved linking semantics.
+4. Source library needs clear spacing and a progressive Add → Saved references → Link flow, a plain explanation of its purpose, and visible reasons for unavailable actions. Manual review/save/link, preserved versions and unsaved Tavily prefill remain distinct.
+5. Nemotron's primary flow must make discussion scope, chosen model, question and explicit Ask obvious. Keep all three model choices, consent, saved evidence, history, settings and special captured test contexts available without presenting everything at once. No automatic inference or policy change.
+6. Apply the shared editorial font family to every human-readable component, including project names, dialogs, native controls and legacy modules. Keep a coordinated mono family for actual quantities, code and identities; retain readable sizes and contrast.
+
+Verify complete desktop/mobile user journeys with isolated synthetic providers, actual rendering inspection, internal Back/Forward/draft safeguards, blocked-action explanations, clear calculations and manual source handoff. Preserve owner projects, histories, keys, balances, approvals and hosted limits; no paid test is necessary. Document exact checks/limits, restart and verify the actual local build, privacy-check and publish to GitHub.

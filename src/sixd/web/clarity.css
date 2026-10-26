@@ -29,3 +29,32 @@
 #sixd-workspace .sd-owner-page .sd-details-grid dd{font-family:var(--sd-font-mono);font-size:14px}
 @media(max-width:700px){#sixd-workspace .sd-legend-explanations{grid-template-columns:1fr;gap:14px}#sixd-workspace .sd-owner-page>section{padding:16px}#sixd-workspace .sd-owner-connection>.sd-button{white-space:normal}#sixd-workspace .sd-project-journey{gap:6px}#sixd-workspace .sd-project-journey button{font-size:13px;padding:7px 8px}}
 @media print{#sixd-workspace .sd-project-journey,#sixd-workspace .sd-owner-page{display:none!important}}
+
+/* A requested guide is visible in every work area; it never changes the page. */
+#sixd-workspace.sd-guide-visible #sd-review-guide{display:block!important;margin:16px 26px 22px}
+#sixd-workspace #sd-review-guide[hidden]{display:none!important}
+#sixd-workspace .sd-guide-intro{padding:18px 22px;line-height:1.6}
+#sixd-workspace .sd-guide-intro p{margin:8px 0 12px}
+#sixd-workspace .sd-calculation-feedback{margin:14px 26px;padding:13px 16px;border:1px solid #c9d6e5;border-radius:10px;background:#f0f5fb;font-size:14px;line-height:1.5}
+#sixd-workspace .sd-calculation-feedback[data-phase="working"]{border-left:4px solid #345bd6}
+#sixd-workspace .sd-calculation-feedback[data-phase="done"]{background:#eff7f2;border-color:#c7dfd0}
+#sixd-workspace .sd-calculation-feedback[data-phase="error"]{background:#fff5f2;border-color:#e4c4b9}
+#sixd-workspace .sd-assistant-scope-row{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
+#sixd-workspace .sd-assistant-scope-row .sd-field{margin:0 0 12px}
+#sixd-workspace #sd-rocket-ai-context{padding:0 0 2px}
+#sixd-workspace .sd-assistant-compose{padding:2px 0 6px}
+#sixd-workspace .sd-assistant-compose .sd-ai-model-picker{max-width:300px;margin:0 0 10px}
+#sixd-workspace .sd-assistant-compose .sd-ai-question{min-height:84px;margin:0}
+#sixd-workspace .sd-assistant-compose .sd-field{margin:0 0 9px}
+#sixd-workspace .sd-assistant-suggestions{display:flex;gap:6px 15px;flex-wrap:wrap;margin:4px 0 14px}
+#sixd-workspace .sd-assistant-suggestions button{font-size:13px;line-height:1.5;padding:3px 0}
+#sixd-workspace .sd-assistant-send-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#sixd-workspace .sd-assistant-send-row #sd-ai-presence{color:#476151;margin-right:auto}
+#sixd-workspace .sd-assistant-send-row #sd-ai-question-count{font-size:12px}
+#sixd-workspace .sd-assistant-send-row #sd-ai-start{min-width:155px;min-height:41px}
+#sixd-workspace .sd-assistant-consent{font-size:13px;line-height:1.5;margin:11px 0 0;max-width:680px}
+#sixd-workspace .sd-ai-advanced,#sixd-workspace .sd-ai-history-disclosure{margin:12px 0 0;border-top:1px solid var(--sd-border);padding-top:12px}
+#sixd-workspace .sd-ai-advanced>summary,#sixd-workspace .sd-ai-history-disclosure>summary{font-size:14px;font-weight:550;cursor:pointer;padding:5px 0}
+#sixd-workspace .sd-ai-advanced[open]>summary{margin-bottom:13px}
+#sixd-workspace .sd-ai-advanced .sd-ai-scope{display:block}
+@media(max-width:650px){#sixd-workspace .sd-assistant-scope-row{grid-template-columns:1fr;gap:0}#sixd-workspace.sd-guide-visible #sd-review-guide,#sixd-workspace .sd-calculation-feedback{margin-left:14px;margin-right:14px}#sixd-workspace .sd-assistant-send-row #sd-ai-start{flex:1}}

@@ -240,7 +240,7 @@
     const {ctx,width:w,height:h}=surface(canvas),rows=samples(a),s=a.session;
     ctx.fillStyle='#f6f8fc';ctx.fillRect(0,0,w,h);
     ctx.fillStyle='#dce3ed';for(let x=16;x<w;x+=24)for(let y=16;y<h;y+=24){ctx.beginPath();ctx.arc(x,y,.65,0,Math.PI*2);ctx.fill();}
-    if(!rows.length){ctx.fillStyle='#5d6a7d';ctx.font='14px system-ui';ctx.textAlign='center';ctx.fillText('Your calculated trajectory will appear here',w/2,h/2);return;}
+    if(!rows.length){ctx.fillStyle='#5d6a7d';ctx.font='14px '+getComputedStyle(canvas).fontFamily;ctx.textAlign='center';ctx.fillText('Your calculated trajectory will appear here',w/2,h/2);return;}
     const other=a.baseline?.receipt.result.samples || [],radius=a.detail.receipt.spec.exclusion_radius_m;
     const extent=Math.max(...rows.map(p=>p.radius_m),...other.map(p=>p.radius_m),radius)*1.18;
     const scale=Math.min(w,h)*.43/extent*s.zoom,cx=w/2,cy=h/2;
@@ -258,13 +258,13 @@
     if(other.length)front(other,'#bb8a39');front(rows,'#3768d5');
     function marker(row,color){if(!row)return;const p=project(row.position_m);ctx.beginPath();ctx.arc(p[0],p[1],6,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke();}
     const row=rows[s.index];marker(baselineSample(a,row.time_s),'#bb8a39');marker(row,'#2855bf');
-    ctx.fillStyle='#5f6b7e';ctx.font='13px ui-monospace, monospace';ctx.textAlign='left';ctx.fillText(s.projection==='3d'?'3D · orthographic view':s.projection.toUpperCase()+' projection',16,h-17);
+    ctx.fillStyle='#5f6b7e';ctx.font='13px '+getComputedStyle(canvas).fontFamily;ctx.textAlign='left';ctx.fillText(s.projection==='3d'?'3D · orthographic view':s.projection.toUpperCase()+' projection',16,h-17);
     const bar=w*.14,metres=bar/scale;ctx.strokeStyle='#73839b';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(w-24-bar,h-30);ctx.lineTo(w-24,h-30);ctx.stroke();ctx.textAlign='right';ctx.fillText(fmt(metres/1000)+' km',w-24,h-12);
     a.host.querySelector('#sim-camera-note').textContent=s.projection==='3d'?'Drag to rotate · arrow keys also rotate':'Fixed '+s.projection.toUpperCase()+' projection · equal spatial scale';
   }
   function drawChart(a) {
     const canvas=a.host.querySelector('#sim-chart');if(!canvas)return;
-    const {ctx,width:w,height:h}=surface(canvas),rows=samples(a);if(!rows.length){ctx.fillStyle='#7c8593';ctx.font='13px ui-monospace, monospace';ctx.fillText('No recorded history yet.',20,36);return;}
+    const {ctx,width:w,height:h}=surface(canvas),rows=samples(a);if(!rows.length){ctx.fillStyle='#7c8593';ctx.font='13px '+getComputedStyle(canvas).fontFamily;ctx.fillText('No recorded history yet.',20,36);return;}
     const key=a.host.querySelector('#sim-quantity').value,other=a.baseline?.receipt.result.samples || [];
     const channels=key==='position_m'?[0,1,2]:[null],colors=['#3768d5','#4d8b7f','#9470bb'];
     const value=(p,c)=>c===null?p[key]:p.position_m[c];

@@ -1,5 +1,7 @@
 # Documentation index
 
+Latest usability refinement: [guide](SIX_ISSUE_USABILITY.md), [acceptance](SIX_ISSUE_USABILITY_ACCEPTANCE.md), [results](SIX_ISSUE_USABILITY_RESULTS.md) and [sanitized checks](validation/SIX_ISSUE_USABILITY_CHECKS.json). Explicit calculation feedback, in-place Guided review, draggable metallic 3D companion, simpler question/reference flows and complete human-readable typography preserve the existing engineering and owner boundaries. Earlier interface records below are dated history.
+
 Current local allowance approval and disabled-search explanation: [October 26 results](BALANCE_LIMITS_RESULTS.md) and [sanitized checks](validation/BALANCE_LIMITS_CHECKS.json). Historical lower ceilings remain documented at their original checkpoints; counters and provider receipts were not reset. Hosted/public budgets remain unchanged.
 
 Current ordinary AI access/layout: [Rocket guide](ROCKET_ASSISTANT.md), [acceptance](ROCKET_ASSISTANT_ACCEPTANCE.md), [delivery/results](ROCKET_ASSISTANT_RESULTS.md) and [sanitized checks](validation/ROCKET_ASSISTANT_CHECKS.json). The animated companion replaces standalone question/search sections; selected-item details/evidence are central. Older dated interface documents retain their historical layout.

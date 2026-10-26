@@ -83,7 +83,7 @@ try{
  for(const label of labels)assert.ok(historicalBefore.some(text=>text.includes('Recorded model: '+label)));
  pass('Requirement Assistant offers Nano, Super and Ultra; retained records name their actual models');
  const question='Explain this saved finding and the next evidence checks.';await page.locator('#sd-ai-question').fill(question);
- await page.locator('.sd-rocket-scope-notes > summary').click();
+ await page.locator('#sd-ai-advanced > summary').click();
  for(let n=0;n<choices.length;n++){
   await page.locator('#sd-ai-model').selectOption(choices[n]);assert.equal(await page.locator('#sd-ai-question').inputValue(),question);
   assert.equal(await page.locator('#sd-ai-consent-model').innerText(),labels[n]);
@@ -99,9 +99,9 @@ try{
  await page.waitForFunction(()=>document.querySelector('#sd-ai-model')?.disabled===true);assert.equal(await page.locator('#sd-ai-start').isDisabled(),true);
  await page.evaluate(()=>{const select=document.querySelector('#sd-ai-model');select.value='nano';select.dispatchEvent(new Event('change',{bubbles:true}));});
  assert.equal(await page.locator('#sd-ai-model').inputValue(),'ultra');assert.equal(posts.filter(p=>p.path==='/api/investigations').length,1);
- await click('project-investigate');
+ await page.locator('#sd-ai-scope').selectOption('project');
  await page.waitForFunction(()=>document.querySelectorAll('#sd-ai-model option').length===3&&document.querySelector('#sd-ai-model').disabled);
- assert.match(await page.locator('#sd-rocket-ai-context').innerText(),/Whole-project/);
+ assert.match(await page.locator('#sd-rocket-ai-context').innerText(),/Whole[ -]project/);
  assert.equal(await page.locator('#sd-ai-start').isDisabled(),true);
  assert.equal(posts.filter(p=>p.path==='/api/investigations').length,1);
  pass('Changing investigation scope while a requirement job runs retains the global busy guard without another POST');
@@ -110,10 +110,10 @@ try{
  assert.equal(posts.find(p=>p.path==='/api/investigations').data.model_choice,'ultra');
  pass('Explicit requirement start reaches Ultra; switching is disabled while running and never creates a second request');
  for(const old of seededRecords)assert.deepEqual(await api('/api/investigations/'+old.investigation_id),old);
- await click('requirement-investigate');await waitChoices();
+ await page.locator('#sd-ai-scope').selectOption('requirement');await waitChoices();
  await page.screenshot({path:join(output,'requirement-desktop.png'),fullPage:true});
  pass('A new chosen-model job does not rewrite historical Nano, Super or Ultra receipts');
- await click('project-investigate');await waitChoices();assert.match(await page.locator('#sd-rocket-ai-context').innerText(),/Whole-project/);
+ await page.locator('#sd-ai-scope').selectOption('project');await waitChoices();assert.match(await page.locator('#sd-rocket-ai-context').innerText(),/Whole[ -]project/);
  const projectQuestion='Review the related findings and unresolved evidence.';await page.locator('#sd-ai-question').fill(projectQuestion);
  const priorWholeCalls=await countCalls();for(const choice of choices){await page.locator('#sd-ai-model').selectOption(choice);assert.equal(await page.locator('#sd-ai-question').inputValue(),projectQuestion);}
  assert.equal(await countCalls(),priorWholeCalls);

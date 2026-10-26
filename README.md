@@ -10,6 +10,8 @@
 
 ## Try it
 
+**Latest interface update:** Calculate/Recalculate now shows an explicit run's progress and completion, and Guided review opens in place. Drag the metallic 3D **Ask 6D** rocket to move it; click it for the simplified Nemotron or Tavily conversation. Source topics use short grouped names with exact targets in Advanced, Source library has a progressive save/link flow, and shared typography covers the full workspace. [Usage](docs/SIX_ISSUE_USABILITY.md) · [Scoped checks and limits](docs/SIX_ISSUE_USABILITY_RESULTS.md). No paid calls or physics changes were made by this refinement.
+
 **Current delivery:** local desktop/browser application. A hosted judge URL is not available yet. Build F now provides an invitation-protected server, isolated visitor workspaces and a CPU-container/HTTPS deployment recipe; actual public deployment remains pending cost approval and platform checks. [Preparation results](docs/BUILD_F_RESULTS.md) · [Operator guide](docs/HOSTED_DEPLOYMENT.md) · [Submission checklist](docs/SUBMISSION_CHECKLIST.md). Opening localhost from another computer will not reach the developer's instance.
 
 Python **3.10+** is required; the application runtime uses the standard library.
@@ -30,7 +32,7 @@ Python **3.10+** is required; the application runtime uses the standard library.
 
 On Windows, `Setup-6D.cmd`, `Open-6D.cmd` and `Stop-6D.cmd` provide the same workflow; `py -3` may be used in place of `python`. On Linux/macOS, use `python3`. Windows has native launcher verification; the other platforms still need native qualification. [Setup, backup and recovery details](docs/RELEASE_HANDOVER.md).
 
-The animated **Ask 6D rocket** stays available throughout the workspace and opens a centered conversation for **Nemotron investigations** or **Tavily reference search**. It offers **Nano, Super and Ultra per investigation**, with the chosen model recorded in history and the same shared spending controls. Selecting a model sends nothing; explicit Start runs it. Inspector/Evidence now sits in the central workspace with folded technical detail; there is no separate right-hand Assistant section. [Rocket guide](docs/ROCKET_ASSISTANT.md) · [Delivery checks](docs/ROCKET_ASSISTANT_RESULTS.md) · [Measured model results and preserved failures](docs/THREE_MODEL_RESULTS.md).
+The animated **Ask 6D rocket** stays available throughout the workspace and opens a centered conversation for **Nemotron investigations** or **Tavily reference search**. It offers **Nano, Super and Ultra per investigation**, with the chosen model recorded in history and the same shared spending controls. Selecting a model sends nothing; explicit **Ask Nemotron** starts the investigation. Inspector/Evidence sits in the central workspace with folded technical detail; there is no separate right-hand Assistant section. [Current companion guide](docs/SIX_ISSUE_USABILITY.md) · [Earlier entry-point delivery](docs/ROCKET_ASSISTANT_RESULTS.md) · [Measured model results and preserved failures](docs/THREE_MODEL_RESULTS.md).
 
 Windows users can opt into **Remember on this device** separately for Nebius, Tavily and LangSmith. Protected keys restore locally after restart without provider calls. Tavily reservations and LangSmith preview/upload approval remain intact; credential files are excluded from backups. [Connection controls and limits](docs/REMEMBERED_SERVICE_CONNECTIONS.md) · [Build E checks](docs/BUILD_E_RESULTS.md).
 

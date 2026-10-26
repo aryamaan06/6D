@@ -36,8 +36,9 @@
   function controls(s){
     if(!active(s))return;
     if(s.reportedBusy!==!!s.busy){s.reportedBusy=!!s.busy;s.ctx.onBusyChange?.(s.reportedBusy);}
-    s.host.querySelectorAll('[data-sr-field="query"],[data-sr-field="target"]').forEach(node=>node.disabled=!!s.busy||readOnly(s)||s.profile?.can_search!==true||s.status?.usage_review_required===true);
+    s.host.querySelectorAll('[data-sr-field="query"],[data-sr-field="target"],[data-sr-field="advanced-target"]').forEach(node=>node.disabled=!!s.busy||readOnly(s)||s.profile?.can_search!==true||s.status?.usage_review_required===true);
     s.host.querySelectorAll('[data-sr-action="search"]').forEach(node=>node.disabled=!canSearch(s));
+    if(s.profile)window.SixDSourceTargets.update(s.host,s.profile.targets,s.target);
     const blocked=find(s,'[data-sr-blocked]');if(blocked){const reason=searchBlockedReason(s);blocked.textContent=reason;blocked.hidden=!reason;}
     s.host.querySelectorAll('[data-sr-action="refresh"],[data-sr-action="load-record"],[data-sr-action="preview"]').forEach(node=>node.disabled=!!s.busy);
     s.host.querySelectorAll('[data-sr-field="key"],[data-sr-field="credit_limit"]').forEach(node=>node.disabled=!!s.busy);
@@ -58,11 +59,11 @@
   }
   function searchForm(s){
     const targets=list(s.profile?.targets);
-    return '<div class="sr-search-form"><label class="sr-field">Engineering context<select data-sr-field="target"><option value="">Choose a requirement, assumption or finding</option>'+targets.map(target=>'<option value="'+esc(target.target_id)+'"'+(target.target_id===s.target?' selected':'')+'>'+esc(target.label)+'</option>').join('')+'</select></label><label class="sr-field">Search query<textarea rows="2" maxlength="1000" data-sr-field="query" placeholder="Type the public reference you want to find.">'+esc(s.query)+'</textarea></label><div class="sr-actions">'+button('search',s.ctx.inAssistant?'Search references':'Search references · 1 credit expected')+'</div><p class="sr-notice" data-sr-blocked role="status" hidden></p><p class="sr-small">Only the query you type is sent to Tavily. Your project data is not attached automatically. Each explicit search uses the configured Tavily credit allowance and returns at most five results; generated answers, page extraction and automatic retries are off.</p></div>';
+    return '<div class="sr-search-form">'+window.SixDSourceTargets.render(targets,s.target,{primaryAttr:'data-sr-field="target"',advancedAttr:'data-sr-field="advanced-target"',label:'What do you want to research?'})+'<label class="sr-field">Your search<textarea rows="2" maxlength="1000" data-sr-field="query" placeholder="For example: NASA rocket heating assumptions">'+esc(s.query)+'</textarea></label><div class="sr-actions">'+button('search','Search references')+'</div><p class="sr-notice" data-sr-blocked role="status" hidden></p><p class="sr-small">Only your typed query is sent to Tavily. Results are references to review, not verified engineering conclusions.</p><details class="sr-identity"><summary>What this search sends and costs</summary><p>One explicit basic search uses the configured Tavily allowance and returns at most five results. Your project data is not attached automatically. Generated answers, page extraction and automatic retries are off.</p></details></div>';
   }
   function history(s){
     const records=list(s.profile?.searches);
-    return '<section class="sr-history"><div class="sr-heading"><h4>Saved searches</h4><span class="sr-small">'+records.length+' retained</span></div>'+(records.length?'<div class="sr-history-list">'+records.map(record=>'<button type="button" class="sr-history-item" data-sr-action="load-record" data-sr-id="'+esc(record.search_id)+'"><span>'+esc(record.query)+'</span><small>R'+esc(record.revision)+' · '+esc(record.state)+' · '+esc(record.result_count??0)+' results · '+esc(record.created_at)+'</small></button>').join('')+'</div>':'<p class="sr-small">No searches have been made for this project. Opening this panel does not start one.</p>')+'</section>';
+    return '<details class="sr-history"><summary>Earlier searches ('+records.length+')</summary><div class="sr-heading"><h4>Saved searches</h4><span class="sr-small">'+records.length+' retained</span></div>'+(records.length?'<div class="sr-history-list">'+records.map(record=>'<button type="button" class="sr-history-item" data-sr-action="load-record" data-sr-id="'+esc(record.search_id)+'"><span>'+esc(record.query)+'</span><small>R'+esc(record.revision)+' · '+esc(record.state)+' · '+esc(record.result_count??0)+' results · '+esc(record.created_at)+'</small></button>').join('')+'</div>':'<p class="sr-small">No searches have been made for this project. Opening this panel does not start one.</p>')+'</details>';
   }
   function result(s){
     const record=s.receipt;if(!record)return '';
@@ -161,7 +162,7 @@
   }
   function mount(host,ctx){
     unmount();const s={host,ctx,status:null,profile:null,receipt:null,preview:null,target:typeof ctx.initialTarget==='string'?ctx.initialTarget:'',query:typeof ctx.initialQuery==='string'?ctx.initialQuery.slice(0,1000):'',busy:'',error:'',notice:'',serial:0,controller:null,disposed:false};mounted=s;
-    const input=event=>{const field=event.target.dataset.srField;if(field==='query')s.query=event.target.value;if(field==='target')s.target=event.target.value;if(field==='query'||field==='target')ctx.onDraftChange?.({query:s.query,target:s.target});controls(s);};
+    const input=event=>{const field=event.target.dataset.srField;if(field==='query')s.query=event.target.value;if(field==='target'||field==='advanced-target')s.target=event.target.value;if(field==='query'||field==='target'||field==='advanced-target')ctx.onDraftChange?.({query:s.query,target:s.target});controls(s);};
     const click=event=>{const control=event.target.closest('[data-sr-action]');if(!control||!host.contains(control)||control.disabled)return;const action=control.dataset.srAction;
       if(action==='owner-settings'){s.ctx.onOwnerSettings?.();return;}
       if(action==='refresh'){void load(s);return;}if(['connect','forget','disconnect'].includes(action)){void connect(s,action);return;}if(action==='search'){void search(s);return;}if(action==='load-record'){void openRecord(s,control.dataset.srId);return;}if(action==='preview'){void openPreview(s,Number(control.dataset.srIndex));return;}if(action==='close-preview'){s.preview=null;draw(s);return;}

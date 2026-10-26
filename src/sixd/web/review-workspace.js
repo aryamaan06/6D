@@ -211,7 +211,7 @@
       if (action === 'rocket-open' && !isDraft()) { ctx.onRocketOpen?.();return; }
       if (action === 'rocket-stage' && !isDraft() && state.data?.rocket_reference?.can_stage && !state.error && !state.loading) { ctx.onRocketStage?.();return; }
       if (action === 'refresh') { void refresh();return; }
-      if (action === 'run' && !isDraft() && state.data && !hasRun(state.data)) { ctx.onRun?.();return; }
+      if (action === 'run' && !isDraft() && state.data && !state.loading && ctx.onRun) { void ctx.onRun();return; }
       if (action === 'draft') { ctx.onNavigate?.('changes');return; }
       if (action === 'coverage') { ctx.onNavigate?.('coverage');return; }
       if (action?.startsWith('inspect:') && !isDraft()) { ctx.onSelectRequirement?.(action.slice(8));return; }
