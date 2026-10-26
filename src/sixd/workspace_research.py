@@ -18,11 +18,11 @@ from uuid import uuid4
 from .workspace import WorkspaceError, ConflictError, _digest, _encode, _now, _revision
 from .workspace_sources import _text, _url, _targets
 from .credential_store import CredentialError
-from .service_credentials import ServiceCredentialStore, credential_error_code, validate_connection
+from .service_credentials import ServiceCredentialStore, credential_error_code, validate_connection, MAX_TAVILY_CREDITS
 
 SCHEMA = 'sixd.research-search.v1'
 ENDPOINT = 'https://api.tavily.com/search'
-MAX_CREDITS = 20
+MAX_CREDITS = MAX_TAVILY_CREDITS
 MAX_RESPONSE_BYTES = 1024 * 1024
 PARAMETERS = {'search_depth': 'basic', 'topic': 'general', 'max_results': 5,
     'include_answer': False, 'include_raw_content': False, 'include_images': False,
@@ -259,7 +259,7 @@ class WorkspaceResearch:
                 or any(ord(ch) < 33 or ord(ch) > 126 for ch in api_key)):
             raise WorkspaceError('Enter a nonempty Tavily key privately, without whitespace.')
         if type(credit_limit) is not int or not 1 <= credit_limit <= MAX_CREDITS:
-            raise WorkspaceError('Choose an absolute local Tavily allowance from one through twenty credits.')
+            raise WorkspaceError('Choose a positive integer Tavily allowance within the approved cumulative limit.')
         if type(remember) is not bool:
             raise WorkspaceError('Remember on this device must be true or false.')
         with self._lock, self.store._connect() as connection:

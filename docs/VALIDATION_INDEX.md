@@ -1,3 +1,5 @@
+> October 26 local balance-limit update: [results](BALANCE_LIMITS_RESULTS.md) / [checks](validation/BALANCE_LIMITS_CHECKS.json). 67 scoped Python methods (66 passed, one skip), 13 synthetic rocket browser groups and 26 preservation checks. Exact future capacity confirmed locally; no paid requests, numerical changes or hosted budget increase.
+
 > October 26 rocket companion: [results](ROCKET_ASSISTANT_RESULTS.md) / [scoped checks](validation/ROCKET_ASSISTANT_CHECKS.json). 48 affected Python methods (47 passed, one Windows Docker-unavailable skip), 48 browser groups, six Node contracts and 27 owner-state preservation checks. Providers were synthetic; no paid calls. This is scoped interface/API regression evidence, not full-suite or independent semantic validation.
 
 > October 26 Build 3: [results](BUILD3_CLARITY_RESULTS.md) and [scoped checks](validation/BUILD3_CLARITY_CHECKS.json): 126 affected Python methods (125 passed, one Windows Docker-unavailable skip), 43 browser groups and six Node history contracts passed. Fresh Ultra completed six constructed workflows; independent human validation and public hosting remain pending.

@@ -122,7 +122,7 @@ class ResearchTests(unittest.TestCase):
             self.search()
         with self.assertRaises(WorkspaceError):
             self.connect(1)
-        for invalid in (0, 21, True, 2.0, '5'):
+        for invalid in (0, research.MAX_CREDITS + 1, True, 2.0, '5'):
             with self.assertRaises(WorkspaceError):
                 self.connect(invalid)
 

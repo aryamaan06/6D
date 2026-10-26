@@ -23,7 +23,10 @@ from .credential_store import CredentialStore, CredentialError, valid_key
 
 MAX_JOB_REQUESTS = 6
 MAX_JOB_RESERVATION_USD = .10
-MAX_APPROVED_ALLOWANCE_USD = 29.50
+# October 26 owner approval: USD58.25 available for future reservations.
+# Retain USD4.80367468 already reserved: cumulative ceiling = USD63.05367468.
+# This does not authorize USD63.05367468 of additional usage.
+MAX_APPROVED_ALLOWANCE_USD = 63.05367468
 ACTIVE = {"queued", "running"}
 
 
@@ -133,7 +136,7 @@ class WorkspaceAI:
     def _config(self, model_choice=None):
         config = LiveConfig.load(self.local / "token-factory.json")
         if config.spend_cap_usd > MAX_APPROVED_ALLOWANCE_USD:
-            raise ProviderError("The configured allowance exceeds the approved cumulative USD 29.50 cap.", code="configuration_error")
+            raise ProviderError("The configured allowance exceeds the approved cumulative cap.", code="configuration_error")
         if config.inference_profile != "native_no_thinking" or config.selection_protocol != "forced_action_v1":
             raise ProviderError("The project assistant requires the established native tool-selection configuration.")
         selection = self.local / "project-assistant-model.json"

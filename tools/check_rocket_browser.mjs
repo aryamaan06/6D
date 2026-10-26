@@ -155,6 +155,18 @@ try{
  assert.equal((await callLog()).filter(c=>c.service==='tavily').length,0);
  await page.locator('#sd-rocket-research-host [data-sr-field="target"]').selectOption('requirement:thermal_limit');
  await page.locator('#sd-rocket-research-host [data-sr-field="query"]').fill('spacecraft steady radiative equilibrium assumptions');
+ const originalResearchStatus=await api(info.owner,'/api/research/status');
+ const exhaustedStatus=route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({...originalResearchStatus,credit_limit:1,reserved_credits:1,remaining_credits:0,can_search:false})});
+ await page.route(info.owner+'/api/research/status',exhaustedStatus);
+ await page.locator('#sd-rocket-research-host [data-sr-action="refresh"]').click();
+ await page.waitForFunction(()=>document.querySelector('#sd-rocket-research-host [data-sr-blocked]')?.textContent.includes('allowance is used up'));
+ assert.equal(await page.locator('#sd-rocket-research-host [data-sr-action="search"]').isDisabled(),true);
+ assert.equal(posts.filter(p=>p.path==='/api/research/search').length,0);
+ await page.unroute(info.owner+'/api/research/status',exhaustedStatus);
+ await page.locator('#sd-rocket-research-host [data-sr-action="refresh"]').click();
+ await page.waitForFunction(()=>document.querySelector('#sd-rocket-research-host [data-sr-action="search"]')?.disabled===false);
+ assert.equal(await page.locator('#sd-rocket-research-host [data-sr-field="query"]').inputValue(),'spacecraft steady radiative equilibrium assumptions');
+ pass('Exhausted Tavily allowance explains the blocked search; refreshing approved capacity restores it without a request or lost query');
  assert.equal(posts.filter(p=>p.path==='/api/research/search').length,0);
  const searchStarted=page.waitForResponse(r=>r.url()===info.owner+'/api/research/search'&&r.request().method()==='POST');await page.locator('#sd-rocket-research-host [data-sr-action="search"]').click();assert.equal((await searchStarted).status(),200);
  await page.locator('#sd-rocket-research-host [data-sr-action="preview"]').click();await page.locator('#sd-rocket-research-host [data-sr-action="use"]').waitFor();

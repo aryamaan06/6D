@@ -87,7 +87,7 @@ class ServiceCredentialFixtureTests(unittest.TestCase):
         self.directory.mkdir()
         invalid = [self.encoded(schema='wrong'), self.encoded(service='langsmith'),
             self.encoded(settings={'credit_limit': True}), self.encoded(settings={'credit_limit': 0}),
-            self.encoded(settings={'credit_limit': 21}), self.encoded(settings={'credit_limit': 3, 'other': 1}),
+            self.encoded(settings={'credit_limit': 4126}), self.encoded(settings={'credit_limit': 3, 'other': 1}),
             self.encoded(key='short'), self.encoded(key=KEY + ' '),
             _MAGIC + self.codec.protect(b'{"schema":"x","schema":"x"}'),
             _MAGIC + self.codec.protect(b'{"key":NaN}'),

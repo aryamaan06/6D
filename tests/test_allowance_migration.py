@@ -43,7 +43,7 @@ class AllowanceMigrationTests(unittest.TestCase):
 
     def test_invalid_increases_do_not_change_ledger_or_configuration(self):
         before = (self.local / "token-factory.json").read_bytes()
-        for cap in (True, 5, 4, 30, float("nan"), float("inf")):
+        for cap in (True, 5, 4, 64, float("nan"), float("inf")):
             with self.subTest(cap=cap), self.assertRaises(ProviderError):
                 update_allowance(self.local, cap, "explicit test authorization")
         self.assertEqual(before, (self.local / "token-factory.json").read_bytes())

@@ -1,5 +1,7 @@
 # Documentation index
 
+Current local allowance approval and disabled-search explanation: [October 26 results](BALANCE_LIMITS_RESULTS.md) and [sanitized checks](validation/BALANCE_LIMITS_CHECKS.json). Historical lower ceilings remain documented at their original checkpoints; counters and provider receipts were not reset. Hosted/public budgets remain unchanged.
+
 Current ordinary AI access/layout: [Rocket guide](ROCKET_ASSISTANT.md), [acceptance](ROCKET_ASSISTANT_ACCEPTANCE.md), [delivery/results](ROCKET_ASSISTANT_RESULTS.md) and [sanitized checks](validation/ROCKET_ASSISTANT_CHECKS.json). The animated companion replaces standalone question/search sections; selected-item details/evidence are central. Older dated interface documents retain their historical layout.
 
 Latest UI delivery: [Build 3 guide](BUILD3_CLARITY.md), [acceptance](BUILD3_CLARITY_ACCEPTANCE.md), [results](BUILD3_CLARITY_RESULTS.md) and [sanitized checks](validation/BUILD3_CLARITY_CHECKS.json). Owner controls and outside dismissal are implemented; fresh Ultra passed six constructed workflows. Public deployment and independent human validation remain pending.

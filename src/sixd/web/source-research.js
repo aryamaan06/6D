@@ -20,11 +20,25 @@
     return value;
   }
   function canSearch(s){return !s.busy&&!readOnly(s)&&s.profile?.can_search===true&&!!s.status?.key_present&&!s.status?.usage_review_required&&s.status?.can_search!==false&&s.status?.remaining_credits>=1&&s.profile.targets.some(target=>target.target_id===s.target)&&!!s.query.trim();}
+  function searchBlockedReason(s){
+    if(s.busy)return 'Wait for the current reference operation to finish.';
+    if(s.ctx.hasDraft)return 'Save or discard the draft before searching.';
+    if(s.ctx.canEdit===false)return 'Choose the latest saved revision to search.';
+    if(!s.status||!s.profile)return 'Reading the saved search context…';
+    if(s.status.usage_review_required||s.profile.usage_review_required)return 'Search is paused for an owner usage review.';
+    if(!s.status.key_present)return 'Connect Tavily privately in Owner settings before searching.';
+    if(!(s.status.remaining_credits>=1))return 'Search is paused: the app’s approved Tavily allowance is used up. Update it in Owner settings; this is separate from your Tavily account balance.';
+    if(s.status.can_search===false||s.profile.can_search!==true)return 'Search is unavailable in this saved context. Refresh saved searches or review Owner settings.';
+    if(!s.profile.targets.some(target=>target.target_id===s.target))return 'Choose an engineering context before searching.';
+    if(!s.query.trim())return 'Type a query, then click Search references. Enter adds a new line.';
+    return '';
+  }
   function controls(s){
     if(!active(s))return;
     if(s.reportedBusy!==!!s.busy){s.reportedBusy=!!s.busy;s.ctx.onBusyChange?.(s.reportedBusy);}
     s.host.querySelectorAll('[data-sr-field="query"],[data-sr-field="target"]').forEach(node=>node.disabled=!!s.busy||readOnly(s)||s.profile?.can_search!==true||s.status?.usage_review_required===true);
     s.host.querySelectorAll('[data-sr-action="search"]').forEach(node=>node.disabled=!canSearch(s));
+    const blocked=find(s,'[data-sr-blocked]');if(blocked){const reason=searchBlockedReason(s);blocked.textContent=reason;blocked.hidden=!reason;}
     s.host.querySelectorAll('[data-sr-action="refresh"],[data-sr-action="load-record"],[data-sr-action="preview"]').forEach(node=>node.disabled=!!s.busy);
     s.host.querySelectorAll('[data-sr-field="key"],[data-sr-field="credit_limit"]').forEach(node=>node.disabled=!!s.busy);
     const connect=find(s,'[data-sr-action="connect"]');if(connect)connect.disabled=!!s.busy||!find(s,'[data-sr-field="key"]')?.value.trim();
@@ -44,7 +58,7 @@
   }
   function searchForm(s){
     const targets=list(s.profile?.targets);
-    return '<div class="sr-search-form"><label class="sr-field">Engineering context<select data-sr-field="target"><option value="">Choose a requirement, assumption or finding</option>'+targets.map(target=>'<option value="'+esc(target.target_id)+'"'+(target.target_id===s.target?' selected':'')+'>'+esc(target.label)+'</option>').join('')+'</select></label><label class="sr-field">Search query<textarea rows="2" maxlength="1000" data-sr-field="query" placeholder="Type the public reference you want to find.">'+esc(s.query)+'</textarea></label><div class="sr-actions">'+button('search',s.ctx.inAssistant?'Search references':'Search references · 1 credit expected')+'</div><p class="sr-small">Only the query you type is sent to Tavily. Your project data is not attached automatically. Each explicit search uses the configured Tavily credit allowance and returns at most five results; generated answers, page extraction and automatic retries are off.</p></div>';
+    return '<div class="sr-search-form"><label class="sr-field">Engineering context<select data-sr-field="target"><option value="">Choose a requirement, assumption or finding</option>'+targets.map(target=>'<option value="'+esc(target.target_id)+'"'+(target.target_id===s.target?' selected':'')+'>'+esc(target.label)+'</option>').join('')+'</select></label><label class="sr-field">Search query<textarea rows="2" maxlength="1000" data-sr-field="query" placeholder="Type the public reference you want to find.">'+esc(s.query)+'</textarea></label><div class="sr-actions">'+button('search',s.ctx.inAssistant?'Search references':'Search references · 1 credit expected')+'</div><p class="sr-notice" data-sr-blocked role="status" hidden></p><p class="sr-small">Only the query you type is sent to Tavily. Your project data is not attached automatically. Each explicit search uses the configured Tavily credit allowance and returns at most five results; generated answers, page extraction and automatic retries are off.</p></div>';
   }
   function history(s){
     const records=list(s.profile?.searches);

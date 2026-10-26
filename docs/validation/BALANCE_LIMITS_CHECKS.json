@@ -1,0 +1,62 @@
+{
+  "schema": "sixd.balance-limits-delivery.v1",
+  "date": "2026-10-26",
+  "build_id": "b2b49af04e8b",
+  "python_regressions": {
+    "ran": 67,
+    "passed": 66,
+    "skipped": 1,
+    "full_discovery": false
+  },
+  "browser": {
+    "groups_passed": 13,
+    "checks": [
+      "One animated rocket is available on Projects, overview, systems, planar/staged analysis and sources without standalone AI tabs or service calls",
+      "Rocket exhaust and hover honor reduced-motion preferences",
+      "Requirement facts are centred in the main workspace with technical detail folded, and the third/right column is gone",
+      "Nemotron opens in the centred rocket conversation with all three models and no ordinary financial accounting",
+      "Model choice, close/reopen, Escape and outside dismissal preserve the unsent question without making requests",
+      "Only explicit Start invokes the chosen Ultra model through the unchanged requirement evidence workflow",
+      "Whole-project review remains accessible inside the same rocket, retaining explicit model choice and one request start",
+      "A delayed Tavily profile stays bound to its captured project; reopening on Projects cannot activate the old form and resolves to a choose-project notice",
+      "Exhausted Tavily allowance explains the blocked search; refreshing approved capacity restores it without a request or lost query",
+      "Tavily requires one explicit search; preview and copy hand off to an unsaved Source library form without automatic source saving",
+      "The centred rocket dialog fits a narrow mobile viewport without horizontal overflow",
+      "Hosted reviewers get the rocket while owner controls, financial amounts and administrative service routes remain protected",
+      "Canonical engineering and the shared cap remain unchanged; only deliberate synthetic investigations/search and visitor login posted"
+    ],
+    "synthetic_transports": true,
+    "external_requests": 0,
+    "errors": []
+  },
+  "nebius": {
+    "cumulative_cap_usd": 63.05367468,
+    "prior_reservations_usd": 4.803674680000001,
+    "future_capacity_usd": 58.25,
+    "configured": true
+  },
+  "tavily": {
+    "credit_limit": 4125,
+    "reserved_credits": 1,
+    "remaining_credits": 4124,
+    "can_search": true,
+    "key_remembered": true
+  },
+  "preservation": {
+    "checks_matched": 26,
+    "existing_workspace_records_preserved": true,
+    "reservations_preserved": true,
+    "prior_approval_history_preserved": true,
+    "new_inference_allowance_audit_rows": 1,
+    "nonbudget_configuration_preserved": true,
+    "nebius_and_langsmith_encrypted_credentials_preserved": true,
+    "tavily_same_key_roundtrip_verified": true,
+    "new_paid_calls": 0
+  },
+  "new_paid_calls": 0,
+  "hosted_public_limits_changed": false,
+  "automatic_provider_balance_sync": false,
+  "per_job_or_batch_limits_changed": false,
+  "default_model_changed": false,
+  "raw_private_records_published": false
+}

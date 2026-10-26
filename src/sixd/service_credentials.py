@@ -18,6 +18,8 @@ from .credential_store import CredentialError, MAX_FILE_BYTES, WindowsDPAPI
 _SCHEMA = 'sixd.remembered-service-key.v1'
 _MAGIC = b'6D-DPAPI-SERVICE-v1\n'
 SERVICES = frozenset(('tavily', 'langsmith'))
+# October 26 approval: 4,124 future credits plus one retained prior reservation.
+MAX_TAVILY_CREDITS = 4125
 _ERROR_CODES = frozenset(('credential_storage_unsupported', 'credential_data_invalid',
     'credential_encryption_failed', 'credential_decryption_failed',
     'credential_storage_unavailable', 'credential_path_invalid'))
@@ -35,7 +37,7 @@ def validate_connection(service, key, settings):
         raise CredentialError('credential_data_invalid')
     if service == 'tavily':
         if (set(settings) != {'credit_limit'} or type(settings['credit_limit']) is not int
-                or not 1 <= settings['credit_limit'] <= 20):
+                or not 1 <= settings['credit_limit'] <= MAX_TAVILY_CREDITS):
             raise CredentialError('credential_data_invalid')
         return {'credit_limit': settings['credit_limit']}
     if set(settings) != {'region', 'workspace_id'} or settings['region'] not in ('us', 'eu'):

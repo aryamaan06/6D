@@ -166,7 +166,7 @@ class WorkspaceAIJobsTests(unittest.TestCase):
         for key in (None, "short", TEST_KEY + "\n", TEST_KEY + " ", "a" * 8193):
             with self.subTest(key_type=type(key).__name__), self.assertRaises(WorkspaceError):
                 self.manager.connect(key)
-        self.write_config(spend_cap_usd=30.0)
+        self.write_config(spend_cap_usd=64.0)
         with self.assertRaisesRegex(ProviderError, "approved cumulative"):
             self.connect()
         self.assertFalse(self.manager.status()["key_present"])
