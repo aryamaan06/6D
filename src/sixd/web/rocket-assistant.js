@@ -39,7 +39,7 @@
     const dialog=document.createElement('dialog');dialog.id='sd-rocket-dialog';
     dialog.className='sd-rocket-dialog';dialog.setAttribute('aria-labelledby','sd-rocket-title');
     dialog.setAttribute('aria-describedby','sd-rocket-context');
-    dialog.innerHTML='<header class="sd-rocket-header"><div><span class="sd-label">Your workspace companion</span><h2 id="sd-rocket-title">Ask 6D</h2><p id="sd-rocket-context">Choose a project or ask for help with this page.</p></div><button type="button" class="sd-icon-button" data-rocket-close aria-label="Close Ask 6D">×</button></header>'+
+    dialog.innerHTML='<header class="sd-rocket-header"><div><h2 id="sd-rocket-title">Ask 6D</h2><p id="sd-rocket-context">Choose a project or ask for help with this page.</p></div><div class="sd-rocket-window-actions"><button type="button" class="sd-rocket-expand" data-rocket-expand aria-label="Expand conversation" title="Expand conversation" aria-pressed="false"><span aria-hidden="true">↗</span> <span data-rocket-expand-label>Expand</span></button><button type="button" class="sd-icon-button" data-rocket-close aria-label="Close Ask 6D">×</button></div></header>'+
       '<div class="sd-rocket-service-tabs" role="tablist" aria-label="Assistant service"><button type="button" id="sd-rocket-tab-nemotron" role="tab" aria-controls="sd-rocket-nemotron-host" aria-selected="true" data-rocket-tab="nemotron">Ask Nemotron</button><button type="button" id="sd-rocket-tab-research" role="tab" aria-controls="sd-rocket-research-host" aria-selected="false" tabindex="-1" data-rocket-tab="research">Find references</button></div>'+
       '<div class="sd-rocket-content"><section id="sd-rocket-nemotron-host" role="tabpanel" aria-labelledby="sd-rocket-tab-nemotron"></section><section id="sd-rocket-research-host" role="tabpanel" aria-labelledby="sd-rocket-tab-research" hidden></section></div><p class="sd-rocket-announcement" role="status" aria-live="polite"></p>';
     root.append(companion,dialog,controls);
@@ -71,6 +71,16 @@
     }
     launcher.addEventListener('click',event=>{if(launcher.dataset.suppressClick==='true'&&event.detail>0){event.preventDefault();event.stopImmediatePropagation();return;}open();});
     dialog.querySelector('[data-rocket-close]').addEventListener('click',close);
+    dialog.querySelector('[data-rocket-expand]').addEventListener('click',()=>{
+      const transcript=dialog.querySelector('#sd-ai-transcript'),scrollTop=transcript?.scrollTop;
+      const expanded=dialog.classList.toggle('sd-rocket-expanded');
+      const button=dialog.querySelector('[data-rocket-expand]');
+      button.setAttribute('aria-pressed',String(expanded));
+      button.setAttribute('aria-label',expanded?'Restore conversation size':'Expand conversation');
+      button.title=expanded?'Restore conversation size':'Expand conversation';
+      button.querySelector('[data-rocket-expand-label]').textContent=expanded?'Restore size':'Expand';
+      if(transcript)requestAnimationFrame(()=>{transcript.scrollTop=scrollTop;});
+    });
     dialog.querySelector('.sd-rocket-service-tabs').addEventListener('click',event=>{
       const button=event.target.closest('[data-rocket-tab]');if(button)setTab(button.dataset.rocketTab);
     });

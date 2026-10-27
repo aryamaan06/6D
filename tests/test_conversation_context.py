@@ -283,7 +283,8 @@ class ConversationContextTests(unittest.TestCase):
         wire, _, _ = ProjectActionAdapter.build_action_request(provider.histories[0],
             [{"type": "function", "function": {"name": "read_requirement", "parameters": {}}}])
         menu = json.loads(wire[-1]["content"])
-        self.assertIn("Answer question_data directly", menu["explanation_contract"]["instruction"])
+        self.assertIn("Answer current_question_data directly", menu["explanation_contract"]["instruction"])
+        self.assertEqual(menu["current_question_data"], json.loads(wire[1]["content"])["question_data"])
         self.assertNotIn("example", menu["explanation_contract"])
 
 

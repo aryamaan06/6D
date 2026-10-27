@@ -1,5 +1,7 @@
 # Focus refinement Build 3
 
+> Historical Build 3 snapshot. The later [chat correction](CHAT_READABILITY_RESULTS.md) supersedes remembered browser-model selection with an explicit Choose a model state and provides the current build/live outcomes. Earlier behavior/results below remain dated history.
+
 October 27, 2026. Refresh **http://127.0.0.1:8768/** and confirm build **09318028ba85**.
 
 ## Talk through the rocket

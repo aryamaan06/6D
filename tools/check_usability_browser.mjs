@@ -73,7 +73,7 @@ try{
  const idle=()=>page.locator('#sixd-workspace[aria-busy="false"]').waitFor();
  const click=async action=>{await page.locator('[data-action="'+action+'"]:visible').first().click();await idle();};
  const route=async name=>{await page.goto(info.owner+'/'+(name==='projects'?'#/projects':'#/projects/'+info.project_id+'/r/1/'+name));await idle();};
- const waitChoices=()=>page.waitForFunction(()=>document.querySelectorAll('#sd-ai-model option').length===3&&!document.querySelector('#sd-ai-model').disabled);
+ const waitChoices=()=>page.waitForFunction(()=>document.querySelectorAll('#sd-ai-model option').length===4&&!document.querySelector('#sd-ai-model').disabled);
  const openRocket=async(tab='nemotron')=>{if(!await page.locator('#sd-rocket-dialog').evaluate(d=>d.open))await page.locator('#sd-rocket-launcher').click();if(await page.locator('[data-rocket-tab="'+tab+'"]').getAttribute('aria-selected')!=='true')await page.locator('[data-rocket-tab="'+tab+'"]').click();};
  const closeRocket=async()=>{await page.locator('#sd-rocket-dialog [data-rocket-close]').click();await page.waitForFunction(()=>!document.querySelector('#sd-rocket-dialog').open);};
  const placement=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('sixd.rocket.placement.v2')));
@@ -147,7 +147,7 @@ try{
  pass('Reduced motion pauses the rocket animation without removing its functional launcher');
  await click('engineering');await click('system');await page.locator('#sd-tab-table').click();await page.locator('#sd-view-content [data-kind="requirement"][data-id="thermal_limit"]').first().click();
  await openRocket();await waitChoices();
- assert.deepEqual(await page.locator('#sd-ai-model option').evaluateAll(nodes=>nodes.map(node=>node.value)),['nano','super','ultra']);
+ assert.deepEqual(await page.locator('#sd-ai-model option').evaluateAll(nodes=>nodes.map(node=>node.value)),['','nano','super','ultra']);
  assert.ok(await page.locator('#sd-ai-question').isVisible());assert.ok(await page.locator('#sd-ai-start').isVisible());
  const body=await page.locator('#sd-rocket-ai-body').innerText();assert.doesNotMatch(body,/Cumulative reservations|Approved development allowance|Reservation capacity remaining|\$\d/);
  const beforeCalls=(await callLog()).length;

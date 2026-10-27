@@ -4,8 +4,6 @@
  */
 (() => {
   'use strict';
-  const preferenceKey='sixd.assistant.model.v1';
-  const models=new Set(['nano','super','ultra']);
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const html=value=>typeof value==='string'?value:'';
   const hints={
@@ -16,15 +14,7 @@
   function modelHint(id){
     return (Object.hasOwn(hints,id)?hints[id]:'Choose a model for this question.')+' Suggested use, not a guarantee of accuracy.';
   }
-  function readModelPreference(storage){
-    try{const value=(storage??window.localStorage).getItem(preferenceKey);return models.has(value)?value:null;}
-    catch{return null;}
-  }
-  function writeModelPreference(id,storage){
-    if(!models.has(id))return false;
-    try{(storage??window.localStorage).setItem(preferenceKey,id);return true;}
-    catch{return false;}
-  }
+  function modelOptionLabel(id){const labels={nano:'Nemotron 3 Nano — Quick explanations',super:'Nemotron 3 Super — Everyday review',ultra:'Nemotron 3 Ultra — Deeper reasoning'};return Object.hasOwn(labels,id)?labels[id]:'Choose a model';}
   function matchesContext(record,context){
     if(!record||!context)return false;
     const scope=context.scope==='project'?'project':context.scope==='requirement'?'requirement':null;
@@ -76,5 +66,5 @@
     return '<div class="sd-conversation-log" role="log" aria-label="Conversation with Nemotron" aria-live="polite" aria-relevant="additions text">'+
       (rows.length?rows.map(turnMarkup).join(''):'<div class="sd-conversation-empty"><span class="sd-conversation-empty-mark" aria-hidden="true">6D</span><h3>Ask in your own words.</h3><p>'+esc(emptyMessage||'Ask about this project, a result you do not understand, or what to check next.')+'</p></div>')+'</div>';
   }
-  window.SixDAssistantConversation=Object.freeze({render,modelHint,readModelPreference,writeModelPreference,matchesContext,compatibleParent});
+  window.SixDAssistantConversation=Object.freeze({render,modelHint,modelOptionLabel,matchesContext,compatibleParent});
 })();

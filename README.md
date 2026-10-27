@@ -1,131 +1,80 @@
 # 6D
 
-**Change a space-system design. See which engineering evidence needs rechecking.**
+**Change a space-system design. See which engineering conclusions need rechecking.**
 
-6D connects requirements, bounded calculations, saved revisions and supporting references. It identifies affected checks after a change, reuses eligible unchanged results, and keeps unmet criteria separate from missing evidence. NVIDIA Nemotron, running through Nebius Token Factory, investigates the recorded evidence and explains what to check next.
+An engineering calculation can be correct and still be out of date after a design change. 6D connects requirements, explicit inputs, bounded calculations and saved evidence. It traces affected checks, reruns those checks, reuses eligible unchanged results and retains the reason behind each conclusion.
 
-![6D showing an integrated constructed rocket change review](docs/images/6d-review.png)
+NVIDIA Nemotron through **Nebius Token Factory** investigates the saved evidence and explains next steps. The application keeps calculated values and requirement outcomes authoritative.
 
-*Actual application UI, calculated constructed rocket reference: reducing thrust makes the burnout-altitude criterion unmet while launch guidance remains unassessed. This is not NASA/ISRO/SpaceX flight data. The screenshot was captured in an isolated reference workspace.*
+**[Current capabilities and known gaps](docs/CURRENT_STATE.md) · [Evidence index](docs/VALIDATION_INDEX.md) · [Repository guide](docs/REPOSITORY_GUIDE.md)**
 
-## Try it
+![Expanded Ask 6D conversation in the current interface](docs/images/6d-current-workspace.png)
 
-**Focus refinement Build 3:** the rocket now presents a question/answer conversation with bounded saved-context follow-ups, remembered Nano/Super/Ultra preference, local image notes and native spelling. Images stay local because these models accept text only. Offline checks passed; the approved Super smoke check hit the final-answer output limit, so live follow-ups remain unverified. [Guide](docs/FOCUS_BUILD3.md) · [Verification and scoped live result](docs/FOCUS_BUILD3_RESULTS.md).
+*Actual interface capture from an isolated constructed browser fixture. The displayed assistant answer is synthetic/offline, not a fresh Nemotron response or real mission data.*
 
-**Focus refinement Build 2:** see calculation conclusions first, expand graphs and evidence on demand, and use **Engine thrust → Edit thrust** for your own sourced value. Staging, saving and calculating remain separate. [Guide](docs/FOCUS_BUILD2.md) · [Checks and preservation](docs/FOCUS_BUILD2_RESULTS.md). Build 3 subsequently delivered the conversation interface; new live qualification remains separately pending.
+## Try the workflow
 
-**Focus refinement Build 1:** stable rocket scrolling, genuine self-hosted Geist fonts and a **Hide sidebar / Show sidebar** control give the main work area more room. [Guide](docs/FOCUS_BUILD1.md) · [Checks and preservation](docs/FOCUS_BUILD1_RESULTS.md). Build 2 subsequently delivered result-first pages and Build 3 delivered the conversation interface.
+**Available now: a local application. A public judge URL has not been deployed.** The separate protected hosting package is implemented and has recorded Linux/container checks; public access, TLS and operational verification remain pending. [Hosting status](docs/BUILD_F_RESULTS.md).
 
-**Part 3 companion/context update:** the rocket parks clear of controls and has dock/reset/minimize options. The composer shows its saved evidence context, and reference preview → draft → save → link → question are explicit steps with unfinished drafts protected. [Guide](docs/PART3_ASSISTANT_WORKFLOW.md) · [Verification and preservation](docs/PART3_ASSISTANT_WORKFLOW_RESULTS.md).
+1. Open **Projects → Try the rocket example** and create a constructed reference project.
+2. Calculate a baseline. Read its met, unmet and unassessed findings separately.
+3. Change a sourced input, preview its dependencies, save the revision and recalculate.
+4. Compare what changed, what ran again and what reused earlier evidence. Open the report for exact values, assumptions and exclusions.
+5. Click the **Ask 6D rocket** to question Nemotron about that saved evidence or find supporting references through Tavily.
 
-**Part 2 readability update:** long authoring records and project context are grouped into expandable sections, repeated page introductions are reduced, compact quantities share SI typography with exact evidence still available, and similarly named projects show distinct ID-based labels without renaming or deleting records. [Guide](docs/PART2_READABILITY.md) · [Verification and preservation audit](docs/PART2_READABILITY_RESULTS.md). Part 3 subsequently delivered the companion refinements.
+The prepared thrust-change example makes one burnout-altitude criterion become unmet while launch guidance stays unassessed. It demonstrates the evidence workflow using constructed inputs; it is not a reconstruction of a real mission.
 
-**Part 1 navigation/clarity update:** pages start at their headings, component names remain distinct in topic choices, Overview explains model-fit gaps separately from calculated criteria, and tool cards show evidence/configuration for the selected saved revision. [Guide](docs/PART1_NAVIGATION_CLARITY.md) · [Scoped checks](docs/PART1_NAVIGATION_CLARITY_RESULTS.md). The next two interface correction parts remain separate.
+## Run locally
 
-**Earlier companion/workflow update:** Calculate/Recalculate shows an explicit run's progress and completion, and Guided review opens in place. Drag the metallic 3D **Ask 6D** rocket to move it; click it for the simplified Nemotron or Tavily conversation. Source topics use grouped names with exact targets in Advanced, Source library has a progressive save/link flow, and shared typography covers the workspace. [Usage](docs/SIX_ISSUE_USABILITY.md) · [Scoped checks and limits](docs/SIX_ISSUE_USABILITY_RESULTS.md). No paid calls or physics changes were made by that refinement.
+Requires **Python 3.10+** and Git. The application runtime uses the Python standard library; setup downloads no packages.
 
-**Current delivery:** local desktop/browser application. A hosted judge URL is not available yet. Build F now provides an invitation-protected server, isolated visitor workspaces and a CPU-container/HTTPS deployment recipe; actual public deployment remains pending cost approval and platform checks. [Preparation results](docs/BUILD_F_RESULTS.md) · [Operator guide](docs/HOSTED_DEPLOYMENT.md) · [Submission checklist](docs/SUBMISSION_CHECKLIST.md). Opening localhost from another computer will not reach the developer's instance.
+```console
+git clone https://github.com/aryamaan06/6D.git
+cd 6D
+python tools/setup_local.py
+python tools/open_preview.py
+```
 
-Python **3.10+** is required; the application runtime uses the standard library.
+Open **http://127.0.0.1:8768/** on that computer. Windows also has `Setup-6D.cmd`, `Open-6D.cmd` and `Stop-6D.cmd`. On Linux/macOS use `python3`; native desktop-launcher qualification remains Windows-specific. The protected Linux/container checks are a separate deployment path. [Opening, update and recovery instructions](docs/OPEN_6D.md).
 
-1. Clone this repository and enter its folder:
-   ```console
-   git clone https://github.com/aryamaan06/6D.git
-   cd 6D
-   ```
-2. Prepare the local environment:
-   ```console
-   python tools/setup_local.py
-   ```
-3. Start the application, then open http://127.0.0.1:8768/:
-   ```console
-   python tools/open_preview.py
-   ```
+Engineering calculations work without a model connection. Live questions require a Nebius key entered privately in the application and an approved allowance. Connection/startup makes no inference request. Do not put keys in project inputs, screenshots or Git. [Provider setup](docs/PROVIDER_SETUP.md).
 
-On Windows, `Setup-6D.cmd`, `Open-6D.cmd` and `Stop-6D.cmd` provide the same workflow; `py -3` may be used in place of `python`. On Linux/macOS, use `python3`. Windows has native launcher verification; the other platforms still need native qualification. [Setup, backup and recovery details](docs/RELEASE_HANDOVER.md).
+## What is implemented
 
-The animated **Ask 6D rocket** stays available throughout the workspace and opens a centered conversation for **Nemotron investigations** or **Tavily reference search**. It offers **Nano, Super and Ultra per investigation**, with the chosen model recorded in history and the same shared spending controls. Selecting a model sends nothing; explicit **Ask Nemotron** starts the investigation. Inspector/Evidence sits in the central workspace with folded technical detail; there is no separate right-hand Assistant section. [Current companion guide](docs/SIX_ISSUE_USABILITY.md) · [Earlier entry-point delivery](docs/ROCKET_ASSISTANT_RESULTS.md) · [Measured model results and preserved failures](docs/THREE_MODEL_RESULTS.md).
+- **Connected engineering review:** system canvas/table/reader, explicit SI inputs, requirements, dependency tracing, saved revisions, targeted recalculation and retained evidence receipts.
+- **Bounded analysis and playback:** ten supported models, orbital and ascent histories, serial staging, imported simulation histories and sampled operating-envelope studies. These are scoped models, not complete engineering disciplines.
+- **Evidence and follow-up:** supporting sources, change comparisons, declared coverage gaps, action tracking and review exports. Forms, CSV, values-only Excel and supported project JSON provide intake paths.
+- **Contextual AI:** requirement or whole-project investigations with an explicit “Choose a model” starting state, Nano/Super/Ultra guidance, expandable conversation and saved answers. Exact numerical facts stay application-owned. Local image previews submit user-written notes, not pixels. [Current interface and verification](docs/CHAT_READABILITY_RESULTS.md).
 
-Windows users can opt into **Remember on this device** separately for Nebius, Tavily and LangSmith. Protected keys restore locally after restart without provider calls. Tavily reservations and LangSmith preview/upload approval remain intact; credential files are excluded from backups. [Connection controls and limits](docs/REMEMBERED_SERVICE_CONNECTIONS.md) · [Build E checks](docs/BUILD_E_RESULTS.md).
+## How the tools contribute
 
-The application opens on **Projects**. Select a saved project, then choose **Overview**, **Engineering**, **Simulations & studies**, **Evidence & review** or **Project setup**. Breadcrumbs and browser Back/Forward retain the saved-view location. [Navigation and typography guide](docs/WORKSPACE_NAVIGATION.md).
-
-Overview connects the main design/change/recalculation journey and explains result states. **Owner settings** separates service management and development accounting from engineering work. Popups support outside-click/Escape dismissal, with confirmation before discarding edited authoring forms. Ultra's fresh six-case workflow screen passed all six constructed cases; the old 2/6 record remains dated history with three cases explicitly untested. [Build 3 guide](docs/BUILD3_CLARITY.md) · [Measured results and limits](docs/BUILD3_CLARITY_RESULTS.md).
-
-For a connected rocket example, choose **Try the rocket example** on Projects or **Project setup → Rocket reference**, create the project and calculate its baseline. Review overview stages a thrust reduction and correction through the normal preview/save/rerun controls. Five bounded calculations share explicit inputs and scalar links; launch guidance stays unassessed. [Reference walkthrough and verification](docs/BUILD_A_RESULTS.md).
-
-A fresh checkout opens without saved private project data or provider credentials. Use **Import project** to choose a constructed reference, explicitly create it, and **Run checks**. **Guided review** follows a design change; **Powered flight** offers its existing vertical-ascent reference. Loading a page never silently calculates a new verdict. [Powered-flight walkthrough](docs/POWERED_FLIGHT.md).
-
-For horizontal motion, open **Powered flight → Planar ascent & steering** and use its constructed reference. A declared pitch programme drives saved downrange/altitude playback and engineering findings; controller tracking remains unassessed. [Build B walkthrough and checks](docs/BUILD_B_RESULTS.md).
-
-For serial stages and variable thrust, select **Powered flight → Variable thrust & staging**. Its constructed reference includes editable stage/thrust forms, exact fuel/separation/ignition events, mass accounting and saved reports. [Build C walkthrough and checks](docs/BUILD_C_RESULTS.md).
-
-The [October 25 final audit](docs/FINAL_BUILD_AUDIT.md) records the current feature-freeze decision, full-test caveat and October 14–20 history trace. A [sanitized retained AI-record index](docs/validation/RETAINED_AI_HISTORY_INDEX.json) preserves failure/success provenance without publishing private raw receipts.
-
-## The engineering workflow
-
-Judge-email recommendations and their concrete 6D actions, evidence and remaining gaps are tracked in [Judge guidance and remaining outcomes](docs/JUDGE_GUIDANCE_ACTIONS.md).
-
-1. Supply project inputs, units, sources, model mappings and requirements using forms, CSV, values-only Excel or supported project JSON.
-2. Calculate a saved baseline and inspect its findings, assumptions, numerical support and exclusions.
-3. Edit a draft and preview the declared dependencies affected by a change.
-4. Save the revision and explicitly rerun affected checks. Inspect calculation/reuse origins and compare retained runs.
-5. Click the **Ask 6D rocket**, choose a requirement or whole-project scope, and explicitly investigate saved findings/changes with Nemotron. Its **Find references** tab searches with Tavily; review passages before manually saving/linking them in Source library. Track follow-up actions and export the evidence.
-
-Working views include the system canvas/table/reader, review overview, change comparison, coverage, action queue, reports, orbital, vertical, planar and staged-flight playback, simulation-history imports and sampled operating-envelope studies. [Current capabilities and boundaries](docs/CONNECTED_REVIEW.md) · [Agreed A–F build scope](docs/HACKATHON_BUILD_SCOPE.md).
-
-## How Nebius and Nemotron are used
-
-The contextual Assistant calls **NVIDIA Nemotron through Nebius Token Factory** during actual investigations. Requirement scope offers bounded evidence reads and supported reproducibility rechecks. Whole-project scope connects saved findings, dependencies and changes, then recommends next checks; its exact numbers and change facts stay in application-owned tables. [Whole-project workflow and measured limits](docs/BUILD_D_RESULTS.md). The application owns numerical quantities, units, change directions and verdicts; model prose cannot replace them.
-
-| Candidate | Recorded evidence | Current use |
-| --- | --- | --- |
-| Nano | Completed earlier case packs; rejected its first read action in the corrected October 20 three-case comparison, leaving two tasks untested. Build 2 records later corrected-protocol completions and source limits. | Available per investigation; not the default. |
-| Super | Selected from earlier reviewed comparison evidence. An October 20 explanation reversed a limit-change direction; a separate offline replay under the new guard rejects it. Four earlier constructed qualification cases completed after that correction. Build D separately records a current-source project-specific changed-rocket check, historical generic replies and preserved rejections. | Selected project Assistant. |
-| Ultra | Completed all three October 20 corrected-contract cases and all six Build 3 constructed workflow cases. Earlier failures/skipped cases remain intact; the separate current four-case quality pack is not established by these results. | Available per investigation; no automatic promotion or escalation. |
-
-These observations concern particular protocols, cases and settings; they are not a universal model ranking. [Comparison results](docs/APPLICATION_ROLES_LIVE_RESULTS.md) · [Direction guard and replay](docs/CHANGE_DIRECTION_RESULTS.md) · [Recorded requirement qualification](docs/AI_QUALIFICATION_RESULTS.md).
-
-Earlier live receipts retain their original policies and source identities. Build 3 adds a source-current Ultra six-case workflow result; this does not qualify every model/scope on the final source or replace human semantic validation. [Fresh and historical evidence](docs/BUILD3_CLARITY_RESULTS.md).
-
-Connect a Nebius key privately through **Owner settings → Manage Nebius connection** after configuring an approved provider allowance. [Provider setup](docs/PROVIDER_SETUP.md). Local engineering calculations and saved evidence work without inference; new AI investigations require a usable Token Factory connection. No paid call occurs on startup or connection. The cumulative reservation ledger, per-job ceilings and no-retry policy remain enforced; reservations are not a provider invoice.
-
-Tavily supplies explicit reference searches followed by human review/save/link steps. LangSmith receives only an explicitly approved, previewed metrics record. [Tavily live result](docs/TAVILY_LIVE_RESULTS.md) · [Connection and privacy details](docs/AI_QUALIFICATION.md). Each service has a separate private key form.
-
-## Evidence, with scope attached
-
-| Evidence | What it establishes |
+| Tool | Job inside 6D |
 | --- | --- |
-| [1,000 generated edit cases, October 19](docs/RECALCULATION_VERIFICATION_RESULTS.md) | 742 valid edits matched full recalculation exactly; 258 invalid edits were consistently rejected. The same-calculator comparison checks reuse consistency, not independent physics correctness; this predates powered flight. |
-| [30 published-reference/domain checks, October 19](docs/PUBLISHED_BENCHMARK_RESULTS.md) | Specified analytic, rounded and separate-tool checks across seven bounded models, with sources and tolerances. |
-| [Current orbital reference comparisons](docs/NUMERICAL_ACCURACY_RESULTS.md) | Constructed cases compared with analytic/NASA CSPICE references after the RK4 improvement; numerical support remains separately gated. |
-| [Powered-flight reference checks](docs/POWERED_FLIGHT_REFERENCE_RESULTS.json) | Recorded reference inputs, errors/tolerances and declared calculation scope. |
-| [Earlier live requirement qualification](docs/AI_QUALIFICATION_RESULTS.md) | Super completed four constructed evidence tasks with 16 accepted responses. Separate coding-agent AI review found no material error in those four explanations; independent human review remains pending. |
+| **Nebius Token Factory + NVIDIA Nemotron** | Live, bounded evidence-reading/recheck actions and explanations tied to a saved project/revision. The selected model and actual outcome are retained. |
+| **Tavily** | Explicit reference search. Results remain previews until a person reviews, saves and links a passage. Search does not validate a calculation. |
+| **LangSmith** | Optional, previewed and separately approved qualification metrics export. It does not calculate engineering results. |
 
-[Build D results](docs/BUILD_D_RESULTS.md) retain all nine whole-project investigation attempts, including four completed histories and five stopped/rejected ones. The final current-source evidence is one specific changed-rocket case; USD0.6197628 was reserved across all attempts, below the USD0.80 ceiling. Generic historical replies and phrase-check false positives are disclosed alongside a caught incorrect direction claim.
+Model choices have separate per-job bounds and share persistent cumulative reservation accounting. No automatic escalation or transport retries are used. A larger model is not treated as evidence of greater correctness.
 
-The October 25 correction pass measured a 13-revision, 512-step orbital history: warm reads improved from 1.074 s to 0.056 s and new-store reads from 0.947 s to 0.280 s on shared development hardware, with identical complete returned evidence. The source-stable 1,000-edit check again had zero discrepancies, and 20 separate numerical-reference cases passed.
+**Current scoped conversation check:** Nano, Super and Ultra each completed two live turns on the same constructed burnout-altitude evidence. Useful answers and concrete next checks were observed; Nano remains repetitive and Ultra verbose. Earlier failures and an unsupported Super assurance were retained and drove guard corrections. These six turns do not establish general answer accuracy. [Results and limits](docs/CHAT_READABILITY_RESULTS.md) · [Latest sanitized live record](docs/validation/CHAT_READABILITY_LIVE_BATCH4.json).
 
-Full discovery ran 1,338 methods and exposed three outdated catalog/source-list test expectations; those were corrected and the affected 37 methods passed. Three development-only SciPy methods were skipped in the application environment and covered separately. No subsequent clean full-suite rerun is claimed. [Corrective results and caveats](docs/CORRECTIVE_BUILD_RESULTS.md).
+## Evidence to inspect
 
-[Validation index](docs/VALIDATION_INDEX.md) distinguishes historical full-suite counts, current targeted tests, browser assertions and reference checks. They are not additive. Full regression tests can be run with `python -m unittest discover -s tests`; they use synthetic provider transports, not paid inference.
+| Recorded check | What it supports |
+| --- | --- |
+| [1,000 generated edit cases](docs/RECALCULATION_VERIFICATION_RESULTS.md) | Targeted/full recalculation consistency on the stated October 19 cases: 742 valid edits matched; 258 invalid edits were rejected. This is not independent physics validation. |
+| [Published-reference checks](docs/PUBLISHED_BENCHMARK_RESULTS.md) | Sourced analytic, rounded and external-tool comparisons for seven bounded models at that checkpoint. |
+| [Orbital accuracy](docs/NUMERICAL_ACCURACY_RESULTS.md) and [powered-flight references](docs/POWERED_FLIGHT_REFERENCE_RESULTS.json) | Declared constructed cases, comparison methods, errors and tolerances. |
+| [Validation index](docs/VALIDATION_INDEX.md) | Current scoped checks, historical full-suite caveats, browser evidence and preserved live successes/failures. Counts are not additive. |
 
-## Submission-period development
+## Boundaries
 
-[Complete project record](docs/PROJECT_RECORD.md) · [Documentation index](docs/DOCUMENTATION_INDEX.md) · [Published-file inventory](docs/PROJECT_RECORD_INVENTORY.json). These cover preserved work before A–C as well as the latest milestones, decisions, failures and remaining gaps.
+6D does not provide complete rocket physics, simultaneous multiphysics coupling, closed-loop launch guidance, complete launch-to-orbit/reentry/landing simulation or launch authorization. Passing a supplied criterion does not validate the criterion, the design's applicability or mission success. Unsupported or insufficiently supported requirements stay unassessed.
 
-The tracked repository begins on **October 14, 2026**. During October 14–24 the implementation added the engineering-evidence workspace, revision/reuse verification, authoring/intake, bounded orbital/flight calculations and accuracy gates, specialist history import, sampled studies, source/action/coverage workflows, and live Nemotron/Tavily/LangSmith integration. Dates and original outcomes remain in [historical development notes](docs/CHANGELOG.md).
+Examples are constructed unless explicitly identified otherwise. Saved playback is recorded calculation evidence. Receipts use local integrity digests, not signed certification. Independent human engineering review, customer validation and public deployment remain separate gaps.
 
-The broader 6D concept predates some of this code. The repository history alone does not establish whether any earlier implementation existed before the submission period; the entrant must confirm that history in the submission. [Submission-period inventory](docs/SUBMISSION_PERIOD.md).
+## Project record and license
 
-## Limits
+Use [CURRENT_STATE.md](docs/CURRENT_STATE.md) for today's capabilities and limitations. Older build reports preserve what was observed at their own dates; their screenshots, model results and build IDs are not promises about the latest version. [Complete chronology](docs/PROJECT_RECORD.md) · [Submission-period disclosure](docs/SUBMISSION_PERIOD.md) · [Historical records](docs/development/README.md).
 
-The ten bounded models cover ideal propulsion, static beams, steady radiative equilibrium, single-condition drag, unforced two-body orbits, supplied power/energy budgets, single-axis spacecraft pointing, vertical ascent/coast, prescribed planar ascent and variable-thrust serial staged ascent. These are not complete engineering disciplines. Scalar links do not create simultaneous multiphysics coupling. Prescribed steering is not closed-loop guidance/control. Whole-project AI reviews the captured scalar evidence and declared gaps, with the exclusions in its guide. E remembered optional-service connections are implemented; F protected hosting is prepared/tested locally; public deployment remains pending.
-
-There is no complete launch-to-orbit, reentry or landing simulator, hardware/flight qualification, customer validation or launch authorization. Current data/examples are constructed unless explicitly classified otherwise. Recorded playback is historical evidence, not a new live inference. The local loopback server must not simply be exposed publicly; Build F must provide appropriate access, isolation and spending controls.
-
-## License and third-party notices
-
-6D source is licensed under the [MIT License](LICENSE), approved by the project owner on October 24, 2026. Bundled third-party material retains its own notices; Lucide's license is preserved at [design/vendor/LUCIDE-LICENSE.txt](design/vendor/LUCIDE-LICENSE.txt). Referenced external tools/data are not relicensed by this repository.
-
-Contributor instructions remain in [AGENTS.md](AGENTS.md); older planning records are archived under [docs/development](docs/development/README.md).
+6D is licensed under [MIT](LICENSE). Bundled third-party notices remain with their assets, including [Geist fonts](docs/GEIST_FONTS.md) and [Lucide](design/vendor/LUCIDE-LICENSE.txt). Contributor instructions are in [AGENTS.md](AGENTS.md).

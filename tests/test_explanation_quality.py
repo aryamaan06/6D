@@ -293,6 +293,39 @@ class ExplanationHeuristicTests(unittest.TestCase):
                         "The criterion is met, but the vehicle is not ready to launch. Review excluded effects."):
             self.assertNotIn("readiness_or_guarantee_claim", self.codes(self.record("met", summary)))
 
+    def test_component_result_cannot_guarantee_obstacle_clearance_space_entry_or_orbit(self):
+        for statement in (
+            "Reaching the declared height ensures the rocket clears obstacles and enters space.",
+            "The passing criterion guarantees obstacle clearance.",
+            "This result proves that the vehicle will reach orbit.",
+            "The calculation confirms successful space entry.",
+            "The component result ensures the spacecraft safely enters outer space.",
+            "Meeting this requirement guarantees successful orbital insertion.",
+            "This does not ensure obstacle clearance, but it confirms that the rocket enters space.",
+            "This does not guarantee space entry. The result proves obstacle clearance.",
+        ):
+            with self.subTest(statement=statement):
+                record = self.record("met", "The criterion is met within its bounded model. " + statement + " Review its assumptions.")
+                original = deepcopy(record)
+                self.assertIn("readiness_or_guarantee_claim", self.codes(record))
+                self.assertFalse(explanation_acceptance(record)["accepted"])
+                self.assertEqual(record, original)
+
+    def test_outcome_denials_questions_and_requested_analyses_are_not_guarantees(self):
+        for statement in (
+            "This result does not ensure the rocket clears obstacles or enters space.",
+            "This does not guarantee obstacle clearance or prove space entry.",
+            "No component result can prove that the vehicle reaches orbit.",
+            "We cannot claim that this result ensures the vehicle enters space.",
+            "Does this criterion guarantee obstacle clearance?",
+            "Review whether sufficient height ensures the vehicle clears obstacles.",
+            "If an independent analysis confirms obstacle clearance, review its applicability.",
+            "A space entry analysis and an obstacle clearance assessment are still needed.",
+            "The calculated criterion is met; reaching orbit requires separate evidence.",
+        ):
+            with self.subTest(statement=statement):
+                self.assertNotIn("readiness_or_guarantee_claim", self.codes(self.record("met", statement)))
+
     def test_actual_ultra_coordinated_denial_does_not_claim_readiness(self):
         for statement in ("The canonical finding is met only within the stated model scope; it does not authorize launch or guarantee mission success.",
                           "The finding does not guarantee mission success or authorize launch. Review the bounded evidence."):

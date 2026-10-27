@@ -1,0 +1,11 @@
+# Chat readability and current-build model checks — acceptance
+
+Authorized October 27, 2026. Lightning, project deletion and public hosting are outside this task.
+
+- A new chat displays **Choose a model** even if the browser has an old saved preference. No provider request can start without explicit Nano/Super/Ultra selection. The chosen model persists during that chat, with clear task guidance; existing answers keep their original model labels.
+- A visible **Expand conversation / Restore size** control offers a near-full-window native dialog without remounting the conversation, losing its question/attachment/context or starting any request. The transcript receives usable reading space; scope and model controls stay compact, and technical evidence remains optional.
+- Expanding ordinary details with pointer or keyboard keeps the summary visible and reveals content below it, both on workspace pages and inside chat. Preserve draft forms, focus, explicit navigation and normal scrolling. No automatic bottom jump.
+- The final-answer compatibility correction retains mandatory evidence reads/recheck, exact application-owned values/status/directions, integrity and explanation guards, strict tool validation, original failed receipts and existing spending ceilings. Verify compact provider payload against full retained evidence offline.
+- Prepare identical two-question constructed burnout-altitude checks for Nano, Super and Ultra. A follow-up requires a completed accepted parent in the exact same evidence context. Live execution requires a separately established combined spending ceiling; no automatic retry or promise of passes. Distinguish protocol completion from human answer-quality review and numerical validation.
+- The README and judge-facing guide reflect the final verified build, opening steps, real tool roles, limitations and known results. Use new clearly labelled screenshots, and retain development/failure history behind links.
+- Appropriate scoped Python, component and browser checks pass. Preserve owner project data, encrypted keys, configurations, allowance and canonical numerical evidence; distinguish authorized live receipt/reservation additions. Verify the actual local build, source consistency, privacy and GitHub synchronization before delivery.

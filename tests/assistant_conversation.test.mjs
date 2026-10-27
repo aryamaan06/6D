@@ -54,17 +54,13 @@ test('model hints describe tasks without guaranteeing quality or triggering rout
   assert.match(renderer.modelHint('toString'),/^Choose a model/);
 });
 
-test('model preference stores only permitted UI choice and survives unavailable storage',()=>{
-  const data=new Map(),calls=[];
-  const storage={getItem:key=>{calls.push(['get',key]);return data.get(key)??null;},setItem:(key,value)=>{calls.push(['set',key,value]);data.set(key,value);}};
-  for(const choice of ['nano','super','ultra']){assert.equal(renderer.writeModelPreference(choice,storage),true);assert.equal(renderer.readModelPreference(storage),choice);}
-  const before=calls.length;assert.equal(renderer.writeModelPreference('external',storage),false);assert.equal(calls.length,before);
-  assert.equal(data.size,1);assert.ok(data.has('sixd.assistant.model.v1'));
-  data.set('sixd.assistant.model.v1','<script>bad()</script>');assert.equal(renderer.readModelPreference(storage),null);
-  const broken={getItem(){throw Error('blocked');},setItem(){throw Error('blocked');}};
-  assert.equal(renderer.readModelPreference(broken),null);assert.equal(renderer.writeModelPreference('nano',broken),false);
-  const unavailable=api(Object.defineProperty({},'localStorage',{get(){throw Error('unavailable');}}));
-  assert.equal(unavailable.readModelPreference(),null);assert.equal(unavailable.writeModelPreference('super'),false);
+test('model choice labels are task guidance and never read an old browser preference',()=>{
+  const unavailable=api(Object.defineProperty({},'localStorage',{get(){throw Error('No preference may select a model');}}));
+  assert.equal(unavailable.modelOptionLabel('nano'),'Nemotron 3 Nano — Quick explanations');
+  assert.equal(unavailable.modelOptionLabel('super'),'Nemotron 3 Super — Everyday review');
+  assert.equal(unavailable.modelOptionLabel('ultra'),'Nemotron 3 Ultra — Deeper reasoning');
+  for(const value of [null,'','unknown','toString','__proto__'])assert.equal(unavailable.modelOptionLabel(value),'Choose a model');
+  assert.equal(unavailable.readModelPreference,undefined);assert.equal(unavailable.writeModelPreference,undefined);
 });
 
 const digest='a'.repeat(64),otherDigest='b'.repeat(64);

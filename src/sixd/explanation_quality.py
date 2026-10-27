@@ -369,6 +369,45 @@ def _readiness_claim_text(text):
     return re.sub(denial, lambda match: " " * len(match.group(0)), text)
 
 
+def _component_mission_assurance(text):
+    """Flag explicit outcome guarantees beyond a bounded component finding.
+
+    These narrow phrases do not make the heuristic a general semantic judge.
+    Questions, proposed checks and explicit denials remain distinct from an
+    affirmative claim of obstacle clearance, space entry or orbital delivery.
+    """
+    outcome = (
+        r"(?:(?:clears?|avoids?)\s+(?:(?:the|all|launch|pad|nearby)\s+){0,4}obstacles?|"
+        r"enter(?:s|ing)?\s+(?:outer\s+)?space|"
+        r"(?:reach(?:es|ing)?|achieves?)\s+(?:(?:the|a|target)\s+){0,2}orbit|"
+        r"(?:safe\s+)?obstacle\s+clearance|(?:successful\s+)?space\s+entry|"
+        r"entry\s+into\s+(?:outer\s+)?space|(?:successful\s+)?orbital\s+insertion)\b"
+    )
+    predicate = (
+        r"(?:ensures?|guarantees?|proves?|confirms?)\s+(?:that\s+)?"
+        r"(?:(?:(?:the|a|this|our)\s+)?(?:rocket|vehicle|spacecraft|mission|it)\s+)?"
+        r"(?:(?:will|can)\s+)?(?:(?:safely|successfully)\s+)?" + outcome
+    )
+    # Mask an explicit two-predicate 'not ... or ...' denial only; a later
+    # affirmative sentence or 'but' clause remains eligible for checking.
+    denial = (r"\b(?:does\s+not|doesn't|do\s+not|cannot|can\s+not|can't|must\s+not)\s+"
+              + predicate + r"\s+or\s+" + predicate)
+    masked = re.sub(denial, lambda match: " " * len(match.group(0)), text)
+    no_claim = (r"\bno\s+(?:component\s+)?(?:finding|calculation|result|evidence)\s+"
+                r"(?:can\s+|ever\s+)?" + predicate)
+    masked = re.sub(no_claim, lambda match: " " * len(match.group(0)), masked)
+    for sentence in re.split(r"(?<=[.!?;])\s+|\n+", masked):
+        if (sentence.rstrip().endswith("?") and re.match(
+                r"\s*(?:did|does|do|has|have|had|is|are|was|were|why|how|what|could|would|should|can)\b", sentence)):
+            continue
+        for clause in re.split(r"\b(?:but|however|nevertheless)\b", sentence):
+            if re.match(r"\s*(?:if|unless|whether|could|would|should|might|may|hypothetical|proposed|review|check|consider|evaluate|verify|inspect)\b", clause):
+                continue
+            if _affirmative(r"\b" + predicate, clause):
+                return True
+    return False
+
+
 def _attributed_source_quotes(record, summary):
     """Mask only exact captured reason/issue strings with explicit attribution.
 
@@ -748,7 +787,8 @@ def evaluate_explanation(record):
                                   for claim in _status_claims(claim_summary, subject))):
         flag("canonical_status_contradiction", "An explicit outcome claim conflicts with the canonical requirement status.", "error")
     readiness_text = _readiness_claim_text(text if test_bundle is not None else claim_text)
-    if _affirmative(r"\b(?:mission\s+success\s+is\s+guaranteed|guarantees?\s+mission\s+success|(?:ready|safe|cleared|approved)\s+(?:for|to)\s+launch|launch\s+(?:is\s+)?authorized)\b", readiness_text):
+    if (_affirmative(r"\b(?:mission\s+success\s+is\s+guaranteed|guarantees?\s+mission\s+success|(?:ready|safe|cleared|approved)\s+(?:for|to)\s+launch|launch\s+(?:is\s+)?authorized)\b", readiness_text)
+            or _component_mission_assurance(readiness_text)):
         flag("readiness_or_guarantee_claim", "Readiness or guarantee language requires review; this evidence does not authorize launch.", "error")
     status_words = {
         "met": r"\b(?:meets?|met|satisfied|passes|passed)\b",

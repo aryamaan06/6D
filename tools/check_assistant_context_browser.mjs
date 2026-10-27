@@ -76,7 +76,7 @@ try{
  const seedRecords=await Promise.all(info.seed_ids.map(id=>api('/api/investigations/'+id)));
  const idle=()=>page.locator('#sixd-workspace[aria-busy="false"]').waitFor();
  const click=async action=>{await page.locator('[data-action="'+action+'"]:visible').first().click();await idle();};
- const open=async()=>{await page.locator('#sd-rocket-launcher').click();if(await page.locator('[data-rocket-tab="nemotron"]').getAttribute('aria-selected')!=='true')await page.locator('[data-rocket-tab="nemotron"]').click();await page.locator('#sd-ai-context-summary').waitFor();await page.waitForFunction(()=>document.querySelectorAll('#sd-ai-model option').length===3&&!document.querySelector('#sd-ai-model').disabled);};
+ const open=async()=>{await page.locator('#sd-rocket-launcher').click();if(await page.locator('[data-rocket-tab="nemotron"]').getAttribute('aria-selected')!=='true')await page.locator('[data-rocket-tab="nemotron"]').click();await page.locator('#sd-ai-context-summary').waitFor();await page.waitForFunction(()=>document.querySelectorAll('#sd-ai-model option').length===4&&!document.querySelector('#sd-ai-model').disabled);};
  const close=async()=>{await page.locator('#sd-rocket-dialog [data-rocket-close]').click();await page.waitForFunction(()=>!document.querySelector('#sd-rocket-dialog').open);};
  const summary=async()=>{const detail=page.locator('#sd-ai-context-summary .sd-chat-context-details');if(!await detail.evaluate(node=>node.open))await detail.locator(':scope > summary').click();return page.locator('#sd-ai-context-summary').innerText();};
  const assertPage=async()=>{const label=await page.locator('#sd-page-title').innerText();assert.ok((await summary()).length>0,'saved context summary remains visible');assert.ok((await page.locator('#sd-rocket-context').innerText()).includes(label));};
@@ -129,6 +129,7 @@ try{
  pass('Existing hidden exact-row handoff opens its own requirement from prior project scope; another check parks the row and returning restores it');
 
  assert.equal((await callLog()).length,beforeCalls);assert.equal(posts.filter(post=>post.path==='/api/investigations'||post.path==='/api/research/search').length,0);
+ await page.locator('#sd-ai-model').selectOption('super');
  const started=page.waitForResponse(response=>response.url()===origin+'/api/investigations'&&response.request().method()==='POST');await page.locator('#sd-ai-start').click();const response=await started;assert.equal(response.status(),200);const job=await response.json();
  await page.waitForFunction(()=>!document.querySelector('#sd-ai-model').disabled);const record=await api('/api/investigations/'+job.investigation_id);assert.equal(record.state,'completed');assert.equal(record.requirement_id,'drag_limit');
  const request=posts.find(post=>post.path==='/api/investigations').data;assert.equal(request.requirement_id,'drag_limit');assert.equal(request.test_comparison_id,info.comparison_id);assert.equal(request.test_row_number,info.row_number);assert.equal(request.scope,undefined);

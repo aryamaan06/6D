@@ -143,8 +143,46 @@ def _claimed_direction(word):
     return "unchanged"
 
 
+def _within_run_constant_assumption(clause, match):
+    """Recognize explicit time/model assumptions, not revision equality.
+
+    A constant-thrust burn can use a different thrust in the next saved design.
+    Only the word 'constant' receives this narrow disambiguation; 'unchanged',
+    opposite directions and explicit before/after claims still use the captured
+    comparison. This is a bounded English distinction, not semantic validation.
+    """
+    if match["direction"] != "constant" or match["neg"]:
+        return False
+    if re.search(
+        r"\b(?:between|across|over)\s+(?:the\s+)?(?:(?:saved|recorded|two)\s+)*revisions?\b|"
+        r"\b(?:compared\s+(?:with|to)|relative\s+to|from|since|as\s+in)\s+(?:the\s+)?"
+        r"(?:prior|previous|earlier|baseline)\b|"
+        r"\b(?:prior|previous|earlier|baseline)\s+(?:(?:saved|recorded)\s+)?(?:revision|configuration|design|value)\b",
+        clause,
+    ):
+        return False
+    prefix = clause[max(0, match.start() - 180):match.start()]
+    suffix = clause[match.end():match.end() + 160]
+    if re.search(r"\b(?:assumptions?|assumes?|assuming|assumed|modelled|modeled|model\s+scope)\b[^;.!?]{0,120}$", prefix):
+        return True
+    if re.search(r"\b(?:model|simulation|approximation)\b[^;.!?]{0,120}\b(?:with|using)\s+$", prefix):
+        return True
+    if re.match(r"\s+(?:(?:input|value)\s+)?(?:assumption|model|approximation)\b", suffix):
+        return True
+    if re.search(r"\b(?:during|throughout|over|within)\s+(?:the\s+)?(?:burn|flight|ascent|simulation|run|trajectory|time\s+history)\b", prefix + " " + suffix):
+        return True
+    # A request to inspect a constant-input assumption does not assert that the
+    # saved input was unchanged. Keep this local to an explicit next-check lead.
+    return bool(re.match(
+        r"\s*(?:(?:a|the)\s+)?(?:concrete\s+)?next\s+(?:engineering\s+)?(?:review|check|action)\s+is\s+to\s+"
+        r"(?:review|check|verify|inspect|evaluate)\b", clause))
+
+
 def _commentary_clauses(summary):
     text = re.sub(r"[\u2010-\u2015\u2212]", "-", summary.casefold())
+    # Keep explicit model-scope/assumption headings attached to their lists.
+    # Ordinary colons still separate assertions with unrelated subjects.
+    text = re.sub(r"\b(model\s+scope|(?:model\s+)?assumptions?)\s*:\s*", r"\1 ", text)
     for old, new in (("didn't", "did not"), ("hasn't", "has not"),
                      ("wasn't", "was not"), ("isn't", "is not")):
         text = text.replace(old, new)
@@ -214,6 +252,8 @@ def evaluate_change_commentary(summary, context):
                                 or re.search(r"\b(?:if|unless|whether|could|would|should|might|may|hypothetical|proposed)\b", clause[:match.start()])):
                             continue
                         if pattern_index == 1 and re.match(r"\s+" + _PROPOSED_DIRECTION_SUFFIX, clause[match.end():]):
+                            continue
+                        if _within_run_constant_assumption(clause, match):
                             continue
                         if (match["direction"] in ("higher", "larger", "greater", "lower", "smaller", "equal", "the same", "identical")
                                 and re.match(r"\s+(?:than|to|as)\s+", clause[match.end():])

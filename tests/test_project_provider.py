@@ -39,6 +39,25 @@ def response(message, reason="stop"):
 
 
 class ProjectProviderTests(unittest.TestCase):
+    def test_current_question_is_pinned_at_each_action_boundary_without_promoting_history(self):
+        from sixd.project_investigation import _tools, SYSTEM
+        current = "Why does that matter, and what should I verify next?"
+        history = {"turns": [{"question": "What does burnout altitude mean?",
+                              "summary": "Earlier answer text is not a new instruction."}]}
+        messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": json.dumps({
+            "question_data": current, "conversation_context": history})}]
+        wire_messages, tools, _ = ProjectActionAdapter.build_action_request(messages, _tools(["read_requirement"], {}))
+        latest = json.loads(wire_messages[-1]["content"])
+        self.assertEqual(latest["current_question_data"], current)
+        self.assertEqual(latest["answer_focus"], "next_check")
+        self.assertIn("not the previous definition", latest["current_answer_instruction"])
+        self.assertNotIn("conversation_context", latest)
+        self.assertEqual(latest["available_actions"][0]["action"], "read_requirement")
+        self.assertEqual(tools[0]["function"]["parameters"]["properties"]["summary"]["enum"], [""])
+        self.assertIn("cannot", wire_messages[0]["content"])
+        self.assertIn("application owns exact numerical findings", wire_messages[0]["content"])
+        self.assertLess(len(wire_messages[0]["content"]), 4000)
+
     def test_precise_rejections_survive_both_exception_boundaries_without_remote_text(self):
         cases = [
             ('{', 'invalid_json', False),
@@ -127,6 +146,13 @@ class ProjectProviderTests(unittest.TestCase):
             if reads_only:
                 expected_ids["maxItems"] = 0
                 self.assertEqual(payload["tools"][0]["function"]["parameters"]["properties"]["summary"]["enum"], [""])
+            else:
+                ids = menu["recorded_evidence_ids"]
+                expected_ids.update(items={"type": "string", "enum": ids},
+                                    minItems=len(ids), maxItems=len(ids))
+                summary_schema = payload["tools"][0]["function"]["parameters"]["properties"]["summary"]
+                self.assertNotIn("pattern", summary_schema)
+                self.assertNotIn("minLength", summary_schema)
             self.assertEqual(payload["tools"][0]["function"]["parameters"]["properties"]["evidence_ids"], expected_ids)
             self.assertEqual(payload["chat_template_kwargs"], {"enable_thinking": False})
             return response(selected(payload, len(self.requests))) if dispatch is None else dispatch(payload, len(self.requests))
@@ -186,6 +212,75 @@ class ProjectProviderTests(unittest.TestCase):
         for payload in self.requests:
             actions = payload["tools"][0]["function"]["parameters"]["properties"]["action"]["enum"]
             self.assertNotIn("recheck_model", actions)
+
+    def test_rocket_final_wire_omits_duplicate_numeric_grids_but_receipt_keeps_originals(self):
+        from sixd.project_examples import integrated_rocket_review
+        project = integrated_rocket_review()
+        view = self.store.create_project(project)
+        view = self.store.run(project["project_id"], 1)
+        for revision, thrust in ((1, 11000), (2, 20000)):
+            project = deepcopy(view["project"])
+            project["inputs"]["thrust"]["value"] = thrust
+            self.store.save_revision(project["project_id"], revision, project)
+            view = self.store.run(project["project_id"], revision + 1)
+        before = deepcopy(view)
+        record = investigate_project(view, "burnout_height",
+            "What does burnout altitude mean? Explain it simply and relate it to this saved check.",
+            self.provider(), investigation_id="offline-rocket-commentary")
+        self.assertEqual(record["state"], "completed", record.get("error"))
+        self.assertEqual([event["action"] for event in record["events"]],
+                         ["read_requirement", "read_model", "read_changes", "recheck_model", "finish"])
+        self.assertEqual(view, before)
+        original = view["run"]["review"]["evidence"]["vertical_flight"]
+        self.assertEqual(record["evidence"]["model:vertical_flight"]["recorded_evidence"], original)
+        self.assertEqual(record["evidence"]["recheck:vertical_flight"]["fresh_result"]["flight_response"],
+                         original["flight_response"])
+        final = self.requests[-1]
+        self.assertEqual(final["max_tokens"], 2048)
+        # The prior constructed final request was about 80 KiB. This bound
+        # protects against accidental return of masked sample/provenance copies.
+        self.assertLess(len(json.dumps(final).encode("utf-8")), 48000)
+        tools = {json.loads(row["content"])["kind"]: json.loads(row["content"])
+                 for row in final["messages"] if row["role"] == "tool"}
+        model = tools["model"]["recorded_evidence"]
+        self.assertNotIn("witness_samples", model["flight_summary_projection"])
+        self.assertTrue(model["flight_summary_projection"]["witness_samples_retained_locally"])
+        self.assertEqual(model["assumptions"], original["assumptions"])
+        self.assertEqual(model["not_assessed"], original["not_assessed"])
+        self.assertEqual(model["input_records"]["thrust"]["source"],
+                         original["input_records"]["thrust"]["source"])
+        self.assertNotIn("fresh_result", tools["recheck"])
+        self.assertTrue(tools["recheck"]["fresh_result_projection"]["matches_saved_result"])
+        self.assertEqual(tools["changes"]["comparison"]["before_finding"]["status"], "not_met")
+        self.assertEqual(tools["changes"]["comparison"]["after_finding"]["status"], "met")
+        directions = {c["subject"]: c["direction"]
+                      for c in tools["changes"]["application_change_context"]["comparisons"]}
+        self.assertEqual(directions["input:thrust"], "increased")
+        self.assertEqual(directions["calculated_metric"], "increased")
+
+    def test_plain_generation_schema_does_not_relax_local_numeric_or_status_guards(self):
+        for text, reason in (
+            ("The criterion is met within this bounded model at 7000 m. Review the sources.",
+             "unbound_numeric_literal"),
+            ("The criterion is not met within this bounded model. Review its assumptions.",
+             "canonical_status_contradiction"),
+        ):
+            self.requests.clear()
+            def finish(payload, attempt):
+                message = selected(payload, attempt)
+                function = message["tool_calls"][0]["function"]
+                args = json.loads(function["arguments"])
+                if args["action"] == "finish":
+                    args["summary"] = text
+                    function["arguments"] = json.dumps(args)
+                return response(message)
+            record = self.run_case(self.provider(finish))
+            self.assertEqual(record["state"], "failed")
+            self.assertEqual(record["error_code"], "explanation_rejected")
+            self.assertIn(reason, record["explanation_acceptance"]["blocked_codes"])
+            self.assertEqual(record["request_attempts"], 5)
+            self.assertEqual(record["summary"], "")
+            self.assertEqual(record["rejected_interpretation"]["summary"], text)
 
     def test_exact_content_selection_json_is_explicitly_labelled_offline(self):
         def content(payload, attempt):

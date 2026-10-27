@@ -1,0 +1,88 @@
+{
+  "schema": "sixd.chat-readability-checks.v1",
+  "date": "2026-10-27",
+  "build_id": "cbd5b64fe0be",
+  "python": {
+    "methods": 226,
+    "passed": 226,
+    "skips": 0,
+    "full_suite_run": false
+  },
+  "node_components": {
+    "passed": 39,
+    "includes_real_local_image_decode": true
+  },
+  "browser": {
+    "chat": 7,
+    "native_disclosures": 6,
+    "usability": 15,
+    "navigation": 27,
+    "exact_context": 10,
+    "total_groups": 65,
+    "synthetic_fixtures": true,
+    "external_requests": 0,
+    "browser_errors": 0
+  },
+  "runtime": {
+    "javascript_files_parsed": 39,
+    "canonical_python_files": 64,
+    "restart_required": false
+  },
+  "live": {
+    "phases": 4,
+    "explicit_jobs": 20,
+    "request_attempts": 100,
+    "historical_completed_jobs": 16,
+    "historical_failed_jobs": 4,
+    "total_reserved_usd": 1.81489076,
+    "latest_phase_reserved_usd": 0.56654448,
+    "latest_phase_jobs_completed": 6,
+    "latest_phase_jobs_started": 6,
+    "latest_phase_model_local_followups": 3,
+    "latest_phase_useful_scoped_answers_observed": true,
+    "independent_human_review": false,
+    "semantic_accuracy_established": false,
+    "automatic_retries": 0,
+    "images_sent": false,
+    "other_services_called": false,
+    "batch_records": [
+      "CHAT_READABILITY_LIVE_BATCH1.json",
+      "CHAT_READABILITY_LIVE_BATCH2.json",
+      "CHAT_READABILITY_LIVE_BATCH3.json",
+      "CHAT_READABILITY_LIVE_BATCH4.json"
+    ]
+  },
+  "preservation": {
+    "checks": 28,
+    "exact_matches": 26,
+    "original_investigation_rows_preserved": 29,
+    "authorized_new_investigations": 20,
+    "only_matching_reservation_changed_in_ledger": true,
+    "reservation_delta_usd": 1.81489076,
+    "all_other_tables_credentials_configs_unchanged": true,
+    "canonical_saved_view_and_source_library_unchanged": true,
+    "allowance_and_server_default_unchanged": true
+  },
+  "services_restored": {
+    "nebius": {
+      "key_present": true,
+      "key_remembered": true,
+      "credential_error": null
+    },
+    "tavily": {
+      "key_present": true,
+      "key_remembered": true,
+      "credential_error": null
+    },
+    "langsmith": {
+      "key_present": true,
+      "key_remembered": true,
+      "credential_error": null
+    }
+  },
+  "new_physics": false,
+  "lightning_added": false,
+  "projects_deleted": false,
+  "public_deployment": false,
+  "qualification_boundary": "One constructed requirement case, two questions per model; scoped workflow and development answer review, not general semantic or physical qualification."
+}

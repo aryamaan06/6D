@@ -12,7 +12,7 @@
 #sixd-workspace .sd-rocket-launcher-label{position:absolute;bottom:0;display:block;padding:4px 9px;font-family:var(--sd-font-sans);font-size:13px;font-weight:600;line-height:1.1;background:var(--sd-bg);border:1px solid var(--sd-border);border-radius:20px;box-shadow:0 2px 5px rgb(29 29 31 / 4%);white-space:nowrap}
 #sixd-workspace .sd-rocket-working{display:none;position:absolute;top:14px;right:8px;width:9px;height:9px;background:#3d74a5;border:2px solid var(--sd-bg);border-radius:50%}
 #sixd-workspace .sd-rocket-is-busy .sd-rocket-working{display:block}
-#sixd-workspace #sd-rocket-dialog{position:fixed;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(820px,calc(100vw - 32px));max-width:820px;max-height:calc(100dvh - 40px);height:fit-content;padding:0;margin:0;border:1px solid var(--sd-border);border-radius:19px;background:var(--sd-bg);box-shadow:0 24px 90px rgb(29 29 31 / 20%);color:var(--sd-ink);overflow:hidden}
+#sixd-workspace #sd-rocket-dialog{position:fixed;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(960px,calc(100vw - 32px));max-width:960px;max-height:calc(100dvh - 32px);height:min(900px,calc(100dvh - 32px));padding:0;margin:0;border:1px solid var(--sd-border);border-radius:19px;background:var(--sd-bg);box-shadow:0 24px 90px rgb(29 29 31 / 20%);color:var(--sd-ink);overflow:hidden}
 #sixd-workspace #sd-rocket-dialog[open]{display:flex;flex-direction:column}
 #sixd-workspace #sd-rocket-dialog::backdrop{background:rgb(29 29 31 / 26%);backdrop-filter:blur(3px)}
 #sixd-workspace .sd-rocket-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:23px 26px 17px;border-bottom:1px solid var(--sd-border);flex-shrink:0}
@@ -129,3 +129,11 @@
 .sd-assistant-context-heading{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
 .sd-assistant-context-heading>span{color:#626268;font-size:14px}
 @media(max-width:600px){.sd-assistant-context-summary{padding:12px}.sd-assistant-context-heading{display:block}}
+
+/* Stable window sizes prevent disclosures from lifting a centred dialog upwards. */
+#sixd-workspace #sd-rocket-dialog.sd-rocket-expanded{width:calc(100vw - 32px);max-width:1440px;height:calc(100dvh - 24px);max-height:calc(100dvh - 24px)}
+#sixd-workspace #sd-rocket-dialog .sd-rocket-window-actions{display:flex;align-items:center;gap:9px;flex:none}
+#sixd-workspace #sd-rocket-dialog .sd-rocket-expand{display:flex;align-items:center;gap:7px;min-height:34px;padding:6px 11px;border:1px solid var(--sd-border);border-radius:8px;background:var(--sd-bg);font:500 13px/1.3 var(--sd-font-sans);color:var(--sd-ink);cursor:pointer}
+#sixd-workspace .sd-rocket-expand:hover{background:var(--sd-side)}
+#sixd-workspace .sd-rocket-expand:focus-visible{outline:2px solid #608cbb;outline-offset:3px}
+@media(max-width:650px){#sixd-workspace #sd-rocket-dialog{height:calc(100dvh - 16px);max-height:calc(100dvh - 16px)}#sixd-workspace #sd-rocket-dialog.sd-rocket-expanded{inset:0;transform:none;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0}#sixd-workspace #sd-rocket-dialog .sd-rocket-window-actions{gap:5px}#sixd-workspace #sd-rocket-dialog .sd-rocket-expand{padding:6px 8px;font-size:12px}}

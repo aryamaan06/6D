@@ -283,6 +283,72 @@ class ChangeDirectionCommentaryTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(LIVE_BATCH.read_bytes()).hexdigest(), before_hash)
 
 
+class WithinRunAssumptionTests(unittest.TestCase):
+    def setUp(self):
+        # Independently supplied before/after scalar values: thrust really rose.
+        # Whether a solver holds each chosen value constant during time is a
+        # different question from equality between these saved configurations.
+        source = changes(before_limit=250, after_limit=250)
+        source["comparison"]["before"]["input_records"]["thrust"] = quantity(10, "N")
+        source["comparison"]["after"]["input_records"]["thrust"] = quantity(20, "N")
+        self.context = change_evidence.build_change_context(source)
+        self.assertEqual(rows(self.context)["input:thrust"]["direction"], "increased")
+
+    def test_within_run_time_or_model_assumptions_are_not_revision_equality_claims(self):
+        for summary in (
+            "The model assumes constant thrust during the burn.",
+            "The model assumptions include constant thrust and a supplied atmosphere.",
+            "The model's assumptions—such as constant thrust—need engineering review.",
+            "Within the model scope: one radial vertical degree of freedom, constant thrust and instantaneous cutoff.",
+            "The thrust is constant throughout the simulation.",
+            "During the burn the thrust remains constant.",
+            "The thrust increased between saved revisions. The model assumes constant thrust during each burn.",
+            "Increased thrust was used in the saved revision; the model assumes constant thrust during the burn.",
+            "The next engineering check is to verify constant thrust and dry mass against sources.",
+            "A concrete next engineering review is to verify the initial masses, constant thrust and atmosphere inputs.",
+            "In this saved vertical flight model, the vehicle ascends straight up with constant thrust and changing mass.",
+            "The finding applies only to the stated assumptions: one vertical degree of freedom, constant thrust and instantaneous cutoff.",
+            "Using the bounded model, ascent is computed with constant thrust.",
+        ):
+            with self.subTest(summary=summary):
+                self.assertEqual(change_evidence.evaluate_change_commentary(summary, self.context), [])
+
+    def test_explicit_revision_equality_and_opposite_directions_remain_rejected(self):
+        for summary in (
+            "The thrust remained constant between revisions.",
+            "The model assumes thrust remained constant between the saved revisions.",
+            "The thrust is constant compared with the prior revision.",
+            "The model scope: the thrust remained constant from the previous revision.",
+            "The thrust stayed unchanged.",
+            "Unchanged thrust was used in the revised design.",
+            "The thrust decreased between revisions.",
+            "The decreased thrust is a modelling assumption.",
+            "The recorded thrust remained constant.",
+            "Constant thrust from the baseline configuration was retained.",
+            "In this saved vertical flight model, the thrust remained constant between saved revisions.",
+            "The finding applies only to the stated assumptions: the thrust remained constant from the prior revision.",
+            "In this model, the thrust is unchanged.",
+            "In this model, the thrust decreased.",
+        ):
+            with self.subTest(summary=summary):
+                flags = change_evidence.evaluate_change_commentary(summary, self.context)
+                self.assertTrue(any(flag["code"] == "change_direction_contradiction"
+                                    and flag["subject"] == "input:thrust" for flag in flags), summary)
+
+    def test_model_assumption_cannot_exempt_a_different_subject_or_later_claim(self):
+        for summary, subject in (
+            ("The model assumes constant thrust during the burn, but the thrust decreased between revisions.", "input:thrust"),
+            ("The model assumes constant thrust while the declared limit increased.", "declared_limit"),
+            ("The model assumes constant thrust and the thrust is unchanged between revisions.", "input:thrust"),
+            ("The model assumes constant thrust; the calculated metric decreased.", "calculated_metric"),
+            ("In this saved model, with constant thrust the calculated metric decreased.", "calculated_metric"),
+        ):
+            with self.subTest(summary=summary):
+                flags = change_evidence.evaluate_change_commentary(summary, self.context)
+                self.assertTrue(any(flag["code"] == "change_direction_contradiction"
+                                    and flag["subject"] == subject for flag in flags), summary)
+
+
 class ChangeDirectionPipelineTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

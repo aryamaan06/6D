@@ -1,0 +1,107 @@
+{
+  "schema": "sixd.chat-readability-live-batch.v1",
+  "date": "2026-10-27",
+  "phase": "initial_after_final_action_compatibility_fix",
+  "build_id": "59ca22e7bc7a",
+  "approved_maximum_reservation_usd": 1.3,
+  "jobs_started": 3,
+  "jobs_completed": 0,
+  "request_attempts": 15,
+  "accepted_provider_responses": 15,
+  "accepted_final_answers": 0,
+  "reserved_usd": 0.30132656,
+  "accounting": "Conservative reservations, not provider billed usage.",
+  "automatic_retries": 0,
+  "followups_sent": 0,
+  "images_sent": false,
+  "other_services_called": false,
+  "turns": [
+    {
+      "model": "nano",
+      "model_id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "receipt_id": "076707e6af384c3dbe0888903431fd31",
+      "state": "failed",
+      "request_attempts": 5,
+      "accepted_provider_responses": 5,
+      "accepted_final_answers": 0,
+      "error_code": "explanation_rejected",
+      "blocked_codes": [
+        "change_direction_contradiction"
+      ],
+      "required_actions_completed": [
+        "read_requirement",
+        "read_model",
+        "read_changes",
+        "recheck_model"
+      ],
+      "reserved_usd": 0.013882259999999999,
+      "elapsed_seconds": 6.883582,
+      "followup_sent": false,
+      "agent_source_count": 39,
+      "agent_sources_sha256": "882d72b6f23a996d055ba637e0164e95d44971cea81b9442b7894139ed2d1591"
+    },
+    {
+      "model": "super",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b",
+      "receipt_id": "e623aad0d9cc471f9391fd3021c75656",
+      "state": "failed",
+      "request_attempts": 5,
+      "accepted_provider_responses": 5,
+      "accepted_final_answers": 0,
+      "error_code": "explanation_rejected",
+      "blocked_codes": [
+        "change_direction_contradiction"
+      ],
+      "required_actions_completed": [
+        "read_requirement",
+        "read_model",
+        "read_changes",
+        "recheck_model"
+      ],
+      "reserved_usd": 0.0663333,
+      "elapsed_seconds": 9.685318,
+      "followup_sent": false,
+      "agent_source_count": 39,
+      "agent_sources_sha256": "882d72b6f23a996d055ba637e0164e95d44971cea81b9442b7894139ed2d1591"
+    },
+    {
+      "model": "ultra",
+      "model_id": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "receipt_id": "29bd3d14e50f49ef93c5db9aa29e31f0",
+      "state": "failed",
+      "request_attempts": 5,
+      "accepted_provider_responses": 5,
+      "accepted_final_answers": 0,
+      "error_code": "explanation_rejected",
+      "blocked_codes": [
+        "change_direction_contradiction",
+        "unbound_numeric_literal"
+      ],
+      "required_actions_completed": [
+        "read_requirement",
+        "read_model",
+        "read_changes",
+        "recheck_model"
+      ],
+      "reserved_usd": 0.22111100000000003,
+      "elapsed_seconds": 12.25141,
+      "followup_sent": false,
+      "agent_source_count": 39,
+      "agent_sources_sha256": "882d72b6f23a996d055ba637e0164e95d44971cea81b9442b7894139ed2d1591"
+    }
+  ],
+  "preservation": {
+    "canonical_view_unchanged": true,
+    "source_library_unchanged": true,
+    "cap_unchanged": true,
+    "default_unchanged": true
+  },
+  "observed_blockers": [
+    "All final actions completed, so no provider_output_limit occurred in these cases.",
+    "All three explanations were rejected for a change-direction check that treated constant thrust within the model as unchanged thrust across revisions.",
+    "Ultra also named RK4, violating the existing no-digits prose policy."
+  ],
+  "subsequent_correction": "Correct the guard temporal scope and clarify concise words-only prompting offline; original failed records stay unchanged. A further live run requires separate explicit approval.",
+  "qualification_claimed": false,
+  "semantic_accuracy_established": false
+}
