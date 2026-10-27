@@ -68,6 +68,8 @@ class WorkspaceNavigationAssetTests(unittest.TestCase):
         self.assertLess(assets.scripts.index("/workspace-sidebar.js"), assets.scripts.index("/workspace.js"))
         self.assertLess(assets.scripts.index("/rocket-assistant.js"), assets.scripts.index("/workspace.js"))
         self.assertLess(assets.scripts.index("/assistant-context.js"), assets.scripts.index("/workspace.js"))
+        self.assertLess(assets.scripts.index("/assistant-conversation.js"), assets.scripts.index("/workspace.js"))
+        self.assertLess(assets.scripts.index("/assistant-attachments.js"), assets.scripts.index("/workspace.js"))
         self.assertLess(assets.scripts.index("/rocket-renderer.js"), assets.scripts.index("/rocket-assistant.js"))
         self.assertLess(assets.scripts.index("/source-targets.js"), assets.scripts.index("/source-library.js"))
         self.assertLess(assets.styles.index("/typography.css"), assets.styles.index("/rocket-assistant.css"))
@@ -75,7 +77,7 @@ class WorkspaceNavigationAssetTests(unittest.TestCase):
         self.assertIn("/navigation.css", assets.styles)
         self.assertTrue(all(path.startswith("/") and not path.startswith("//")
                             for path in assets.scripts + assets.styles))
-        for path in ["/workspace-navigation.js", "/workspace-shell.js", "/workspace-sidebar.js", "/navigation.css", "/typography.css", "/rocket-renderer.js", "/rocket-assistant.js", "/rocket-assistant.css", "/source-targets.js", "/assistant-context.js"]:
+        for path in ["/assistant-conversation.js", "/assistant-conversation.css", "/assistant-attachments.js", "/assistant-attachments.css", "/workspace-navigation.js", "/workspace-shell.js", "/workspace-sidebar.js", "/navigation.css", "/typography.css", "/rocket-renderer.js", "/rocket-assistant.js", "/rocket-assistant.css", "/source-targets.js", "/assistant-context.js"]:
             status, mime, body = self.request(path)
             self.assertEqual(status, 200, path)
             self.assertTrue(body, path)

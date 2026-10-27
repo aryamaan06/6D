@@ -121,8 +121,13 @@ class ProjectProviderTests(unittest.TestCase):
             self.requests.append(payload)
             self.assertEqual(payload["tool_choice"], {"type": "function", "function": {"name": "select_next_action"}})
             self.assertEqual(len(payload["tools"]), 1)
-            self.assertEqual(payload["tools"][0]["function"]["parameters"]["properties"]["evidence_ids"],
-                             {"type": "array", "items": {"type": "string"}})
+            menu = json.loads(payload["messages"][-1]["content"])
+            reads_only = all(item["action"] != "finish" for item in menu["available_actions"])
+            expected_ids = {"type": "array", "items": {"type": "string"}}
+            if reads_only:
+                expected_ids["maxItems"] = 0
+                self.assertEqual(payload["tools"][0]["function"]["parameters"]["properties"]["summary"]["enum"], [""])
+            self.assertEqual(payload["tools"][0]["function"]["parameters"]["properties"]["evidence_ids"], expected_ids)
             self.assertEqual(payload["chat_template_kwargs"], {"enable_thinking": False})
             return response(selected(payload, len(self.requests))) if dispatch is None else dispatch(payload, len(self.requests))
         return TokenFactoryProvider(self.config, self.ledger, api_key=KEY,

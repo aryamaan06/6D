@@ -1,0 +1,12 @@
+# Focus refinement Build 3 — acceptance
+
+Authorized October 27, 2026: conversational Nemotron answers/follow-ups, explicit remembered Nano/Super/Ultra selection and task guidance, honest image sharing within the selected models' capabilities, and user-controlled spelling assistance. Build 1/2 remain intact.
+
+- The rocket remains the ordinary Nemotron/Tavily entry in the centered workspace. Show a user/assistant transcript with the accepted answer first; keep canonical status visible and detailed numerical/source/activity records expandable. Never display a rejected interpretation as an accepted answer or relabel deterministic guidance as model reasoning.
+- Follow-up context comes only from intact completed server records for the same saved project/revision/run/review/scope/test/reference context. Bound prior turns and size before reserving a request. Client-supplied assistant history, forged parents and another context must not become conversation evidence. New conversation remains an explicit option; opening or selecting sends nothing.
+- Nano/Super/Ultra remain explicit choices. Remember the user's UI preference with basic/ordinary/deeper task guidance; do not change the server default, automatically escalate, increase caps or rewrite historical labels. Historical results remain available.
+- These exact models accept text only. A PNG/JPEG/WebP can be previewed locally with editable user notes, but image bytes are never sent and pixel understanding/OCR is not claimed. Make the limitation visible before attachment and asking. Notes are unverified user text, not calculation evidence. Bound file bytes, dimensions, notes and memory; reject unsafe formats.
+- Enable native spelling assistance on Nemotron questions, image notes and Tavily queries. Corrections remain user-selected; do not silently rewrite, alter browser settings, check credential fields or claim all browsers render identical suggestions.
+- Preserve exact findings, comparisons, source scope, guards, budget ledger, per-job ceilings, provider allowlists, stored failures and encrypted keys. No new physics or public deployment. Verify synthetic chat/follow-up, context rejection, preference persistence, local attachment privacy, spelling attributes, progressive evidence and original-state preservation; record any live calls separately if authorized.
+
+Publish checked source, tests and accurate documentation to GitHub after a privacy check, verify the remote commit, and give the actual local address/build identity.

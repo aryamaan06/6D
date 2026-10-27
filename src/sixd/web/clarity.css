@@ -64,3 +64,47 @@
 #sixd-workspace .sd-reader>.sd-context-disclosure>.sd-disclosure-body{padding:0 0 16px}
 #sixd-workspace #sd-thrust-dialog{width:min(540px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto}
 #sixd-workspace #sd-thrust-dialog .sd-field{margin:15px 0}
+
+/* Conversation first; engineering detail remains available on demand. */
+#sixd-workspace .sd-conversation-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:3px 0 20px}
+#sixd-workspace .sd-conversation-toolbar>span{flex:1}
+#sixd-workspace .sd-conversation-compose{margin-top:24px;padding-top:18px;border-top:1px solid var(--sd-border)}
+#sixd-workspace .sd-assistant-compose.sd-conversation-compose .sd-ai-model-picker{display:flex;align-items:center;gap:16px;flex-wrap:wrap;max-width:none}
+#sixd-workspace .sd-conversation-compose .sd-ai-model-picker>.sd-field{min-width:210px;flex:0 1 240px;margin:0}
+#sixd-workspace .sd-conversation-compose #sd-ai-model-help{flex:1;min-width:200px;line-height:1.5;margin:0}
+#sixd-workspace .sd-assistant-compose.sd-conversation-compose .sd-ai-question{min-height:62px;resize:vertical;font-size:15px;line-height:1.65}
+#sixd-workspace .sd-chat-context-details{margin:9px 0;font-size:13px}
+#sixd-workspace .sd-chat-context-details>summary{cursor:pointer;color:var(--sd-soft)}
+#sixd-workspace .sd-conversation-recorded .sd-chip{margin:0 4px}
+#sixd-workspace .sd-conversation-details-body .sd-ai-record{border:0;padding:0;margin:0;box-shadow:none}
+#sixd-workspace #sd-rocket-dialog[open]:has(#sd-rocket-nemotron-host:not([hidden])){height:min(920px,calc(100dvh - 40px))}
+#sixd-workspace .sd-rocket-content:has(#sd-rocket-nemotron-host:not([hidden])){display:flex;flex-direction:column;flex:1;min-height:0;max-height:none;overflow:hidden;padding-top:14px}
+#sixd-workspace #sd-rocket-nemotron-host:not([hidden]){display:flex;flex-direction:column;min-height:0;flex:1}
+#sixd-workspace #sd-rocket-ai-body{display:flex;flex-direction:column;min-height:0;flex:1;overflow:auto}
+#sixd-workspace #sd-ai-transcript{min-height:90px;overflow:auto;flex:1 1 auto;padding:3px 3px 12px}
+#sixd-workspace .sd-conversation-compose{flex:none;margin-top:8px;background:var(--sd-bg)}
+#sixd-workspace .sd-conversation-key-hint{font-size:12px;margin:1px 0 8px}
+#sixd-workspace #sd-rocket-ai-body>.sd-assistant-context-summary{margin-bottom:9px;padding:10px 13px;flex:none}
+#sixd-workspace #sd-rocket-ai-body>.sd-conversation-toolbar{margin:0 0 9px;flex:none}
+#sixd-workspace #sd-ai-transcript .sd-conversation-empty{padding:10px 10px 14px}
+#sixd-workspace #sd-ai-transcript .sd-conversation-empty-mark{display:none}
+#sixd-workspace #sd-ai-advanced,#sixd-workspace #sd-ai-history-disclosure{flex:none;margin-top:7px;padding-top:6px}
+#sixd-workspace .sd-saved-conversation{display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;padding:12px 14px;margin:8px 0;border:1px solid var(--sd-border);border-radius:9px;background:var(--sd-bg);color:var(--sd-ink);cursor:pointer;font:inherit;overflow-wrap:anywhere}
+#sixd-workspace .sd-saved-conversation>span{color:var(--sd-soft);font-size:12px}
+#sixd-workspace #sd-rocket-dialog .sd-rocket-header{padding:15px 24px 12px}
+#sixd-workspace #sd-rocket-dialog .sd-rocket-header h2{font-size:22px;margin:3px 0 5px}
+#sixd-workspace #sd-rocket-dialog .sd-rocket-service-tabs{padding:8px 24px}
+#sixd-workspace .sd-assistant-context-summary>.sd-chat-context-details{margin:0}
+#sixd-workspace .sd-assistant-context-summary>.sd-chat-context-details>summary{color:var(--sd-ink)}
+#sixd-workspace .sd-conversation-compose .sd-assistant-suggestions{margin:2px 0 6px}
+#sixd-workspace .sd-conversation-compose .sd-assistant-consent{font-size:12px;line-height:1.45;margin-top:7px}
+#sixd-workspace .sd-conversation-compose .aa-attachment{margin:7px 0}
+#sixd-workspace .sd-conversation-compose .sd-assistant-suggestions[hidden]{display:none}
+#sixd-workspace .sd-conversation-compose label[for="sd-ai-question"]>.sr-only,#sixd-workspace .sd-conversation-key-hint{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+#sixd-workspace .sd-assistant-compose.sd-conversation-compose .sd-ai-model-picker>.sd-field{display:flex;align-items:center;gap:9px;margin-bottom:3px}
+#sixd-workspace .sd-assistant-compose.sd-conversation-compose .sd-ai-model-picker{margin-bottom:8px}
+#sixd-workspace .sd-chat-extra{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;flex:none;min-width:0}
+#sixd-workspace .sd-chat-extra>details{min-width:0}
+#sixd-workspace .sd-chat-extra:has(>details[open]){display:block}
+@media(max-width:650px){#sixd-workspace #sd-rocket-ai-body{overflow:auto}#sixd-workspace #sd-ai-transcript{flex:none;max-height:310px;overflow:auto}#sixd-workspace .sd-conversation-compose{margin-top:7px}#sixd-workspace #sd-ai-transcript .sd-conversation-empty{padding:4px 6px 9px}}
+@media(max-width:650px){#sixd-workspace .sd-conversation-toolbar{gap:8px}#sixd-workspace .sd-conversation-toolbar>span{flex-basis:100%}#sixd-workspace .sd-conversation-compose .sd-ai-model-picker{display:block}#sixd-workspace .sd-conversation-compose #sd-ai-model-help{margin-top:7px}}

@@ -74,6 +74,7 @@ BUILD_FILES += [WEB / name for name in ("hosted-login.html", "hosted-login.js", 
 CODE_FILES += [Path(__file__).with_name(name) for name in ("ai_qualification.py", "workspace_qualification.py", "workspace_observability.py", "model_choices.py")]
 BUILD_FILES += [WEB / name for name in ("ai-quality.js", "ai-quality.css")]
 BUILD_FILES += [WEB / route[1:] for route in FONT_ASSETS]
+BUILD_FILES += [WEB / name for name in ("assistant-conversation.js", "assistant-conversation.css", "assistant-attachments.js", "assistant-attachments.css")]
 
 
 def _code_fingerprint():
@@ -310,7 +311,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 self._reply(200, self.server.review_workspace.summary(self._one(query, "project_id"), self._revision(self._one(query, "revision"))))
             elif route in FONT_ASSETS:
                 self._reply(200, (WEB / route[1:]).read_bytes(), FONT_ASSETS[route])
-            elif route in {"/workspace-sidebar.js", "/assistant-context.js", "/source-targets.js", "/rocket-renderer.js", "/rocket-assistant.js", "/rocket-assistant.css", "/overlay-dismiss.js", "/owner-settings.js", "/clarity.css", "/workspace-navigation.js", "/workspace-shell.js", "/navigation.css", "/typography.css", "/review-workspace.js", "/review-workspace.css", "/units.js", "/connected-review.css", "/guided-ascent.js", "/guided-ascent.css", "/staged-ascent.js", "/staged-ascent.css"}:
+            elif route in {"/assistant-conversation.js", "/assistant-conversation.css", "/assistant-attachments.js", "/assistant-attachments.css", "/workspace-sidebar.js", "/assistant-context.js", "/source-targets.js", "/rocket-renderer.js", "/rocket-assistant.js", "/rocket-assistant.css", "/overlay-dismiss.js", "/owner-settings.js", "/clarity.css", "/workspace-navigation.js", "/workspace-shell.js", "/navigation.css", "/typography.css", "/review-workspace.js", "/review-workspace.css", "/units.js", "/connected-review.css", "/guided-ascent.js", "/guided-ascent.css", "/staged-ascent.js", "/staged-ascent.css"}:
                 path = WEB / route[1:]
                 self._reply(200, path.read_bytes(), "application/javascript; charset=utf-8" if path.suffix == ".js" else "text/css; charset=utf-8")
             elif route == "/api/envelopes/summary":
@@ -632,6 +633,10 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                     basic.add("model_choice")
                     if value["model_choice"] not in ("nano", "super", "ultra"):
                         raise WorkspaceError("Choose Nano, Super or Ultra for this investigation.")
+                if "parent_investigation_id" in value:
+                    basic.add("parent_investigation_id")
+                    if not isinstance(value["parent_investigation_id"], str) or re.fullmatch(r"[a-f0-9]{32}", value["parent_investigation_id"]) is None:
+                        raise WorkspaceError("Choose an intact saved conversation to continue.")
                 if project_scope and set(value) & selected_test:
                     raise WorkspaceError("Project investigations cannot select a test row.")
                 self._fields(value, basic | selected_test if set(value) & selected_test else basic)
@@ -644,7 +649,8 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 extras = {key: value[key] for key in selected_test} if set(value) & selected_test else {}
                 view = self.server.ai.start(value["project_id"], self._revision(value["revision"]),
                                             value.get("requirement_id"), value["question"], scope=value.get("scope", "requirement"),
-                                            model_choice=value.get("model_choice"), **extras)
+                                            model_choice=value.get("model_choice"),
+                                            parent_investigation_id=value.get("parent_investigation_id"), **extras)
             elif route == "/api/projects":
                 self._fields(value, {"project"})
                 view = self.server.store.create_project(value["project"])

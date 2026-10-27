@@ -10,9 +10,11 @@
 
 ## Try it
 
-**Focus refinement Build 2:** see calculation conclusions first, expand graphs and evidence on demand, and use **Engine thrust → Edit thrust** for your own sourced value. Staging, saving and calculating remain separate. [Guide](docs/FOCUS_BUILD2.md) · [Checks and preservation](docs/FOCUS_BUILD2_RESULTS.md). Conversational AI remains separate proposed work.
+**Focus refinement Build 3:** the rocket now presents a question/answer conversation with bounded saved-context follow-ups, remembered Nano/Super/Ultra preference, local image notes and native spelling. Images stay local because these models accept text only. [Guide](docs/FOCUS_BUILD3.md) · [Offline verification and pending live check](docs/FOCUS_BUILD3_RESULTS.md).
 
-**Focus refinement Build 1:** stable rocket scrolling, genuine self-hosted Geist fonts and a **Hide sidebar / Show sidebar** control give the main work area more room. [Guide](docs/FOCUS_BUILD1.md) · [Checks and preservation](docs/FOCUS_BUILD1_RESULTS.md). Build 2 subsequently delivered result-first pages; conversational AI remains separate proposed work.
+**Focus refinement Build 2:** see calculation conclusions first, expand graphs and evidence on demand, and use **Engine thrust → Edit thrust** for your own sourced value. Staging, saving and calculating remain separate. [Guide](docs/FOCUS_BUILD2.md) · [Checks and preservation](docs/FOCUS_BUILD2_RESULTS.md). Build 3 subsequently delivered the conversation interface; new live qualification remains separately pending.
+
+**Focus refinement Build 1:** stable rocket scrolling, genuine self-hosted Geist fonts and a **Hide sidebar / Show sidebar** control give the main work area more room. [Guide](docs/FOCUS_BUILD1.md) · [Checks and preservation](docs/FOCUS_BUILD1_RESULTS.md). Build 2 subsequently delivered result-first pages and Build 3 delivered the conversation interface.
 
 **Part 3 companion/context update:** the rocket parks clear of controls and has dock/reset/minimize options. The composer shows its saved evidence context, and reference preview → draft → save → link → question are explicit steps with unfinished drafts protected. [Guide](docs/PART3_ASSISTANT_WORKFLOW.md) · [Verification and preservation](docs/PART3_ASSISTANT_WORKFLOW_RESULTS.md).
 

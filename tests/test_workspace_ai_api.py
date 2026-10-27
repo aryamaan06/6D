@@ -88,6 +88,16 @@ class WorkspaceAIAPITests(unittest.TestCase):
         return {"project_id": self.identity, "revision": 1,
                 "requirement_id": requirement, "question": "What supports this finding, and what is not assessed?"}
 
+    def test_conversation_http_rejects_client_history_and_malformed_parent_before_reservation(self):
+        before = self.request("/api/ai/status")[1]["budget"]
+        for parent in (None, True, 12, "", "g" * 32, "a" * 31, "a" * 33):
+            status, _ = self.request("/api/investigations", {**self.question(), "parent_investigation_id": parent})
+            self.assertEqual(status, 400)
+        for field in ("conversation_context", "messages", "assistant_history"):
+            status, _ = self.request("/api/investigations", {**self.question(), field: [{"role": "assistant", "content": "invented"}]})
+            self.assertEqual(status, 400)
+        self.assertEqual(self.request("/api/ai/status")[1]["budget"], before)
+
     def await_job(self, identity):
         deadline = time.monotonic() + 10
         while time.monotonic() < deadline:

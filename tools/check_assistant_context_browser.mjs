@@ -78,8 +78,8 @@ try{
  const click=async action=>{await page.locator('[data-action="'+action+'"]:visible').first().click();await idle();};
  const open=async()=>{await page.locator('#sd-rocket-launcher').click();if(await page.locator('[data-rocket-tab="nemotron"]').getAttribute('aria-selected')!=='true')await page.locator('[data-rocket-tab="nemotron"]').click();await page.locator('#sd-ai-context-summary').waitFor();await page.waitForFunction(()=>document.querySelectorAll('#sd-ai-model option').length===3&&!document.querySelector('#sd-ai-model').disabled);};
  const close=async()=>{await page.locator('#sd-rocket-dialog [data-rocket-close]').click();await page.waitForFunction(()=>!document.querySelector('#sd-rocket-dialog').open);};
- const summary=()=>page.locator('#sd-ai-context-summary').innerText();
- const assertPage=async()=>{const label=await page.locator('#sd-page-title').innerText();assert.ok((await summary()).includes(label),'context summary includes current page label '+label);assert.ok((await page.locator('#sd-rocket-context').innerText()).includes(label));};
+ const summary=async()=>{const detail=page.locator('#sd-ai-context-summary .sd-chat-context-details');if(!await detail.evaluate(node=>node.open))await detail.locator(':scope > summary').click();return page.locator('#sd-ai-context-summary').innerText();};
+ const assertPage=async()=>{const label=await page.locator('#sd-page-title').innerText();assert.ok((await summary()).length>0,'saved context summary remains visible');assert.ok((await page.locator('#sd-rocket-context').innerText()).includes(label));};
  const selectCheck=async id=>{await page.locator('#sd-ai-scope').selectOption('requirement');await page.locator('#sd-rocket-requirement').selectOption(id);};
  await page.goto(origin+'/#/projects/context-a/r/2/system?view=table&kind=requirement&item=thermal_limit');await idle();
  // Use the actual selected-check control because a route may normalize defaults.
@@ -136,7 +136,7 @@ try{
 
  await close();await page.locator('#sd-project-picker').selectOption('context-b');await idle();await open();assert.match(await summary(),/Constructed context B/);assert.doesNotMatch(await summary(),new RegExp(info.comparison_id));assert.equal(await page.locator('#sd-ai-question').inputValue(),'');await close();
  await page.locator('#sd-project-picker').selectOption('context-a');await idle();await page.locator('#sd-revision-picker').selectOption('1');await idle();await open();assert.match(await summary(),/R1/);assert.match(await summary(),/historical/i);assert.doesNotMatch(await summary(),new RegExp(info.comparison_id));assert.equal(await page.locator('#sd-ai-question').inputValue(),'');
- await selectCheck('thermal_limit');await page.waitForFunction(()=>document.querySelectorAll('#sd-ai-history .sd-ai-record').length===1);assert.ok((await page.locator('#sd-ai-history').textContent()).includes(info.seed_ids[0]));
+ await selectCheck('thermal_limit');await page.waitForFunction(()=>document.querySelectorAll('#sd-ai-history [data-ai-resume]').length===1);assert.equal(await page.locator('[data-ai-resume="'+info.seed_ids[0]+'"]').count(),1);
  await page.locator('[data-rocket-tab="research"]').click();await page.locator('#sd-rocket-research-host [data-sr-field="target"]').waitFor();assert.equal(await page.locator('#sd-rocket-research-host [data-sr-action="search"]').isDisabled(),true);assert.match(await page.locator('#sd-rocket-research-host').innerText(),/historical revision.*read-only/i);
  await close();
  pass('Project and historical-revision changes do not attach another context’s question or row; historical answers stay scoped and reference search is blocked');

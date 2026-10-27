@@ -424,7 +424,76 @@ class WorkspaceAI:
             rows = db.execute(query + " ORDER BY created_at DESC LIMIT 50", values).fetchall()
             return [self._projection(self._read(row), db) for row in rows]
 
-    def start(self, project_id, revision, requirement_id, question, *, test_comparison_id=None, test_row_number=None, scope="requirement", model_choice=None):
+    def _conversation(self, parent_id, view, requirement_id, scope):
+        """Resolve prior prose from intact server records, never client history."""
+        if parent_id is None:
+            return None
+        from .project_investigation import (CONVERSATION_SCHEMA, CONVERSATION_POLICY,
+            MAX_CONVERSATION_TURNS, MAX_CONVERSATION_CHARACTERS, validate_conversation_context)
+        if not isinstance(parent_id, str) or re.fullmatch(r"[a-f0-9]{32}", parent_id) is None:
+            raise WorkspaceError("Choose a valid saved answer before continuing the conversation.")
+
+        def sources(record):
+            return (record.get("evidence", {}).get("project", {}).get("linked_sources", {})
+                    if scope == "project" else record.get("project_sources"))
+
+        expected_sources = view.get("whole_project_sources", {}) if scope == "project" else view.get("project_sources")
+        expected_test = view.get("test_evidence")
+        run = view["run"]
+
+        def checked(db, identity, expected_digest=None):
+            row = db.execute("SELECT * FROM project_investigations WHERE investigation_id=?", (identity,)).fetchone()
+            if row is None:
+                raise WorkspaceError("That saved answer is unavailable. Start a new conversation for this saved context.")
+            record = self._read(row)
+            if (expected_digest is not None and _digest(record) != expected_digest):
+                raise WorkspaceError("The captured earlier answer no longer matches its saved record.")
+            if (record.get("state") != "completed" or not isinstance(record.get("summary"), str)
+                    or not record["summary"].strip()
+                    or record.get("explanation_acceptance", {}).get("accepted") is False):
+                raise ConflictError("Continue only from a completed accepted answer; stopped or pending answers are not conversation context.")
+            if (record.get("project_id") != view["project_id"] or record.get("revision") != view["revision"]
+                    or record.get("run_id") != run["run_id"] or record.get("review_digest") != run["review"]["digest"]
+                    or record.get("scope", "requirement") != scope or record.get("requirement_id") != requirement_id
+                    or _digest(record.get("test_evidence")) != _digest(expected_test)
+                    or _digest(sources(record)) != _digest(expected_sources)):
+                raise ConflictError("That answer belongs to different saved evidence, scope, test row or linked references. Start a new conversation for this context.")
+            return record
+
+        with self._db() as db:
+            parent = checked(db, parent_id)
+            previous = parent.get("conversation_context")
+            if previous is not None:
+                try:
+                    previous = validate_conversation_context(previous, view, requirement_id)
+                except ValueError:
+                    raise WorkspaceError("The earlier conversation context is invalid. Start a new conversation.") from None
+            earlier = []
+            for turn in (previous or {}).get("turns", []):
+                earlier.append(checked(db, turn["investigation_id"], turn["record_digest"]))
+            records = earlier + [parent]
+            selected, characters = [], 0
+            for record in reversed(records):
+                count = len(record["question"]) + len(record["summary"])
+                if len(selected) >= MAX_CONVERSATION_TURNS or characters + count > MAX_CONVERSATION_CHARACTERS:
+                    break
+                selected.append({"investigation_id": record["investigation_id"], "record_digest": _digest(record),
+                                 "question": record["question"], "summary": record["summary"], "model": record["model"]})
+                characters += count
+            if not selected:
+                raise WorkspaceError("That answer is too large for the bounded conversation. Start a new conversation.")
+            selected.reverse()
+            context = {"schema": CONVERSATION_SCHEMA, "policy": CONVERSATION_POLICY,
+                       "project_id": view["project_id"], "revision": view["revision"],
+                       "run_id": run["run_id"], "review_digest": run["review"]["digest"],
+                       "scope": scope, "requirement_id": requirement_id,
+                       "parent_investigation_id": parent_id, "parent_record_digest": _digest(parent),
+                       "turns": selected, "history_characters": characters,
+                       "omitted_turn_count": (previous or {}).get("omitted_turn_count", 0) + len(records) - len(selected)}
+            context["digest"] = _digest(context)
+            return validate_conversation_context(context, view, requirement_id)
+
+    def start(self, project_id, revision, requirement_id, question, *, test_comparison_id=None, test_row_number=None, scope="requirement", model_choice=None, parent_investigation_id=None):
         if model_choice is not None:
             from .model_choices import candidate
             candidate(model_choice)
@@ -460,10 +529,11 @@ class WorkspaceAI:
             from .workspace_test_data import WorkspaceTestData
             view["test_evidence"] = TestEvidence(self.store, WorkspaceTestData(self.store)).investigation_context(
                 project_id, revision, requirement_id, test_comparison_id, test_row_number)
+        conversation = self._conversation(parent_investigation_id, view, requirement_id, scope)
         from .project_investigation import validate_investigation_view
         if scope == "project":
             from .whole_project_investigation import capture_context
-            capture_context(view)  # Size/integrity preflight before saving a job or reserving.
+            capture_context(view, conversation_context=conversation)  # Preflight before saving a job or reserving.
         else:
             validate_investigation_view(view, requirement_id)
         config = self._config(model_choice) if model_choice is not None else self._config()
@@ -478,11 +548,13 @@ class WorkspaceAI:
                 raise WorkspaceError("Remove private credential material from the question before saving or sending it.")
             if contains_private_text(view, self._key):
                 raise WorkspaceError("Remove private credential material from linked references before starting an investigation.")
+            if conversation is not None and contains_private_text(conversation, self._key):
+                raise WorkspaceError("Remove private credential material from the saved conversation before continuing.")
             if self._sources() != self._runtime:
                 raise ConflictError("Application sources changed. Restart 6D before an investigation.")
             identity = uuid4().hex
             record = {"schema": "sixd.project-investigation.v1", "investigation_id": identity,
-                      "project_id": project_id, "revision": revision,
+                      "project_id": project_id, "revision": revision, "run_id": view["run"]["run_id"],
                       "review_digest": view["run"]["review"]["digest"],
                       "requirement_id": requirement_id, "scope": scope, "question": question.strip(),
                       "state": "queued", "model": config.model, "provider_mode": self._provider_mode,
@@ -499,6 +571,16 @@ class WorkspaceAI:
                 record["test_evidence"] = deepcopy(view["test_evidence"])
             if "project_sources" in view:
                 record["project_sources"] = deepcopy(view["project_sources"])
+            if scope == "project":
+                captures = view["whole_project_sources"]
+                library_digests = {item.get("library_digest") for item in captures.values()}
+                record["queued_reference_context"] = {
+                    "schema": "sixd.queued-reference-context.v1",
+                    "library_digest": next(iter(library_digests)) if len(library_digests) == 1 else None,
+                    "requirement_ids": sorted(captures),
+                }
+            if conversation is not None:
+                record["conversation_context"] = deepcopy(conversation)
             with self._db() as db:
                 db.execute("INSERT INTO project_investigations VALUES (?,?,?,?,?,?,?,?,?)",
                            (identity, project_id, revision, requirement_id, record["started_at"],
@@ -561,10 +643,12 @@ class WorkspaceAI:
             if record.get("scope") == "project":
                 from .whole_project_investigation import investigate_whole_project
                 result = investigate_whole_project(view, record["question"], provider,
-                    investigation_id=record["investigation_id"], on_event=event)
+                    investigation_id=record["investigation_id"], on_event=event,
+                    conversation_context=queued.get("conversation_context"))
             else:
                 result = investigate_project(view, record["requirement_id"], record["question"], provider,
-                    investigation_id=record["investigation_id"], on_event=event)
+                    investigation_id=record["investigation_id"], on_event=event,
+                    conversation_context=queued.get("conversation_context"))
             record = {**result, "agent_sources": self._runtime, "reserved_usd": budget.reserved,
                       "request_reservations": budget.count, "provider_settings": queued["provider_settings"]}
             record.update({name: queued[name] for name in ("model_choice", "model_selection_policy",

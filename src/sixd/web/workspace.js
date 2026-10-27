@@ -10,11 +10,11 @@
   // Credentials are never assigned to application state or persistent browser storage.
   const ai = {scope:'requirement',status:null, statusError:'', statusLoading:false, evaluation:null, evaluationError:'', evaluationLoading:false, requirementId:null, question:'', records:[], error:'', loading:false, loadedContext:'', starting:false, connecting:false, context:'', generation:0, timer:null, controller:null};
   ai.testSelection=null;
-  ai.modelChoice=null;
+  ai.modelChoice=window.SixDAssistantConversation.readModelPreference();
   state.hosted=true;
   const editedDialogs=new WeakSet();
   let rocket=null;
-  const rocketUI={rendered:'',questionDrafts:new Map(),researchDrafts:new Map(),researchKey:'',researchDispose:null,researchBusy:false,openIntent:null,launchContext:'',notice:'',parkedTests:new Map(),handoffSerial:0};
+  const rocketUI={threadHeads:new Map(),attachmentController:null,rendered:'',questionDrafts:new Map(),researchDrafts:new Map(),researchKey:'',researchDispose:null,researchBusy:false,openIntent:null,launchContext:'',notice:'',parkedTests:new Map(),handoffSerial:0};
   const reviewGuide={open:false,exportedRun:null};
   try{reviewGuide.open=localStorage.getItem('sixd.review-guide.open')==='yes';}catch{}
   const testLinks={key:'',pending:'',profile:null,error:'',serial:0,controller:null,timer:null};
@@ -140,7 +140,7 @@
       if(profile.project_id!==id||profile.revision!==revision||profile.context!=='saved'||profile.run_id!==runId)throw Error('The source-library context changed. Reload the saved project.');
       sourceLinks.profile=profile;sourceLinks.key=key;
     }catch(error){if(error.name!=='AbortError'&&serial===sourceLinks.serial&&key===sourceLinkKey()){sourceLinks.profile=null;sourceLinks.key=key;sourceLinks.error=error.message;}}
-    finally{if(serial===sourceLinks.serial){sourceLinks.pending='';hydrateSourceLinks();renderAssistantContextSummary();}}
+    finally{if(serial===sourceLinks.serial){sourceLinks.pending='';hydrateSourceLinks();renderAssistantContextSummary();renderAiHistory();}}
   }
   function interfaceSlot(variant,modelIds=null){
     queueMicrotask(()=>void refreshInterfaceLinks());
@@ -969,7 +969,7 @@
       const projectId=state.data.project_id,revision=state.data.revision,runId=currentRun()?.run_id||null,mountKey=sourceLinkKey();
       sourceLinks.dispose=window.SixDSources.mount($('#sd-source-library'),{api,projectId,revision,runId,hasDraft:!!state.draft,canEdit:latest(),onChange:profile=>{
         if(mountKey!==sourceLinkKey()||profile.project_id!==projectId||profile.revision!==revision||profile.context!=='saved'||profile.run_id!==runId)return;
-        sourceLinks.serial++;sourceLinks.controller?.abort();sourceLinks.pending='';sourceLinks.profile=profile;sourceLinks.key=mountKey;sourceLinks.error='';hydrateSourceLinks();renderAssistantContextSummary();void refreshActionLinks(true);
+        sourceLinks.serial++;sourceLinks.controller?.abort();sourceLinks.pending='';sourceLinks.profile=profile;sourceLinks.key=mountKey;sourceLinks.error='';hydrateSourceLinks();renderAssistantContextSummary();renderAiHistory();void refreshActionLinks(true);
       },onAskLinkedReference:selection=>askLinkedReference(selection,mountKey)});
       return;
     }
@@ -1381,7 +1381,7 @@
     if(chosen)ai.modelChoice=chosen.id;
     select.innerHTML=rows.length?rows.map(row=>'<option value="'+esc(row.id)+'"'+(row.id===ai.modelChoice?' selected':'')+'>'+esc(row.label)+'</option>').join(''):'<option value="">Reading available models…</option>';
     select.disabled=!chosen||ai.starting||ai.status?.investigation_active||ai.records.some(investigationActive)||state.busy;
-    $('#sd-ai-model-help').textContent=chosen?chosen.description+' Selection makes no request. All models use the same saved evidence; AI cannot change calculated findings.':'Available model choices must be loaded before starting.';
+    $('#sd-ai-model-help').textContent=chosen?'Nano for quick explanations · Super for everyday review · Ultra for deeper questions.':'Available model choices must be loaded before asking.';
     const consent=$('#sd-ai-consent-model');if(consent)consent.textContent=providerModelLabel(chosen?.model||ai.status?.model);
   }
   function stopInvestigationPolling() {
@@ -1406,7 +1406,8 @@
     const context=assistantDescriptor(),parked=[...rocketUI.parkedTests.keys()].some(key=>key.startsWith(JSON.stringify([context.projectId,context.revision,context.runId]).slice(0,-1)+','));
     let reference=context.references.summary;
     if(context.references.state!=='ready')reference=sourceLinks.error?'References could not be loaded. Open saved references or refresh before relying on them.':'Loading linked references for this saved context…';
-    host.innerHTML='<div class="sd-assistant-context-heading"><strong>'+esc(context.title)+' · R'+esc(context.revision)+'</strong><span>'+esc(window.SixDWorkspaceShell.labelFor(state.page))+'</span></div><p><strong>'+esc(context.scope==='project'?'Whole project':context.requirementTitle||'No engineering check selected')+'</strong>'+(context.findingStatus?' · '+esc(human(context.findingStatus)):'')+'</p><p class="sd-small sd-muted">'+esc(context.runId?'Saved calculation '+context.runId:'No saved calculation in this revision')+'</p><p class="sd-small">'+esc(reference)+'</p>'+(context.testSelection?'<p class="sd-small">Includes selected test row '+esc(context.testSelection.rowNumber)+' from comparison '+esc(context.testSelection.comparisonId)+'.</p><button type="button" class="sd-mini-action" data-action="clear-test-selection">Clear selected test row</button>':parked?'<p class="sd-small sd-notice">A test row is parked for another check; it is not included.</p>':'')+(context.hasDraft?'<p class="sd-notice">Unsaved draft: this conversation shows the saved revision. Save the draft and calculate before asking about its changes.</p>':'')+(context.historical?'<p class="sd-notice">Historical saved revision. Reference changes are disabled.</p>':'')+(context.runStale?'<p class="sd-notice">The saved calculation needs rechecking against current sources.</p>':'')+(rocketUI.notice?'<p class="sd-small" role="status">'+esc(rocketUI.notice)+'</p>':'')+'<button type="button" class="sd-mini-action" data-action="ai-use-page-context">Use this page’s context</button>';
+    const scopeTitle=context.scope==='project'?'Whole project':window.SixDSourceTargets?.shortLabel({label:context.requirementTitle||'No check selected',target_id:'requirement:'+context.requirementId})||context.requirementTitle;
+    host.innerHTML='<details class="sd-chat-context-details"><summary><strong>'+esc(scopeTitle)+'</strong> · saved R'+esc(context.revision)+(context.findingStatus?' · '+esc(human(context.findingStatus)):'')+'</summary><p><strong>'+esc(context.title)+' · R'+esc(context.revision)+'</strong></p><p>'+esc(context.requirementTitle||'Whole project')+'</p><p class="sd-small sd-muted">'+esc(context.runId?'Saved calculation '+context.runId:'No saved calculation in this revision')+'</p><p class="sd-small">'+esc(reference)+'</p>'+(context.testSelection?'<p class="sd-small">Selected test row '+esc(context.testSelection.rowNumber)+' from comparison '+esc(context.testSelection.comparisonId)+'.</p><button type="button" class="sd-mini-action" data-action="clear-test-selection">Clear selected test row</button>':parked?'<p class="sd-small sd-notice">A test row is parked for another check; it is not included.</p>':'')+'<button type="button" class="sd-mini-action" data-action="ai-use-page-context">Use this page’s context</button></details>'+(context.hasDraft?'<p class="sd-notice">Your draft is not calculated. This conversation uses the saved revision.</p>':'')+(context.historical?'<p class="sd-notice">Historical saved revision. Reference changes are disabled.</p>':'')+(context.runStale?'<p class="sd-notice">The saved calculation needs rechecking against current sources.</p>':'')+(rocketUI.notice?'<p class="sd-small" role="status">'+esc(rocketUI.notice)+'</p>':'');
   }
   function aiStatusMarkup(owner=false) {
     const s=ai.status;if(!s)return '<p class="sd-small sd-muted">Reading AI connection status…</p>';
@@ -1495,31 +1496,33 @@
     if(ai.status.investigation_active)return 'An AI investigation is running. Wait for it to finish before starting another.';
     if(ai.records.some(investigationActive))return 'An investigation is still running for this scope.';
     if(ai.loading)return 'Reading saved investigations before allowing a new request.';
+    if(conversationHead()&&!conversationSource())return 'Reading the current references before continuing this conversation.';
     return '';
   }
   function updateAiControls() {
     rocket?.setBusy(!!(rocketUI.researchBusy||ai.starting||ai.status?.investigation_active||ai.records.some(investigationActive)));
     updateModelChoiceControls();
     const button=$('#sd-ai-start');if(!button)return;
-    const blocked=aiBlockedReason();button.disabled=!!blocked||ai.starting||state.busy||!ai.question.trim();
+    const attachment=rocketUI.attachmentController?.snapshot();const composed=questionPayload();const blocked=aiBlockedReason()||(rocketUI.attachmentController?.isBusy()?'Checking the local image before sending…':'')||(attachment?.present&&!attachment.description.trim()?'Describe or transcribe the image first. The selected model receives text, not pixels.':'')||(composed.length>2000?'Shorten the question and image notes to 2,000 characters together.':'');button.disabled=!!blocked||ai.starting||state.busy||!ai.question.trim();
     button.textContent=ai.starting?'Asking…':ai.status?.investigation_active?'Investigation running…':'Ask Nemotron';
     const presence=$('#sd-ai-presence');if(presence)presence.textContent=ai.status?.key_present?'Connected · Nebius':'AI connection unavailable';
     $('#sd-ai-blocked').textContent=blocked;$('#sd-ai-blocked').hidden=!blocked;
-    $('#sd-ai-question-count').textContent=ai.question.length+'/2000';
+    $('#sd-ai-question-count').textContent=composed.length+'/2000';$('#sd-ai-question').disabled=ai.starting||!!ai.status?.investigation_active;const attachmentsDisabled=ai.starting||!!ai.status?.investigation_active;if(ai.attachmentsDisabled!==attachmentsDisabled){ai.attachmentsDisabled=attachmentsDisabled;rocketUI.attachmentController?.setDisabled(attachmentsDisabled);}
   }
   function renderProjectAssistant() {renderUnifiedAssistant(null);}
   function renderUnifiedAssistant(requirement){
+    rocketUI.attachmentController?.dispose();rocketUI.attachmentController=null;ai.attachmentsDisabled=null;
     const isProject=ai.scope==='project',requirements=allReqs();
     const shortTitle=r=>window.SixDSourceTargets?.shortLabel({label:r.title,target_id:'requirement:'+r.id})||r.title;
-    $('#sd-rocket-ai-context').innerHTML='<div class="sd-assistant-scope-row"><label class="sd-field" for="sd-ai-scope">What should we discuss?<select id="sd-ai-scope" class="sd-input"><option value="project"'+(isProject?' selected':'')+'>Whole project</option><option value="requirement"'+(!isProject?' selected':'')+(requirements.length?'':' disabled')+'>One engineering check</option></select></label>'+(!isProject&&requirements.length?'<label class="sd-field" for="sd-rocket-requirement">Choose a check<select id="sd-rocket-requirement" class="sd-input">'+requirements.map(r=>'<option value="'+esc(r.id)+'"'+(r.id===ai.requirementId?' selected':'')+'>'+esc(shortTitle(r))+'</option>').join('')+'</select></label>':'')+'</div>';
-    const context=isProject?'Whole-project review: saved findings, declared dependencies and revision changes. It does not analyze unselected test rows, imported histories, studies or unlinked sources, and it does not rerun physics.':requirement?'Selected check: '+requirement.title+' ('+requirement.id+'). The saved finding remains authoritative. AI may inspect scoped evidence and request a supported recheck.':'No applicable check is selected. Choose the whole-project scope or define a requirement in Engineering.';
-    $('#sd-rocket-ai-body').innerHTML='<section id="sd-ai-context-summary" class="sd-assistant-context-summary" aria-label="Selected saved evidence"></section><section class="sd-assistant-compose" aria-label="Ask about saved evidence">'+modelChoiceMarkup()+'<label class="sd-field" for="sd-ai-question">Your question<textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="3" maxlength="2000" placeholder="Explain this result in simple words, or tell me what to check next.">'+esc(ai.question)+'</textarea></label><div class="sd-assistant-suggestions" aria-label="Draft a question"><button type="button" class="sd-mini-action" data-action="ai-simple-question">Explain this simply</button><button type="button" class="sd-mini-action" data-action="ai-next-question">What should I check next?</button><button type="button" class="sd-mini-action" data-action="ai-project-question">What changed?</button></div><p id="sd-ai-blocked" class="sd-notice" hidden></p><div class="sd-assistant-send-row"><span id="sd-ai-presence" class="sd-small"></span><span id="sd-ai-question-count" class="sd-small sd-muted"></span><button type="button" id="sd-ai-start" class="sd-button sd-primary" data-action="ai-start">Ask Nemotron</button></div><p class="sd-assistant-consent sd-small sd-muted">Ask sends your question and the selected saved evidence to Nemotron through Nebius. AI explains; recorded calculations stay authoritative.</p></section><details id="sd-ai-advanced" class="sd-ai-advanced"><summary>Context, sources and settings</summary><div id="sd-ai-status">'+aiStatusMarkup()+'</div><div class="sd-ai-scope"><p>'+esc(context)+'</p><p class="sd-small sd-muted">'+esc(project().name)+' · R'+state.data.revision+'</p></div><p class="sd-small sd-ai-consent">The chosen model <span id="sd-ai-consent-model">'+esc(providerModelLabel(selectedAIModel()?.model||ai.status?.model))+'</span> receives the question and scoped saved inputs, findings, model definitions and relevant pinned reference excerpts. Starting uses the approved allowance. Opening this conversation and selecting a model send nothing.</p><div class="sd-action-row"><button type="button" class="sd-button" data-action="ai-source-question">Draft a question about references</button><button type="button" class="sd-button" data-action="sources">Open saved references</button><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings</button></div></details><details id="sd-ai-history-disclosure" class="sd-ai-history-disclosure"><summary>Saved answers and evidence</summary><div id="sd-ai-history" class="sd-ai-history" aria-live="polite"></div></details>';
-    const help=$('#sd-ai-model-help');if(help)$('#sd-ai-advanced').prepend(help);
-    const disclosure=$('#sd-ai-history-disclosure'),capturedContext=ai.context;
-    rocketUI.historyOpen??=new Map();disclosure.open=rocketUI.historyOpen.get(capturedContext)||ai.records.some(investigationActive);
+    $('#sd-rocket-ai-context').innerHTML='<div class="sd-assistant-scope-row"><label class="sd-field" for="sd-ai-scope">Discuss<select id="sd-ai-scope" class="sd-input"><option value="project"'+(isProject?' selected':'')+'>Whole project</option><option value="requirement"'+(!isProject?' selected':'')+(requirements.length?'':' disabled')+'>One engineering check</option></select></label>'+(!isProject&&requirements.length?'<label class="sd-field" for="sd-rocket-requirement">Check<select id="sd-rocket-requirement" class="sd-input">'+requirements.map(r=>'<option value="'+esc(r.id)+'"'+(r.id===ai.requirementId?' selected':'')+'>'+esc(shortTitle(r))+'</option>').join('')+'</select></label>':'')+'</div>';
+    const context=isProject?'Whole-project questions use saved findings, dependencies and revision changes. Unselected tests, imports, studies and unlinked sources are not included.':requirement?'Selected check: '+requirement.title+' ('+requirement.id+'). The saved finding stays authoritative.':'Choose a saved project or engineering check.';
+    $('#sd-rocket-ai-body').innerHTML='<section id="sd-ai-context-summary" class="sd-assistant-context-summary" aria-label="Selected saved evidence"></section><div class="sd-conversation-toolbar"><span id="sd-ai-thread-note" class="sd-small sd-muted"></span><button type="button" class="sd-mini-action" data-action="ai-new-conversation">New conversation</button><button type="button" class="sd-mini-action" data-action="ai-refresh">Refresh</button></div><div id="sd-ai-transcript"></div><section class="sd-assistant-compose sd-conversation-compose" aria-label="Ask about saved evidence">'+modelChoiceMarkup()+'<label class="sd-field" for="sd-ai-question"><span class="sr-only">Your question</span><textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="2" maxlength="2000" spellcheck="true" lang="en" autocorrect="off" autocapitalize="sentences" placeholder="Ask anything about this saved design…">'+esc(ai.question)+'</textarea></label><p class="sd-small sd-muted sd-conversation-key-hint">Enter to send · Shift + Enter for a new line</p><div id="sd-ai-attachments"></div><div class="sd-assistant-suggestions" aria-label="Draft a question"><button type="button" class="sd-mini-action" data-action="ai-simple-question">Explain simply</button><button type="button" class="sd-mini-action" data-action="ai-next-question">What next?</button><button type="button" class="sd-mini-action" data-action="ai-project-question">What changed?</button></div><p id="sd-ai-blocked" class="sd-notice" hidden></p><div class="sd-assistant-send-row"><span id="sd-ai-presence" class="sd-small"></span><span id="sd-ai-question-count" class="sd-small sd-muted"></span><button type="button" id="sd-ai-start" class="sd-button sd-primary" data-action="ai-start">Ask Nemotron</button></div><p class="sd-assistant-consent sd-small sd-muted">Your question, image notes and saved evidence go to Nebius. Images stay local.</p></section><div class="sd-chat-extra"><details id="sd-ai-advanced" class="sd-ai-advanced"><summary>Context, sources and settings</summary><div id="sd-ai-status">'+aiStatusMarkup()+'</div><div class="sd-ai-scope"><p>'+esc(context)+'</p><p class="sd-small sd-muted">'+esc(project().name)+' · R'+state.data.revision+'</p></div><p class="sd-small sd-ai-consent">The selected model <span id="sd-ai-consent-model">'+esc(providerModelLabel(selectedAIModel()?.model||ai.status?.model))+'</span> receives scoped saved inputs, findings, model definitions and pinned reference excerpts. A follow-up also includes bounded prior conversation text from this same evidence context. Opening or choosing makes no request.</p><p class="sd-small">Spelling suggestions use your browser settings. Right-click an underlined word to choose a correction; 6D never rewrites your question automatically.</p><div class="sd-action-row"><button type="button" class="sd-button" data-action="ai-source-question">Draft a reference question</button><button type="button" class="sd-button" data-action="sources">Open saved references</button><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings</button></div></details><details id="sd-ai-history-disclosure" class="sd-ai-history-disclosure"><summary>Saved conversations</summary><div id="sd-ai-history" class="sd-ai-history"></div></details></div>';
+    const capturedContext=ai.context,disclosure=$('#sd-ai-history-disclosure');
+    rocketUI.historyOpen??=new Map();disclosure.open=rocketUI.historyOpen.get(capturedContext)||false;
     disclosure.addEventListener('toggle',()=>{rocketUI.historyOpen.set(capturedContext,disclosure.open);if(rocketUI.historyOpen.size>50)rocketUI.historyOpen.delete(rocketUI.historyOpen.keys().next().value);});
+    rocketUI.attachmentController=window.SixDAssistantAttachments.mount($('#sd-ai-attachments'),{contextKey:capturedContext,onChange:()=>updateAiControls()});
     if(ai.testSelection&&requirement){
-      $('#sd-rocket-ai-body .sd-ai-scope').insertAdjacentHTML('beforeend','<p class="sd-small">Includes selected test row '+esc(ai.testSelection.rowNumber)+' from comparison <span class="sd-receipt">'+esc(ai.testSelection.comparisonId)+'</span>, with its captured baseline and applicability.</p><button type="button" class="sd-mini-action" data-action="clear-test-selection">Clear selected test row</button>'+testEvidenceSlot('assistant',[requirement.id]));hydrateTestLinks();
+      $('#sd-rocket-ai-body .sd-ai-scope').insertAdjacentHTML('beforeend','<p class="sd-small">Selected test row '+esc(ai.testSelection.rowNumber)+' from comparison <span class="sd-receipt">'+esc(ai.testSelection.comparisonId)+'</span>.</p><button type="button" class="sd-mini-action" data-action="clear-test-selection">Clear selected test row</button>'+testEvidenceSlot('assistant',[requirement.id]));hydrateTestLinks();
     }
     renderAssistantContextSummary();void refreshSourceLinks();renderAiHistory();updateAiControls();
     if(ai.loadedContext!==ai.context&&!ai.loading)void loadInvestigations();
@@ -1749,11 +1752,53 @@
     const track=current&&['not_met','not_assessed'].includes(record.canonical_finding?.status)?'<button type="button" class="sd-mini-action" data-track-action="'+esc('finding:'+record.requirement_id)+'">Track follow-up for this finding</button>':'';
     return '<details class="sd-source sd-ai-reference-snapshot"><summary>References captured for this investigation ('+captured.links.length+')</summary><p class="sd-small">These are pinned supplemental references. Later library edits do not replace them, and their contents do not change the numerical finding.</p>'+window.SixDSources.render({...captured,context:'saved'},{requirementIds:[record.requirement_id],modelIds:modelId?[modelId]:[captured.model_id]})+(captured.omitted_links?'<p class="sd-notice">'+esc(captured.omitted_links)+' relevant links were omitted by the captured context bound.</p>':'')+'<p class="sd-receipt">Original library '+esc(captured.library_digest)+'<br>Captured context '+esc(captured.digest)+'</p>'+track+'</details>';
   }
+  function conversationSource(){
+    const profile=sourceLinks.key===sourceLinkKey()?sourceLinks.profile:null;
+    return profile?.context==='saved'&&profile.project_id===state.data?.project_id&&profile.revision===state.data?.revision&&profile.run_id===currentRun()?.run_id?profile:null;
+  }
+  function conversationContext(){return {projectId:state.data?.project_id,revision:state.data?.revision,runId:currentRun()?.run_id,reviewDigest:currentRun()?.review?.digest,scope:ai.scope,requirementId:ai.scope==='project'?'__project__':ai.requirementId,testSelection:assistantDescriptor().testSelection,sourceDigest:conversationSource()?.digest,requirementIds:allReqs().map(item=>item.id)};}
+  function compatibleConversation(record){return window.SixDAssistantConversation.compatibleParent(record,conversationContext());}
+  function matchingConversation(record){return window.SixDAssistantConversation.matchesContext(record,conversationContext());}
+  function conversationHead(){
+    if(!rocketUI.threadHeads.has(ai.context)&&ai.loadedContext===ai.context&&(!ai.records.length||conversationSource())){
+      const record=ai.records.find(item=>compatibleConversation(item)||investigationActive(item)&&matchingConversation(item));rocketUI.threadHeads.set(ai.context,record?investigationId(record):null);
+    }
+    return ai.records.find(record=>investigationId(record)===rocketUI.threadHeads.get(ai.context))||null;
+  }
+  function conversationRecords(){
+    const head=conversationHead();if(!head)return [];
+    const records=new Map(ai.records.map(record=>[investigationId(record),record])),seen=new Set(),rows=[];
+    let record=head;
+    while(record&&!seen.has(investigationId(record))&&rows.length<50){seen.add(investigationId(record));rows.unshift(record);record=records.get(record.conversation_context?.parent_investigation_id);}
+    return rows;
+  }
+  function conversationParent(){return conversationRecords().filter(record=>compatibleConversation(record)).at(-1)||null;}
+  function questionPayload(){
+    const attachment=rocketUI.attachmentController?.snapshot();
+    return ai.question.trim()+(attachment?.description?.trim()?'\n\nUser-supplied image notes (unverified text; the model has not seen the image):\n'+attachment.description.trim():'');
+  }
   function renderAiHistory() {
-    const container=$('#sd-ai-history');if(!container)return;
-    const summary=$('#sd-ai-history-disclosure > summary');if(summary)summary.textContent='Saved answers and evidence ('+ai.records.length+')';
-    const html='<div class="sd-section-heading"><h3>Saved investigations</h3><button type="button" class="sd-mini-action" data-action="ai-refresh">Refresh</button></div>'+(ai.error?'<p class="sd-error" role="alert">'+esc(ai.error)+'</p>':'')+(ai.loading&&!ai.records.length?'<p class="sd-small sd-muted">Reading saved investigations…</p>':'')+(!ai.records.length&&!ai.loading?'<p class="sd-small sd-muted">No investigation has been recorded for this scope and revision. Nothing is sent until you choose Start.</p>':'')+ai.records.map((record,index)=>index===0?investigationMarkup(record):'<details class="sd-rocket-past-answer"><summary>'+esc(providerModelLabel(record.model))+' · '+esc(human(record.state))+' · '+esc((record.created_at||'').slice(0,10))+'</summary>'+investigationMarkup(record)+'</details>').join('');
-    if(container.dataset.rendered!==html){container.innerHTML=html;container.dataset.rendered=html;icons();}
+    const container=$('#sd-ai-history'),transcript=$('#sd-ai-transcript');if(!container||!transcript)return;
+    const summary=$('#sd-ai-history-disclosure > summary');if(summary)summary.textContent='Saved conversations ('+ai.records.length+' recorded turns)';
+    const rows=conversationRecords();
+    const turns=rows.map(record=>{
+      const current=matchingConversation(record);
+      let canonical='';
+      if(record.canonical_finding){const f=record.canonical_finding;canonical='<span>Saved criterion: '+chip(findingStatus(f))+'</span>'+(f.evidence?'<p>'+measure(f.evidence.metric)+' compared with '+esc(f.evidence.operator)+' '+measure(f.evidence.limit)+'</p>':'');}
+      else if(record.scope==='project'){const values=Object.values(record.canonical_findings||{});canonical='<span>Saved project: '+values.filter(f=>f.status==='met').length+' criteria met · '+values.filter(f=>f.status==='not_met').length+' unmet · '+values.filter(f=>f.status==='not_assessed').length+' not assessed.</span>';}
+      const answer=record.summary?(record.scope==='project'?'<p class="sd-ai-summary-text">'+esc(record.summary)+'</p>':record.evidence_facts_prose_policy==='application_roles_v1'?'<p class="sd-ai-summary-text">'+esc(record.summary)+'</p>':evidenceInterpretationMarkup(record.summary,record)):'';
+      return {id:investigationId(record),question:record.question,modelLabel:providerModelLabel(record.model),timeLabel:record.created_at?new Date(record.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'',state:record.state,answerHtml:answer,canonicalHtml:canonical,detailsHtml:investigationMarkup(record),failureHtml:investigationFailureMarkup(record),notice:!current?'This saved answer uses a different test or reference context. Your next question starts fresh with the selected saved evidence.':record.provider_mode&&record.provider_mode!=='live_token_factory'?'Offline test provider; not a live model response.':''};
+    });
+    const openIds=new Set([...transcript.querySelectorAll('details[data-conversation-details][open]')].map(node=>node.dataset.conversationDetails));
+    const last=turns.at(-1),turnKey=last?last.id+':'+last.state:'';const previousTurn=transcript.dataset.lastTurn;
+    const html=(ai.error?'<p class="sd-error" role="alert">'+esc(ai.error)+'</p>':'')+window.SixDAssistantConversation.render({turns,emptyMessage:ai.loading?'Reading your saved conversations…':'Ask about a result, an engineering term or the next check. You can follow up in the same conversation.'});
+    if(transcript.dataset.rendered!==html){transcript.innerHTML=html;transcript.dataset.rendered=html;transcript.querySelectorAll('details[data-conversation-details]').forEach(node=>{if(openIds.has(node.dataset.conversationDetails))node.open=true;});icons();}
+    transcript.dataset.lastTurn=turnKey;
+    const suggestions=$('#sd-rocket-ai-body .sd-assistant-suggestions');if(suggestions)suggestions.hidden=rows.length>0;
+    if(last?.state==='completed'&&turnKey!==previousTurn&&!openIds.size)requestAnimationFrame(()=>{const answer=transcript.querySelector('.sd-conversation-turn:last-child .sd-conversation-answer');if(answer)transcript.scrollTop+=answer.getBoundingClientRect().top-transcript.getBoundingClientRect().top;});
+    const note=$('#sd-ai-thread-note');if(note)note.textContent=rows.length?(conversationParent()?'Follow up below · same saved evidence'+(conversationHead()?.conversation_context?.omitted_turn_count?' · recent turns sent':''):'Saved conversation · next question starts fresh'):'New conversation · same saved evidence';
+    const archive=ai.records.map(record=>'<button type="button" class="sd-saved-conversation" data-ai-resume="'+esc(investigationId(record))+'"><strong>'+esc((record.question||'Saved question').slice(0,140))+'</strong><span>'+esc(providerModelLabel(record.model))+' · '+esc(human(record.state))+'</span></button>').join('');
+    if(container.dataset.rendered!==archive){container.innerHTML=archive;container.dataset.rendered=archive;}
     updateAiControls();
   }
   async function openAssistant(requirementId) {
@@ -1787,15 +1832,15 @@
   }
   async function startInvestigation() {
     syncAssistantContext();const blocked=aiBlockedReason();
-    if(blocked||ai.starting||!ai.question.trim()){updateAiControls();return;}
-    const context=ai.context;ai.starting=true;ai.error='';rocketUI.historyOpen??=new Map();rocketUI.historyOpen.set(context,true);const history=$('#sd-ai-history-disclosure');if(history)history.open=true;updateAiControls();
+    if(blocked||ai.starting||rocketUI.attachmentController?.isBusy()||!ai.question.trim()||questionPayload().length>2000||rocketUI.attachmentController?.snapshot().present&&!rocketUI.attachmentController.snapshot().description.trim()){updateAiControls();return;}
+    const context=ai.context;ai.starting=true;ai.error='';updateAiControls();
     try{
       const selection=ai.testSelection;
       const chosen=selectedAIModel();
       if(!chosen)throw Error('Choose an available investigation model before starting.');
-      const record=await api('/api/investigations',{project_id:state.data.project_id,revision:state.data.revision,...(ai.scope==='project'?{scope:'project'}:{requirement_id:ai.requirementId}),question:ai.question.trim(),model_choice:chosen.id,...(selection?{test_comparison_id:selection.comparisonId,test_row_number:selection.rowNumber}:{})});
+      const record=await api('/api/investigations',{project_id:state.data.project_id,revision:state.data.revision,...(ai.scope==='project'?{scope:'project'}:{requirement_id:ai.requirementId}),question:questionPayload(),model_choice:chosen.id,...(conversationParent()?{parent_investigation_id:investigationId(conversationParent())}:{}),...(selection?{test_comparison_id:selection.comparisonId,test_row_number:selection.rowNumber}:{})});
       if(context!==ai.context)return;
-      ai.records=[record,...ai.records.filter(item=>investigationId(item)!==investigationId(record))];renderAiHistory();
+      rocketUI.threadHeads.set(context,investigationId(record));ai.question='';rocketUI.questionDrafts.set(context,'');const question=$('#sd-ai-question');if(question)question.value='';rocketUI.attachmentController?.clear();ai.records=[record,...ai.records.filter(item=>investigationId(item)!==investigationId(record))];renderAiHistory();
       scheduleInvestigationPoll(ai.generation,context);await refreshAiStatus();
     }catch(error){if(context===ai.context){ai.error='The investigation was not started or could not be confirmed. Refresh saved investigations before trying again. '+error.message;renderAiHistory();}}
     finally{if(context===ai.context){ai.starting=false;updateAiControls();}}
@@ -1947,6 +1992,7 @@
     if(name==='project-investigate'){openRocket({scope:'project'});return;}
     if(name==='requirement-investigate'){openRocket({scope:'requirement'});return;}
     if(name==='ai-simple-question'||name==='ai-next-question'||name==='ai-project-question'){ai.question=name==='ai-simple-question'?'Explain this saved evidence in simple words.':name==='ai-next-question'?'What should I check next, based on this saved evidence?':'What changed in this saved design, and why does it matter?';$('#sd-ai-question').value=ai.question;updateAiControls();return;}
+    if(name==='ai-new-conversation'){if(ai.starting||ai.records.some(investigationActive))return;rocketUI.threadHeads.set(ai.context,null);ai.question='';rocketUI.questionDrafts.set(ai.context,'');$('#sd-ai-question').value='';rocketUI.attachmentController?.clear();renderAiHistory();$('#sd-ai-question').focus();return;}
     if(name==='ai-start'){await startInvestigation();return;}
     if(name==='ai-refresh'){await Promise.allSettled([refreshAiStatus(),loadInvestigations()]);return;}
     if(name==='rocket-reference'){await showImport('rocket_review');return;}
@@ -2052,6 +2098,7 @@
       if(id!==state.data?.project_id&&dirty()&&!window.confirm('Discard unsaved draft changes and open this project?'))return;
       void perform(async()=>{await load(id);state.page='review-home';state.panel='details';root.classList.remove('sd-tree-open');render();});return;
     }
+    if(button.dataset.aiResume){if(ai.starting||ai.records.some(investigationActive))return;rocketUI.threadHeads.set(ai.context,button.dataset.aiResume);renderAiHistory();$('#sd-ai-history-disclosure').open=false;$('#sd-ai-question').focus();return;}
     if(button.dataset.authorAdd){openEditor(button.dataset.authorAdd);return;}
     if(button.dataset.authorEdit){openEditor(button.dataset.authorEdit,button.dataset.id);return;}
     if(button.dataset.authorRemove){
@@ -2086,6 +2133,9 @@
     if(button.dataset.investigate){select('requirement',button.dataset.investigate,true);return;}
     if(button.dataset.kind)select(button.dataset.kind,button.dataset.id);
   });
+  root.addEventListener('keydown',event=>{
+    if(event.target.id==='sd-ai-question'&&event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();if(!$('#sd-ai-start')?.disabled)void startInvestigation();}
+  });
   root.addEventListener('input',event=>{
     if(state.busy)return;
     const el=event.target;
@@ -2107,7 +2157,7 @@
     if(el.id==='sd-rocket-requirement'){if(req(el.value)){changeAssistantContext({scope:'requirement',requirementId:el.value},true);renderRocket(true);}return;}
     if(el.id==='sd-ai-model'){
       if(ai.starting||ai.status?.investigation_active||ai.records.some(investigationActive)){updateModelChoiceControls();return;}
-      if(modelChoices().some(row=>row.id===el.value)){ai.modelChoice=el.value;const status=$('#sd-ai-status');if(status)status.innerHTML=aiStatusMarkup();updateAiControls();}
+      if(modelChoices().some(row=>row.id===el.value)){ai.modelChoice=el.value;window.SixDAssistantConversation.writeModelPreference(el.value);const status=$('#sd-ai-status');if(status)status.innerHTML=aiStatusMarkup();updateAiControls();}
       return;
     }
     if(el.closest('#sd-author-form')&&el.matches('select[name="type"],select[name="model_id"],select[name="metric"]')){
