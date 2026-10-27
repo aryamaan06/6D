@@ -1,1 +1,4 @@
 * text=auto eol=lf
+
+# Preserve the pinned upstream OFL notice byte-for-byte, including its own spacing.
+src/sixd/web/fonts/OFL-Geist.txt -whitespace

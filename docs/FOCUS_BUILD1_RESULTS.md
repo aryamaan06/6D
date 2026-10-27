@@ -24,7 +24,7 @@ A header sidebar toggle and Ctrl/Cmd + backslash shortcut preserve the mounted p
 | Existing Node contracts | **15 passed:** history and exact saved assistant context. |
 | Actual owner | All 13 projects remain visible. The existing walkthrough opens, uses Geist Sans with heading weight 700, and hides/restores its sidebar. No owner calculation, draft save, inference, search or upload was initiated. |
 | Preservation | All **28 checks matched exactly**: 23 active database tables, three encrypted credential files and two service/model configuration files. Existing records, failures, defaults and allowances were retained. All three services restored present/remembered without credential errors. |
-| Runtime/source policy | 64 Python files pass canonical LF checks; JavaScript syntax and whitespace pass. Exact committed Python bytes and remote synchronization are checked on publication. |
+| Runtime/source policy | 64 Python files pass canonical LF checks; JavaScript syntax and first-party whitespace checks pass. The unchanged upstream OFL notice retains its original spacing under a narrow Git whitespace exemption; its committed hash is verified. Exact committed Python bytes and remote synchronization are checked on publication. |
 
 An integration review caught the omitted nested font package-data patterns; these were corrected and checked. A final owner inspection found an older module overriding heading weight, so shared heading weights were made explicit and a legacy-override rendering case verifies them. The browser DOM inspection interface could not enumerate FontFace records; actual decoding/metrics were instead verified by the dedicated Chromium fixture and computed family/weight were inspected in the owner UI.
 
