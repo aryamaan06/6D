@@ -10,7 +10,7 @@
 
 ## Try it
 
-**Focus refinement Build 3:** the rocket now presents a question/answer conversation with bounded saved-context follow-ups, remembered Nano/Super/Ultra preference, local image notes and native spelling. Images stay local because these models accept text only. [Guide](docs/FOCUS_BUILD3.md) · [Offline verification and pending live check](docs/FOCUS_BUILD3_RESULTS.md).
+**Focus refinement Build 3:** the rocket now presents a question/answer conversation with bounded saved-context follow-ups, remembered Nano/Super/Ultra preference, local image notes and native spelling. Images stay local because these models accept text only. Offline checks passed; the approved Super smoke check hit the final-answer output limit, so live follow-ups remain unverified. [Guide](docs/FOCUS_BUILD3.md) · [Verification and scoped live result](docs/FOCUS_BUILD3_RESULTS.md).
 
 **Focus refinement Build 2:** see calculation conclusions first, expand graphs and evidence on demand, and use **Engine thrust → Edit thrust** for your own sourced value. Staging, saving and calculating remain separate. [Guide](docs/FOCUS_BUILD2.md) · [Checks and preservation](docs/FOCUS_BUILD2_RESULTS.md). Build 3 subsequently delivered the conversation interface; new live qualification remains separately pending.
 

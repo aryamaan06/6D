@@ -20,7 +20,7 @@
         "Centered chat starts invitingly, native spelling is explicit, and Ultra choice survives reload without a request or server-default change",
         "A direct question is followed by its accepted plain-language answer before collapsed evidence, with the canonical result visible and composer cleared",
         "Follow-up is a second explicit turn with a server-validated parent and captured conversation; Shift+Enter adds a line and full historical evidence remains accessible",
-        "New/resumed conversations send nothing; image preview and notes survive close, and only explicitly supplied text is sent\u2014no pixels, filename or hidden vision claim",
+        "New/resumed conversations send nothing; image preview and notes survive close, and only explicitly supplied text is sent—no pixels, filename or hidden vision claim",
         "Tavily spelling changes only user text, mobile chat stays contained, and original project/sources/allowance remain unchanged without external traffic"
       ],
       "browser_errors": [],
@@ -98,7 +98,7 @@
         "Visible references use the exact selected check/model scope and separate current links from unresolved links",
         "Existing hidden exact-row handoff opens its own requirement from prior project scope; another check parks the row and returning restores it",
         "No context choice triggers a provider request; one explicit synthetic Ask sends exactly the selected requirement and test row",
-        "Project and historical-revision changes do not attach another context\u2019s question or row; historical answers stay scoped and reference search is blocked",
+        "Project and historical-revision changes do not attach another context’s question or row; historical answers stay scoped and reference search is blocked",
         "An open draft describes the saved baseline and blocks Ask and reference search until saved or discarded",
         "Saved designs, reference snapshots, historical receipts and allowance ceiling remain unchanged; no external requests or browser errors occur"
       ],
@@ -114,7 +114,8 @@
     "all_matched": true,
     "database_tables": 23,
     "encrypted_credentials": 3,
-    "configuration_files": 2
+    "configuration_files": 2,
+    "phase": "offline_delivery_before_approved_live_check"
   },
   "services_restored": {
     "nebius": {
@@ -154,15 +155,39 @@
     "memory_contexts": 4,
     "permanent_browser_storage": false
   },
-  "paid_calls": 0,
+  "paid_calls": 5,
   "live_check": {
-    "state": "not_run",
-    "reason": "Specific payload/spend approval pending after automatic approval review rejection.",
-    "proposed_maximum_jobs": 2,
-    "proposed_reservation_ceiling_usd": 0.4,
-    "automatic_retries": false
+    "state": "failed_first_turn",
+    "reason": "Final native-tool action reached the configured 2048-token output ceiling.",
+    "result_file": "FOCUS_BUILD3_LIVE_CHECK.json",
+    "explicit_payload_and_spend_approval": true,
+    "previous_automatic_rejection_retained": true,
+    "maximum_jobs": 2,
+    "jobs_started": 1,
+    "jobs_completed": 0,
+    "request_attempts": 5,
+    "accepted_intermediate_responses": 4,
+    "accepted_final_answers": 0,
+    "reserved_usd": 0.0843252,
+    "reservation_ceiling_usd": 0.4,
+    "followup_sent": false,
+    "live_followup_verified": false,
+    "automatic_retries": false,
+    "preservation": {
+      "exact_matches": 26,
+      "checks": 28,
+      "authorized_new_investigation_rows": 1,
+      "original_investigation_rows_preserved": 27,
+      "ledger_only_reservation_changed": true,
+      "reservation_delta_usd": 0.0843252,
+      "all_other_tables_credentials_and_configs_unchanged": true,
+      "canonical_saved_view_unchanged": true,
+      "allowance_ceiling_unchanged": true,
+      "server_default_unchanged": true
+    }
   },
   "new_physics_validation": false,
   "new_live_ai_qualification": false,
-  "public_deployment": false
+  "public_deployment": false,
+  "paid_calls_basis": "Actual dispatched Nebius requests in the separately approved smoke check; not accepted final answers."
 }

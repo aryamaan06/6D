@@ -1,0 +1,68 @@
+{
+  "schema": "sixd.focus-build3-live-check.v1",
+  "date": "2026-10-27",
+  "build_id": "09318028ba85",
+  "scope": "User-approved two-turn Super smoke check using constructed R3 burnout-altitude evidence; second turn requires a first accepted answer.",
+  "state": "failed_first_turn",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "receipt_id": "55fc139df79744c0865a79069ff03672",
+  "started_at": "2026-10-27T15:42:58.458713Z",
+  "completed_at": "2026-10-27T15:43:20.868519Z",
+  "elapsed_seconds": 22.409806,
+  "explicit_jobs_approved": 2,
+  "jobs_started": 1,
+  "jobs_completed": 0,
+  "request_attempts": 5,
+  "accepted_intermediate_responses": 4,
+  "accepted_final_answers": 0,
+  "required_actions_completed": [
+    "read_requirement",
+    "read_model",
+    "read_changes",
+    "recheck_model"
+  ],
+  "error_code": "provider_output_limit",
+  "provider_diagnostic": {
+    "content_present": false,
+    "finish_reason": "length",
+    "inference_profile": "native_no_thinking",
+    "max_output_tokens": 2048,
+    "response_shape": "native_tool_call",
+    "tool_call_count": 1,
+    "usage": {
+      "completion_tokens": 2048,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "prompt_tokens": 21427,
+      "total_tokens": 23475
+    }
+  },
+  "reserved_usd": 0.0843252,
+  "reservation_ceiling_usd": 0.4,
+  "accounting": "Conservative request reservations, not provider billed usage.",
+  "followup_sent": false,
+  "live_followup_verified": false,
+  "automatic_retries": 0,
+  "images_sent": false,
+  "tavily_searches": 0,
+  "langsmith_uploads": 0,
+  "source_count": 39,
+  "agent_sources_sha256": "38092a4d7c409c35f7c81c940d4c5a75076d790f8eb2e46074289ea2088ac94a",
+  "preservation": {
+    "exact_matches": 26,
+    "checks": 28,
+    "authorized_new_investigation_rows": 1,
+    "original_investigation_rows_preserved": 27,
+    "ledger_only_reservation_changed": true,
+    "reservation_delta_usd": 0.0843252,
+    "all_other_tables_credentials_and_configs_unchanged": true,
+    "canonical_saved_view_unchanged": true,
+    "allowance_ceiling_unchanged": true,
+    "server_default_unchanged": true
+  },
+  "prior_automatic_approval_rejection": "Retained history: no execution or reservation before explicit payload/spend approval.",
+  "conclusion": "Final native-tool action was truncated at its output ceiling. No answer or live follow-up success established; no retry. Large final prompt alone does not establish a unique cause.",
+  "new_live_ai_qualification": false,
+  "independent_semantic_validation": false
+}

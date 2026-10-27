@@ -25,16 +25,22 @@ The browser remembers Nano/Super/Ultra choice only as a UI preference. Image sig
 | Image privacy/intent | PNG/JPEG/WebP preview, invalid formats/signatures/size/dimensions/animations/decoding, context isolation, four-context memory bound, removal/clear and held-decode/cancellation behavior passed. Submitted payload contains only notes, with no filename, image bytes, base64, image URL or vision claim. |
 | Evidence/workflows | Canonical criteria remain visible before expandable evidence. Exact source save/link/Ask, selected test row, history, drafts, fonts, mobile containment, hosted owner boundaries and original design/metric values pass the regression fixtures. |
 | Actual owner | The existing historical R3 walkthrough and its preserved Nano answer were inspected read-only through the rocket. No owner question, calculation, draft save, image transfer, search or metrics upload was initiated. |
-| Preservation | All **28 original-state checks match exactly**: 23 database tables, three encrypted credential files and two configuration files. All three remembered services restore present/remembered without credential errors. |
+| Preservation | Before the separately approved live check, all **28 original-state checks matched exactly**: 23 database tables, three encrypted credential files and two configuration files. All three remembered services restore present/remembered without credential errors. |
 | Source/runtime | All **38** browser JavaScript files parse; all **64** Python runtime files pass LF consistency. Committed-byte consistency and remote synchronization are checked on publication. |
 
 Review caught and corrected automatic selection of a different test/reference parent, loss of active queued context on reload, a Send-versus-image-check race, and a chat layout that gave too little room to the answer. Earlier test failures included a stale strict-tool-schema fixture, local socket permissions and selectors that assumed context metadata was always expanded. Failed runs are not counted as passing. The final affected tests pass; this is not a fresh full-suite or independent semantic/physics validation.
 
-## Live test status
+## Approved live smoke check — first turn failed
 
-**No paid inference, Tavily search or LangSmith upload ran for this milestone.** Automatic approval review blocked a proposed two-turn Super check because earlier approvals did not clearly cover transmitting this specific saved evidence/follow-up payload to Nebius with a $0.40 ceiling. An explicit approval question was presented; the test remains unrun while that approval is pending. No indirect workaround or retry was executed, and no cost was reserved.
+After the offline delivery, Arya explicitly approved two Super turns on the constructed R3 burnout-altitude evidence, with the first accepted answer supplied to the second turn, a combined **$0.40 reservation ceiling**, no images/other-service uploads and no automatic retries. The earlier automatic approval rejection remains part of the history: it caused no execution or reservation before this specific approval.
 
-Existing live receipts remain historical after these prompt/conversation source changes. Synthetic completion establishes the protocol and UI path, not current model answer quality. Independent human review, a newly approved live conversation and public hosting are not claimed by this result.
+**One job started; no final answer completed.** Super successfully selected `read_requirement`, `read_model`, `read_changes` and `recheck_model`. Its fifth request, the final native-tool response, returned `finish_reason=length`: **2,048 completion tokens** exhausted the configured **2,048-token output ceiling**; recorded reasoning-token count was zero. The final request contained 21,427 prompt tokens. This demonstrates truncation under the current settings; the retained diagnostic does not prove which prompt detail caused it. No incomplete answer was accepted.
+
+The job retained **five requests, four accepted intermediate responses and $0.0843252 in conservative reservations**, not billed cost. Because the first answer failed, **the second turn was not sent and live follow-up behavior remains unverified**. No retry, Tavily search or LangSmith upload ran. [Sanitized live result](validation/FOCUS_BUILD3_LIVE_CHECK.json) retains the receipt identity, diagnostic, timing and source fingerprint without raw prompts, engineering inputs or credentials.
+
+After this authorized test, **26 of 28 preservation checks still match exactly**. The only changes are one appended failed investigation (all 27 earlier investigation rows retained) and its matching reservation increase. Every other table, all three encrypted credentials and both configurations are unchanged; the R3 saved view, newer revisions, allowance ceiling and server model default are unchanged.
+
+The offline UI/protocol verification above remains valid. This smoke check does **not** establish current live conversation quality, Nano/Ultra qualification, independent semantic/physics validation or public hosting. The failed receipt remains intact. The next correction should address the final-answer output/payload budget and be verified offline before any separately approved new live attempt.
 
 ## Reproduce
 
