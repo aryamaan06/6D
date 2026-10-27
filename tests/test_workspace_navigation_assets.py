@@ -65,6 +65,7 @@ class WorkspaceNavigationAssetTests(unittest.TestCase):
         assets.feed(body.decode("utf-8"))
         self.assertLess(assets.scripts.index("/workspace-navigation.js"), assets.scripts.index("/workspace.js"))
         self.assertLess(assets.scripts.index("/workspace-shell.js"), assets.scripts.index("/workspace.js"))
+        self.assertLess(assets.scripts.index("/workspace-sidebar.js"), assets.scripts.index("/workspace.js"))
         self.assertLess(assets.scripts.index("/rocket-assistant.js"), assets.scripts.index("/workspace.js"))
         self.assertLess(assets.scripts.index("/assistant-context.js"), assets.scripts.index("/workspace.js"))
         self.assertLess(assets.scripts.index("/rocket-renderer.js"), assets.scripts.index("/rocket-assistant.js"))
@@ -74,11 +75,31 @@ class WorkspaceNavigationAssetTests(unittest.TestCase):
         self.assertIn("/navigation.css", assets.styles)
         self.assertTrue(all(path.startswith("/") and not path.startswith("//")
                             for path in assets.scripts + assets.styles))
-        for path in ["/workspace-navigation.js", "/workspace-shell.js", "/navigation.css", "/typography.css", "/rocket-renderer.js", "/rocket-assistant.js", "/rocket-assistant.css", "/source-targets.js", "/assistant-context.js"]:
+        for path in ["/workspace-navigation.js", "/workspace-shell.js", "/workspace-sidebar.js", "/navigation.css", "/typography.css", "/rocket-renderer.js", "/rocket-assistant.js", "/rocket-assistant.css", "/source-targets.js", "/assistant-context.js"]:
             status, mime, body = self.request(path)
             self.assertEqual(status, 200, path)
             self.assertTrue(body, path)
             self.assertIn("javascript" if path.endswith(".js") else "text/css", mime)
+        self.assertEqual(self.server.store.list_projects(), before)
+
+    def test_fonts_are_exact_local_assets_under_a_same_origin_font_policy(self):
+        before = self.server.store.list_projects()
+        for name in ["GeistSans-variable.woff2", "GeistSans-italic-variable.woff2",
+                     "GeistMono-variable.woff2", "GeistMono-italic-variable.woff2"]:
+            status, mime, body = self.request("/fonts/" + name)
+            self.assertEqual((status, mime), (200, "font/woff2"))
+            self.assertTrue(body.startswith(b"wOF2"))
+            self.assertEqual(body, (ROOT / "src/sixd/web/fonts" / name).read_bytes())
+        connection = HTTPConnection("127.0.0.1", self.server.server_port, timeout=20)
+        try:
+            connection.request("GET", "/")
+            response = connection.getresponse()
+            self.assertIn("font-src 'self'", response.getheader("Content-Security-Policy"))
+            response.read()
+        finally:
+            connection.close()
+        for path in ["/fonts/not-published.woff2", "/fonts/../AGENTS.md", "/fonts/.local/credentials/nebius.dpapi"]:
+            self.assertIn(self.request(path)[0], {400, 403, 404})
         self.assertEqual(self.server.store.list_projects(), before)
 
     def test_static_allowlist_does_not_expose_repository_or_private_state(self):

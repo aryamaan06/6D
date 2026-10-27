@@ -10,6 +10,8 @@
 
 ## Try it
 
+**Focus refinement Build 1:** stable rocket scrolling, genuine self-hosted Geist fonts and a **Hide sidebar / Show sidebar** control give the main work area more room. [Guide](docs/FOCUS_BUILD1.md) · [Checks and preservation](docs/FOCUS_BUILD1_RESULTS.md). Result-first page restructuring and conversational AI are separate proposed work.
+
 **Part 3 companion/context update:** the rocket parks clear of controls and has dock/reset/minimize options. The composer shows its saved evidence context, and reference preview → draft → save → link → question are explicit steps with unfinished drafts protected. [Guide](docs/PART3_ASSISTANT_WORKFLOW.md) · [Verification and preservation](docs/PART3_ASSISTANT_WORKFLOW_RESULTS.md).
 
 **Part 2 readability update:** long authoring records and project context are grouped into expandable sections, repeated page introductions are reduced, compact quantities share SI typography with exact evidence still available, and similarly named projects show distinct ID-based labels without renaming or deleting records. [Guide](docs/PART2_READABILITY.md) · [Verification and preservation audit](docs/PART2_READABILITY_RESULTS.md). Part 3 subsequently delivered the companion refinements.

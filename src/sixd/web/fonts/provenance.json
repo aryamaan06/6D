@@ -1,0 +1,44 @@
+{
+  "schema": "sixd.font-provenance.v1",
+  "family": "Geist Sans and Geist Mono",
+  "upstream": "https://github.com/vercel/geist-font",
+  "release": "v1.8.2",
+  "release_url": "https://github.com/vercel/geist-font/releases/tag/v1.8.2",
+  "archive_url": "https://github.com/vercel/geist-font/releases/download/v1.8.2/geist-font-v1.8.2.zip",
+  "archive_sha256": "43ffb66912b1c49e40c371d96e86b3b3dab42db83eb2d0c8a17321210394c4c7",
+  "license": "SIL Open Font License 1.1",
+  "modified": false,
+  "note": "Files are copied unchanged from the official release; filenames are shortened for local routes. No CDN requests occur at runtime.",
+  "files": [
+    {
+      "file": "GeistSans-variable.woff2",
+      "archive_member": "geist-font/Geist/webfonts/Geist[wght].woff2",
+      "bytes": 69560,
+      "sha256": "206f01ed08e05c98a51daa7472331c3c71bbb8c1f9d55ea8c70074f3c528a706"
+    },
+    {
+      "file": "GeistSans-italic-variable.woff2",
+      "archive_member": "geist-font/Geist/webfonts/Geist-Italic[wght].woff2",
+      "bytes": 73388,
+      "sha256": "1f2eb7d3856abe2f0ce78cc945e1a6bea31bca00737401f4ebe2c30f1bcf2494"
+    },
+    {
+      "file": "GeistMono-variable.woff2",
+      "archive_member": "geist-font/GeistMono/webfonts/GeistMono[wght].woff2",
+      "bytes": 71104,
+      "sha256": "55419aa06f58adcd7f145c6c920e56936416f17e528f60efc6032ffa4269972b"
+    },
+    {
+      "file": "GeistMono-italic-variable.woff2",
+      "archive_member": "geist-font/GeistMono/webfonts/GeistMono-Italic[wght].woff2",
+      "bytes": 78860,
+      "sha256": "3b49468ee01206a3e6593c83084d8723b4ad45396dd5e8c911010d9294f594d8"
+    },
+    {
+      "file": "OFL-Geist.txt",
+      "archive_member": "geist-font/OFL.txt",
+      "bytes": 4383,
+      "sha256": "c683bfbcc7e087f5d37a54ef628f10387c451a83ddc459b151403a164ac46c90"
+    }
+  ]
+}

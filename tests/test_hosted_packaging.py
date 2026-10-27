@@ -10,12 +10,28 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10 keeps the remaining packaging checks.
+    tomllib = None
 
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class HostedPackagingTests(unittest.TestCase):
+    @unittest.skipIf(tomllib is None, 'Package manifest parsing requires Python 3.11+.')
+    def test_installed_package_declares_all_local_fonts_and_their_license(self):
+        config = tomllib.loads((ROOT / 'pyproject.toml').read_text(encoding='utf-8'))
+        patterns = config['tool']['setuptools']['package-data']['sixd']
+        package = ROOT / 'src/sixd'
+        included = {path.relative_to(package).as_posix()
+                    for pattern in patterns for path in package.glob(pattern)}
+        fonts = {path.relative_to(package).as_posix()
+                 for path in (package / 'web/fonts').iterdir() if path.is_file()}
+        self.assertEqual(len(fonts), 6)
+        self.assertTrue(fonts <= included, sorted(fonts - included))
+
     def test_image_copies_only_public_runtime_roots_and_runs_nonroot(self):
         text = (ROOT / 'deployment' / 'Dockerfile').read_text(encoding='utf-8')
         copies = [shlex.split(row)[1:] for row in text.splitlines() if row.startswith('COPY ')]

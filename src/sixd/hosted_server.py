@@ -19,7 +19,7 @@ import threading
 import time
 from urllib.parse import urlsplit
 
-from .workspace_server import WorkspaceHandler, WEB, ROOT, build_status
+from .workspace_server import WorkspaceHandler, WEB, ROOT, FONT_ASSETS, build_status
 from .workspace import ConflictError, WorkspaceError
 
 
@@ -35,7 +35,8 @@ POST_ROUTES = frozenset({
 })
 LOGIN_ASSETS = {'/hosted-login.html': 'text/html; charset=utf-8',
                 '/hosted-login.js': 'text/javascript; charset=utf-8',
-                '/hosted-login.css': 'text/css; charset=utf-8'}
+                '/hosted-login.css': 'text/css; charset=utf-8',
+                '/typography.css': 'text/css; charset=utf-8', **FONT_ASSETS}
 HOSTED_ASSETS = {'/hosted-mode.js': 'text/javascript; charset=utf-8',
                  '/hosted-mode.css': 'text/css; charset=utf-8'}
 
@@ -263,7 +264,7 @@ class HostedHandler(WorkspaceHandler):
         self.send_header('Cache-Control', 'no-store')
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Referrer-Policy', 'no-referrer')
-        self.send_header('Content-Security-Policy', "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'")
+        self.send_header('Content-Security-Policy', "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'")
         if self._hosted.config.public_origin.startswith('https://'):
             self.send_header('Strict-Transport-Security', 'max-age=31536000')
         if filename:

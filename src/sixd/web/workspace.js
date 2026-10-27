@@ -1838,7 +1838,7 @@
     if(name==='guided-inputs'){state.page='system';state.system='overview';state.view='table';state.panel='details';stopInvestigationPolling();render();$('#sd-view-content').scrollIntoView({block:'start'});return;}
     if(name==='guided-latest'){await perform(()=>load(state.data.project_id));return;}
 
-    if(name==='tree'){root.classList.toggle('sd-tree-open');return;}
+    if(name==='tree'){window.SixDSidebar.toggle();return;}
     if(name==='new-project'){await showNewProject();return;}
     if(name==='close-new'){window.SixDOverlayDismiss.requestClose($('#sd-new-dialog'),'close-button');return;}
     if(name==='close-author-editor'){window.SixDOverlayDismiss.requestClose($('#sd-author-dialog'),'close-button');return;}
@@ -2076,6 +2076,7 @@
   $('#sd-ai-connect-dialog').addEventListener('cancel',()=>{$('#sd-ai-key').value='';});
   $('#sd-ai-connect-dialog').addEventListener('close',()=>{$('#sd-ai-key').value='';});
   async function init() {
+    window.SixDSidebar.mount(root);
     mountRocket();
     navigation=window.SixDNavigation.create({read:locationSnapshot,apply:restoreLocation,onError:showError,onChange:renderLocation});
     try{state.hosted=(await api('/api/hosted/status')).hosted!==false;}catch{state.hosted=true;}

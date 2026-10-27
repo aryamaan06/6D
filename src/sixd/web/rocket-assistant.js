@@ -29,13 +29,13 @@
     launcher.setAttribute('aria-expanded','false');
     launcher.title='Click to ask · drag to move · Alt + arrow keys to reposition';
     launcher.setAttribute('aria-describedby','sd-rocket-move-hint');
-    launcher.innerHTML=rocket+'<span class="sd-rocket-launcher-label">Ask 6D</span><span id="sd-rocket-move-hint" class="sd-rocket-move-hint">Drag to move. Release to park clear of page controls. Alt plus an arrow key moves the rocket; Alt plus Home resets its position. Rocket options has help, docking and size controls. Click or press Enter to ask.</span><span class="sd-rocket-working" aria-hidden="true"></span>';
+    launcher.innerHTML=rocket+'<span class="sd-rocket-launcher-label">Ask 6D</span><span id="sd-rocket-move-hint" class="sd-rocket-move-hint">Drag to move. Release to park clear of page controls. The rocket stays still while you scroll; Dock safely or Minimize if it covers content. Alt plus an arrow key moves the rocket; Alt plus Home resets its position. Rocket options has help, docking and size controls. Click or press Enter to ask.</span><span class="sd-rocket-working" aria-hidden="true"></span>';
     const companion=document.createElement('div');companion.className='sd-rocket-companion';
     companion.innerHTML='<div class="sd-rocket-companion-tools"><button type="button" data-rocket-options aria-label="Rocket options and movement help" aria-haspopup="dialog" aria-controls="sd-rocket-controls">Options</button><button type="button" data-rocket-size aria-label="Minimize rocket" title="Minimize rocket">−</button></div><span class="sd-rocket-placement-status sd-rocket-move-hint" role="status" aria-live="polite"></span>';
     companion.prepend(launcher);
     const controls=document.createElement('dialog');controls.id='sd-rocket-controls';controls.className='sd-rocket-controls';
     controls.setAttribute('aria-labelledby','sd-rocket-controls-title');
-    controls.innerHTML='<div class="sd-rocket-controls-heading"><h2 id="sd-rocket-controls-title">Your rocket companion</h2><button type="button" class="sd-icon-button" data-rocket-controls-close aria-label="Close rocket options">×</button></div><p>Click the rocket to ask 6D. Drag its body to move it; it parks clear of page controls when released.</p><p>With the rocket focused, use <kbd>Alt</kbd> + an arrow key to move, add <kbd>Shift</kbd> for a larger step, or use <kbd>Alt</kbd> + <kbd>Home</kbd> to reset.</p><p data-rocket-placement-note></p><div class="sd-rocket-controls-actions"><button type="button" data-rocket-dock>Dock safely</button><button type="button" data-rocket-reset>Reset position</button><button type="button" data-rocket-controls-size>Minimize rocket</button></div>';
+    controls.innerHTML='<div class="sd-rocket-controls-heading"><h2 id="sd-rocket-controls-title">Your rocket companion</h2><button type="button" class="sd-icon-button" data-rocket-controls-close aria-label="Close rocket options">×</button></div><p>Click the rocket to ask 6D. Drag its body to move it; it parks clear of page controls when released.</p><p>It stays still while you scroll. Content can move beneath it: choose Dock safely, drag it elsewhere or minimize it when you need more space.</p><p>With the rocket focused, use <kbd>Alt</kbd> + an arrow key to move, add <kbd>Shift</kbd> for a larger step, or use <kbd>Alt</kbd> + <kbd>Home</kbd> to reset.</p><p data-rocket-placement-note></p><div class="sd-rocket-controls-actions"><button type="button" data-rocket-dock>Dock safely</button><button type="button" data-rocket-reset>Reset position</button><button type="button" data-rocket-controls-size>Minimize rocket</button></div>';
     const dialog=document.createElement('dialog');dialog.id='sd-rocket-dialog';
     dialog.className='sd-rocket-dialog';dialog.setAttribute('aria-labelledby','sd-rocket-title');
     dialog.setAttribute('aria-describedby','sd-rocket-context');
@@ -87,10 +87,12 @@
       announce:text=>{dialog.querySelector('.sd-rocket-announcement').textContent=String(text??'');}};
     s.api=api;return api;
   }
-  function installMovement(launcher,companion,controls,root,pause){
+  function installMovement(launcher,companion,controls,root,pauseRenderer){
     const gap=10,clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+    let pausedState=null;
+    const pause=value=>{if(pausedState!==value){pausedState=value;pauseRenderer(value);}};
     let pointer=null,position={x:8,y:8},preference=null,userCompact=false,compact=false,inline=false;
-    let queued=0,next=null,refreshFrame=0,clickTimer=null,keyboardTimer=null;
+    let queued=0,next=null,refreshFrame=0,pendingRefresh=null,clickTimer=null,keyboardTimer=null,scrollUntil=0,savedPreference=null;
     const status=companion.querySelector('.sd-rocket-placement-status');
     const sizeButton=companion.querySelector('[data-rocket-size]');
     const optionsButton=companion.querySelector('[data-rocket-options]');
@@ -98,11 +100,16 @@
     const bounds=()=>{const size=dimensions();return{x:Math.max(8,innerWidth-size.width-8),y:Math.max(8,innerHeight-size.height-8)};};
     const valid=value=>value&&Number.isFinite(value.x)&&Number.isFinite(value.y);
     try{
-      const saved=JSON.parse(localStorage.getItem(placementKey)||'null');
+      savedPreference=localStorage.getItem(placementKey);
+      const saved=JSON.parse(savedPreference||'null');
       if(saved?.version===2){if(valid(saved.position))preference={x:clamp(saved.position.x,0,1),y:clamp(saved.position.y,0,1)};userCompact=saved.compact===true;}
       else{const old=JSON.parse(localStorage.getItem(positionKey)||'null');if(valid(old))preference={x:clamp(old.x,0,1),y:clamp(old.y,0,1)};}
     }catch{}
-    function savePreference(){try{localStorage.setItem(placementKey,JSON.stringify({version:2,position:preference,compact:userCompact}));}catch{}}
+    function savePreference(){
+      const value=JSON.stringify({version:2,position:preference,compact:userCompact});
+      if(value===savedPreference)return;
+      try{localStorage.setItem(placementKey,value);savedPreference=value;}catch{}
+    }
     function remember(){const max=bounds();preference={x:max.x>8?(position.x-8)/(max.x-8):0,y:max.y>8?(position.y-8)/(max.y-8):0};savePreference();}
     function desired(){const max=bounds();return preference?{x:8+preference.x*(max.x-8),y:8+preference.y*(max.y-8)}:{x:innerWidth>950?258:innerWidth>650?200:12,y:max.y-24};}
     function place(x,y){const max=bounds();position={x:clamp(x,8,max.x),y:clamp(y,8,max.y)};companion.style.left=position.x+'px';companion.style.top=position.y+'px';}
@@ -152,11 +159,17 @@
       }
       return best;
     }
-    function refreshNow({dock=false,announce=false}={}){
-      refreshFrame=0;if(pointer)return;
+    function refreshNow({dock=false,announce=false,passive=false}={}){
+      cancelAnimationFrame(refreshFrame);refreshFrame=0;pendingRefresh=null;if(pointer)return;
       const blocked=!!document.querySelector('dialog[open]');
       companion.classList.toggle('sd-rocket-obscured',blocked);pause(blocked||compact);
       if(blocked)return;
+      // Scroll moves page controls beneath this viewport-fixed companion. Chasing
+      // those controls on every frame made its position and full/compact mode
+      // oscillate. Incidental sticky/lazy-layout mutations during scrolling must
+      // not repark it either. Deliberate host renders, resize and user controls
+      // still request a fresh safe position; there is no scroll-end snap.
+      if(passive&&performance.now()<scrollUntil)return;
       setInline(false);setCompact(userCompact);
       let preferred=desired(),rects=obstacles(),safe=safePoint(preferred,rects,dock);
       if(!safe&&!compact){setCompact(true);preferred=desired();safe=safePoint(preferred,rects,dock);}
@@ -167,12 +180,16 @@
         setCompact(true);setInline(true);
       }
       pause(compact);
-      const note=inline?'Compact access is below the workspace header because this screen has no clear floating space.':compact?(userCompact?'The rocket is minimized. Use Show full rocket to restore it.':'Compact access keeps this screen clear. Show full rocket restores it when space permits.'):'The full rocket is parked clear of page controls.';
+      const note=inline?'Compact access is below the workspace header because this screen has no clear floating space.':compact?(userCompact?'The rocket is minimized. Use Show full rocket to restore it.':'Compact access was selected for this layout. Dock safely checks the current controls; Show full rocket restores it when space permits.'):'The full rocket stays at its chosen position while you scroll. Dock safely checks the current controls.';
       controls.querySelector('[data-rocket-placement-note]').textContent=note;
       if(announce)status.textContent=note;
       savePreference();
     }
-    function refresh(options){cancelAnimationFrame(refreshFrame);refreshFrame=requestAnimationFrame(()=>refreshNow(options));}
+    function refresh(options={}){
+      const passive=options.passive===true;
+      pendingRefresh={...pendingRefresh,...options,passive:pendingRefresh?pendingRefresh.passive===true&&passive:passive};
+      if(!refreshFrame)refreshFrame=requestAnimationFrame(()=>refreshNow(pendingRefresh));
+    }
     function reset(){preference=null;userCompact=false;refreshNow({dock:true,announce:true});remember();}
     function resize(){refresh();}
     function toggleSize(){userCompact=!compact;savePreference();refreshNow({announce:true});}
@@ -212,13 +229,14 @@
       clearTimeout(keyboardTimer);keyboardTimer=setTimeout(()=>refreshNow({announce:true}),150);
     });
     launcher.addEventListener('keyup',event=>{if(event.key.startsWith('Arrow')){clearTimeout(keyboardTimer);refreshNow({announce:true});}});
-    window.addEventListener('resize',resize);window.addEventListener('scroll',()=>refresh(),true);
+    window.addEventListener('resize',resize);
+    window.addEventListener('scroll',()=>{scrollUntil=performance.now()+200;},{capture:true,passive:true});
     const observer=new MutationObserver(records=>{
-      if(records.some(record=>!companion.contains(record.target)&&!controls.contains(record.target)&&record.target!==companion))refresh();
+      if(records.some(record=>!companion.contains(record.target)&&!controls.contains(record.target)&&record.target!==companion))refresh({passive:true});
     });
     observer.observe(root,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','open','class','style','disabled']});
     if(document.body!==root)observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['open']});
-    if(window.ResizeObserver){const resizeObserver=new ResizeObserver(()=>refresh());resizeObserver.observe(root);const main=root.querySelector('.sd-main');if(main)resizeObserver.observe(main);}
+    if(window.ResizeObserver){const resizeObserver=new ResizeObserver(()=>refresh({passive:true}));resizeObserver.observe(root);const main=root.querySelector('.sd-main');if(main)resizeObserver.observe(main);}
     refreshNow();return {refresh};
   }
   window.SixDRocketAssistant=Object.freeze({mount,open:tab=>current?.api.open(tab),close:()=>current?.api.close(),

@@ -44,6 +44,14 @@ WORKSPACE_ID = sha256(str(ROOT).casefold().encode()).hexdigest()[:16]
 MAX_BODY_BYTES = 3 * 1024 * 1024
 WEB = Path(__file__).resolve().parent / "web"
 VENDOR = ROOT / "design" / "vendor" / "lucide.min.js"
+FONT_ASSETS = {
+    "/fonts/GeistSans-variable.woff2": "font/woff2",
+    "/fonts/GeistSans-italic-variable.woff2": "font/woff2",
+    "/fonts/GeistMono-variable.woff2": "font/woff2",
+    "/fonts/GeistMono-italic-variable.woff2": "font/woff2",
+    "/fonts/OFL-Geist.txt": "text/plain; charset=utf-8",
+    "/fonts/provenance.json": "application/json; charset=utf-8",
+}
 BUILD_FILES = [WEB / name for name in ("workspace.html", "workspace.css", "workspace.js", "review-guide.js", "simulation.css", "simulation.js", "scenarios.css", "scenarios.js", "test-data.css", "test-data.js", "test-evidence.css", "test-evidence.js", "systems.css", "systems.js", "power-budget.css", "power-budget.js", "attitude.css", "attitude.js", "powered-flight.css", "powered-flight.js", "chains.css", "chains.js", "spreadsheet-intake.css", "spreadsheet-intake.js", "source-library.js", "source-library.css", "action-queue.js", "action-queue.css", "design-comparison.js", "design-comparison.css", "source-research.js", "source-research.css", "engineering-coverage.js", "engineering-coverage.css")]
 CODE_FILES = [Path(__file__).with_name(name) for name in (
     "workspace_server.py", "workspace.py", "engineering.py", "lifecycle.py",
@@ -53,7 +61,7 @@ CODE_FILES = [Path(__file__).with_name(name) for name in (
 
 
 BUILD_FILES += [WEB / name for name in ("simulation-imports.js", "simulation-imports.css", "envelopes.js", "envelopes.css")]
-BUILD_FILES += [WEB / name for name in ("workspace-navigation.js", "workspace-shell.js", "overlay-dismiss.js", "owner-settings.js", "assistant-context.js", "source-targets.js", "rocket-renderer.js", "rocket-assistant.js", "rocket-assistant.css", "clarity.css", "navigation.css", "typography.css", "review-workspace.js", "review-workspace.css", "units.js", "connected-review.css")]
+BUILD_FILES += [WEB / name for name in ("workspace-sidebar.js", "workspace-navigation.js", "workspace-shell.js", "overlay-dismiss.js", "owner-settings.js", "assistant-context.js", "source-targets.js", "rocket-renderer.js", "rocket-assistant.js", "rocket-assistant.css", "clarity.css", "navigation.css", "typography.css", "review-workspace.js", "review-workspace.css", "units.js", "connected-review.css")]
 CODE_FILES += [Path(__file__).with_name("workspace_review.py"), Path(__file__).with_name("workspace_ultra_workflow.py")]
 CODE_FILES += [Path(__file__).with_name("rocket_reference.py")]
 CODE_FILES += [Path(__file__).with_name("guided_ascent.py")]
@@ -65,6 +73,7 @@ CODE_FILES += [Path(__file__).with_name(name) for name in ("service_credentials.
 BUILD_FILES += [WEB / name for name in ("hosted-login.html", "hosted-login.js", "hosted-login.css", "hosted-mode.js", "hosted-mode.css")]
 CODE_FILES += [Path(__file__).with_name(name) for name in ("ai_qualification.py", "workspace_qualification.py", "workspace_observability.py", "model_choices.py")]
 BUILD_FILES += [WEB / name for name in ("ai-quality.js", "ai-quality.css")]
+BUILD_FILES += [WEB / route[1:] for route in FONT_ASSETS]
 
 
 def _code_fingerprint():
@@ -152,7 +161,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'")
+        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'")
         if filename:
             self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
         self.end_headers()
@@ -299,7 +308,9 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 if _code_fingerprint() != RUNTIME_ID:
                     raise ConflictError("Application code changed. Restart 6D before loading the connected review.")
                 self._reply(200, self.server.review_workspace.summary(self._one(query, "project_id"), self._revision(self._one(query, "revision"))))
-            elif route in {"/assistant-context.js", "/source-targets.js", "/rocket-renderer.js", "/rocket-assistant.js", "/rocket-assistant.css", "/overlay-dismiss.js", "/owner-settings.js", "/clarity.css", "/workspace-navigation.js", "/workspace-shell.js", "/navigation.css", "/typography.css", "/review-workspace.js", "/review-workspace.css", "/units.js", "/connected-review.css", "/guided-ascent.js", "/guided-ascent.css", "/staged-ascent.js", "/staged-ascent.css"}:
+            elif route in FONT_ASSETS:
+                self._reply(200, (WEB / route[1:]).read_bytes(), FONT_ASSETS[route])
+            elif route in {"/workspace-sidebar.js", "/assistant-context.js", "/source-targets.js", "/rocket-renderer.js", "/rocket-assistant.js", "/rocket-assistant.css", "/overlay-dismiss.js", "/owner-settings.js", "/clarity.css", "/workspace-navigation.js", "/workspace-shell.js", "/navigation.css", "/typography.css", "/review-workspace.js", "/review-workspace.css", "/units.js", "/connected-review.css", "/guided-ascent.js", "/guided-ascent.css", "/staged-ascent.js", "/staged-ascent.css"}:
                 path = WEB / route[1:]
                 self._reply(200, path.read_bytes(), "application/javascript; charset=utf-8" if path.suffix == ".js" else "text/css; charset=utf-8")
             elif route == "/api/envelopes/summary":

@@ -108,6 +108,24 @@ class HostedHTTPTests(unittest.TestCase):
         with closing(sqlite3.connect(self.server.manager.db_path)) as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM sessions').fetchone()[0], 0)
 
+    def test_login_uses_the_same_local_fonts_without_creating_a_visitor_session(self):
+        status, page, headers = self.request('/')
+        self.assertEqual(status, 200)
+        self.assertIn(b'/typography.css', page)
+        self.assertIn("font-src 'self'", headers['Content-Security-Policy'])
+        for path, mime in [('/typography.css', 'text/css; charset=utf-8'),
+                           ('/fonts/GeistSans-variable.woff2', 'font/woff2'),
+                           ('/fonts/GeistMono-variable.woff2', 'font/woff2')]:
+            status, data, headers = self.request(path)
+            self.assertEqual(status, 200)
+            self.assertEqual(headers['Content-Type'], mime)
+            self.assertTrue(data)
+            self.assertNotIn('Set-Cookie', headers)
+        self.assertEqual(self.request('/fonts/unpublished.woff2')[0], 401)
+        self.assertEqual(self.request('/api/projects')[0], 401)
+        with closing(sqlite3.connect(self.server.manager.db_path)) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM sessions').fetchone()[0], 0)
+
     def test_login_seeds_only_one_calculated_rocket_and_cookie_is_private(self):
         cookie = self.login()
         self.assertTrue(cookie.startswith('__Host-sixd_session='))

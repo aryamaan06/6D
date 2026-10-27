@@ -13,7 +13,7 @@ dependencies = []
 where = ["src"]
 
 [tool.setuptools.package-data]
-sixd = ["web/*.html", "web/*.css", "web/*.js"]
+sixd = ["web/*.html", "web/*.css", "web/*.js", "web/fonts/*.woff2", "web/fonts/*.txt", "web/fonts/*.json"]
 
 [project.scripts]
 sixd = "sixd.cli:main"

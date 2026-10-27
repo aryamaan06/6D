@@ -63,3 +63,14 @@
 @media(max-width:950px){#sixd-workspace.sd-navigation-hub .sd-shell{grid-template-columns:190px minmax(0,1fr)}#sixd-workspace .sd-destination-grid,#sixd-workspace .sd-project-grid{grid-template-columns:1fr}}
 @media(max-width:650px){#sixd-workspace.sd-navigation-hub .sd-shell{display:block}#sixd-workspace.sd-navigation-hub #sd-view-content{padding:4px 16px 26px}#sixd-workspace .sd-top{padding:12px}#sixd-workspace .sd-preview-tag,#sixd-workspace .sd-separator,#sixd-workspace #sd-ai-header-status{display:none}#sixd-workspace .sd-main{padding:0 0 24px}#sixd-workspace .sd-top-right{gap:6px}#sixd-workspace .sd-top-right .sd-button{padding:7px 9px;font-size:13px}#sixd-workspace .sd-project-card,#sixd-workspace .sd-destination{padding:18px}#sixd-workspace .sd-home-intro h2{font-size:24px}#sixd-workspace .sd-location-item{display:none}#sixd-workspace .sd-sidebar{display:none}#sixd-workspace.sd-tree-open .sd-sidebar{display:flex}}
 @media print{#sixd-workspace .sd-primary-nav,#sixd-workspace .sd-section-menu,#sixd-workspace .sd-breadcrumb{display:none}}
+
+/* Focus layout keeps the same mounted project, form editors and navigation history. */
+#sixd-workspace .sd-sidebar-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 10px;white-space:nowrap}
+#sixd-workspace .sd-sidebar-toggle svg{flex-shrink:0}
+#sixd-workspace .sd-sidebar-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#sixd-workspace.sd-sidebar-collapsed .sd-sidebar{display:none!important}
+#sixd-workspace.sd-sidebar-collapsed .sd-shell{grid-template-columns:minmax(0,1fr)!important}
+#sixd-workspace.sd-sidebar-collapsed .sd-main{grid-column:1!important;min-width:0}
+#sixd-workspace .sd-mobile-tree{display:none!important}
+@media(max-width:650px){#sixd-workspace .sd-sidebar-toggle{padding:7px 9px;font-size:13px}#sixd-workspace.sd-tree-open:not(.sd-sidebar-collapsed) .sd-sidebar{display:flex}}
+@media print{#sixd-workspace .sd-sidebar-toggle,#sixd-workspace .sd-sidebar{display:none!important}#sixd-workspace .sd-shell{grid-template-columns:minmax(0,1fr)!important}}

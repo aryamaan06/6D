@@ -1,9 +1,37 @@
-/* Shared editorial type system. Native fonts keep the workspace private/offline;
-   a locally supplied Geist variable may take precedence without a network fetch. */
+/* Actual Geist faces, served by 6D itself. The native stacks are fallbacks only.
+   Unmodified official v1.8.2 files and OFL notice: /fonts/provenance.json. */
+@font-face {
+  font-family: "Geist Sans";
+  src: url("/fonts/GeistSans-variable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Sans";
+  src: url("/fonts/GeistSans-italic-variable.woff2") format("woff2");
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-variable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-italic-variable.woff2") format("woff2");
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+}
 :root {
-  --sd-font-sans: var(--font-geist-sans, -apple-system), BlinkMacSystemFont,
+  --sd-font-sans: "Geist Sans", -apple-system, BlinkMacSystemFont,
     "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --sd-font-mono: var(--font-geist-mono, ui-monospace), SFMono-Regular, Menlo,
+  --sd-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo,
     Monaco, Consolas, "Liberation Mono", monospace;
 }
 
@@ -32,13 +60,18 @@ html, body {
   color: var(--sd-ink);
   background: var(--sd-bg);
   font-size: 14.5px;
+  font-weight: 400;
   line-height: 1.6;
 }
 
 #sixd-workspace :is(h1, h2, h3) {
   letter-spacing: -0.025em !important;
   text-wrap: balance;
+  font-weight: 650 !important;
+  line-height: 1.25;
 }
+#sixd-workspace h1 { font-weight: 700 !important; }
+#sixd-workspace h3 { font-weight: 600 !important; }
 
 #sixd-workspace :is(.sd-label, .rw-eyebrow, .aq-eyebrow, .dc-eyebrow,
   .ec-eyebrow, .pb-eyebrow, .sl-eyebrow, .sr-eyebrow, .si-eyebrow,
@@ -119,7 +152,7 @@ html, body {
   font-family: var(--sd-font-mono);
 }
 
-/* Hosted access uses the same native family without importing a web font. */
+/* Hosted access uses the same locally served family. */
 .sixd-hosted-banner {
   font-family: var(--sd-font-sans);
 }
@@ -164,6 +197,7 @@ html, body {
 
 /* One family for every human-readable word, including legacy modules/controls.
    Important beats old module font shorthands; quantitative exceptions are explicit. */
+html,body,button,input,select,textarea,option,optgroup,
 #sixd-workspace,#sixd-workspace * {
   font-family:var(--sd-font-sans)!important;
   -webkit-font-smoothing:antialiased;
@@ -178,6 +212,14 @@ html, body {
  .rw-count-value,.sim-metrics strong,.aq-metrics dd,.sd-number,.sd-project-id,.rw-exact-values dd,input[type="number"],
  [data-field="value"],[data-field="unit"],.sim-playback output,.te-values dd,
  .sy-values dd,.sr-budget dd,.ga-table td,.sa-table td) {
+  font-family:var(--sd-font-mono)!important;
+  font-variant-numeric:tabular-nums slashed-zero;
+}
+
+/* Nested code/evidence tokens and SVG data labels must not fall back to sans
+   through the universal legacy-module rule above. No original text is changed. */
+#sixd-workspace :is(code,pre) *,
+#sixd-workspace :is(.sd-chart,.en-chart,.sc-chart,.td-chart) text {
   font-family:var(--sd-font-mono)!important;
   font-variant-numeric:tabular-nums slashed-zero;
 }

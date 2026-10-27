@@ -247,7 +247,7 @@
     const scale=Math.min(w,h)*.43/extent*s.zoom,cx=w/2,cy=h/2;
     const project=p=>{const t=transform(p,s);return [cx+t[0]*scale,cy-t[1]*scale,t[2]*scale];};
     const line=(points,color,width=1,dash=[])=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.beginPath();points.forEach((p,i)=>{const v=project(p);i?ctx.lineTo(v[0],v[1]):ctx.moveTo(v[0],v[1]);});ctx.stroke();ctx.setLineDash([]);};
-    [['X',[extent,0,0],'#b66d76'],['Y',[0,extent,0],'#56877a'],['Z',[0,0,extent],'#7d72ba']].forEach(([label,p,color])=>{line([p.map(n=>-n),p],color+'66',1,[4,5]);const end=project(p);ctx.fillStyle=color;ctx.font='13px ui-monospace, monospace';ctx.textAlign='center';ctx.fillText(label,end[0]+9,end[1]-7);});
+    [['X',[extent,0,0],'#b66d76'],['Y',[0,extent,0],'#56877a'],['Z',[0,0,extent],'#7d72ba']].forEach(([label,p,color])=>{line([p.map(n=>-n),p],color+'66',1,[4,5]);const end=project(p);ctx.fillStyle=color;ctx.font='13px '+(getComputedStyle(canvas).getPropertyValue('--sd-font-mono').trim()||'monospace');ctx.textAlign='center';ctx.fillText(label,end[0]+9,end[1]-7);});
     function path(data,color){line(data.map(p=>p.position_m),color,2);}
     if(other.length)path(other,'#bb8a39');path(rows,'#3768d5');
     // Translucency preserves visibility of the far side; this is an exclusion
@@ -273,7 +273,7 @@
     const margin=Math.max((hi-lo)*.08,Math.max(Math.abs(lo),Math.abs(hi),1)*1e-8);lo-=margin;hi+=margin;
     const x0=Math.min(116,Math.max(76,w*.28)),x1=w-22,y0=25,y1=h-32,tmax=Math.max(rows.at(-1).time_s,other.at(-1)?.time_s || 0);
     const px=t=>x0+t/tmax*(x1-x0),py=v=>y1-(v-lo)/(hi-lo)*(y1-y0);
-    ctx.font='13px ui-monospace, monospace';ctx.fillStyle='#728093';ctx.textAlign='right';ctx.strokeStyle='#e7ecf3';ctx.lineWidth=1;
+    ctx.font='13px '+(getComputedStyle(canvas).getPropertyValue('--sd-font-mono').trim()||'monospace');ctx.fillStyle='#728093';ctx.textAlign='right';ctx.strokeStyle='#e7ecf3';ctx.lineWidth=1;
     for(let i=0;i<=3;i++){const v=lo+(hi-lo)*i/3,y=py(v);ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();ctx.fillText(fmt(v),x0-8,y+3);}
     ctx.textAlign='center';const tickCount=w<500?2:4;for(let i=0;i<=tickCount;i++){const t=tmax*i/tickCount;ctx.fillText(fmt(t),px(t),h-12);}
     channels.forEach((c,j)=>{for(const [data,baseline] of [[other,true],[rows,false]]){if(!data.length)continue;ctx.strokeStyle=baseline?(key==='position_m'?colors[j]:'#bb8a39'):colors[j];ctx.setLineDash(baseline?[5,4]:[]);ctx.lineWidth=baseline?1.3:1.8;ctx.beginPath();data.forEach((p,i)=>{i?ctx.lineTo(px(p.time_s),py(value(p,c))):ctx.moveTo(px(p.time_s),py(value(p,c)));});ctx.stroke();}ctx.setLineDash([]);if(c!==null){ctx.fillStyle=colors[j];ctx.textAlign='left';ctx.fillText(['X','Y','Z'][c],x0+j*26,14);}});
