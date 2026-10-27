@@ -2,6 +2,29 @@
 (() => {
   'use strict';
   let active = null;
+  const disclosureStates = new Map();
+  function disclosure(ctx,id,title,body,extra='') {
+    const key=JSON.stringify([ctx.projectId??null,ctx.revision??null,ctx.runId??null,ctx.modelId??null,!!ctx.hasDraft]);
+    return '<details class="sd-source" data-flight-disclosure="'+id+'" data-flight-context="'+esc(key)+'"'+(disclosureStates.get(key)?.get(id)?' open':'')+extra+'><summary>'+esc(title)+'</summary>'+body+'</details>';
+  }
+  function bindDisclosures(host,signal) {
+    host.addEventListener('toggle',event=>{
+      const item=event.target;if(!item.matches?.('details[data-flight-disclosure]')||!host.contains(item))return;
+      const key=item.dataset.flightContext;if(!disclosureStates.has(key))disclosureStates.set(key,new Map());
+      disclosureStates.get(key).set(item.dataset.flightDisclosure,item.open);
+      if(disclosureStates.size>50)disclosureStates.delete(disclosureStates.keys().next().value);
+    },{capture:true,signal});
+  }
+  function outcome(result,ctx) {
+    const requirements=(ctx.project?.requirements||[]).filter(item=>item.model_id===ctx.modelId);
+    if(ctx.hasDraft)return '<p class="sd-notice">Draft not calculated. Save the revision and run its checks.</p>';
+    if(!result||result.status!=='completed')return '<p class="sd-notice">Flight not assessed: no completed calculation for this saved context. Inspect the issues below.</p>';
+    const counts={met:0,not_met:0,not_assessed:0,not_run:0};
+    for(const requirement of requirements){const finding=ctx.findings?.[requirement.id],status=['insufficient_accuracy','accuracy_not_assessed'].includes(finding?.assessment_status)?'not_assessed':finding?.status||'not_run';counts[Object.hasOwn(counts,status)?status:'not_assessed']++;}
+    const response=result.flight_response||result.guided_response||result.staged_response;
+    const accuracy=response?.diagnostics;
+    return '<section class="sa-result-summary" aria-label="Saved flight check results"><strong>Saved checks</strong><p>'+ (requirements.length?counts.met+' meet criteria · '+counts.not_met+' criteria unmet · '+counts.not_assessed+' not assessed'+(counts.not_run?' · '+counts.not_run+' not calculated':''):'No requirements are linked to this flight model.')+'</p><p class="sa-note">These results concern the supplied model and saved inputs, not a complete rocket or mission.</p>'+(accuracy?.grid_agreement_met===false?'<p class="sd-notice"><strong>Numerical agreement not met.</strong> '+esc(accuracy.reason)+'</p>':'')+'</section>';
+  }
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const human = value => String(value ?? '').replace(/_/g, ' ');
   const list = value => Array.isArray(value) ? value : [];
@@ -77,7 +100,7 @@
   }
   function stageSummary(result,project,model) {
     let definitions;try { definitions=profileRows(project,model); } catch(error) { return '<p class="sd-notice">Stage profile unavailable: '+esc(error.message)+'</p>'; }
-    const supplied=definitions.map((stage,index)=>'<details class="sd-source"'+(index===0?' open':'')+'><summary>Stage '+(index+1)+' · supplied mass and thrust profile</summary>'+table(['Dry mass · kg','Propellant · kg','Isp · s','Separation delay · s'],[[esc(stage.dry_mass||'Unspecified'),esc(stage.propellant_mass||'Unspecified'),esc(stage.specific_impulse||'Unspecified'),index===definitions.length-1?'0 · final stage retained':esc(stage.separation_delay||'Unspecified')]])+table(['Segment','Duration · s','Start thrust · N','End thrust · N'],stage.segments.map((segment,i)=>[i+1,esc(segment.duration||'Unspecified'),esc(segment.thrust_start||'Unspecified'),esc(segment.thrust_end||'Unspecified')]))+'</details>').join('');
+    const supplied=definitions.map((stage,index)=>'<details class="sd-source"><summary>Stage '+(index+1)+' · supplied mass and thrust profile</summary>'+table(['Dry mass · kg','Propellant · kg','Isp · s','Separation delay · s'],[[esc(stage.dry_mass||'Unspecified'),esc(stage.propellant_mass||'Unspecified'),esc(stage.specific_impulse||'Unspecified'),index===definitions.length-1?'0 · final stage retained':esc(stage.separation_delay||'Unspecified')]])+table(['Segment','Duration · s','Start thrust · N','End thrust · N'],stage.segments.map((segment,i)=>[i+1,esc(segment.duration||'Unspecified'),esc(segment.thrust_start||'Unspecified'),esc(segment.thrust_end||'Unspecified')]))+'</details>').join('');
     return '<section class="sa-stage-summary"><h3>Stages and thrust programme</h3><p class="sa-note">Thrust varies linearly inside each supplied segment. Fuel exhaustion can truncate the remaining profile. Attached mass includes the payload and every attached upper stage; only exhausted nonfinal dry stages are dropped.</p>'+supplied+'</section>';
   }
 
@@ -123,22 +146,24 @@
     return artifact && list(artifact.samples).length > 0 && artifact.diagnostics ? artifact : null;
   }
 
-  function evidence(result, ctx = {}) {
-    if (ctx.hasDraft) return '<p class="sd-notice">Unsaved draft changes have no calculated staged-ascent response. Save the revision and run checks.</p>';
-    if (!result) return '<p class="sd-notice">No current staged-ascent calculation for this saved revision. Run checks to record its response.</p>';
-    const artifact = artifactFrom(result);
-    if (!artifact) return '<p class="sd-notice">Staged-ascent response unavailable. A model or input gap does not establish a failed rocket.</p>' + bullets(result.issues);
-    const diagnostics = artifact.diagnostics;
-    return timeline(artifact)+'<p class="sa-diagnostic" data-sa-agreement="' + String(diagnostics.grid_agreement_met) + '"><strong>' + (diagnostics.grid_agreement_met ? 'Declared grid agreement met' : 'Diagnostic response · grid agreement not met') + '</strong><br>' + esc(diagnostics.reason) + '</p>' +
-      table(['Saved metric','Value','Unit','Numerical allowance'],Object.entries(result.metrics || {}).map(([name,quantity]) => [esc(human(name)),value(quantity.value),esc(unit(quantity.unit)),value(diagnostics.metric_allowances?.[name])])) +
-      '<p class="sa-note">Values use compact display precision; exact metrics, diagnostics and stage times are available below. These are sampled results. Numerical allowances combine declared state tolerances and observed grid differences; they are not rigorous error bounds or validation of the supplied vehicle.</p><div class="sa-charts">' + charts.map(([title,units,series]) => chart(artifact,title,units,series)).join('') + '</div>' +
-      table(['Grid pair · steps/segment','Maximum position difference · m','Maximum velocity difference · m/s'],list(diagnostics.level_differences).map(row => [esc(row.coarse_steps + ' → ' + row.fine_steps),value(row.max_position_difference_m),value(row.max_velocity_difference_m_s)])) +
-      '<details class="sd-source" data-preserve-notation><summary>Exact saved metrics, numerical diagnostics and stage times</summary><pre>' + esc(JSON.stringify({metrics:result.metrics,diagnostics,stage_plan:artifact.solver?.stage_plan},null,2)) + '</pre></details>' +
-      '<details class="sd-source" data-preserve-notation><summary>Frame, supplied inputs and retained events</summary><p>Nonrotating body-centered inertial plane. Initial position is (launch radius, 0), initially at rest. Signed downrange is the launch-radius surface arc R × atan2(y, x). Pitch is measured from the local outward radial direction toward the counterclockwise tangent.</p><p>Classical RK4 with analytical piecewise-linear thrust impulse and propellant consumption. Integration segments end at thrust and pitch knots, burnout, separation and ignition events. ' + esc(artifact.samples.length) + ' fine-grid samples retained; intermediate grids remain in exported JSON.</p>' + table(['Parameter','Supplied value'],Object.entries(artifact.parameters || {}).map(([key,number]) => [esc(human(key)),esc(number)])) + table(['Event','Sample index','Time · s'],list(artifact.events).map(event => [esc(human(event.event)),esc(event.sample_index),esc(event.time_s)])) + '</details>' +
-      '<details class="sd-source"><summary>Assumptions and unassessed scope</summary><h4>Assumptions</h4>' + bullets(artifact.assumptions) + '<h4>Not assessed</h4>' + bullets(artifact.not_assessed) + '</details>' +
-      '<p class="sd-receipt">Project ' + esc(ctx.projectId || '—') + ' · saved revision R' + esc(ctx.revision ?? '—') + '<br>Run ' + esc(ctx.runId || '—') + '<br>Review ' + esc(ctx.reviewDigest || '—') + '<br>Solver SHA-256 ' + esc(artifact.source_fingerprint) + (ctx.origin ? '<br>' + esc(human(ctx.origin.disposition)) + ' from R' + esc(ctx.origin.revision) + ' · ' + esc(ctx.origin.run_id) : '') + '</p>';
+  function evidence(result,ctx={}) {
+    if(ctx.hasDraft)return '<p class="sd-notice">Draft changes have no calculated flight response. Save the revision and run checks.</p>';
+    if(!result)return '<p class="sd-notice">No current flight calculation for this saved revision. Run checks to record its response.</p>';
+    const artifact=artifactFrom(result);
+    if(!artifact)return '<p class="sd-notice">Flight response unavailable. This model/input gap does not establish a failed vehicle.</p>'+bullets(result.issues);
+    const diagnostics=artifact.diagnostics;
+    const metrics=table(['Saved metric','Value','Unit','Numerical allowance'],Object.entries(result.metrics||{}).map(([name,quantity])=>[esc(human(name)),value(quantity.value),esc(unit(quantity.unit)),value(diagnostics.metric_allowances?.[name])]));
+    const grids=table(['Grid pair · steps/segment','Maximum position difference · m','Maximum velocity difference · m/s'],(diagnostics.level_differences||[]).map(row=>[esc(row.coarse_steps+' → '+row.fine_steps),value(row.max_position_difference_m),value(row.max_velocity_difference_m_s)]));
+    const exactEvidence={metrics:result.metrics,diagnostics,stage_plan:artifact.solver?.stage_plan};
+    return '<p class="sa-diagnostic" data-sa-agreement="'+String(diagnostics.grid_agreement_met)+'"><strong>'+(diagnostics.grid_agreement_met?'Declared grid agreement met':'Diagnostic response · grid agreement not met')+'</strong><br>'+esc(diagnostics.reason)+'</p><p class="sa-note">Sampled model output. Grid agreement is not a physical validation or a rigorous error bound.</p>'+
+      disclosure(ctx,'metrics','View saved metrics and numerical comparison',metrics+'<p class="sa-note">Values use compact display precision. Allowances combine declared state tolerances and observed grid differences. Extrema concern retained samples only.</p>'+grids)+
+      disclosure(ctx,'graphs','View graphs ('+charts.length+')',charts.map(([title,units,series],index)=>disclosure(ctx,'graph-'+index,title,chart(artifact,title,units,series))).join(''))+
+      disclosure(ctx,'stage-timeline','View recorded stage timeline',timeline(artifact))+
+      disclosure(ctx,'exact-metrics','Exact saved metrics and numerical diagnostics','<pre>'+esc(JSON.stringify(exactEvidence,null,2))+'</pre>',' data-preserve-notation')+
+      disclosure(ctx,'method','Inputs, method and retained events','<p>Initial position is (launch radius, 0), initially at rest. Signed downrange is the launch-radius surface arc R × atan2(y, x). Pitch is measured from the local outward radial direction toward the counterclockwise tangent. Classical RK4 in a nonrotating body-centered inertial plane, with analytical piecewise-linear thrust impulse and propellant consumption. Boundaries retain pitch/thrust knots, cutoff, separation and ignition events. '+esc(artifact.samples.length)+' fine-grid samples retained; intermediate grids remain in exported JSON.</p>'+table(['Parameter','Supplied value'],Object.entries(artifact.parameters||{}).map(([key,number])=>[esc(human(key)),esc(number)]))+table(['Event','Sample index','Time · s'],(artifact.events||[]).map(event=>[esc(human(event.event)),esc(event.sample_index),esc(event.time_s)])),' data-preserve-notation')+
+      disclosure(ctx,'assumptions','Assumptions and unassessed scope','<h4>Assumptions</h4>'+bullets(artifact.assumptions)+'<h4>Not assessed</h4>'+bullets(artifact.not_assessed))+
+      disclosure(ctx,'identity','Calculation identity and execution origin','<p class="sd-receipt">Project '+esc(ctx.projectId||'—')+' · saved revision R'+esc(ctx.revision??'—')+'<br>Run '+esc(ctx.runId||'—')+'<br>Review '+esc(ctx.reviewDigest||'—')+'<br>Solver SHA-256 '+esc(artifact.source_fingerprint)+(ctx.origin?'<br>'+esc(human(ctx.origin.disposition))+' from R'+esc(ctx.origin.revision)+' · '+esc(ctx.origin.run_id):'')+'</p>');
   }
-
   function report(result, ctx = {}) {
     return '<section class="sa-evidence" data-staged-ascent-evidence="' + esc(ctx.modelId || result?.model_id || '') + '"><h3>Staged-ascent evidence</h3>' + evidence(result,ctx) + '</section>';
   }
@@ -190,7 +215,7 @@
         ['Radial velocity',row.radial_velocity_m_s,'m/s'],['Tangential velocity',row.tangential_velocity_m_s,'m/s'],
         ['Pitch from local vertical',row.pitch_angle_rad,'rad'],['Mass',row.mass_kg,'kg'],['Thrust',row.thrust_n,'N'],
         ['Drag magnitude',row.drag_n,'N'],['Dynamic pressure',row.dynamic_pressure_pa,'Pa'],['Acceleration magnitude',row.acceleration_m_s2,'m/s²'],
-      ].map(([label,number,units]) => [esc(label),value(number,units)])) + '<details class="sd-source" data-preserve-notation><summary>Exact recorded sample</summary><pre>' + esc(JSON.stringify(row,null,2)) + '</pre></details>';
+      ].map(([label,number,units]) => [esc(label),value(number,units)])) + disclosure({...ctx,modelId:state.modelId},'exact-sample','Exact recorded sample','<pre>'+esc(JSON.stringify(row,null,2))+'</pre>',' data-preserve-notation');
       const x = 68+435*row.time_s/saved.samples.at(-1).time_s;
       for (const cursor of host.querySelectorAll('[data-sa-cursor]')) { cursor.setAttribute('x1',x);cursor.setAttribute('x2',x); }
     }
@@ -200,11 +225,13 @@
       host.innerHTML = '<section class="sa-page" aria-label="Staged ascent"><p class="sd-label">Saved R' + esc(ctx.revision) + ' · variable thrust and serial stages</p><h2>Follow the stages and thrust programme.</h2><p class="sd-lead">Replay saved variable-thrust flight, exact fuel cutoff, dry-mass separation and upper-stage ignition.</p><p class="sa-scope">Thrust and pitch programmes are supplied inputs. Nonfinal dry stages separate without a velocity impulse; the final dry stage is retained. One supplied drag coefficient and area remain fixed. Controller tracking, separation mechanics and whole-mission readiness are unassessed.</p><div class="sd-action-row">' + button('reference','Use constructed staged-ascent reference',!!ctx.hasDraft) + button('author','Author project') + (hasModels ? button('profile','Edit stage & thrust profile',ctx.isLatest === false || !ctx.onEditProfile && !ctx.hasDraft) + button('inputs','Other ascent inputs') + button('run','Run checks',!!ctx.hasDraft || ctx.isLatest === false) + button('report','Open full report',!ctx.runId || !!ctx.hasDraft) : '') + '</div>' +
         (!hasModels ? '<div class="sd-notice">This project has no staged-ascent model. Use the constructed reference or add a staged-ascent model through Author project. Creating a new reference preserves existing projects and runs no calculation.</div>' : '<label class="sa-select">Ascent model <select data-sa-model' + (state.editor ? ' disabled' : '') + '>' + models.map(model => '<option value="' + esc(model.id) + '"' + (model.id === state.modelId ? ' selected' : '') + '>' + esc(model.id) + '</option>').join('') + '</select></label>') +
         (state.error ? '<p class="sa-error" role="alert">'+esc(state.error)+'</p>' : '') + editor() + (ctx.hasDraft && hasModels ? '<p class="sd-notice">An unsaved draft is open. Its trajectory has not been calculated; saved playback is hidden until the draft is saved and checked or discarded.</p>' : '') +
-        (saved ? '<section class="sa-playback" aria-label="Saved staged-ascent playback">' + pathFigure(saved) + '<div class="sa-playback-controls"><p data-sa-sample aria-live="off"></p><div class="sd-action-row">' + button('play','Play') + button('start','Launch') + button('cutoff-before','Stage cutoff before') + button('cutoff-after','Stage cutoff after',!saved.events.some(event => event.event === 'stage_burnout_after')) + button('previous-event','Previous event') + button('next-event','Next event') + button('end','Last sample') + '</div><label class="sa-event-select">Recorded event<select class="sd-select" data-sa-event><option value="">Choose an exact retained event</option>'+list(saved.events).map(event=>'<option value="'+event.sample_index+'">Stage '+esc(event.stage)+' · '+esc(human(event.event))+' · '+esc(short(event.time_s))+' s</option>').join('')+'</select></label><label class="sa-scrub">Recorded sample<input data-sa-slider type="range" min="0" max="' + (saved.samples.length-1) + '" step="1" value="0" aria-label="Recorded staged-ascent sample"></label><div data-sa-state></div></div></section>' : '') +
-        (hasModels ? stageSummary(ctx.hasDraft?null:result(),ctx.project,model()) + evidence(result(),{...ctx,modelId:state.modelId,origin:ctx.modelOrigins?.[state.modelId]}) : '') + (ctx.hasDraft && hasModels ? '<div class="sd-action-row">'+button('preview','Preview affected checks',!!state.editor||state.busy)+button('save','Save revision',!!state.editor||state.busy)+'</div>' : '') +
+        (hasModels ? outcome(result(),{...ctx,modelId:state.modelId}) : '') +
+        (saved ? '<section class="sa-playback" aria-label="Saved staged-ascent playback">' + pathFigure(saved) + '<div class="sa-playback-controls"><p data-sa-sample aria-live="off"></p><div class="sd-action-row">' + button('play','Play') + button('start','Launch') + button('cutoff-before','Stage cutoff before') + button('cutoff-after','Stage cutoff after',!saved.events.some(event => event.event === 'stage_burnout_after')) + button('previous-event','Previous event') + button('next-event','Next event') + button('end','Last sample') + '</div><label class="sa-event-select">Recorded event<select class="sd-select" data-sa-event><option value="">Choose an exact retained event</option>'+list(saved.events).map(event=>'<option value="'+event.sample_index+'">Stage '+esc(event.stage)+' · '+esc(human(event.event))+' · '+esc(short(event.time_s))+' s</option>').join('')+'</select></label><label class="sa-scrub">Recorded sample<input data-sa-slider type="range" min="0" max="' + (saved.samples.length-1) + '" step="1" value="0" aria-label="Recorded staged-ascent sample"></label>'+disclosure({...ctx,modelId:state.modelId},'sample-values','View sample values','<div data-sa-state></div>')+'</div></section>' : '') +
+        (hasModels ? disclosure({...ctx,modelId:state.modelId},'stage-programme','View supplied stages and thrust programme',stageSummary(ctx.hasDraft?null:result(),ctx.project,model())) + evidence(result(),{...ctx,modelId:state.modelId,origin:ctx.modelOrigins?.[state.modelId]}) : '') + (ctx.hasDraft && hasModels ? '<div class="sd-action-row">'+button('preview','Preview affected checks',!!state.editor||state.busy)+button('save','Save revision',!!state.editor||state.busy)+'</div>' : '') +
         (hasModels ? '<h3>Declared requirements</h3>' + table(['Requirement','Finding','Actions'],list(ctx.project.requirements).filter(requirement => requirement.model_id === state.modelId).map(requirement => [esc(requirement.title),esc(ctx.hasDraft ? 'Uncalculated draft' : human(ctx.findings?.[requirement.id]?.status || 'not run')),'<button type="button" class="sd-button" data-sa-requirement="' + esc(requirement.id) + '">Inspect</button> <button type="button" class="sd-button" data-sa-investigate="' + esc(requirement.id) + '"' + (!ctx.runId || ctx.hasDraft ? ' disabled' : '') + '>Investigate</button>'])) : '') + '</section>';
       sample();
     }
+    bindDisclosures(host,state.controller.signal);
     host.addEventListener('input', event => {
       if (event.target.matches('[data-sa-profile-key]') && state.editor && !state.busy) {
         const input=event.target,stage=state.editor[Number(input.dataset.saProfileStage)];

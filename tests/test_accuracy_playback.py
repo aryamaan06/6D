@@ -101,8 +101,11 @@ class AccuracyPlaybackTests(unittest.TestCase):
 const fs = require('fs'), vm = require('vm'), assert = require('assert');
 let source = fs.readFileSync(process.argv[1], 'utf8');
 source = source.replace('window.SixDSimulation={mount,unmount};', 'window.SixDSimulation={mount,unmount,accuracyPanel};');
-const context = {window:{}}; vm.createContext(context); vm.runInContext(source, context);
-const render = context.window.SixDSimulation.accuracyPanel;
+const context = {window:{}}; vm.createContext(context);
+vm.runInContext(fs.readFileSync(require('path').join(require('path').dirname(process.argv[1]), 'units.js'), 'utf8'), context);
+vm.runInContext(source, context);
+const render = receipt => context.window.SixDSimulation.accuracyPanel(receipt,
+ {options:{projectId:'playback-accuracy',revision:1},session:{runId:'retained-run',mode:'project',modelId:'orbit'}});
 const [supported, unresolved, legacy, exploratory] = JSON.parse(fs.readFileSync(0, 'utf8'));
 let html = render(supported);
 assert(html.includes('Refinement criteria supported'));

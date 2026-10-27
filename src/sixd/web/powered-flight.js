@@ -2,6 +2,29 @@
 (() => {
   'use strict';
   let active=null;
+  const disclosureStates = new Map();
+  function disclosure(ctx,id,title,body,extra='') {
+    const key=JSON.stringify([ctx.projectId??null,ctx.revision??null,ctx.runId??null,ctx.modelId??null,!!ctx.hasDraft]);
+    return '<details class="sd-source" data-flight-disclosure="'+id+'" data-flight-context="'+esc(key)+'"'+(disclosureStates.get(key)?.get(id)?' open':'')+extra+'><summary>'+esc(title)+'</summary>'+body+'</details>';
+  }
+  function bindDisclosures(host,signal) {
+    host.addEventListener('toggle',event=>{
+      const item=event.target;if(!item.matches?.('details[data-flight-disclosure]')||!host.contains(item))return;
+      const key=item.dataset.flightContext;if(!disclosureStates.has(key))disclosureStates.set(key,new Map());
+      disclosureStates.get(key).set(item.dataset.flightDisclosure,item.open);
+      if(disclosureStates.size>50)disclosureStates.delete(disclosureStates.keys().next().value);
+    },{capture:true,signal});
+  }
+  function outcome(result,ctx) {
+    const requirements=(ctx.project?.requirements||[]).filter(item=>item.model_id===ctx.modelId);
+    if(ctx.hasDraft)return '<p class="sd-notice">Draft not calculated. Save the revision and run its checks.</p>';
+    if(!result||result.status!=='completed')return '<p class="sd-notice">Flight not assessed: no completed calculation for this saved context. Inspect the issues below.</p>';
+    const counts={met:0,not_met:0,not_assessed:0,not_run:0};
+    for(const requirement of requirements){const finding=ctx.findings?.[requirement.id],status=['insufficient_accuracy','accuracy_not_assessed'].includes(finding?.assessment_status)?'not_assessed':finding?.status||'not_run';counts[Object.hasOwn(counts,status)?status:'not_assessed']++;}
+    const response=result.flight_response||result.guided_response||result.staged_response;
+    const accuracy=response?.diagnostics;
+    return '<section class="pf-result-summary" aria-label="Saved flight check results"><strong>Saved checks</strong><p>'+ (requirements.length?counts.met+' meet criteria · '+counts.not_met+' criteria unmet · '+counts.not_assessed+' not assessed'+(counts.not_run?' · '+counts.not_run+' not calculated':''):'No requirements are linked to this flight model.')+'</p><p class="pf-note">These results concern the supplied model and saved inputs, not a complete rocket or mission.</p>'+(accuracy?.grid_agreement_met===false?'<p class="sd-notice"><strong>Numerical agreement not met.</strong> '+esc(accuracy.reason)+'</p>':'')+'</section>';
+  }
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const human=v=>String(v??'').replace(/_/g,' ');
   const unit=v=>window.SixDUnits.format(v);
@@ -22,16 +45,23 @@
     const burnout=a.events.find(e=>e.event==='before_cutoff').time_s;
     return '<figure class="pf-chart"><figcaption>'+esc(title)+' · '+esc(units)+'</figcaption><svg viewBox="0 0 540 225" role="img" aria-label="'+esc(title+' against time, saved samples with burnout marker')+'"><path d="M65 38V183H505" fill="none" stroke="#cbd0d8"/><path d="M'+x(burnout)+' 38V183" stroke="#969aa3" stroke-dasharray="4 4"/>'+paths+'<line data-pf-cursor x1="65" x2="65" y1="38" y2="183" stroke="#262b35" stroke-opacity=".5"/><text x="60" y="42" text-anchor="end">'+short(high)+'</text><text x="60" y="183" text-anchor="end">'+short(low)+'</text><text x="65" y="204">0</text><text x="505" y="204" text-anchor="end">'+short(end)+' s</text></svg><div class="pf-legend">'+series.map(([,label,color])=>'<span><i style="background:'+color+'"></i>'+esc(label)+'</span>').join('')+'<span>Dashed: burnout</span></div></figure>';
   }
-  function evidence(result,ctx={}){
+  function evidence(result,ctx={}) {
     if(ctx.hasDraft)return '<p class="sd-notice">Draft changes have no calculated flight response. Save the revision and run checks.</p>';
-    if(!result)return '<p class="sd-notice">No current flight calculation for this revision. Run checks to record its response.</p>';
-    const a=result.flight_response;
-    if(result.status!=='completed'||!a)return '<p class="sd-notice">Flight response unavailable. This model/input gap does not establish a failed vehicle.</p>'+list(result.issues||[]);
-    const d=a.diagnostics;
-    return '<p class="pf-diagnostic" data-pf-agreement="'+d.grid_agreement_met+'"><strong>'+ (d.grid_agreement_met?'Declared grid agreement met':'Diagnostic result · grid agreement not met')+'</strong><br>'+esc(d.reason)+'</p>'+table(['Saved metric','Value','Unit','Numerical allowance'],Object.entries(result.metrics).map(([name,q])=>[esc(human(name)),value(q.value),esc(unit(q.unit)),value(d.metric_allowances[name])]))+
-      '<p class="pf-note">Values use compact display precision; exact metrics and diagnostics are available below. Allowances combine declared state tolerances and observed grid differences. They are not proven error bounds. Extrema cover saved samples; lines join selected samples for readability.</p><div class="pf-charts">'+charts.map(([title,units,series])=>chart(a,title,units,series)).join('')+'</div>'+table(['Grid pair · steps/segment','Maximum altitude difference · m','Maximum velocity difference · m/s'],d.level_differences.map(row=>[row.coarse_steps+' → '+row.fine_steps,value(row.max_altitude_difference_m),value(row.max_velocity_difference_m_s)]))+
-      '<details class="sd-source" data-preserve-notation><summary>Exact saved metrics and numerical diagnostics</summary><pre>'+esc(JSON.stringify({metrics:result.metrics,diagnostics:d},null,2))+'</pre></details>'+
-      '<details class="sd-source"><summary>Inputs, method and retained sample events</summary><p>Classical RK4, order 4; analytical mass depletion. Burn and coast have separate grids, joined at exact fuel exhaustion. '+esc(a.samples.length)+' fine-grid samples retained; intermediate grids remain in JSON.</p>'+table(['Parameter','Supplied value'],Object.entries(a.parameters).map(([key,v])=>[esc(human(key)),esc(v)]))+table(['Event','Sample index','Time · s'],a.events.map(e=>[esc(human(e.event)),e.sample_index,esc(e.time_s)]))+'</details><details class="sd-source"><summary>Assumptions and exclusions</summary><h4>Assumptions</h4>'+list(a.assumptions)+'<h4>Not assessed</h4>'+list(a.not_assessed)+'</details><p class="sd-receipt">Project '+esc(ctx.projectId)+' · revision R'+esc(ctx.revision)+'<br>Run '+esc(ctx.runId)+'<br>Review '+esc(ctx.reviewDigest)+'<br>Solver SHA-256 '+esc(a.source_fingerprint)+(ctx.origin?'<br>'+esc(human(ctx.origin.disposition))+' from R'+esc(ctx.origin.revision)+' · '+esc(ctx.origin.run_id):'')+'</p>';
+    if(!result)return '<p class="sd-notice">No current flight calculation for this saved revision. Run checks to record its response.</p>';
+    const artifact=result.status==='completed'?result.flight_response:null;
+    if(!artifact)return '<p class="sd-notice">Flight response unavailable. This model/input gap does not establish a failed vehicle.</p>'+list(result.issues||[]);
+    const diagnostics=artifact.diagnostics;
+    const metrics=table(['Saved metric','Value','Unit','Numerical allowance'],Object.entries(result.metrics||{}).map(([name,quantity])=>[esc(human(name)),value(quantity.value),esc(unit(quantity.unit)),value(diagnostics.metric_allowances?.[name])]));
+    const grids=table(['Grid pair · steps/segment','Maximum altitude difference · m','Maximum velocity difference · m/s'],(diagnostics.level_differences||[]).map(row=>[esc(row.coarse_steps+' → '+row.fine_steps),value(row.max_altitude_difference_m),value(row.max_velocity_difference_m_s)]));
+    const exactEvidence={metrics:result.metrics,diagnostics};
+    return '<p class="pf-diagnostic" data-pf-agreement="'+String(diagnostics.grid_agreement_met)+'"><strong>'+(diagnostics.grid_agreement_met?'Declared grid agreement met':'Diagnostic response · grid agreement not met')+'</strong><br>'+esc(diagnostics.reason)+'</p><p class="pf-note">Sampled model output. Grid agreement is not a physical validation or a rigorous error bound.</p>'+
+      disclosure(ctx,'metrics','View saved metrics and numerical comparison',metrics+'<p class="pf-note">Values use compact display precision. Allowances combine declared state tolerances and observed grid differences. Extrema concern retained samples only.</p>'+grids)+
+      disclosure(ctx,'graphs','View graphs ('+charts.length+')',charts.map(([title,units,series],index)=>disclosure(ctx,'graph-'+index,title,chart(artifact,title,units,series))).join(''))+
+
+      disclosure(ctx,'exact-metrics','Exact saved metrics and numerical diagnostics','<pre>'+esc(JSON.stringify(exactEvidence,null,2))+'</pre>',' data-preserve-notation')+
+      disclosure(ctx,'method','Inputs, method and retained events','<p>Classical RK4 with analytical mass depletion. Burn and coast have separate grids joined at exact fuel exhaustion. '+esc(artifact.samples.length)+' fine-grid samples retained; intermediate grids remain in exported JSON.</p>'+table(['Parameter','Supplied value'],Object.entries(artifact.parameters||{}).map(([key,number])=>[esc(human(key)),esc(number)]))+table(['Event','Sample index','Time · s'],(artifact.events||[]).map(event=>[esc(human(event.event)),esc(event.sample_index),esc(event.time_s)])),' data-preserve-notation')+
+      disclosure(ctx,'assumptions','Assumptions and unassessed scope','<h4>Assumptions</h4>'+list(artifact.assumptions||[])+'<h4>Not assessed</h4>'+list(artifact.not_assessed||[]))+
+      disclosure(ctx,'identity','Calculation identity and execution origin','<p class="sd-receipt">Project '+esc(ctx.projectId||'—')+' · saved revision R'+esc(ctx.revision??'—')+'<br>Run '+esc(ctx.runId||'—')+'<br>Review '+esc(ctx.reviewDigest||'—')+'<br>Solver SHA-256 '+esc(artifact.source_fingerprint)+(ctx.origin?'<br>'+esc(human(ctx.origin.disposition))+' from R'+esc(ctx.origin.revision)+' · '+esc(ctx.origin.run_id):'')+'</p>');
   }
   function report(result,ctx={}){return '<section class="pf-evidence" data-powered-flight-evidence="'+esc(ctx.modelId||result?.model_id)+'"><h3>Powered vertical-flight evidence</h3>'+evidence(result,ctx)+'</section>';}
   function unmount(){if(active){active.controller.abort();cancelAnimationFrame(active.frame);active=null;}}
@@ -46,18 +76,20 @@
       const y=260-220*row.altitude_m/Math.max(1,...a.samples.map(r=>r.altitude_m));
       host.querySelector('[data-pf-vehicle]').setAttribute('transform','translate(90 '+y+')');
       host.querySelector('[data-pf-sample]').textContent='Sample '+state.index+' / '+(a.samples.length-1)+' · '+short(row.time_s)+' s · '+human(row.event||row.phase);
-      host.querySelector('[data-pf-state]').innerHTML=table(['Quantity','Saved value'],[['Altitude',row.altitude_m,'m'],['Vertical velocity',row.velocity_m_s,'m/s'],['Mass',row.mass_kg,'kg'],['Thrust',row.thrust_n,'N'],['Signed drag',row.drag_n,'N'],['Gravity',row.gravity_m_s2,'m/s²'],['Upward acceleration',row.acceleration_m_s2,'m/s²']].map(([key,v,u])=>[key,value(v,u)]))+'<details class="sd-source" data-preserve-notation><summary>Exact recorded sample</summary><pre>'+esc(JSON.stringify(row,null,2))+'</pre></details>';
+      host.querySelector('[data-pf-state]').innerHTML=table(['Quantity','Saved value'],[['Altitude',row.altitude_m,'m'],['Vertical velocity',row.velocity_m_s,'m/s'],['Mass',row.mass_kg,'kg'],['Thrust',row.thrust_n,'N'],['Signed drag',row.drag_n,'N'],['Gravity',row.gravity_m_s2,'m/s²'],['Upward acceleration',row.acceleration_m_s2,'m/s²']].map(([key,v,u])=>[key,value(v,u)]))+disclosure({...ctx,modelId:state.modelId},'exact-sample','Exact recorded sample','<pre>'+esc(JSON.stringify(row,null,2))+'</pre>',' data-preserve-notation');
       const x=65+440*row.time_s/a.samples.at(-1).time_s;
       for(const line of host.querySelectorAll('[data-pf-cursor]')){line.setAttribute('x1',x);line.setAttribute('x2',x);}
     }
     function render(){
       stop();state.index=0;const result=ctx.modelResults?.[state.modelId],a=!ctx.hasDraft&&result?.status==='completed'?result.flight_response:null;
       host.innerHTML='<section class="pf-page"><p class="sd-label">Saved R'+esc(ctx.revision)+' · bounded vertical ascent</p><h2>Follow the flight through burnout.</h2><p class="sd-lead">Inspect recorded altitude, velocity, mass and forces through a constant-thrust burn and above-surface coast.</p><div class="sd-action-row">'+button('reference','Use constructed flight reference',!!ctx.hasDraft)+button('author','Author project')+(models.length?button('inputs','Edit flight inputs')+button('run','Run checks',!!ctx.hasDraft)+button('report','Open full report',!ctx.runId||!!ctx.hasDraft):'')+'</div>'+(!models.length?'<div class="sd-notice">This project has no powered-flight model. Choose the constructed reference to try this bounded calculation, or add a powered vertical-flight model through Author project. Creating a template is explicit; no existing project is overwritten.</div>':'<label class="pf-select">Flight model <select data-pf-model>'+models.map(m=>'<option value="'+esc(m.id)+'" '+(m.id===state.modelId?'selected':'')+'>'+esc(m.id)+'</option>').join('')+'</select></label>')+
-        (a?'<section class="pf-playback" aria-label="Saved vertical flight playback"><div class="pf-path"><svg viewBox="0 0 180 300" role="img" aria-label="Recorded altitude above launch surface, vertical axis only"><line x1="90" x2="90" y1="35" y2="260" stroke="#cbd0d8" stroke-dasharray="4 4"/><path d="M25 260H155" stroke="#9a9f89" stroke-width="3"/><text x="90" y="290" text-anchor="middle">Launch surface</text><text x="90" y="20" text-anchor="middle">'+esc(short(Math.max(...a.samples.map(r=>r.altitude_m))))+' m</text><g data-pf-vehicle><path d="M0 -13L8 9H-8Z" fill="#5267aa"/><circle r="3" fill="white"/></g></svg><p class="pf-note">Vertical position only. Shape is a marker, not vehicle geometry.</p></div><div><p data-pf-sample></p><div class="sd-action-row">'+button('play','Play')+button('cutoff-before','Before cutoff')+button('cutoff-after','After cutoff',!a.parameters.coast_duration)+'</div><label class="pf-scrub">Recorded sample <input data-pf-slider type="range" min="0" max="'+(a.samples.length-1)+'" step="1" value="0" aria-label="Recorded flight sample"></label><div data-pf-state></div></div></section>':'')+
+        (models.length?outcome(result,{...ctx,modelId:state.modelId}):'')+
+        (a?'<section class="pf-playback" aria-label="Saved vertical flight playback"><div class="pf-path"><svg viewBox="0 0 180 300" role="img" aria-label="Recorded altitude above launch surface, vertical axis only"><line x1="90" x2="90" y1="35" y2="260" stroke="#cbd0d8" stroke-dasharray="4 4"/><path d="M25 260H155" stroke="#9a9f89" stroke-width="3"/><text x="90" y="290" text-anchor="middle">Launch surface</text><text x="90" y="20" text-anchor="middle">'+esc(short(Math.max(...a.samples.map(r=>r.altitude_m))))+' m</text><g data-pf-vehicle><path d="M0 -13L8 9H-8Z" fill="#5267aa"/><circle r="3" fill="white"/></g></svg><p class="pf-note">Vertical position only. Shape is a marker, not vehicle geometry.</p></div><div><p data-pf-sample></p><div class="sd-action-row">'+button('play','Play')+button('cutoff-before','Before cutoff')+button('cutoff-after','After cutoff',!a.parameters.coast_duration)+'</div><label class="pf-scrub">Recorded sample <input data-pf-slider type="range" min="0" max="'+(a.samples.length-1)+'" step="1" value="0" aria-label="Recorded flight sample"></label>'+disclosure({...ctx,modelId:state.modelId},'sample-values','View sample values','<div data-pf-state></div>')+'</div></section>':'')+
         (models.length?evidence(result,{...ctx,modelId:state.modelId,origin:ctx.modelOrigins?.[state.modelId]}):'')+
         (models.length?'<h3>Declared requirements</h3>'+table(['Requirement','Finding','Actions'],(ctx.project.requirements||[]).filter(r=>r.model_id===state.modelId).map(r=>[esc(r.title),esc(ctx.hasDraft?'Uncalculated draft':human(ctx.findings?.[r.id]?.status||'not run')),'<button class="sd-button" data-pf-requirement="'+esc(r.id)+'">Inspect</button> <button class="sd-button" data-pf-investigate="'+esc(r.id)+'" '+(!ctx.runId||ctx.hasDraft?'disabled':'')+'>Investigate</button>'])):'')+'</section>';
       sample();
     }
+    bindDisclosures(host,state.controller.signal);
     host.addEventListener('input',e=>{if(e.target.matches('[data-pf-slider]')){stop();state.index=Number(e.target.value);sample();}},{signal:state.controller.signal});
     host.addEventListener('change',e=>{if(e.target.matches('[data-pf-model]')){state.modelId=e.target.value;render();}},{signal:state.controller.signal});
     host.addEventListener('click',e=>{

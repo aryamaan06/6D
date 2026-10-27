@@ -85,6 +85,8 @@ try {
  assert.match(await route(),/navigation-a/);
  assert.match(await route(),/review-home/);
  pass('Selected project and saved revision have an addressable overview');
+ assert.equal(await page.locator('.rw-coverage-brief').isVisible(),true);
+ await page.locator('[data-rw-disclosure="coverage"] > summary').click();
  const coverage=page.locator('.rw-coverage-context');
  assert.match(await coverage.innerText(),/Criterion counts above describe calculated requirements/);
  assert.match(await coverage.innerText(),/model.fit declaration/i);
@@ -94,6 +96,7 @@ try {
  await coverage.locator('[data-rw-nav="coverage"]').click();await idle();assert.match(await route(),/coverage/);
  await click('review-home');await page.locator('.rw-workspace[aria-busy="false"]').waitFor();
  pass('Passing calculation criteria remain separate from nine missing fit declarations and one unsupported analysis, with a working coverage action');
+ await page.locator('[data-rw-disclosure="workflow"] > summary').click();
  const reportLink=page.locator('.rw-map [data-rw-nav="report"]');
  await reportLink.scrollIntoViewIfNeeded();assert.ok(await page.evaluate(()=>scrollY)>200);
  await reportLink.click();await idle();await page.waitForFunction(()=>scrollY<2);
@@ -163,12 +166,12 @@ try {
  pass('Draft edits keep their grouped section open without saving, and readable native unit labels retain canonical selection values');
  await click('analysis');await click('vertical-mode');
  assert.equal(await page.locator('#sd-page-title').innerText(),'Vertical flight');assert.equal(await page.locator('.pf-page > h2:visible').count(),0);
- assert.equal(await page.locator('h1:visible').count(),1);assert.equal(await page.locator('.pf-page details').filter({hasText:'Assumptions and exclusions'}).count(),1);
+ assert.equal(await page.locator('h1:visible').count(),1);assert.equal(await page.locator('.pf-page details[data-flight-disclosure="assumptions"]').count(),1);
  const exactFlight=page.locator('.pf-page details').filter({has:page.locator('summary').filter({hasText:'Exact saved metrics and numerical diagnostics'})});await exactFlight.locator(':scope > summary').click();
  assert.ok((await exactFlight.innerText()).includes(String(exactAltitude)));
  await page.getByRole('button',{name:'Open full report',exact:true}).click();await idle();const scopeDetails=page.locator('.sd-reader details[data-disclosure-key*="project-description"]');
  assert.equal(await scopeDetails.evaluate(el=>el.open),false);assert.equal(await page.locator('.sd-reader > h2:visible').count(),0);assert.equal(await page.locator('h1:visible').count(),1);
- assert.equal(await page.locator('.sd-reader > .sd-accuracy-warning').isVisible(),true);
+ assert.equal(await page.locator('.sd-reader > .rw-verdict > .sd-accuracy-warning').isVisible(),true);
  await page.evaluate(()=>dispatchEvent(new Event('beforeprint')));assert.equal(await scopeDetails.evaluate(el=>el.open),true);
  await page.evaluate(()=>dispatchEvent(new Event('afterprint')));assert.equal(await scopeDetails.evaluate(el=>el.open),false);
  await click('review-home');await page.locator('.rw-workspace[aria-busy="false"]').waitFor();
@@ -202,6 +205,7 @@ try {
  assert.match(await page.locator('#sd-location-trail').innerText(),/Engineering/);
  pass('System Table, selected requirement and evidence panel survive deep reload with a parent breadcrumb');
  await click('review-home');
+ await page.locator('.rw-workspace[aria-busy="false"]').waitFor();await page.locator('[data-rw-disclosure="reference"] > summary').click();
  await page.locator('[data-rw="rocket-stage"]').click();await idle();
  assert.match(await page.locator('#sd-view-content').innerText(),/11,?000/);
  await click('evidence');assert.equal(await page.locator('#sd-draft-strip').isVisible(),true);
@@ -221,6 +225,7 @@ try {
  // Create a known cross-project history boundary, then exercise browser Back.
  await click('review-home');const bUrl=page.url();
  await ensureProject('navigation-a');await click('review-home');
+ await page.locator('.rw-workspace[aria-busy="false"]').waitFor();if(!await page.locator('[data-rw-disclosure="reference"]').evaluate(node=>node.open))await page.locator('[data-rw-disclosure="reference"] > summary').click();
  await page.locator('[data-rw="rocket-stage"]').click();await idle();
  const aDraftUrl=page.url();
  let dismissed=0;const rejectDialog=async d=>{dismissed++;await d.dismiss();};page.on('dialog',rejectDialog);

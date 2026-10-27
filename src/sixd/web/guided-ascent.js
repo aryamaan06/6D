@@ -2,6 +2,29 @@
 (() => {
   'use strict';
   let active = null;
+  const disclosureStates = new Map();
+  function disclosure(ctx,id,title,body,extra='') {
+    const key=JSON.stringify([ctx.projectId??null,ctx.revision??null,ctx.runId??null,ctx.modelId??null,!!ctx.hasDraft]);
+    return '<details class="sd-source" data-flight-disclosure="'+id+'" data-flight-context="'+esc(key)+'"'+(disclosureStates.get(key)?.get(id)?' open':'')+extra+'><summary>'+esc(title)+'</summary>'+body+'</details>';
+  }
+  function bindDisclosures(host,signal) {
+    host.addEventListener('toggle',event=>{
+      const item=event.target;if(!item.matches?.('details[data-flight-disclosure]')||!host.contains(item))return;
+      const key=item.dataset.flightContext;if(!disclosureStates.has(key))disclosureStates.set(key,new Map());
+      disclosureStates.get(key).set(item.dataset.flightDisclosure,item.open);
+      if(disclosureStates.size>50)disclosureStates.delete(disclosureStates.keys().next().value);
+    },{capture:true,signal});
+  }
+  function outcome(result,ctx) {
+    const requirements=(ctx.project?.requirements||[]).filter(item=>item.model_id===ctx.modelId);
+    if(ctx.hasDraft)return '<p class="sd-notice">Draft not calculated. Save the revision and run its checks.</p>';
+    if(!result||result.status!=='completed')return '<p class="sd-notice">Flight not assessed: no completed calculation for this saved context. Inspect the issues below.</p>';
+    const counts={met:0,not_met:0,not_assessed:0,not_run:0};
+    for(const requirement of requirements){const finding=ctx.findings?.[requirement.id],status=['insufficient_accuracy','accuracy_not_assessed'].includes(finding?.assessment_status)?'not_assessed':finding?.status||'not_run';counts[Object.hasOwn(counts,status)?status:'not_assessed']++;}
+    const response=result.flight_response||result.guided_response||result.staged_response;
+    const accuracy=response?.diagnostics;
+    return '<section class="ga-result-summary" aria-label="Saved flight check results"><strong>Saved checks</strong><p>'+ (requirements.length?counts.met+' meet criteria · '+counts.not_met+' criteria unmet · '+counts.not_assessed+' not assessed'+(counts.not_run?' · '+counts.not_run+' not calculated':''):'No requirements are linked to this flight model.')+'</p><p class="ga-note">These results concern the supplied model and saved inputs, not a complete rocket or mission.</p>'+(accuracy?.grid_agreement_met===false?'<p class="sd-notice"><strong>Numerical agreement not met.</strong> '+esc(accuracy.reason)+'</p>':'')+'</section>';
+  }
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const human = value => String(value ?? '').replace(/_/g, ' ');
   const list = value => Array.isArray(value) ? value : [];
@@ -64,22 +87,24 @@
     return artifact && list(artifact.samples).length > 0 && artifact.diagnostics ? artifact : null;
   }
 
-  function evidence(result, ctx = {}) {
-    if (ctx.hasDraft) return '<p class="sd-notice">Unsaved draft changes have no calculated guided-ascent response. Save the revision and run checks.</p>';
-    if (!result) return '<p class="sd-notice">No current guided-ascent calculation for this saved revision. Run checks to record its response.</p>';
-    const artifact = artifactFrom(result);
-    if (!artifact) return '<p class="sd-notice">Guided-ascent response unavailable. A model or input gap does not establish a failed rocket.</p>' + bullets(result.issues);
-    const diagnostics = artifact.diagnostics;
-    return '<p class="ga-diagnostic" data-ga-agreement="' + String(diagnostics.grid_agreement_met) + '"><strong>' + (diagnostics.grid_agreement_met ? 'Declared grid agreement met' : 'Diagnostic response · grid agreement not met') + '</strong><br>' + esc(diagnostics.reason) + '</p>' +
-      table(['Saved metric','Value','Unit','Numerical allowance'],Object.entries(result.metrics || {}).map(([name,quantity]) => [esc(human(name)),value(quantity.value),esc(unit(quantity.unit)),value(diagnostics.metric_allowances?.[name])])) +
-      '<p class="ga-note">Values use compact display precision; exact metrics and diagnostics are available below. These are sampled results. Numerical allowances combine declared state tolerances and observed grid differences; they are not rigorous error bounds or validation of the supplied vehicle.</p><div class="ga-charts">' + charts.map(([title,units,series]) => chart(artifact,title,units,series)).join('') + '</div>' +
-      table(['Grid pair · steps/segment','Maximum position difference · m','Maximum velocity difference · m/s'],list(diagnostics.level_differences).map(row => [esc(row.coarse_steps + ' → ' + row.fine_steps),value(row.max_position_difference_m),value(row.max_velocity_difference_m_s)])) +
-      '<details class="sd-source" data-preserve-notation><summary>Exact saved metrics and numerical diagnostics</summary><pre>' + esc(JSON.stringify({metrics:result.metrics,diagnostics},null,2)) + '</pre></details>' +
-      '<details class="sd-source" data-preserve-notation><summary>Frame, supplied inputs and retained events</summary><p>Nonrotating body-centered inertial plane. Initial position is (launch radius, 0), initially at rest. Signed downrange is the launch-radius surface arc R × atan2(y, x). Pitch is measured from the local outward radial direction toward the counterclockwise tangent.</p><p>Classical RK4 with analytical constant-flow mass. Separate integration segments end at pitch boundaries and exact fuel exhaustion. ' + esc(artifact.samples.length) + ' fine-grid samples retained; intermediate grids remain in exported JSON.</p>' + table(['Parameter','Supplied value'],Object.entries(artifact.parameters || {}).map(([key,number]) => [esc(human(key)),esc(number)])) + table(['Event','Sample index','Time · s'],list(artifact.events).map(event => [esc(human(event.event)),esc(event.sample_index),esc(event.time_s)])) + '</details>' +
-      '<details class="sd-source"><summary>Assumptions and unassessed scope</summary><h4>Assumptions</h4>' + bullets(artifact.assumptions) + '<h4>Not assessed</h4>' + bullets(artifact.not_assessed) + '</details>' +
-      '<p class="sd-receipt">Project ' + esc(ctx.projectId || '—') + ' · saved revision R' + esc(ctx.revision ?? '—') + '<br>Run ' + esc(ctx.runId || '—') + '<br>Review ' + esc(ctx.reviewDigest || '—') + '<br>Solver SHA-256 ' + esc(artifact.source_fingerprint) + (ctx.origin ? '<br>' + esc(human(ctx.origin.disposition)) + ' from R' + esc(ctx.origin.revision) + ' · ' + esc(ctx.origin.run_id) : '') + '</p>';
-  }
+  function evidence(result,ctx={}) {
+    if(ctx.hasDraft)return '<p class="sd-notice">Draft changes have no calculated flight response. Save the revision and run checks.</p>';
+    if(!result)return '<p class="sd-notice">No current flight calculation for this saved revision. Run checks to record its response.</p>';
+    const artifact=artifactFrom(result);
+    if(!artifact)return '<p class="sd-notice">Flight response unavailable. This model/input gap does not establish a failed vehicle.</p>'+bullets(result.issues);
+    const diagnostics=artifact.diagnostics;
+    const metrics=table(['Saved metric','Value','Unit','Numerical allowance'],Object.entries(result.metrics||{}).map(([name,quantity])=>[esc(human(name)),value(quantity.value),esc(unit(quantity.unit)),value(diagnostics.metric_allowances?.[name])]));
+    const grids=table(['Grid pair · steps/segment','Maximum position difference · m','Maximum velocity difference · m/s'],(diagnostics.level_differences||[]).map(row=>[esc(row.coarse_steps+' → '+row.fine_steps),value(row.max_position_difference_m),value(row.max_velocity_difference_m_s)]));
+    const exactEvidence={metrics:result.metrics,diagnostics};
+    return '<p class="ga-diagnostic" data-ga-agreement="'+String(diagnostics.grid_agreement_met)+'"><strong>'+(diagnostics.grid_agreement_met?'Declared grid agreement met':'Diagnostic response · grid agreement not met')+'</strong><br>'+esc(diagnostics.reason)+'</p><p class="ga-note">Sampled model output. Grid agreement is not a physical validation or a rigorous error bound.</p>'+
+      disclosure(ctx,'metrics','View saved metrics and numerical comparison',metrics+'<p class="ga-note">Values use compact display precision. Allowances combine declared state tolerances and observed grid differences. Extrema concern retained samples only.</p>'+grids)+
+      disclosure(ctx,'graphs','View graphs ('+charts.length+')',charts.map(([title,units,series],index)=>disclosure(ctx,'graph-'+index,title,chart(artifact,title,units,series))).join(''))+
 
+      disclosure(ctx,'exact-metrics','Exact saved metrics and numerical diagnostics','<pre>'+esc(JSON.stringify(exactEvidence,null,2))+'</pre>',' data-preserve-notation')+
+      disclosure(ctx,'method','Inputs, method and retained events','<p>Initial position is (launch radius, 0), initially at rest. Signed downrange is the launch-radius surface arc R × atan2(y, x). Pitch is measured from the local outward radial direction toward the counterclockwise tangent. Classical RK4 in a nonrotating body-centered inertial plane, with analytical mass depletion and separate retained event boundaries. '+esc(artifact.samples.length)+' fine-grid samples retained; intermediate grids remain in exported JSON.</p>'+table(['Parameter','Supplied value'],Object.entries(artifact.parameters||{}).map(([key,number])=>[esc(human(key)),esc(number)]))+table(['Event','Sample index','Time · s'],(artifact.events||[]).map(event=>[esc(human(event.event)),esc(event.sample_index),esc(event.time_s)])),' data-preserve-notation')+
+      disclosure(ctx,'assumptions','Assumptions and unassessed scope','<h4>Assumptions</h4>'+bullets(artifact.assumptions)+'<h4>Not assessed</h4>'+bullets(artifact.not_assessed))+
+      disclosure(ctx,'identity','Calculation identity and execution origin','<p class="sd-receipt">Project '+esc(ctx.projectId||'—')+' · saved revision R'+esc(ctx.revision??'—')+'<br>Run '+esc(ctx.runId||'—')+'<br>Review '+esc(ctx.reviewDigest||'—')+'<br>Solver SHA-256 '+esc(artifact.source_fingerprint)+(ctx.origin?'<br>'+esc(human(ctx.origin.disposition))+' from R'+esc(ctx.origin.revision)+' · '+esc(ctx.origin.run_id):'')+'</p>');
+  }
   function report(result, ctx = {}) {
     return '<section class="ga-evidence" data-guided-ascent-evidence="' + esc(ctx.modelId || result?.model_id || '') + '"><h3>Guided-ascent evidence</h3>' + evidence(result,ctx) + '</section>';
   }
@@ -114,7 +139,7 @@
         ['Radial velocity',row.radial_velocity_m_s,'m/s'],['Tangential velocity',row.tangential_velocity_m_s,'m/s'],
         ['Pitch from local vertical',row.pitch_angle_rad,'rad'],['Mass',row.mass_kg,'kg'],['Thrust',row.thrust_n,'N'],
         ['Drag magnitude',row.drag_n,'N'],['Dynamic pressure',row.dynamic_pressure_pa,'Pa'],['Acceleration magnitude',row.acceleration_m_s2,'m/s²'],
-      ].map(([label,number,units]) => [esc(label),value(number,units)])) + '<details class="sd-source" data-preserve-notation><summary>Exact recorded sample</summary><pre>' + esc(JSON.stringify(row,null,2)) + '</pre></details>';
+      ].map(([label,number,units]) => [esc(label),value(number,units)])) + disclosure({...ctx,modelId:state.modelId},'exact-sample','Exact recorded sample','<pre>'+esc(JSON.stringify(row,null,2))+'</pre>',' data-preserve-notation');
       const x = 68+435*row.time_s/saved.samples.at(-1).time_s;
       for (const cursor of host.querySelectorAll('[data-ga-cursor]')) { cursor.setAttribute('x1',x);cursor.setAttribute('x2',x); }
     }
@@ -124,11 +149,13 @@
       host.innerHTML = '<section class="ga-page" aria-label="Guided ascent"><p class="sd-label">Saved R' + esc(ctx.revision) + ' · bounded planar ascent</p><h2>Follow the ascent and its steering programme.</h2><p class="sd-lead">Replay recorded horizontal motion and altitude through a declared pitch programme, burnout and above-surface coast.</p><p class="ga-scope">Prescribed steering is an input. This calculation does not verify closed-loop guidance, navigation, attitude stability or a complete launch-to-orbit mission.</p><div class="sd-action-row">' + button('reference','Use constructed guided-ascent reference',!!ctx.hasDraft) + button('author','Author project') + (hasModels ? button('inputs','Edit ascent inputs') + button('run','Run checks',!!ctx.hasDraft || ctx.isLatest === false) + button('report','Open full report',!ctx.runId || !!ctx.hasDraft) : '') + '</div>' +
         (!hasModels ? '<div class="sd-notice">This project has no guided-ascent model. Use the constructed reference or add a guided-ascent model through Author project. Creating a new reference preserves existing projects and runs no calculation.</div>' : '<label class="ga-select">Ascent model <select data-ga-model>' + models.map(model => '<option value="' + esc(model.id) + '"' + (model.id === state.modelId ? ' selected' : '') + '>' + esc(model.id) + '</option>').join('') + '</select></label>') +
         (ctx.hasDraft && hasModels ? '<p class="sd-notice">An unsaved draft is open. Its trajectory has not been calculated; saved playback is hidden until the draft is saved and checked or discarded.</p>' : '') +
-        (saved ? '<section class="ga-playback" aria-label="Saved guided-ascent playback">' + pathFigure(saved) + '<div class="ga-playback-controls"><p data-ga-sample aria-live="off"></p><div class="sd-action-row">' + button('play','Play') + button('start','Launch') + button('cutoff-before','Before cutoff') + button('cutoff-after','After cutoff',!saved.events.some(event => event.event === 'after_cutoff')) + button('end','Last sample') + '</div><label class="ga-scrub">Recorded sample<input data-ga-slider type="range" min="0" max="' + (saved.samples.length-1) + '" step="1" value="0" aria-label="Recorded guided-ascent sample"></label><div data-ga-state></div></div></section>' : '') +
+        (hasModels ? outcome(result(),{...ctx,modelId:state.modelId}) : '') +
+        (saved ? '<section class="ga-playback" aria-label="Saved guided-ascent playback">' + pathFigure(saved) + '<div class="ga-playback-controls"><p data-ga-sample aria-live="off"></p><div class="sd-action-row">' + button('play','Play') + button('start','Launch') + button('cutoff-before','Before cutoff') + button('cutoff-after','After cutoff',!saved.events.some(event => event.event === 'after_cutoff')) + button('end','Last sample') + '</div><label class="ga-scrub">Recorded sample<input data-ga-slider type="range" min="0" max="' + (saved.samples.length-1) + '" step="1" value="0" aria-label="Recorded guided-ascent sample"></label>'+disclosure({...ctx,modelId:state.modelId},'sample-values','View sample values','<div data-ga-state></div>')+'</div></section>' : '') +
         (hasModels ? evidence(result(),{...ctx,modelId:state.modelId,origin:ctx.modelOrigins?.[state.modelId]}) : '') +
         (hasModels ? '<h3>Declared requirements</h3>' + table(['Requirement','Finding','Actions'],list(ctx.project.requirements).filter(requirement => requirement.model_id === state.modelId).map(requirement => [esc(requirement.title),esc(ctx.hasDraft ? 'Uncalculated draft' : human(ctx.findings?.[requirement.id]?.status || 'not run')),'<button type="button" class="sd-button" data-ga-requirement="' + esc(requirement.id) + '">Inspect</button> <button type="button" class="sd-button" data-ga-investigate="' + esc(requirement.id) + '"' + (!ctx.runId || ctx.hasDraft ? ' disabled' : '') + '>Investigate</button>'])) : '') + '</section>';
       sample();
     }
+    bindDisclosures(host,state.controller.signal);
     host.addEventListener('input', event => {
       if (!event.target.matches('[data-ga-slider]')) return;
       stop();state.index = Number(event.target.value);sample();

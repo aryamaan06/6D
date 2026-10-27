@@ -14,7 +14,7 @@ function snapshot(counts,checks){
 }
 async function render(data,extra={}){
   const window={},targets=new Map([['[data-rw-findings]',{innerHTML:''}],['[data-rw-match-count]',{textContent:''}]]);
-  const host={innerHTML:'',querySelector:selector=>targets.get(selector)||null,querySelectorAll:()=>[],contains:()=>true,replaceChildren(){this.innerHTML='';}};
+  const host={addEventListener(){},removeEventListener(){},innerHTML:'',querySelector:selector=>targets.get(selector)||null,querySelectorAll:()=>[],contains:()=>true,replaceChildren(){this.innerHTML='';}};
   const navigation=[],requests=[];
   vm.runInNewContext(unitsSource,{window});
   vm.runInNewContext(source,{window,AbortController,encodeURIComponent});

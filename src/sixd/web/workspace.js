@@ -391,6 +391,50 @@
     clearTimeout(testLinks.timer);testLinks.timer=setTimeout(()=>void refreshTestLinks(),300);hydrateTestLinks();
     clearTimeout(interfaceLinks.timer);interfaceLinks.timer=setTimeout(()=>void refreshInterfaceLinks(),300);
   }
+  function thrustInputs(){
+    if(!state.data)return [];
+    const p=project(),savedBefore=priorRun()?.review?.project||state.data.configuration_base?.project;
+    const ids=[...new Set((p.models||[]).map(item=>item.inputs?.thrust).filter(id=>typeof id==='string'&&Object.hasOwn(p.inputs,id)))];
+    return ids.map(id=>{const input=p.inputs[id],previous=savedBefore?.inputs?.[id];return {id,label:human(id),value:input.value,unit:input.unit,source:input.source,previous:previous&&typeof previous.value==='number'?{value:previous.value,unit:previous.unit,revision:priorRun()?.revision||state.data.configuration_base?.revision}:null};});
+  }
+  function thrustEditKey(){return JSON.stringify([state.data?.project_id,state.data?.revision,state.data?.latest_revision,currentRun()?.run_id||null,state.draft]);}
+  function thrustError(text){const node=$('#sd-thrust-error');node.textContent=text;node.hidden=!text;}
+  function fillThrustEditor(id){
+    const item=state.thrustEdit?.inputs.find(input=>input.id===id);if(!item)return;
+    $('#sd-thrust-value').value=String(item.value);$('#sd-thrust-source').value=item.source||'';
+    $('#sd-thrust-unit').textContent='Saved unit: '+item.unit+' · input '+item.id;
+    thrustError(item.unit==='N'?'':'This input does not use newtons. Correct its unit in Design & requirements; no implicit conversion is applied.');
+  }
+  function openThrustEditor(){
+    if(!latest()){message('Historical values are preserved. Select the latest revision to edit thrust.');return;}
+    if(state.stagedProfileEdit){message('Apply or cancel the open staged profile before editing another input.');return;}
+    const inputs=thrustInputs();if(!inputs.length){message('No supported constant-thrust input is bound in this design. Open Design & requirements to configure it.');return;}
+    state.thrustEdit={key:thrustEditKey(),inputs};
+    $('#sd-thrust-input').innerHTML=inputs.map(item=>'<option value="'+esc(item.id)+'">'+esc(item.label)+'</option>').join('');
+    $('#sd-thrust-input-group').hidden=inputs.length===1;
+    $('#sd-thrust-context').textContent=project().name+' · '+(state.draft?'Existing unsaved draft based on ':'Saved ')+'R'+state.data.revision;
+    fillThrustEditor(inputs[0].id);$('#sd-thrust-dialog').showModal();$('#sd-thrust-value').focus();
+  }
+  async function stageThrust(event){
+    event.preventDefault();if(state.busy)return;
+    const capture=state.thrustEdit,id=$('#sd-thrust-input').value,item=capture?.inputs.find(input=>input.id===id),text=$('#sd-thrust-value').value.trim(),value=Number(text),source=$('#sd-thrust-source').value.trim();
+    if(!capture||capture.key!==thrustEditKey()||!latest()){thrustError('The saved design changed. Close and reopen this editor before staging.');return;}
+    if(!item||item.unit!=='N'){thrustError('Choose a bound thrust input in newtons.');return;}
+    if(!text||!Number.isFinite(value)||value<=0){thrustError('Enter a finite thrust greater than zero, in newtons.');return;}
+    if(!source||source.length>2000){thrustError('Provide a source or rationale of at most 2,000 characters.');return;}
+    const candidate=copy(project());candidate.inputs[id]={...candidate.inputs[id],value,source};
+    const projectId=state.data.project_id,revision=state.data.revision;
+    thrustError('');
+    await perform(async()=>{
+      try{
+        const preview=await api('/api/impact',{project_id:projectId,base_revision:revision,project:candidate});
+        if(state.thrustEdit!==capture||capture.key!==thrustEditKey()||!$('#sd-thrust-dialog').open)return;
+        state.draft=candidate;state.impact=preview.impact;invalidatePreflight();state.page='changes';state.panel='details';state.selected={kind:'input',id};
+        $('#sd-thrust-dialog').close();state.thrustEdit=null;stopInvestigationPolling();
+        message('Thrust change staged. Review its effects, save a revision, then recalculate. No result has changed yet.');
+      }catch(error){if(state.thrustEdit===capture)thrustError(error.message||'The thrust change could not be staged. Your saved design is unchanged.');}
+    });
+  }
   function beginDraft() {if(state.draft)return true;if(!latest()){message('Select the latest revision before creating a draft.');return false;}state.draft=copy(state.data.project);state.impact=null;invalidatePreflight();return true;}
   function inputConsumers(id) {return [...allModels().filter(m=>Object.values(m.inputs).includes(id)).map(m=>'Model '+m.id),...allReqs().filter(r=>r.limit_input===id).map(r=>'Requirement '+r.id),...(project().interfaces||[]).filter(i=>i.target_input===id||i.source.input_id===id).map(i=>'Interface '+i.id)];}
   function deletionReason(kind,id) {const users=kind==='input'?inputConsumers(id):kind==='model'?[...allModels().filter(m=>Object.values(m.links||{}).some(l=>l.model_id===id)).map(m=>'Calculation '+m.id),...allReqs().filter(r=>r.model_id===id).map(r=>'Requirement '+r.id),...(project().systems||[]).filter(s=>s.model_ids.includes(id)).map(s=>'System '+s.id),...(project().interfaces||[]).filter(i=>i.source.model_id===id).map(i=>'Interface '+i.id)]:[];return users.length?'Used by '+users.join(', ')+'. Remove or remap these dependents first.':'';}
@@ -770,9 +814,30 @@
     if(!run)return '<div class="sd-notice">'+(priorRun()?'Previous evidence is preserved from R'+priorRun().revision+'. It does not constitute a review of this saved revision.':'This project has no calculated evidence yet.')+' Run checks to produce a review for R'+state.data.revision+'.</div>';
     return '<div class="sd-run-summary">Recorded '+esc(new Date(run.created_at).toLocaleString())+' · '+run.executed_model_ids.length+' model adapters executed · '+run.reused_model_ids.length+' results reused after dependency verification.<br>AI calls: 0 · Maintained deterministic adapters.<br><span class="sd-receipt">Run '+esc(run.run_id)+'</span></div>';
   }
+  function readerFindings(requirements){
+    return requirements.map(r=>{
+      const f=finding(r.id),status=reqStatus(r.id),title=window.SixDSourceTargets?.shortLabel({label:r.title,target_id:'requirement:'+r.id})||r.title;
+      const meaning=status==='met'?'The saved calculation is within your stated limit.':status==='not_met'?'The saved calculation is outside your stated limit.':status==='not_assessed'?'The available model and evidence do not decide this check.':'Calculate the saved revision before assessing this check.';
+      const values=f?.evidence?'<p><strong>Calculated:</strong> '+measure(f.evidence.metric)+' · <strong>Criterion:</strong> '+esc(r.operator)+' '+measure(f.evidence.limit)+'</p>':'';
+      return disclosure('result:'+r.id+':'+(currentRun()?.run_id||'unrun'),title,'<p>'+esc(meaning)+'</p><p>'+esc(f?.reason||'No current calculation reason is available.')+'</p>'+values+'<p class="sd-small sd-muted">'+esc(r.title)+' · '+esc(r.id)+'</p>'+disclosure('result-graph:'+r.id,'View comparison graph',chart(r.id))+modelContext(r.model_id,true),{className:'sd-context-disclosure sd-result-disclosure',summary:chip(status)});
+    }).join('');
+  }
   function reader(report=false) {
-    const requirements=report?allReqs():selectedReqs();const p=project();
-    return '<article class="sd-reader"><span class="sd-label">'+(report?'Saved project · engineering review':esc(p.lifecycle_stage)+' · system reader')+'</span><h2>'+esc(report?p.name:activeSystem()?.title || p.name)+'</h2>'+projectDescription()+'<p class="sd-small sd-accuracy-warning">Calculated findings apply to declared models and criteria. Physical applicability and whole-mission readiness require external engineering evidence.</p>'+(!currentRun()||state.draft?'<div class="sd-notice">'+(state.draft?'Draft edits are not calculated. Displayed recorded values still belong to saved R'+state.data.revision+'.':'Awaiting a review of this revision.')+'</div>':'')+'<p class="sd-report-context">Project '+esc(state.data.project_id)+' · '+(state.draft?'Draft based on saved':'Saved')+' revision R'+state.data.revision+'</p>'+stats(requirements)+receiptInfo()+engineeringPlots(requirements)+(report?allModels():selectedModels()).filter(m=>result(m.id)?.simulation).map(m=>'<h3>'+esc(human(m.id))+' trajectory evidence</h3>'+trajectoryContext(m.id)).join('')+'<h3>Requirement findings</h3><p class="sd-small sd-muted sd-number-note">Values are rounded for reading. Hover a value for its original precision, open exact table values, or export the saved evidence.</p>'+requirementTable(requirements)+'<h3>Model evidence</h3>'+ (report?allModels():selectedModels()).map(m=>{const r=result(m.id);return '<details class="sd-source"><summary>'+esc(human(m.id))+' · '+(r?esc(human(r.status)):'Not run')+'</summary>'+modelEvidence(m.id)+'</details>';}).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='power_energy_budget').map(m=>powerEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>m.type==='attitude_control').map(m=>attitudeEvidence(m.id)).join('')+(report?allModels():selectedModels()).filter(m=>['powered_flight','guided_ascent','staged_ascent'].includes(m.type)).map(m=>flightEvidence(m.id)).join('')+interfaceSlot('report',report?null:selectedModels().map(m=>m.id))+sourceSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+actionSlot('report',report?null:requirements.map(r=>r.id),report?null:selectedModels().map(m=>m.id))+testEvidenceSlot('report',report?null:requirements.map(r=>r.id))+(report?coverageSlot()+seriesSlot()+envelopeSlot():'')+'<h3>Scope of this review</h3><ul class="sd-scope-list">'+(currentRun()?.review?.exclusions || ['Only explicitly bound models and supplied requirements can be assessed.','Physical tests, operational performance and whole-mission readiness are not verified.']).map(item=>'<li>'+esc(item)+'</li>').join('')+'</ul><div class="sd-action-row">'+(report?'<button type="button" class="sd-button sd-primary" data-action="export" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('download')+'Export evidence JSON</button><button type="button" class="sd-button" data-action="export-review" disabled>Export combined review JSON</button><button type="button" class="sd-button" data-action="print-report" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('printer')+'Print report / Save PDF</button>':'<button type="button" class="sd-button" data-action="report">'+icon('file-text')+'Open full report</button>')+'<button type="button" class="sd-button" data-action="export-project">Export project JSON</button></div>'+(currentRun()?'<details class="sd-source"><summary>Receipt identity and verification sources</summary><p class="sd-receipt">Review '+esc(currentRun().review.digest)+'</p>'+Object.entries(currentRun().review.verification_sources || {}).map(([file,digest])=>'<p class="sd-receipt">'+esc(file)+': '+esc(digest)+'</p>').join('')+'</details>':'')+'</article>';
+    const requirements=report?allReqs():selectedReqs(),models=report?allModels():selectedModels(),p=project();
+    const counts={met:0,not_met:0,not_assessed:0};requirements.forEach(r=>{const status=reqStatus(r.id);if(Object.hasOwn(counts,status))counts[status]++;});
+    const conclusion=state.draft?'Draft changes have not been calculated.':!currentRun()||currentRun().stale?'This revision needs current calculations.':counts.not_met?counts.not_met+' checks miss their stated limits.':counts.not_assessed?counts.met+' checks meet their criteria; '+counts.not_assessed+' need more evidence.':'The calculated checks meet their stated criteria.';
+    const id=currentRun()?.run_id||'unrun';
+    const traces=models.filter(m=>result(m.id)?.simulation).map(m=>'<h3>'+esc(human(m.id))+' trajectory evidence</h3>'+trajectoryContext(m.id)).join('');
+    const modelsMarkup=models.map(m=>{const r=result(m.id);return '<details class="sd-source"><summary>'+esc(human(m.id))+' · '+(r?esc(human(r.status)):'Not run')+'</summary>'+modelEvidence(m.id)+powerEvidence(m.id)+attitudeEvidence(m.id)+flightEvidence(m.id)+'</details>';}).join('');
+    const supplemental=interfaceSlot('report',report?null:models.map(m=>m.id))+sourceSlot('report',report?null:requirements.map(r=>r.id),report?null:models.map(m=>m.id))+actionSlot('report',report?null:requirements.map(r=>r.id),report?null:models.map(m=>m.id))+testEvidenceSlot('report',report?null:requirements.map(r=>r.id))+(report?coverageSlot()+seriesSlot()+envelopeSlot():'');
+    const scope='<ul class="sd-scope-list">'+(currentRun()?.review?.exclusions||['Only explicitly bound models and supplied requirements can be assessed.','Physical tests, operational performance and whole-mission readiness are not verified.']).map(item=>'<li>'+esc(item)+'</li>').join('')+'</ul>';
+    return '<article class="sd-reader"><span class="sd-label">'+(report?'Saved project · engineering review':esc(p.lifecycle_stage)+' · system reader')+'</span><h2>'+esc(report?p.name:activeSystem()?.title||p.name)+'</h2><section class="rw-verdict" aria-label="Report conclusion"><strong>'+esc(conclusion)+'</strong><p class="sd-accuracy-warning">Results apply to the declared calculations and criteria, not a complete mission assessment.</p></section>'+(state.draft?'<div class="sd-notice">Displayed evidence belongs to saved R'+state.data.revision+'; unsaved values are not calculated findings.</div>':'')+stats(requirements)+'<h3>Requirement findings</h3><p class="sd-small sd-muted">Scan the result, then open a requirement for its reason and exact evidence.</p>'+readerFindings(requirements)+disclosure('report-table:'+id,'View full numerical table',requirementTable(requirements))+
+      disclosure('report-graphs:'+id,'View graphs and trajectory comparisons',engineeringPlots(requirements)+traces)+
+      disclosure('report-models:'+id,'Calculation methods and evidence',modelsMarkup,{summary:models.length+' configured models'})+
+      disclosure('report-support:'+id,'References, tests and follow-up',supplemental)+
+      disclosure('report-scope:'+id,'Scope, assumptions and exclusions',scope)+
+      disclosure('report-context:'+id,'Project context and receipt identity',projectDescription()+receiptInfo()+(currentRun()?'<p class="sd-receipt">Review '+esc(currentRun().review.digest)+'</p>'+Object.entries(currentRun().review.verification_sources||{}).map(([file,digest])=>'<p class="sd-receipt">'+esc(file)+': '+esc(digest)+'</p>').join(''):''))+
+      '<div class="sd-action-row">'+(report?'<button type="button" class="sd-button sd-primary" data-action="export" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('download')+'Export evidence JSON</button><button type="button" class="sd-button" data-action="export-review" disabled>Export combined review JSON</button><button type="button" class="sd-button" data-action="print-report" '+(!currentRun()||currentRun().stale||state.draft?'disabled':'')+'>'+icon('printer')+'Print report / Save PDF</button>':'<button type="button" class="sd-button" data-action="report">Open full report</button>')+'<button type="button" class="sd-button" data-action="export-project">Export project JSON</button></div></article>';
   }
   function changeRecords() {
     const before=state.draft?state.data.project:priorRun()?.review?.project || state.data.configuration_base?.project;
@@ -838,6 +903,7 @@
         onNavigate:name=>{if(current())void action(name);},
         onRocketOpen:()=>{if(current()&&!state.draft)void action('rocket-reference');},
         onRocketStage:()=>{if(current()&&!state.draft)void action('rocket-stage');},
+        thrustInputs:thrustInputs(),onEditThrust:latest()?()=>{if(current())openThrustEditor();}:undefined,
         onSelectRequirement:id=>{if(!current()||state.draft||!req(id))return;state.page='system';state.view='reader';state.system=owningSystem(req(id).model_id)?.id||'overview';state.panel='evidence';select('requirement',id,false);},
         onRun:latest()&&!state.draft?()=>{if(current())return action('run');}:undefined,
         onReload:()=>{if(current())void perform(()=>load(projectId,revision));}
@@ -1120,7 +1186,7 @@
     }else{
       const f=finding(selected.id),old=priorFinding(selected.id),limit=project().inputs[object.limit_input];
       if(state.panel==='evidence')body+='<p class="sd-small sd-muted">Recorded calculation evidence. Ask the rocket to explain it.</p>';
-      body+=(state.draft?'<div class="sd-notice">Draft values have not been calculated. Recorded evidence belongs to saved R'+state.data.revision+'.</div>':'')+(f?'<p>'+esc(f.reason)+'</p>':'<p>No review has been recorded for this revision.</p>')+(f?.evidence?'<div class="sd-finding-value">'+(comparisonNeedsExact(f.evidence)?esc(String(f.evidence.metric.value)):num(f.evidence.metric.value))+' <span>'+esc(f.evidence.metric.unit)+'</span></div>'+chart(selected.id):old?.evidence?'<div class="sd-notice">Historical R'+priorRun().revision+': '+measure(old.evidence.metric)+'. This is not a current result.</div>':'')+'<dl class="sd-details-grid"><dt>Model</dt><dd>'+selectionButton('model',object.model_id,human(object.model_id),'sd-mini-action')+'</dd><dt>Comparison</dt><dd>'+esc(object.operator)+'</dd><dt>Declared limit</dt><dd>'+plotMeasure(limit,comparisonNeedsExact(f?.evidence))+'</dd><dt>Critical requirement</dt><dd>'+(object.critical?'Yes':'No')+'</dd></dl><label class="sd-field">Requirement limit'+inputField(object.limit_input,'value')+'</label><label class="sd-field">Limit unit'+inputField(object.limit_input,'unit')+'</label><label class="sd-field">Limit source'+inputField(object.limit_input,'source')+'</label>';
+      body+=(state.draft?'<div class="sd-notice">Draft values have not been calculated. Recorded evidence belongs to saved R'+state.data.revision+'.</div>':'')+(f?'<p>'+esc(f.reason)+'</p>':'<p>No review has been recorded for this revision.</p>')+(f?.evidence?'<div class="sd-finding-value">'+(comparisonNeedsExact(f.evidence)?esc(String(f.evidence.metric.value)):num(f.evidence.metric.value))+' <span>'+esc(f.evidence.metric.unit)+'</span></div>'+disclosure('finding-plot:'+selected.id,'View comparison graph',chart(selected.id)):old?.evidence?'<div class="sd-notice">Historical R'+priorRun().revision+': '+measure(old.evidence.metric)+'. This is not a current result.</div>':'')+'<dl class="sd-details-grid"><dt>Model</dt><dd>'+selectionButton('model',object.model_id,human(object.model_id),'sd-mini-action')+'</dd><dt>Comparison</dt><dd>'+esc(object.operator)+'</dd><dt>Declared limit</dt><dd>'+plotMeasure(limit,comparisonNeedsExact(f?.evidence))+'</dd><dt>Critical requirement</dt><dd>'+(object.critical?'Yes':'No')+'</dd></dl><label class="sd-field">Requirement limit'+inputField(object.limit_input,'value')+'</label><label class="sd-field">Limit unit'+inputField(object.limit_input,'unit')+'</label><label class="sd-field">Limit source'+inputField(object.limit_input,'source')+'</label>';
       if(state.draft)body+='<label class="sd-field">Comparison operator<select class="sd-input" data-requirement="'+esc(object.id)+'" data-req-field="operator">'+['<=','>=','=='].map(op=>'<option '+(object.operator===op?'selected':'')+' value="'+esc(op)+'">'+esc(op)+'</option>').join('')+'</select></label><label class="sd-field">Critical<select class="sd-input" data-requirement="'+esc(object.id)+'" data-req-field="critical"><option value="true" '+(object.critical?'selected':'')+'>Yes</option><option value="false" '+(!object.critical?'selected':'')+'>No</option></select></label>';
       if(state.panel==='evidence')body+='<h3>What was checked?</h3><p>The maintained adapter’s recorded '+esc(human(object.metric))+' is compared with the declared '+esc(object.operator)+' limit in the same unit. A requirement can remain unassessed when its model or inputs are unsupported.</p>'+modelEvidence(object.model_id);
       if(state.panel!=='evidence')body+=declaredAccuracy(object.model_id)+modelContext(object.model_id,true);
@@ -1920,6 +1986,8 @@
     if(name==='investigate'){if(state.selected)select(state.selected.kind,state.selected.id,true);return;}
     if(name==='zoom-in'||name==='zoom-out'){state.camera.scale=Math.max(.3,Math.min(1.8,state.camera.scale+(name==='zoom-in'?.1:-.1)));applyCamera();return;}
     if(name==='fit'){fit();return;}
+    if(name==='close-thrust'){window.SixDOverlayDismiss.requestClose($('#sd-thrust-dialog'),'cancel-button');return;}
+    if(name==='edit-thrust'){openThrustEditor();return;}
     if(name==='rocket-stage'){
       if(state.draft||!latest()||!currentRun())return;
       const projectId=state.data.project_id,revision=state.data.revision,runId=currentRun().run_id;
@@ -1969,7 +2037,7 @@
   // on-screen disclosure state. Printing never changes saved project records.
   let printDisclosures=[];
   window.addEventListener('beforeprint',()=>{
-    printDisclosures=[...root.querySelectorAll('.sd-reader details')].map(el=>({el,open:el.open}));
+    printDisclosures=[...root.querySelectorAll('#sd-view-content details,#sd-panel-body details')].map(el=>({el,open:el.open}));
     printDisclosures.forEach(({el})=>{el.open=true;});
   });
   window.addEventListener('afterprint',()=>{
@@ -2070,11 +2138,14 @@
   window.addEventListener('beforeunload',event=>{if(dirty()||author.editor||state.stagedProfileEdit){event.preventDefault();event.returnValue='';}});
   root.addEventListener('sixd:before-dismiss',event=>{
     const dialog=event.target;
-    if((dialog.id==='sd-author-dialog'||dialog.id==='sd-new-dialog')&&editedDialogs.has(dialog)&&!window.confirm('Close this form and discard its unapplied entries? Saved project data and applied draft changes remain intact.'))event.preventDefault();
+    if((dialog.id==='sd-author-dialog'||dialog.id==='sd-new-dialog'||dialog.id==='sd-thrust-dialog')&&editedDialogs.has(dialog)&&!window.confirm('Close this form and discard its unapplied entries? Saved project data and applied draft changes remain intact.'))event.preventDefault();
   });
   for(const dialog of root.querySelectorAll('dialog'))dialog.addEventListener('close',()=>{editedDialogs.delete(dialog);if(dialog.id==='sd-author-dialog')author.editor=null;});
   $('#sd-ai-connect-dialog').addEventListener('cancel',()=>{$('#sd-ai-key').value='';});
   $('#sd-ai-connect-dialog').addEventListener('close',()=>{$('#sd-ai-key').value='';});
+  $('#sd-thrust-form').addEventListener('submit',stageThrust);
+  $('#sd-thrust-input').addEventListener('change',event=>fillThrustEditor(event.target.value));
+  $('#sd-thrust-dialog').addEventListener('close',()=>{state.thrustEdit=null;thrustError('');});
   async function init() {
     window.SixDSidebar.mount(root);
     mountRocket();

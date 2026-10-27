@@ -126,3 +126,23 @@
 #sixd-workspace .rw-exact-values dd{margin:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 #sixd-workspace .rw-context-identity{font-size:13px;max-width:100%;overflow-wrap:anywhere}
 #sixd-workspace .rw-context-identity summary{cursor:pointer}
+
+/* Conclusions precede optional investigation detail. */
+#sixd-workspace .rw-verdict{margin:18px 0;padding:18px 20px;background:#f2f5fb;border:1px solid var(--sd-border);border-radius:12px}
+#sixd-workspace .rw-verdict>strong{font-size:20px;letter-spacing:-.02em;line-height:1.35}
+#sixd-workspace .rw-verdict p{margin:7px 0 0;color:var(--sd-soft)}
+#sixd-workspace .rw-disclosure{margin:14px 0;border:1px solid var(--sd-border);border-radius:10px;background:var(--sd-bg)}
+#sixd-workspace .rw-disclosure>summary{padding:14px 17px;cursor:pointer;font-size:15px;font-weight:600}
+#sixd-workspace .rw-disclosure>summary>span{display:block;padding:5px 0 0 17px;font-weight:400}
+#sixd-workspace .rw-disclosure-body{padding:0 18px 18px}
+#sixd-workspace .rw-thrust{display:flex;justify-content:space-between;align-items:center;gap:18px;border:1px solid var(--sd-border);border-radius:12px;padding:18px 20px;margin:18px 0}
+#sixd-workspace .rw-thrust h2{font-size:18px;margin:0}
+#sixd-workspace .rw-thrust p{margin:7px 0}
+#sixd-workspace .rw-thrust p>strong{font:600 22px var(--sd-font-mono)}
+#sixd-workspace .rw-thrust p>span{display:block;margin-top:6px}
+#sixd-workspace .rw-coverage-brief{padding:18px 0;border-top:1px solid var(--sd-border)}
+#sixd-workspace .rw-coverage-brief>h2{font-size:18px}
+#sixd-workspace .rw-inline-detail>td{padding:0 16px 18px;background:#f8f9fb}
+#sixd-workspace .rw-inline-detail .rw-finding-detail{margin:0;border:0}
+@media(max-width:650px){#sixd-workspace .rw-thrust{align-items:flex-start;flex-direction:column}#sixd-workspace .rw-verdict>strong{font-size:18px}}
+@media print{#sixd-workspace .rw-disclosure{break-inside:auto}#sixd-workspace .rw-disclosure-body{display:block}}

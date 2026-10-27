@@ -1,0 +1,132 @@
+{
+  "schema": "sixd.focus-build2-checks.v1",
+  "date": "2026-10-27",
+  "build_id": "696ed8991d1b",
+  "scope": "Result-first pages, progressive disclosure and sourced thrust draft editing; no solver/provider-policy change.",
+  "python": {
+    "distinct_methods": 78,
+    "passed": 77,
+    "skipped": 1,
+    "skip_reason": "Docker unavailable in selected Windows environment",
+    "full_suite_run": false
+  },
+  "node": {
+    "passed": 28
+  },
+  "browser": {
+    "focus": {
+      "groups_passed": 10,
+      "checks": [
+        "Overview begins with its canonical conclusion, counts and editable current thrust; secondary workflows and explanations are closed",
+        "A selected result explains itself immediately below its row with exact values; a same-context refresh retains chosen disclosures",
+        "Positive custom thrust and its source stage only an unsaved draft; invalid values and cancelled dismissal preserve the original design",
+        "Save and recalculate are separate actions; custom thrust remains visible/editable after leaving the prepared example and old evidence is unchanged",
+        "Report results expand individually, full print reveals every nested detail then restores it, and project export retains exact original values",
+        "Historical thrust is read-only and no AI/search/upload or allowance changes occur",
+        "Vertical, guided and staged flight retain visible saved outcomes/playback, expand nested graphs, and preserve sample/graph choices through exact event changes",
+        "Orbital history draws nonempty pixels after expanding, preserves graph choice for its saved run, and starts collapsed for a different exploratory context",
+        "Saved sweep and sampled-envelope graphs expand on demand and printing reveals their complete recorded evidence",
+        "Coverage opens its editor only when a check or Add is chosen, including after an explicitly collapsed prior editor"
+      ],
+      "browser_errors": [],
+      "unexpected_http_responses": [],
+      "external_requests": 0,
+      "synthetic_fixture": true
+    },
+    "navigation": {
+      "groups_passed": 27,
+      "checks": [
+        "Repeated project names are visibly distinct through stable real identities without renaming, deleting or hiding records",
+        "Selected project and saved revision have an addressable overview",
+        "Passing calculation criteria remain separate from nine missing fit declarations and one unsupported analysis, with a working coverage action",
+        "Opening a report from lower Overview and accepted Back/Forward start at the page heading instead of inheriting a deep scroll",
+        "Tool badges distinguish recorded flight, absent mappings and uncalculated staging, and update across projects and historical revisions",
+        "The actual assistant picker distinguishes battery and engine temperature checks while retaining their exact requirement IDs without inference",
+        "Overview uses compact shared precision while a selected finding exposes exact values and preserves its canonical status",
+        "Authoring groups retain every input source and record action, and project export preserves original names, SI unit strings and full numeric values",
+        "Draft edits keep their grouped section open without saving, and readable native unit labels retain canonical selection values",
+        "Pages keep one visible primary heading, preserve flight exclusions and exact diagnostics, and expand then restore folded project scope for printing",
+        "Five broad work areas are reachable without a flat list of every tool",
+        "Native browser Back and Forward restore internal locations",
+        "Reload preserves the routed project, saved revision and work area",
+        "A deep link to a historical revision survives reload",
+        "System Table, selected requirement and evidence panel survive deep reload with a parent breadcrumb",
+        "Same-project page navigation and Back retain the unsaved shared draft without a database write",
+        "Cancelled project switch preserves draft; confirmed switch explicitly discards it",
+        "Cancelling browser Back across project context preserves URL, displayed project and draft",
+        "Accepting browser Back loads the previous saved project and discards only the unsaved draft",
+        "Back during a delayed project load leaves URL and displayed project in the same context",
+        "Unapplied stage-profile values survive blocked area, project and revision navigation",
+        "Browser Back cannot remount or discard an unapplied stage-profile form",
+        "Explicit profile cancellation restores navigation while saved staged inputs stay unchanged",
+        "Actual locally loaded Geist Sans/Mono, readable sizes, ink and soft canvas cover the workspace with no external font request",
+        "Sidebar focus mode gives the main content its width, remembers the preference and leaves route, mounted content and saved evidence unchanged",
+        "Mobile sidebar has an explicit open/close control and independent preference without route changes or horizontal overflow",
+        "Original fixture receipts unchanged; no provider, search, upload, calculation or save POSTs; no browser errors"
+      ],
+      "browser_errors": [],
+      "unexpected_http_responses": [],
+      "external_requests": 0,
+      "synthetic_fixture": true
+    },
+    "companion": {
+      "groups_passed": 15,
+      "checks": [
+        "Guided review opens and closes in place from Projects, work-area hubs, Overview and Systems without hidden navigation or provider calls",
+        "Calculate and Recalculate each save a new review on an already calculated revision, show progress/completion and prevent duplicate in-flight starts",
+        "The companion draws actual local WebGL geometry rather than the previous SVG, with frames rendered before interaction",
+        "Pointer dragging repositions without opening AI, restores its saved preference after reload, and retains click/keyboard movement while resting clear of page controls",
+        "Reduced motion pauses the rocket animation without removing its functional launcher",
+        "Nemotron keeps the primary question/model/start controls and all three models, makes no selection-triggered call, and preserves a completed evidence-backed answer",
+        "Tavily starts with a small duplicate-free human-readable list, while Advanced preserves exact finding/assumption targets without starting a search",
+        "Copying a preview to the same Source library refuses a nonempty editor, preserves its exact draft and mounted DOM, retains the preview and makes no extra search/save/link/model call",
+        "The Source library shows Copied draft, Saved source version and Linked progress, and saves/links only through two separate explicit actions with the exact source version",
+        "Ask about this reference opens the same rocket with its exact saved project/revision/calculation/check and source identity, without starting inference or repeating search/save/link",
+        "Project names, source text, native controls and Nemotron dialog copy share the global UI font rather than local module-specific stacks",
+        "Dragged companion and simplified conversation remain inside a narrow mobile viewport with no page-wide horizontal overflow",
+        "Simplified hosted conversation preserves the existing owner-only controls and financial-status boundary",
+        "Only explicit isolated actions posted; original design, numerical results and allowance remain unchanged, with no external provider traffic",
+        "Graphics-context loss exposes the honest local fallback while the draggable assistant remains functional"
+      ],
+      "browser_errors": [],
+      "unexpected_http_responses": [],
+      "external_requests": 0,
+      "synthetic_fixture": true
+    }
+  },
+  "preservation": {
+    "checked": 28,
+    "matched": 28,
+    "all_matched": true,
+    "database_tables": 23,
+    "encrypted_credentials": 3,
+    "configuration_files": 2
+  },
+  "services_restored": {
+    "nebius": {
+      "key_present": true,
+      "key_remembered": true,
+      "credential_error": null
+    },
+    "tavily": {
+      "key_present": true,
+      "key_remembered": true,
+      "credential_error": null
+    },
+    "langsmith": {
+      "key_present": true,
+      "key_remembered": true,
+      "credential_error": null
+    }
+  },
+  "runtime": {
+    "restart_required": false,
+    "javascript_files_parsed": 36,
+    "canonical_python_files": 64
+  },
+  "paid_provider_calls": 0,
+  "new_physics_validation": false,
+  "new_live_ai_qualification": false,
+  "public_deployment": false,
+  "build3_started": false
+}

@@ -107,6 +107,7 @@ try{
  const oldRun=before.run.run_id;
  let firstRun;
  for(const [index,label] of [[0,'Calculate'],[1,'Recalculate']]){
+  await page.locator('[data-rw-disclosure="workflow"] > summary').click();
   let release,entered;const gate=new Promise(resolve=>release=resolve),pending=new Promise(resolve=>entered=resolve);
   const hold=async request=>{entered();await gate;await request.continue();};
   await page.route(info.owner+'/api/run',hold);
@@ -232,7 +233,7 @@ try{
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);assert.deepEqual(badResponses,[]);assert.deepEqual(failures.filter(r=>r.error!=='net::ERR_ABORTED'),[]);
  pass('Only explicit isolated actions posted; original design, numerical results and allowance remain unchanged, with no external provider traffic');
  if(await page.locator('#sd-rocket-dialog').evaluate(d=>d.open))await closeRocket();
- await page.setViewportSize({width:1512,height:1060});await safeRocket();
+ await page.setViewportSize({width:1512,height:1060});await page.waitForTimeout(450);await safeRocket();
  assert.equal(await page.locator('.sd-rocket-companion').getAttribute('data-mode'),'full','Desktop restores full geometry after automatic mobile compaction.');
  await page.locator('#sd-rocket-canvas').evaluate(canvas=>canvas.dispatchEvent(new Event('webglcontextlost',{cancelable:true})));
  assert.equal(await page.locator('#sd-rocket-canvas').getAttribute('data-renderer'),'fallback');

@@ -58,3 +58,9 @@
 #sixd-workspace .sd-ai-advanced[open]>summary{margin-bottom:13px}
 #sixd-workspace .sd-ai-advanced .sd-ai-scope{display:block}
 @media(max-width:650px){#sixd-workspace .sd-assistant-scope-row{grid-template-columns:1fr;gap:0}#sixd-workspace.sd-guide-visible #sd-review-guide,#sixd-workspace .sd-calculation-feedback{margin-left:14px;margin-right:14px}#sixd-workspace .sd-assistant-send-row #sd-ai-start{flex:1}}
+
+#sixd-workspace :is(details.sd-source,details.sd-context-disclosure)>summary{cursor:pointer;padding:10px 0;line-height:1.5;font-weight:600}
+#sixd-workspace .sd-reader>.sd-context-disclosure{margin:15px 0;border:1px solid var(--sd-border);border-radius:10px;padding:0 16px}
+#sixd-workspace .sd-reader>.sd-context-disclosure>.sd-disclosure-body{padding:0 0 16px}
+#sixd-workspace #sd-thrust-dialog{width:min(540px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto}
+#sixd-workspace #sd-thrust-dialog .sd-field{margin:15px 0}
