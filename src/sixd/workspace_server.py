@@ -53,7 +53,7 @@ CODE_FILES = [Path(__file__).with_name(name) for name in (
 
 
 BUILD_FILES += [WEB / name for name in ("simulation-imports.js", "simulation-imports.css", "envelopes.js", "envelopes.css")]
-BUILD_FILES += [WEB / name for name in ("workspace-navigation.js", "workspace-shell.js", "overlay-dismiss.js", "owner-settings.js", "source-targets.js", "rocket-renderer.js", "rocket-assistant.js", "rocket-assistant.css", "clarity.css", "navigation.css", "typography.css", "review-workspace.js", "review-workspace.css", "units.js", "connected-review.css")]
+BUILD_FILES += [WEB / name for name in ("workspace-navigation.js", "workspace-shell.js", "overlay-dismiss.js", "owner-settings.js", "assistant-context.js", "source-targets.js", "rocket-renderer.js", "rocket-assistant.js", "rocket-assistant.css", "clarity.css", "navigation.css", "typography.css", "review-workspace.js", "review-workspace.css", "units.js", "connected-review.css")]
 CODE_FILES += [Path(__file__).with_name("workspace_review.py"), Path(__file__).with_name("workspace_ultra_workflow.py")]
 CODE_FILES += [Path(__file__).with_name("rocket_reference.py")]
 CODE_FILES += [Path(__file__).with_name("guided_ascent.py")]
@@ -299,7 +299,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 if _code_fingerprint() != RUNTIME_ID:
                     raise ConflictError("Application code changed. Restart 6D before loading the connected review.")
                 self._reply(200, self.server.review_workspace.summary(self._one(query, "project_id"), self._revision(self._one(query, "revision"))))
-            elif route in {"/source-targets.js", "/rocket-renderer.js", "/rocket-assistant.js", "/rocket-assistant.css", "/overlay-dismiss.js", "/owner-settings.js", "/clarity.css", "/workspace-navigation.js", "/workspace-shell.js", "/navigation.css", "/typography.css", "/review-workspace.js", "/review-workspace.css", "/units.js", "/connected-review.css", "/guided-ascent.js", "/guided-ascent.css", "/staged-ascent.js", "/staged-ascent.css"}:
+            elif route in {"/assistant-context.js", "/source-targets.js", "/rocket-renderer.js", "/rocket-assistant.js", "/rocket-assistant.css", "/overlay-dismiss.js", "/owner-settings.js", "/clarity.css", "/workspace-navigation.js", "/workspace-shell.js", "/navigation.css", "/typography.css", "/review-workspace.js", "/review-workspace.css", "/units.js", "/connected-review.css", "/guided-ascent.js", "/guided-ascent.css", "/staged-ascent.js", "/staged-ascent.css"}:
                 path = WEB / route[1:]
                 self._reply(200, path.read_bytes(), "application/javascript; charset=utf-8" if path.suffix == ".js" else "text/css; charset=utf-8")
             elif route == "/api/envelopes/summary":

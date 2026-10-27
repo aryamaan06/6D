@@ -1,0 +1,232 @@
+{
+  "schema": "sixd.part3-assistant-workflow-checks.v1",
+  "completed_date": "2026-10-27",
+  "paid_calls_initiated_by_build": 0,
+  "build": "8ddc0fde043b",
+  "restart_required": false,
+  "services": {
+    "nebius": {
+      "key_present": true,
+      "key_remembered": true,
+      "remember_error": null
+    },
+    "tavily": {
+      "key_present": true,
+      "key_remembered": true,
+      "remember_error": null
+    },
+    "langsmith": {
+      "key_present": true,
+      "key_remembered": true,
+      "remember_error": null
+    }
+  },
+  "python": {
+    "distinct_affected_methods": 81,
+    "passed": 80,
+    "skipped": 1,
+    "final_affected_rerun_methods": 59,
+    "final_rerun_passed": 58,
+    "final_rerun_skipped": 1,
+    "skip": "Docker unavailable on Windows; no new container execution claim"
+  },
+  "node_contracts": {
+    "passed": 51
+  },
+  "chromium_placement_cases": {
+    "passed": 7
+  },
+  "browser_groups": 51,
+  "browser": {
+    "navigation": {
+      "schema": "sixd.navigation-browser-acceptance.v1",
+      "checks": [
+        "Repeated project names are visibly distinct through stable real identities without renaming, deleting or hiding records",
+        "Selected project and saved revision have an addressable overview",
+        "Passing calculation criteria remain separate from nine missing fit declarations and one unsupported analysis, with a working coverage action",
+        "Opening a report from lower Overview and accepted Back/Forward start at the page heading instead of inheriting a deep scroll",
+        "Tool badges distinguish recorded flight, absent mappings and uncalculated staging, and update across projects and historical revisions",
+        "The actual assistant picker distinguishes battery and engine temperature checks while retaining their exact requirement IDs without inference",
+        "Overview uses compact shared precision while a selected finding exposes exact values and preserves its canonical status",
+        "Authoring groups retain every input source and record action, and project export preserves original names, SI unit strings and full numeric values",
+        "Draft edits keep their grouped section open without saving, and readable native unit labels retain canonical selection values",
+        "Pages keep one visible primary heading, preserve flight exclusions and exact diagnostics, and expand then restore folded project scope for printing",
+        "Five broad work areas are reachable without a flat list of every tool",
+        "Native browser Back and Forward restore internal locations",
+        "Reload preserves the routed project, saved revision and work area",
+        "A deep link to a historical revision survives reload",
+        "System Table, selected requirement and evidence panel survive deep reload with a parent breadcrumb",
+        "Same-project page navigation and Back retain the unsaved shared draft without a database write",
+        "Cancelled project switch preserves draft; confirmed switch explicitly discards it",
+        "Cancelling browser Back across project context preserves URL, displayed project and draft",
+        "Accepting browser Back loads the previous saved project and discards only the unsaved draft",
+        "Back during a delayed project load leaves URL and displayed project in the same context",
+        "Unapplied stage-profile values survive blocked area, project and revision navigation",
+        "Browser Back cannot remount or discard an unapplied stage-profile form",
+        "Explicit profile cancellation restores navigation while saved staged inputs stay unchanged",
+        "Requested local editorial typography, ink and soft canvas are applied without remote fonts",
+        "Navigation layout stays within a narrow viewport",
+        "Original fixture receipts unchanged; no provider, search, upload, calculation or save POSTs; no browser errors"
+      ],
+      "errors": [],
+      "unexpected_responses": [],
+      "external_requests": 0,
+      "post_routes": [
+        "/api/authoring/preflight",
+        "/api/authoring/preflight",
+        "/api/authoring/preflight",
+        "/api/test-evidence/impact",
+        "/api/interfaces/preview",
+        "/api/impact",
+        "/api/interfaces/preview",
+        "/api/test-evidence/impact",
+        "/api/impact"
+      ],
+      "aborted_stale_requests": 38,
+      "synthetic_fixture": true,
+      "paid_calls": 0,
+      "typography": {
+        "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+        "color": "rgb(29, 29, 31)",
+        "background": "rgb(251, 251, 253)",
+        "headingTracking": "-0.625px",
+        "metricFont": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", monospace",
+        "bodyPx": 14.5,
+        "labelPx": 13,
+        "metricPx": 32
+      }
+    },
+    "companion": {
+      "schema": "sixd.usability-browser-acceptance.v1",
+      "synthetic_fixture": true,
+      "checks": [
+        "Guided review opens and closes in place from Projects, work-area hubs, Overview and Systems without hidden navigation or provider calls",
+        "Calculate and Recalculate each save a new review on an already calculated revision, show progress/completion and prevent duplicate in-flight starts",
+        "The companion draws actual local WebGL geometry rather than the previous SVG, with frames rendered before interaction",
+        "Pointer dragging repositions without opening AI, restores its saved preference after reload, and retains click/keyboard movement while resting clear of page controls",
+        "Reduced motion pauses the rocket animation without removing its functional launcher",
+        "Nemotron keeps the primary question/model/start controls and all three models, makes no selection-triggered call, and preserves a completed evidence-backed answer",
+        "Tavily starts with a small duplicate-free human-readable list, while Advanced preserves exact finding/assumption targets without starting a search",
+        "Copying a preview to the same Source library refuses a nonempty editor, preserves its exact draft and mounted DOM, retains the preview and makes no extra search/save/link/model call",
+        "The Source library shows Copied draft, Saved source version and Linked progress, and saves/links only through two separate explicit actions with the exact source version",
+        "Ask about this reference opens the same rocket with its exact saved project/revision/calculation/check and source identity, without starting inference or repeating search/save/link",
+        "Project names, source text, native controls and Nemotron dialog copy share the global UI font rather than local module-specific stacks",
+        "Dragged companion and simplified conversation remain inside a narrow mobile viewport with no page-wide horizontal overflow",
+        "Simplified hosted conversation preserves the existing owner-only controls and financial-status boundary",
+        "Only explicit isolated actions posted; original design, numerical results and allowance remain unchanged, with no external provider traffic",
+        "Graphics-context loss exposes the honest local fallback while the draggable assistant remains functional"
+      ],
+      "errors": [],
+      "external_requests": 0,
+      "unexpected_responses": [],
+      "post_routes": [
+        "/api/run",
+        "/api/run",
+        "/api/investigations",
+        "/api/research/search",
+        "/api/sources",
+        "/api/source-links",
+        "/api/hosted/login"
+      ],
+      "explicit_local_runs": 2,
+      "synthetic_nemotron_starts": 1,
+      "synthetic_tavily_searches": 1,
+      "explicit_reference_saves": 1,
+      "explicit_reference_links": 1,
+      "renderer": {
+        "renderer": "webgl",
+        "frames": 145,
+        "width": 128,
+        "height": 142
+      },
+      "fonts": {
+        "base": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+        "samples": [
+          {
+            "selector": "#sd-project-picker",
+            "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 14
+          },
+          {
+            "selector": "#sd-project-picker option",
+            "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 14
+          },
+          {
+            "selector": "#sd-page-title",
+            "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 25
+          },
+          {
+            "selector": "#sd-location-trail button",
+            "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 13
+          },
+          {
+            "selector": ".sl-page p",
+            "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 14
+          },
+          {
+            "selector": "[data-sl-link=\"source_id\"]",
+            "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 14
+          },
+          {
+            "selector": "[data-sl-link=\"note\"]",
+            "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"SF Pro Display\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 14
+          }
+        ]
+      },
+      "live_provider_calls": 0,
+      "canonical_project_and_metrics_unchanged": true,
+      "allowance_unchanged": true
+    },
+    "context": {
+      "schema": "sixd.assistant-context-browser-acceptance.v1",
+      "synthetic_fixture": true,
+      "paid_calls": 0,
+      "checks": [
+        "System launcher opens the exact selected check with project, saved revision, current page and finding context visible",
+        "Explicit scope and check changes retain the typed question, and same-page reopen retains the explicit scope",
+        "Changing the selected system item resets ordinary launcher scope safely instead of submitting a visually unselected null check",
+        "Overview and report launcher defaults reset to whole project, preserve the typed question, and show the current page",
+        "Visible references use the exact selected check/model scope and separate current links from unresolved links",
+        "Existing hidden exact-row handoff opens its own requirement from prior project scope; another check parks the row and returning restores it",
+        "No context choice triggers a provider request; one explicit synthetic Ask sends exactly the selected requirement and test row",
+        "Project and historical-revision changes do not attach another context’s question or row; historical answers stay scoped and reference search is blocked",
+        "An open draft describes the saved baseline and blocks Ask and reference search until saved or discarded",
+        "Saved designs, reference snapshots, historical receipts and allowance ceiling remain unchanged; no external requests or browser errors occur"
+      ],
+      "errors": [],
+      "external_requests": 0,
+      "unexpected_responses": [],
+      "post_routes": [
+        "/api/investigations",
+        "/api/authoring/preflight",
+        "/api/authoring/preflight",
+        "/api/authoring/preflight"
+      ],
+      "synthetic_provider_requests": 5,
+      "exact_row_callback": "Existing hidden control invoked with DOM click; not claimed as a visible user journey."
+    }
+  },
+  "owner_preservation": {
+    "active_database_tables": 23,
+    "active_tables_unchanged": true,
+    "encrypted_credential_files": 3,
+    "credential_files_unchanged": true,
+    "configuration_files_unchanged": 2,
+    "baseline_files": 78,
+    "unchanged_files_except_transient_startup_log": 77,
+    "exception": "Normal startup log changed during restart; no original data or accounting was reset."
+  },
+  "limits": [
+    "Affected regression checks, not full-suite or independent physics validation.",
+    "Providers/search use isolated synthetic transports, not a new live model qualification.",
+    "Exact selected-test-row callback is verified through an existing hidden control, not claimed as a visible user journey.",
+    "All 3D rendering is local; compact mode intentionally hides full geometry on crowded screens.",
+    "Public hosting remains pending."
+  ]
+}

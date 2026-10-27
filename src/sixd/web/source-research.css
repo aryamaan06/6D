@@ -11,6 +11,8 @@
 @media print{.sr-page{display:none!important}}
 
 /* Compact companion research matches the shared workspace typography. */
+.sr-stage{font-size:13px;font-weight:600;color:var(--sd-ink,#1d1d1f)}
+.sr-preview>.sr-small:last-child{margin-top:14px}
 .sr-page.sr-assistant{padding:0;margin:0;border:0;color:var(--sd-ink,#1d1d1f);font-family:var(--sd-font-sans,system-ui,sans-serif)}
 .sr-assistant>.sr-small{margin-bottom:16px;color:var(--sd-soft,#67676b)}
 .sr-assistant .sr-search-form{padding:0;border:0;margin:0;background:transparent;gap:16px}

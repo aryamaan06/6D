@@ -76,6 +76,23 @@ try{
  const waitChoices=()=>page.waitForFunction(()=>document.querySelectorAll('#sd-ai-model option').length===3&&!document.querySelector('#sd-ai-model').disabled);
  const openRocket=async(tab='nemotron')=>{if(!await page.locator('#sd-rocket-dialog').evaluate(d=>d.open))await page.locator('#sd-rocket-launcher').click();if(await page.locator('[data-rocket-tab="'+tab+'"]').getAttribute('aria-selected')!=='true')await page.locator('[data-rocket-tab="'+tab+'"]').click();};
  const closeRocket=async()=>{await page.locator('#sd-rocket-dialog [data-rocket-close]').click();await page.waitForFunction(()=>!document.querySelector('#sd-rocket-dialog').open);};
+ const placement=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('sixd.rocket.placement.v2')));
+ const safeRocket=async()=>{
+  await page.waitForTimeout(180);
+  const report=await page.locator('.sd-rocket-companion').evaluate(companion=>{
+   const box=companion.getBoundingClientRect(),overlaps=[];
+   for(const node of document.querySelectorAll('#sixd-workspace button,#sixd-workspace a[href],#sixd-workspace input,#sixd-workspace select,#sixd-workspace textarea,#sixd-workspace summary,#sixd-workspace [role="button"],#sixd-workspace [role="tab"],#sixd-workspace [data-kind][data-id]')){
+    if(companion.contains(node)||node.closest('dialog')||!node.getClientRects().length)continue;
+    const rect=node.getBoundingClientRect(),left=Math.max(box.left,rect.left,0),right=Math.min(box.right,rect.right,innerWidth),top=Math.max(box.top,rect.top,0),bottom=Math.min(box.bottom,rect.bottom,innerHeight);
+    if(right-left<1||bottom-top<1)continue;
+    const underneath=document.elementsFromPoint((left+right)/2,(top+bottom)/2).filter(element=>!companion.contains(element));
+    if(underneath.some(element=>element===node||node.contains(element)))overlaps.push(node.getAttribute('aria-label')||node.textContent.trim().slice(0,90)||node.tagName);
+   }
+   return{left:box.left,top:box.top,right:box.right,bottom:box.bottom,mode:companion.dataset.mode,inline:companion.classList.contains('sd-rocket-inline'),overlaps,width:innerWidth,height:innerHeight};
+  });
+  assert.deepEqual(report.overlaps,[],JSON.stringify(report));assert.ok(report.left>=7&&report.top>=0&&report.right<=report.width-7&&report.bottom<=report.height-7,JSON.stringify(report));
+  return report;
+ };
  for(const name of ['projects','engineering','analysis','review-home','system']){
   await route(name);
   if(await page.locator('#sd-review-guide').isVisible()){await click('guided-close');await page.locator('#sd-review-guide').waitFor({state:'hidden'});}
@@ -118,11 +135,11 @@ try{
  await page.mouse.move(origin.x+origin.width/2,origin.y+origin.height/2);await page.mouse.down();await page.mouse.move(end.x,end.y,{steps:14});await page.mouse.up();
  assert.equal(await page.locator('#sd-rocket-dialog').evaluate(dialog=>dialog.open),false);
  const dragged=await launcher.boundingBox();assert.ok(Math.abs(dragged.x-origin.x)>100||Math.abs(dragged.y-origin.y)>100);
- const position=await page.evaluate(()=>JSON.parse(localStorage.getItem('sixd.rocket.position.v1')));assert.ok(position.x>=0&&position.x<=1&&position.y>=0&&position.y<=1);
- await page.reload();await idle();const restored=await launcher.boundingBox();assert.ok(Math.abs(restored.x-dragged.x)<3&&Math.abs(restored.y-dragged.y)<3);
- await launcher.focus();const keyStart=await launcher.boundingBox();await page.keyboard.press('Alt+ArrowRight');const keyEnd=await launcher.boundingBox();assert.ok(keyEnd.x>keyStart.x);
+ const savedPlacement=await placement(),position=savedPlacement.position;assert.equal(savedPlacement.version,2);assert.ok(position.x>=0&&position.x<=1&&position.y>=0&&position.y<=1);await safeRocket();
+ await page.reload();await idle();await safeRocket();assert.deepEqual(await placement(),savedPlacement,'Reload retains the exact preferred position; current controls can require a different safe resting point.');
+ await launcher.focus();const keyStart=await page.locator('.sd-rocket-companion').boundingBox();const beforeKey=(await placement()).position;await page.keyboard.press(beforeKey.x>.75?'Alt+ArrowLeft':'Alt+ArrowRight');const keyEnd=(await placement()).position;assert.notDeepEqual(keyEnd,beforeKey);await safeRocket();
  await launcher.click();await page.locator('#sd-rocket-dialog[open]').waitFor();await closeRocket();
- pass('Pointer dragging repositions without opening AI, restores its saved position after reload, and retains normal click and keyboard repositioning');
+ pass('Pointer dragging repositions without opening AI, restores its saved preference after reload, and retains click/keyboard movement while resting clear of page controls');
  await page.emulateMedia({reducedMotion:'reduce'});await page.waitForFunction(()=>document.querySelector('#sd-rocket-canvas')?.dataset.motion==='reduced');
  const stopped=await page.locator('#sd-rocket-canvas').getAttribute('data-frame-count');await page.waitForTimeout(150);assert.equal(await page.locator('#sd-rocket-canvas').getAttribute('data-frame-count'),stopped);
  await page.emulateMedia({reducedMotion:'no-preference'});
@@ -151,19 +168,49 @@ try{
  assert.equal(posts.filter(p=>p.path==='/api/research/search').length,0);assert.equal((await callLog()).filter(call=>call.service==='tavily').length,0);
  pass('Tavily starts with a small duplicate-free human-readable list, while Advanced preserves exact finding/assumption targets without starting a search');
  const searchResponse=page.waitForResponse(r=>r.url()===info.owner+'/api/research/search'&&r.request().method()==='POST');await page.locator('#sd-rocket-research-host [data-sr-action="search"]').click();assert.equal((await searchResponse).status(),200);
- await page.locator('#sd-rocket-research-host [data-sr-action="preview"]').click();await page.locator('#sd-rocket-research-host [data-sr-action="use"]').click();
+ await page.locator('#sd-rocket-research-host [data-sr-action="preview"]').click();
+ assert.match(await page.locator('#sd-rocket-research-host .sr-preview').innerText(),/Preview · not saved or linked/i);
+ assert.match(await page.locator('#sd-rocket-research-host [data-sr-action="use"]').innerText(),/Copy draft to Source library/);
+ assert.match(await page.locator('#sd-rocket-research-host .sr-preview').innerText(),/only saved references linked to the chosen investigation scope/);
+ await page.locator('#sd-rocket-research-host [data-sr-action="use"]').click();
  await page.waitForFunction(()=>document.querySelector('[data-sl-field="title"]')?.value==='Constructed spacecraft reference');
  assert.equal(await page.locator('[data-sl-editor]').evaluate(node=>node.open),true);assert.equal(posts.filter(p=>p.path==='/api/sources').length,0);assert.equal(posts.filter(p=>p.path==='/api/source-links').length,0);
+ assert.match(await page.locator('[data-sl-source-form] .sl-stage').innerText(),/Copied draft · not saved or linked/i);
+ assert.match(await page.locator('[data-sl-busy]').innerText(),/click Save reference.*explicit link/);
+ assert.match(await page.locator('.sl-context').innerText(),/Copied drafts and unlinked saved references are excluded/);
+ const sourceURL=page.url(),unfinished='Unfinished manual reference draft — preserve exact text';
+ await page.locator('#sd-source-library').evaluate(node=>node.dataset.part3HandoffGuard='same-mounted-library');await page.locator('[data-sl-field="title"]').fill(unfinished);
+ await openRocket('research');await page.locator('#sd-rocket-research-host [data-sr-action="preview"]').click();await page.locator('#sd-rocket-research-host .sr-preview').waitFor();
+ const callsBeforeRefusal=(await callLog()).length,postsBeforeRefusal=posts.length;
+ await page.locator('#sd-rocket-research-host [data-sr-action="use"]').click();await page.waitForFunction(()=>document.querySelector('#sd-rocket-research-host [data-sr-error]')?.textContent.includes('retained'));
+ assert.equal(page.url(),sourceURL);assert.equal(await page.locator('#sd-rocket-dialog').evaluate(node=>node.open),true);
+ assert.equal(await page.locator('#sd-source-library').getAttribute('data-part3-handoff-guard'),'same-mounted-library','same-page refusal must not remount the source editor');
+ assert.equal(await page.locator('[data-sl-field="title"]').inputValue(),unfinished);assert.equal(await page.locator('#sd-rocket-research-host .sr-preview').isVisible(),true);
+ assert.equal(posts.length,postsBeforeRefusal);assert.equal((await callLog()).length,callsBeforeRefusal);await closeRocket();await page.locator('[data-sl-field="title"]').fill('Constructed spacecraft reference');
+ pass('Copying a preview to the same Source library refuses a nonempty editor, preserves its exact draft and mounted DOM, retains the preview and makes no extra search/save/link/model call');
  const pageGeometry=await page.locator('.sl-page').evaluate(node=>{const box=node.getBoundingClientRect(),main=document.querySelector('.sd-main').getBoundingClientRect();return{left:box.left-main.left,right:main.right-box.right,width:box.width};});assert.ok(pageGeometry.left>=15&&pageGeometry.right>=15&&pageGeometry.width<=1200);
  assert.ok(await page.locator('[data-sl-save-help]').count());assert.ok(await page.locator('[data-sl-link-help]').count());
  const title=page.locator('[data-sl-field="title"]');await title.fill('');assert.equal(await page.locator('[data-sl-action="save-source"]').isDisabled(),true);assert.match(await page.locator('[data-sl-save-help]').innerText(),/title|name/i);await title.fill('Constructed spacecraft reference');
  await page.screenshot({path:join(output,'source-library-desktop.png'),fullPage:true});
  const savedResponse=page.waitForResponse(r=>r.url()===info.owner+'/api/sources'&&r.request().method()==='POST');await page.locator('[data-sl-action="save-source"]').click();assert.equal((await savedResponse).status(),200);
  const savedSources=await api(info.owner,sourcePath);assert.equal(savedSources.sources.length,beforeSources.sources.length+1);assert.equal(savedSources.links.length,beforeSources.links.length);
- await page.locator('[data-sl-link="source_id"]').selectOption(savedSources.sources.at(-1).source_id);await page.locator('[data-sl-link="target_id"]').selectOption('requirement:thermal_limit');await page.locator('[data-sl-link="note"]').fill('Synthetic reference retained for manual review of the thermal-model assumptions.');
+ const savedSource=savedSources.sources.find(source=>!beforeSources.sources.some(old=>old.source_id===source.source_id));assert.ok(savedSource);
+ await page.waitForFunction(id=>document.querySelector('[data-sl-link="source_id"]')?.value===id,savedSource.source_id);
+ assert.match(await page.locator('.sl-library-source .sl-eyebrow').innerText(),/Saved · source v1/i);assert.match(await page.locator('[data-sl-busy]').innerText(),/Saved to the library.*not linked yet/);
+ assert.equal(await page.locator('[data-sl-links]').evaluate(node=>node.open),true);assert.equal(await page.locator('[data-sl-action="ask-linked-reference"]').count(),0);
+ assert.equal(posts.filter(p=>p.path==='/api/source-links').length,0);await page.locator('[data-sl-link="target_id"]').selectOption('requirement:thermal_limit');await page.locator('[data-sl-link="note"]').fill('Synthetic reference retained for manual review of the thermal-model assumptions.');
  const linkedResponse=page.waitForResponse(r=>r.url()===info.owner+'/api/source-links'&&r.request().method()==='POST');await page.locator('[data-sl-action="link-source"]').click();assert.equal((await linkedResponse).status(),200);
- const linked=await api(info.owner,sourcePath);assert.equal(linked.links.length,beforeSources.links.length+1);assert.equal(linked.links.at(-1).target.target_id,'requirement:thermal_limit');
- pass('The spaced Source library explains missing form fields, receives an unsaved Tavily preview, and saves/links only through two separate explicit actions');
+ const linked=await api(info.owner,sourcePath);assert.equal(linked.links.length,beforeSources.links.length+1);const newLink=linked.links.find(link=>link.source_id===savedSource.source_id&&link.target.target_id==='requirement:thermal_limit');assert.ok(newLink);assert.equal(newLink.source_version,savedSource.version);
+ await page.locator('[data-sl-action="ask-linked-reference"]').waitFor();assert.match(await page.locator('[data-sl-busy]').innerText(),/Linked to the selected project check/);
+ pass('The Source library shows Copied draft, Saved source version and Linked progress, and saves/links only through two separate explicit actions with the exact source version');
+ const startsBeforeReference=posts.filter(post=>post.path==='/api/investigations').length,callsBeforeReference=(await callLog()).length;
+ const exactScopeResponse=page.waitForResponse(response=>{const url=new URL(response.url());return response.request().method()==='GET'&&url.pathname==='/api/investigations'&&url.searchParams.get('project_id')===info.project_id&&url.searchParams.get('revision')==='1'&&url.searchParams.get('scope')==='requirement'&&url.searchParams.get('requirement_id')==='thermal_limit';});
+ await page.locator('[data-sl-action="ask-linked-reference"]').click();assert.equal((await exactScopeResponse).status(),200);await waitChoices();
+ const handoffSummary=await page.locator('#sd-ai-context-summary').innerText(),currentSaved=await api(info.owner,savedPath);
+ assert.match(handoffSummary,new RegExp(savedSource.source_id));assert.ok(handoffSummary.includes(before.project.name+' · R1'));assert.ok(handoffSummary.includes(currentSaved.run.run_id));assert.ok(handoffSummary.includes(before.project.requirements.find(row=>row.id==='thermal_limit').title));assert.match(handoffSummary,/1 linked reference available in this scope/);
+ assert.equal(await page.locator('[data-rocket-tab="nemotron"]').getAttribute('aria-selected'),'true');assert.ok((await page.locator('#sd-ai-question').inputValue()).trim());assert.equal(posts.filter(post=>post.path==='/api/investigations').length,startsBeforeReference);assert.equal((await callLog()).length,callsBeforeReference);
+ await page.screenshot({path:join(output,'linked-reference-handoff.png')});await closeRocket();
+ pass('Ask about this reference opens the same rocket with its exact saved project/revision/calculation/check and source identity, without starting inference or repeating search/save/link');
  const fonts=await page.evaluate(()=>{
   const family=selector=>{const node=document.querySelector(selector);return node?{selector,font:getComputedStyle(node).fontFamily,size:parseFloat(getComputedStyle(node).fontSize)}:null;};
   return{base:getComputedStyle(document.querySelector('#sixd-workspace')).fontFamily,samples:['#sd-project-picker','#sd-project-picker option','#sd-page-title','#sd-location-trail button','.sl-page p','[data-sl-link="source_id"]','[data-sl-link="note"]'].map(family)};
@@ -185,6 +232,8 @@ try{
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);assert.deepEqual(badResponses,[]);assert.deepEqual(failures.filter(r=>r.error!=='net::ERR_ABORTED'),[]);
  pass('Only explicit isolated actions posted; original design, numerical results and allowance remain unchanged, with no external provider traffic');
  if(await page.locator('#sd-rocket-dialog').evaluate(d=>d.open))await closeRocket();
+ await page.setViewportSize({width:1512,height:1060});await safeRocket();
+ assert.equal(await page.locator('.sd-rocket-companion').getAttribute('data-mode'),'full','Desktop restores full geometry after automatic mobile compaction.');
  await page.locator('#sd-rocket-canvas').evaluate(canvas=>canvas.dispatchEvent(new Event('webglcontextlost',{cancelable:true})));
  assert.equal(await page.locator('#sd-rocket-canvas').getAttribute('data-renderer'),'fallback');
  assert.equal(await page.locator('.sd-rocket-fallback').isVisible(),true);

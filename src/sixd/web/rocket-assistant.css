@@ -90,3 +90,42 @@
 #sixd-workspace .sd-rocket-move-hint{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:650px){#sixd-workspace .sd-rocket-launcher{width:112px;height:140px;transform:none}#sixd-workspace .sd-rocket-visual{height:129px}#sixd-workspace .sd-rocket-art{width:116px;height:129px}#sixd-workspace .sd-rocket-fallback{height:129px;width:100px}}
 @media(prefers-reduced-motion:reduce){#sixd-workspace .sd-rocket-launcher-label{transition:none}}
+
+/* Resting geometry includes every companion control. No workspace rail is reserved. */
+#sixd-workspace .sd-rocket-companion{position:fixed;left:258px;top:calc(100dvh - 210px);z-index:45;width:128px;height:184px;isolation:isolate}
+#sixd-workspace .sd-rocket-companion .sd-rocket-launcher{position:relative;inset:0;width:128px;height:154px;z-index:auto}
+#sixd-workspace .sd-rocket-companion-tools{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:5px;height:27px}
+#sixd-workspace .sd-rocket-companion-tools button{min-width:28px;height:27px;border:1px solid var(--sd-border);border-radius:14px;background:var(--sd-bg);color:var(--sd-soft);font:500 11px/1 var(--sd-font-sans);padding:5px 9px;cursor:pointer;box-shadow:0 2px 6px rgb(29 29 31 / 5%);touch-action:manipulation}
+#sixd-workspace .sd-rocket-companion-tools [data-rocket-size]{font-size:17px;padding:3px 7px}
+#sixd-workspace .sd-rocket-companion-tools button:hover{background:var(--sd-side);color:var(--sd-ink)}
+#sixd-workspace .sd-rocket-companion-tools button:focus-visible{outline:3px solid #608cbb;outline-offset:2px}
+#sixd-workspace .sd-rocket-companion.sd-rocket-dragging{z-index:65;will-change:left,top}
+#sixd-workspace .sd-rocket-companion.sd-rocket-dragging .sd-rocket-launcher{cursor:grabbing}
+#sixd-workspace .sd-rocket-companion.sd-rocket-obscured{visibility:hidden;pointer-events:none}
+#sixd-workspace .sd-rocket-companion.sd-rocket-compact{display:flex;align-items:center;width:170px;height:40px;background:var(--sd-bg);border:1px solid var(--sd-border);border-radius:22px;box-shadow:0 3px 12px rgb(29 29 31 / 9%)}
+#sixd-workspace .sd-rocket-compact .sd-rocket-launcher{width:76px;height:38px;flex-shrink:0;border-radius:22px 0 0 22px}
+#sixd-workspace .sd-rocket-compact .sd-rocket-visual{display:none}
+#sixd-workspace .sd-rocket-compact .sd-rocket-launcher-label{position:static;border:0;background:transparent;box-shadow:none;padding:5px 8px;font-size:12px}
+#sixd-workspace .sd-rocket-compact .sd-rocket-companion-tools{position:static;display:flex;height:30px;gap:0;align-items:center;flex:1}
+#sixd-workspace .sd-rocket-compact .sd-rocket-companion-tools button{box-shadow:none;border:0;height:30px;padding:4px 6px;background:transparent}
+#sixd-workspace .sd-rocket-compact .sd-rocket-companion-tools [data-rocket-size]{min-width:30px}
+#sixd-workspace .sd-rocket-compact .sd-rocket-working{top:4px;right:4px;width:6px;height:6px}
+#sixd-workspace .sd-rocket-companion.sd-rocket-inline{position:relative;inset:auto!important;z-index:auto;margin:8px 16px;width:170px;box-shadow:none}
+#sixd-workspace #sd-rocket-controls{position:fixed;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 24px);box-sizing:border-box;overflow:auto;margin:0;padding:22px;border:1px solid var(--sd-border);border-radius:16px;background:var(--sd-bg);color:var(--sd-ink);box-shadow:0 24px 90px rgb(29 29 31 / 20%)}
+#sixd-workspace #sd-rocket-controls::backdrop{background:rgb(29 29 31 / 26%);backdrop-filter:blur(3px)}
+#sixd-workspace .sd-rocket-controls-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+#sixd-workspace .sd-rocket-controls-heading h2{font-size:21px;line-height:1.3;margin:0}
+#sixd-workspace .sd-rocket-controls-heading .sd-icon-button{width:32px;height:32px;font-size:24px;flex-shrink:0}
+#sixd-workspace #sd-rocket-controls p{font:14px/1.6 var(--sd-font-sans);color:var(--sd-soft);margin:14px 0}
+#sixd-workspace #sd-rocket-controls kbd{font:12px var(--sd-font-sans);border:1px solid var(--sd-border);border-radius:4px;padding:1px 4px;background:var(--sd-side)}
+#sixd-workspace .sd-rocket-controls-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+#sixd-workspace .sd-rocket-controls-actions button{border:1px solid var(--sd-border);border-radius:8px;background:var(--sd-side);color:var(--sd-ink);padding:9px 12px;font:500 13px/1.3 var(--sd-font-sans);cursor:pointer}
+@media(max-width:650px){#sixd-workspace .sd-rocket-companion{width:112px;height:170px}#sixd-workspace .sd-rocket-companion .sd-rocket-launcher{width:112px;height:140px}#sixd-workspace .sd-rocket-companion.sd-rocket-compact{width:170px;height:40px}#sixd-workspace .sd-rocket-compact .sd-rocket-launcher{width:76px;height:38px}}
+@media print{#sixd-workspace .sd-rocket-companion,#sixd-workspace #sd-rocket-controls{display:none!important}}
+
+/* The evidence selection stays visible above the composer, rather than inside settings. */
+.sd-assistant-context-summary{margin:0 0 18px;padding:16px 18px;border:1px solid var(--sd-border,#dedee2);border-radius:14px;background:#f5f5f7;overflow-wrap:anywhere;font-size:14px}
+.sd-assistant-context-summary p{margin:7px 0;line-height:1.5}
+.sd-assistant-context-heading{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sd-assistant-context-heading>span{color:#626268;font-size:14px}
+@media(max-width:600px){.sd-assistant-context-summary{padding:12px}.sd-assistant-context-heading{display:block}}

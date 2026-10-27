@@ -8,6 +8,12 @@
 .sl-flow{display:flex;gap:26px;flex-wrap:wrap;list-style:none;padding:0 0 22px;margin:0 0 22px;border-bottom:1px solid var(--sd-border,#e4e4e7)}
 .sl-flow li{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:550;color:var(--sd-soft,#67676b)}
 .sl-flow li>span{display:grid;place-items:center;width:24px;height:24px;border:1px solid var(--sd-border,#e4e4e7);border-radius:50%;font-variant-numeric:tabular-nums;color:var(--sd-ink,#1d1d1f);background:var(--sd-side,#f5f5f7)}
+.sl-flow li[aria-current=step]{color:var(--sd-ink,#1d1d1f)}
+.sl-flow li[aria-current=step]>span{background:#edf2ff;border-color:#c7d2ed;color:var(--sd-blue,#345bd6)}
+.sl-context{max-width:850px;margin:-7px 0 22px!important}
+.sl-stage{font-size:13px;font-weight:600;color:var(--sd-blue,#345bd6);margin:0 0 10px!important}
+.sl-reference-next{border-top:1px solid var(--sd-border,#e4e4e7);padding-top:16px;margin-top:18px}
+.sl-reference-next .sl-actions{margin:10px 0}
 .sl-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;margin-top:12px;align-items:start}
 .sl-card,.sl-add{min-width:0;padding:22px 24px;border:1px solid var(--sd-border,#e4e4e7);border-radius:13px;background:var(--sd-bg,#fbfbfd)}
 .sl-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}

@@ -59,7 +59,7 @@
   }
   function searchForm(s){
     const targets=list(s.profile?.targets);
-    return '<div class="sr-search-form">'+window.SixDSourceTargets.render(targets,s.target,{primaryAttr:'data-sr-field="target"',advancedAttr:'data-sr-field="advanced-target"',label:'What do you want to research?'})+'<label class="sr-field">Your search<textarea rows="2" maxlength="1000" data-sr-field="query" placeholder="For example: NASA rocket heating assumptions">'+esc(s.query)+'</textarea></label><div class="sr-actions">'+button('search','Search references')+'</div><p class="sr-notice" data-sr-blocked role="status" hidden></p><p class="sr-small">Only your typed query is sent to Tavily. Results are references to review, not verified engineering conclusions.</p><details class="sr-identity"><summary>What this search sends and costs</summary><p>One explicit basic search uses the configured Tavily allowance and returns at most five results. Your project data is not attached automatically. Generated answers, page extraction and automatic retries are off.</p></details></div>';
+    return '<div class="sr-search-form"><p class="sr-stage">1 · Search in saved R'+esc(s.ctx.revision)+'</p>'+window.SixDSourceTargets.render(targets,s.target,{primaryAttr:'data-sr-field="target"',advancedAttr:'data-sr-field="advanced-target"',label:'What do you want to research?'})+'<label class="sr-field">Your search<textarea rows="2" maxlength="1000" data-sr-field="query" placeholder="For example: NASA rocket heating assumptions">'+esc(s.query)+'</textarea></label><div class="sr-actions">'+button('search','Search references')+'</div><p class="sr-notice" data-sr-blocked role="status" hidden></p><p class="sr-small">Only your typed query is sent to Tavily. Results are references to review, not verified engineering conclusions.</p><details class="sr-identity"><summary>What this search sends and costs</summary><p>One explicit basic search uses the configured Tavily allowance and returns at most five results. Your project data is not attached automatically. Generated answers, page extraction and automatic retries are off.</p></details></div>';
   }
   function history(s){
     const records=list(s.profile?.searches);
@@ -73,7 +73,7 @@
   function preview(s){
     if(!s.preview)return '';
     const value=s.preview.source;
-    return '<section class="sr-preview" aria-label="Reference preview"><span class="sr-eyebrow">Preview · not saved or linked</span><h4>'+esc(value.title)+'</h4>'+(safeURL(value.url)?'<a class="sr-url" href="'+esc(safeURL(value.url))+'" target="_blank" rel="noopener noreferrer">'+esc(value.url)+'</a>':'<p>'+esc(value.url)+'</p>')+'<blockquote>'+esc(value.excerpt)+'</blockquote><p class="sr-preserve sr-small">'+esc(value.details)+'</p><p class="sr-notice">Review the source and passage. Using this preview only fills the existing reference form; you must explicitly save it and then create its engineering link.</p><div class="sr-actions">'+button('use','Use in source form')+button('close-preview','Close preview')+'</div></section>';
+    return '<section class="sr-preview" aria-label="Reference preview"><span class="sr-eyebrow">2 · Preview · not saved or linked</span><h4>'+esc(value.title)+'</h4>'+(safeURL(value.url)?'<a class="sr-url" href="'+esc(safeURL(value.url))+'" target="_blank" rel="noopener noreferrer">'+esc(value.url)+'</a>':'<p>'+esc(value.url)+'</p>')+'<blockquote>'+esc(value.excerpt)+'</blockquote><p class="sr-preserve sr-small">'+esc(value.details)+'</p><p class="sr-notice">Review the source and exact passage. Copying opens an unsaved draft in the Source library. Save it there, then link it to the project check before asking Nemotron about it.</p><div class="sr-actions">'+button('use','Copy draft to Source library')+button('close-preview','Close preview')+'</div><p class="sr-small">Nemotron receives only saved references linked to the chosen investigation scope, within its context limits. Search results and previews are excluded.</p></section>';
   }
   function draw(s){
     if(!active(s))return;
@@ -120,7 +120,7 @@
     try{
       const value=await s.ctx.api('/api/research/search',{project_id:s.ctx.projectId,revision:s.ctx.revision,target_id:s.target,query:s.query.trim(),expected_digest:s.profile.library_digest},{signal:s.controller.signal});
       if(!active(s)||serial!==s.serial)return;s.receipt=checkReceipt(s,value);
-      s.notice=value.state==='completed'?'Search captured. Review a result before choosing to use it. Nothing was added to the source library.':'Search outcome saved. Its request reservation remains; no automatic retry was made.';
+      s.notice=value.state==='completed'?'Search captured. Next: review a result’s preview, then choose whether to copy a draft to the Source library. No reference is saved or linked yet.':'Search outcome saved. Its request reservation remains; no automatic retry was made.';
       if(s.ctx.connectionOnly){s.status=await s.ctx.api('/api/research/status',undefined,{signal:s.controller.signal});return;}
       const [status,profile]=await Promise.all([s.ctx.api('/api/research/status'),s.ctx.api('/api/research'+query(s))]);
       if(!active(s)||serial!==s.serial)return;s.status=status;s.profile=checkProfile(s,profile);
@@ -143,7 +143,7 @@
       const value=await s.ctx.api('/api/research/'+encodeURIComponent(id)+'/preview'+query(s)+'&result_index='+index,undefined,{signal:s.controller.signal});
       if(!active(s)||serial!==s.serial||s.receipt?.search_id!==id)return;
       if(value?.project_id!==s.ctx.projectId||Number(value.revision)!==Number(s.ctx.revision)||value.search_id!==id||value.result_index!==index||value.receipt_digest!==s.receipt.digest||!value.source||!['title','url','excerpt','details'].every(key=>typeof value.source[key]==='string')||!safeURL(value.source.url))throw Error('The captured reference preview does not match this search result. Refresh its saved record.');
-      s.preview={source:clone(value.source),search_id:id,index};s.notice='Preview loaded from the saved search. No source was saved or linked.';
+      s.preview={source:clone(value.source),search_id:id,index};s.notice='Preview ready. Review the exact passage, then click Copy draft to Source library. No reference is saved or linked yet.';
     }catch(error){if(active(s)&&serial===s.serial&&error.name!=='AbortError')s.error=error.message||'The captured preview could not be read.';}
     finally{if(active(s)&&serial===s.serial){s.busy='';draw(s);if(s.preview)find(s,'.sr-preview')?.scrollIntoView({block:'nearest'});}}
   }
@@ -155,8 +155,8 @@
     try{
       const copied=await s.ctx.onUseReference(draft,context);
       if(!active(s)||serial!==s.serial)return;
-      if(copied===false){s.error='The source form is busy or no longer available. This preview is retained; open the source library and try again.';return;}
-      s.preview=null;s.notice='Reference copied to the source form. Review it and save explicitly, then add its engineering link.';
+      if(copied===false||copied?.copied===false){s.error=typeof copied?.reason==='string'?copied.reason:'The source form is busy or no longer available. This preview is retained; open the source library and try again.';return;}
+      s.preview=null;s.notice='Copied draft · not saved or linked. In the Source library, review it, click Save reference, then Link reference. Ask about this reference becomes available after linking.';
     }catch{if(active(s)&&serial===s.serial)s.error='The reference could not be copied. The preview is retained; reopen the saved source form before trying again.';}
     finally{if(active(s)&&serial===s.serial){s.busy='';draw(s);}}
   }

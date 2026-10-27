@@ -1,3 +1,5 @@
+Latest Part 3 delivery, October 27: [guide](PART3_ASSISTANT_WORKFLOW.md), [acceptance](PART3_ASSISTANT_WORKFLOW_ACCEPTANCE.md), [results](PART3_ASSISTANT_WORKFLOW_RESULTS.md) and [sanitized checks](validation/PART3_ASSISTANT_WORKFLOW_CHECKS.json). Safe rocket parking/controls, explicit saved AI context, retained questions and protected manual reference handoffs. Earlier unstarted statements below describe historical checkpoints.
+
 # Documentation index
 
 Latest Part 2 readability delivery: [guide](PART2_READABILITY.md), [acceptance](PART2_READABILITY_ACCEPTANCE.md), [results](PART2_READABILITY_RESULTS.md) and [sanitized checks](validation/PART2_READABILITY_CHECKS.json). Covers counted authoring disclosures, retained scope/exact evidence, shared display notation and distinct project identities. The state audit preserves separately recorded concurrent owner activity. Part 3 is unstarted.
