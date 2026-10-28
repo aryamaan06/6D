@@ -20,8 +20,9 @@ html,body{margin:0;min-height:100%;background:#fbfbfd}body{overflow-x:hidden}
     #sixd-workspace .sd-muted{color:var(--sd-soft)}
     #sixd-workspace .sd-label{font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--sd-soft)}
     #sixd-workspace .sd-top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:54px;padding:10px 20px;border-bottom:1px solid var(--sd-border);background:var(--sd-bg)}
-    #sixd-workspace .sd-brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:650;letter-spacing:-1px}
-    #sixd-workspace .sd-mark{display:grid;place-items:center;width:25px;height:25px;background:var(--sd-ink);color:#fff;border-radius:7px;font-size:14px;letter-spacing:-1px}
+    #sixd-workspace .sd-brand{display:flex;align-items:center;gap:8px;font-size:22px;font-weight:750;letter-spacing:-1.2px;color:var(--sd-ink);text-decoration:none}
+    #sixd-workspace .sd-brand-text{display:inline-block;font-weight:800;font-size:22px;letter-spacing:-1px;color:var(--sd-ink)}
+    #sixd-workspace .sd-mark{display:none}
     #sixd-workspace .sd-top-left,#sixd-workspace .sd-top-right{display:flex;align-items:center;gap:15px;flex-wrap:wrap}
     #sixd-workspace .sd-separator{width:1px;height:17px;background:var(--sd-border)}
     #sixd-workspace .sd-preview-tag{display:inline-flex;align-items:center;gap:6px;color:var(--sd-soft);font-size:13px;background:var(--sd-side);padding:3px 7px;border-radius:4px}

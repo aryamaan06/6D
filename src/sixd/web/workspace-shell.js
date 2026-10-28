@@ -132,7 +132,32 @@
     return '<button type="button" class="sd-project-card" data-open-project="'+esc(id)+'" title="Project ID: '+esc(id)+'" aria-label="'+esc(project.display_name+' · Revision R'+project.revision+' · Project ID: '+id)+'"><span class="sd-label">Saved project'+(project.project_id===currentId?' · Current':'')+'</span><strong>'+esc(project.display_name)+'</strong><span class="sd-project-id">ID '+esc(project.identity_label)+'</span>'+(project.project_hint?'<span class="sd-project-hint">'+esc(project.project_hint)+'</span>':'')+'<span class="sd-project-meta">Revision R'+esc(project.revision)+(created?'<span class="sd-project-created">'+esc(created)+'</span>':'')+'</span><span class="sd-project-open">Open project <i data-lucide="arrow-right" aria-hidden="true"></i></span></button>';
   }
   function hub(page,projects,currentId,tools=null) {
-    if (page === 'projects') return '<section class="sd-project-home" aria-label="Your projects"><div class="sd-home-intro"><span class="sd-label">Your workspace</span><h2>Choose a project to begin.</h2><p>Open a saved design, then choose the engineering or review task you want to work on.</p></div><div class="sd-project-grid">'+projectChoices(projects).map(project=>projectCard(project,currentId)).join('')+'</div><section class="sd-home-start"><h3>Start something new</h3><div class="sd-destination-grid">'+button('rocket-reference','Try the rocket example','Learn how a design change affects recorded conclusions.')+button('new-project','Create a project','Start empty and define your own supported checks.')+button('import','Import or use a template','Bring a supported file or choose another reference example.')+'</div></section></section>';
+    if (page === 'projects') {
+      const hero = '<div class="sd-hero-banner">'
+        + '<div class="sd-hero-badge"><span class="sd-dot sd-green"></span>Nebius AI Hackathon 2026 · NVIDIA Nemotron 3</div>'
+        + '<h1 class="sd-hero-title">Sixth Dimension <span class="sd-hero-sub">· 6D</span></h1>'
+        + '<p class="sd-hero-tagline">Deterministic Space Mission Assurance &amp; AI Engineering Copilot</p>'
+        + '<p class="sd-hero-description">Evaluate mission-critical rocket ascent trajectories, variable-thrust serial staging, aerodynamic constraints, and numerical proofs before hardware commitment. Deterministic physics with NVIDIA Nemotron via Nebius Token Factory.</p>'
+        + '<div class="sd-hero-actions">'
+        + '<button type="button" class="sd-button sd-primary sd-hero-cta" data-action="rocket-reference"><i data-lucide="play" aria-hidden="true"></i> Launch Rocket Demonstration</button>'
+        + '<button type="button" class="sd-button" data-action="new-project"><i data-lucide="plus" aria-hidden="true"></i> Create New Project</button>'
+        + '</div>'
+        + '<div class="sd-hero-pillars">'
+        + '<div class="sd-pillar-card"><div class="sd-pillar-title"><span class="sd-pillar-dot"></span>Deterministic Physics</div><p>10 validated analytical models for planar ascent, staging, and mass dynamics. Numerical proofs remain mathematically evaluated.</p></div>'
+        + '<div class="sd-pillar-card"><div class="sd-pillar-title"><span class="sd-pillar-dot"></span>NVIDIA Nemotron 3</div><p>Intelligent investigation planning, revision rationale, and requirements traceability powered by Nebius Token Factory.</p></div>'
+        + '<div class="sd-pillar-card"><div class="sd-pillar-title"><span class="sd-pillar-dot"></span>Tamper-Evident Receipts</div><p>Cryptographic SHA-256 digests, strict audit ledgers, and immutable engineering receipts for every run.</p></div>'
+        + '</div>'
+        + '</div>';
+      return '<section class="sd-project-home" aria-label="Your projects">'
+        + hero
+        + '<div class="sd-home-intro"><span class="sd-label">Saved projects</span><h2>Choose a project to begin.</h2><p>Open a saved design, or launch the interactive rocket demonstration above to explore the engineering workflow.</p></div><div class="sd-project-grid">'
+        + projectChoices(projects).map(project=>projectCard(project,currentId)).join('')
+        + '</div><section class="sd-home-start"><h3>Start something new</h3><div class="sd-destination-grid">'
+        + button('rocket-reference','Try the rocket example','Learn how a design change affects recorded conclusions.')
+        + button('new-project','Create a project','Start empty and define your own supported checks.')
+        + button('import','Import or use a template','Bring a supported file or choose another reference example.')
+        + '</div></section></section>';
+    }
     const area = areaFor(page);
     tools=scopedTools(tools,currentId);
     const showTools=tools&&['engineering','analysis'].includes(page);

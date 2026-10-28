@@ -1,0 +1,16 @@
+name: sixd-hosted
+
+services:
+  app:
+    environment:
+      SIXD_LIVE_AI_ENABLED: "1"
+      SIXD_CUMULATIVE_LEDGER_HANDOFF_CONFIRMED: "1"
+      SIXD_PROVIDER_CONFIG_FILE: /run/secrets/token-factory.json
+      SIXD_NEBIUS_API_KEY_FILE: /run/secrets/nebius-api-key
+      SIXD_PRIOR_BUDGET_FILE: /run/secrets/prior-budget.sqlite3
+      SIXD_INFERENCE_DAILY_CAP_USD: "5.0"
+      SIXD_INFERENCE_SESSION_CAP_USD: "0.50"
+    volumes:
+      - "${SIXD_SECRET_DIRECTORY}/token-factory.json:/run/secrets/token-factory.json:ro"
+      - "${SIXD_SECRET_DIRECTORY}/nebius-api-key:/run/secrets/nebius-api-key:ro"
+      - "${SIXD_SECRET_DIRECTORY}/prior-budget.sqlite3:/run/secrets/prior-budget.sqlite3:ro"
