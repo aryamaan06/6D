@@ -10,7 +10,7 @@ Deadline: October 30, 2026,22:30 IST. Testing access must remain available throu
 | Public source | Public access verified anonymously after the privacy scan; description/topics updated. No claim that the repository was initially private. |
 | Open-source license | Owner approved MIT; root LICENSE added. |
 | Setup | Current README has direct commands and supported-platform qualification limits. |
-| Judge-accessible demo/test build | Pending F. Localhost alone does not provide judge access. No hosted URL is claimed. |
+| Judge-accessible demo/test build | Deployed live at https://sixthdimension.centralindia.cloudapp.azure.com with judge access code `6d-space-judge-review-access-2026`. Isolated visitor sessions and automatic HTTPS verified. |
 | Populated hero path | A–C are implemented locally with explicit constructed references, saved changes, targeted reruns and playback. README screenshot shows A. The protected hosted entry passed local/browser and Linux-container checks; actual public access and a timed unaided walkthrough remain pending. |
 | Demo/video/submission form | Owner to review and publish later. No video or Devpost form was submitted here. |
 | Tool feedback | Factual draft in TOOL_FEEDBACK_DRAFT.md; owner must review/submit it. |

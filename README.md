@@ -12,15 +12,19 @@ NVIDIA Nemotron through **Nebius Token Factory** investigates the saved evidence
 
 *Actual interface capture from an isolated constructed browser fixture. The displayed assistant answer is synthetic/offline, not a fresh Nemotron response or real mission data.*
 
-## Try the workflow
+## Try the live demo
 
-**Available now: a local application. A public judge URL has not been deployed.** The separate protected hosting package is implemented and has recorded Linux/container checks; public access, TLS and operational verification remain pending. [Hosting status](docs/BUILD_F_RESULTS.md).
+**Live hosted application:** [https://sixthdimension.centralindia.cloudapp.azure.com](https://sixthdimension.centralindia.cloudapp.azure.com)  
+**Judge access code:** `6d-space-judge-review-access-2026`  
 
-1. Open **Projects → Try the rocket example** and create a constructed reference project.
-2. Calculate a baseline. Read its met, unmet and unassessed findings separately.
-3. Change a sourced input, preview its dependencies, save the revision and recalculate.
-4. Compare what changed, what ran again and what reused earlier evidence. Open the report for exact values, assumptions and exclusions.
-5. Click the **Ask 6D rocket** to question Nemotron about that saved evidence or find supporting references through Tavily.
+Each visitor receives an isolated persistent session with the pre-populated rocket demonstration. Native HTTPS is automatically provisioned.
+
+1. Open the URL and enter the access code.
+2. Explore **Projects → Try the rocket example** with its constructed reference project.
+3. Calculate or inspect the baseline. Read its met, unmet and unassessed findings separately.
+4. Change a sourced input, preview its dependencies, save the revision and recalculate.
+5. Compare what changed, what ran again and what reused earlier evidence. Open the report for exact values, assumptions and exclusions.
+6. Click the **Ask 6D rocket** to question Nemotron about that saved evidence or find supporting references through Tavily.
 
 The prepared thrust-change example makes one burnout-altitude criterion become unmet while launch guidance stays unassessed. It demonstrates the evidence workflow using constructed inputs; it is not a reconstruction of a real mission.
 

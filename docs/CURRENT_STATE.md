@@ -8,7 +8,7 @@ Status date: **October 27, 2026**. This page distinguishes implemented capabilit
 
 - **Local application:** implemented at http://127.0.0.1: 8768/ on the machine running it.
 - **Protected hosting package:** implemented with invitation access, isolated visitor state and recorded Linux/container checks.
-- **Public hosted demo:** not deployed. No public URL, production uptime or cloud operational qualification is claimed.
+- **Public hosted demo:** deployed at [https://sixthdimension.centralindia.cloudapp.azure.com](https://sixthdimension.centralindia.cloudapp.azure.com) with judge access code `6d-space-judge-review-access-2026`. Verified with automatic HTTPS, Caddy reverse proxy and session-isolated visitor state.
 - **Customer or flight qualification:** not established. Current example projects are constructed unless labelled otherwise.
 
 [Local opening/update instructions](OPEN_6D.md) · [Hosting evidence and outstanding deployment work](BUILD_F_RESULTS.md).
