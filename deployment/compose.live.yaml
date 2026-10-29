@@ -9,7 +9,7 @@ services:
       SIXD_NEBIUS_API_KEY_FILE: /run/secrets/nebius-api-key
       SIXD_PRIOR_BUDGET_FILE: /run/secrets/prior-budget.sqlite3
       SIXD_INFERENCE_DAILY_CAP_USD: "5.0"
-      SIXD_INFERENCE_SESSION_CAP_USD: "0.50"
+      SIXD_INFERENCE_SESSION_CAP_USD: "3.00"
       SIXD_TAVILY_API_KEY_FILE: /run/secrets/tavily-api-key
       SIXD_TAVILY_CREDIT_LIMIT: "4125"
     volumes:
