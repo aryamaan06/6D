@@ -15,16 +15,14 @@ NVIDIA Nemotron through **Nebius Token Factory** investigates the saved evidence
 ## Try the live demo
 
 **Live hosted application:** [https://sixthdimension.centralindia.cloudapp.azure.com](https://sixthdimension.centralindia.cloudapp.azure.com)  
-**Judge access code:** `6d-space-judge-review-access-2026`  
+**Access:** Open access (no login barrier). Each visitor receives an isolated, persistent session with pre-calculated rocket telemetry. Native HTTPS is provisioned automatically.
 
-Each visitor receives an isolated persistent session with the pre-populated rocket demonstration. Native HTTPS is automatically provisioned.
-
-1. Open the URL and enter the access code.
-2. Explore **Projects → Try the rocket example** with its constructed reference project.
-3. Calculate or inspect the baseline. Read its met, unmet and unassessed findings separately.
+1. Open the URL directly in your browser.
+2. Explore the **Constructed rocket review** with its 3D interactive vehicle canvas, mass properties, and 6 subsystem disciplines.
+3. Inspect the verified engineering criteria (8 Met, 0 Unmet, 1 Unassessed for Launch GNC).
 4. Change a sourced input, preview its dependencies, save the revision and recalculate.
 5. Compare what changed, what ran again and what reused earlier evidence. Open the report for exact values, assumptions and exclusions.
-6. Click the **Ask 6D rocket** to question Nemotron about that saved evidence or find supporting references through Tavily.
+6. Click the **Ask 6D rocket icon** to question NVIDIA Nemotron about any engineering check or find supporting references through Tavily.
 
 The prepared thrust-change example makes one burnout-altitude criterion become unmet while launch guidance stays unassessed. It demonstrates the evidence workflow using constructed inputs; it is not a reconstruction of a real mission.
 
@@ -48,13 +46,14 @@ Engineering calculations work without a model connection. Live questions require
 - **Connected engineering review:** system canvas/table/reader, explicit SI inputs, requirements, dependency tracing, saved revisions, targeted recalculation and retained evidence receipts.
 - **Bounded analysis and playback:** ten supported models, orbital and ascent histories, serial staging, imported simulation histories and sampled operating-envelope studies. These are scoped models, not complete engineering disciplines.
 - **Evidence and follow-up:** supporting sources, change comparisons, declared coverage gaps, action tracking and review exports. Forms, CSV, values-only Excel and supported project JSON provide intake paths.
-- **Contextual AI:** requirement or whole-project investigations with an explicit “Choose a model” starting state, Nano/Super/Ultra guidance, expandable conversation and saved answers. Exact numerical facts stay application-owned. Local image previews submit user-written notes, not pixels. [Current interface and verification](docs/CHAT_READABILITY_RESULTS.md).
+- **Contextual AI:** Grounded engineering check investigations with explicit “Choose an engineering check…” and “Choose a model” (Nano / Super / Ultra) selectors. Active conversations persist across page refreshes, with explicit `New conversation`, `Refresh conversations`, and `Clear conversation history` actions. Exact numerical facts stay application-owned and mathematically verified. Local image previews submit user-written notes, not raw pixels. [Current interface and verification](docs/CHAT_READABILITY_RESULTS.md).
+- **Reference Research:** Tavily integration with query targeting, candidate preview, source saving, `New search`, `Refresh saved searches`, and `Clear search history` controls.
 
 ## How the tools contribute
 
 | Tool | Job inside 6D |
 | --- | --- |
-| **Nebius Token Factory + NVIDIA Nemotron** | Live, bounded evidence-reading/recheck actions and explanations tied to a saved project/revision. The selected model and actual outcome are retained. |
+| **NVIDIA Nemotron (Hugging Face / Nebius)** | Open-weight foundation models (`nvidia/Nemotron-3-Nano`, `Super`, `Ultra`) served via high-throughput Nebius Token Factory inference. Architecture supports on-premise air-gapped deployment via Hugging Face TGI / vLLM for defense aerospace ITAR compliance. Live bounded evidence-reading/recheck actions and explanations tied to a saved project/revision. |
 | **Tavily** | Explicit reference search. Results remain previews until a person reviews, saves and links a passage. Search does not validate a calculation. |
 | **LangSmith** | Optional, previewed and separately approved qualification metrics export. It does not calculate engineering results. |
 

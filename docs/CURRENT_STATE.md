@@ -8,7 +8,7 @@ Status date: **October 27, 2026**. This page distinguishes implemented capabilit
 
 - **Local application:** implemented at http://127.0.0.1: 8768/ on the machine running it.
 - **Protected hosting package:** implemented with invitation access, isolated visitor state and recorded Linux/container checks.
-- **Public hosted demo:** deployed at [https://sixthdimension.centralindia.cloudapp.azure.com](https://sixthdimension.centralindia.cloudapp.azure.com) with judge access code `6d-space-judge-review-access-2026`. Verified with automatic HTTPS, Caddy reverse proxy and session-isolated visitor state.
+- **Public hosted demo:** deployed at [https://sixthdimension.centralindia.cloudapp.azure.com](https://sixthdimension.centralindia.cloudapp.azure.com) with direct open access (no login barrier). Verified with automatic HTTPS, Caddy reverse proxy and session-isolated visitor state.
 - **Customer or flight qualification:** not established. Current example projects are constructed unless labelled otherwise.
 
 [Local opening/update instructions](OPEN_6D.md) · [Hosting evidence and outstanding deployment work](BUILD_F_RESULTS.md).
@@ -40,7 +40,7 @@ Inputs use explicit units and source statements. Historical revisions remain rea
 
 ### Current interface correction
 
-The conversation has a larger reading area and an **Expand / Restore size** control. New conversations start at **Choose a model**; the user explicitly selects Nano for quick explanations, Super for everyday review or Ultra for deeper reasoning. These are suggested roles, not accuracy guarantees. Model choice is retained within a conversation rather than silently choosing a server default for a new one.
+The conversation has a larger reading area and an **Expand / Restore size** control. New conversations start with explicit **Choose an engineering check…** and **Choose a model** controls; the user explicitly selects Nano for quick explanations, Super for everyday review or Ultra for deeper reasoning. Active conversations persist across page refreshes with explicit `New conversation`, `Refresh conversations`, and `Clear conversation history` actions. Exact numerical facts stay application-owned. Model choice is retained within a conversation rather than silently choosing a server default for a new one.
 
 Progressive disclosures preserve the opened section's beginning so the reader can proceed downward. Numerical evidence, activity and technical settings remain available behind details. These UI changes have offline verification; they do not establish live answer quality. [Correction results](CHAT_READABILITY_RESULTS.md).
 
@@ -48,7 +48,7 @@ Progressive disclosures preserve the opened section's beginning so the reader ca
 
 | Service | Implemented role | Validation boundary |
 | --- | --- | --- |
-| Nebius Token Factory / NVIDIA Nemotron | Requirement and whole-project investigations; explicit Nano/Super/Ultra selection; bounded evidence reads and supported rechecks; retained questions, outcomes and source identities | Current-source success must be established by a completed live record. Older successes do not automatically qualify newer prompts or conversation handling. |
+| Nebius Token Factory / NVIDIA Nemotron | Grounded engineering check investigations; explicit check and Nano/Super/Ultra selection; bounded evidence reads and supported rechecks; retained questions, outcomes and source identities | Current-source success must be established by a completed live record. Older successes do not automatically qualify newer prompts or conversation handling. |
 | Tavily | Explicit search, result preview and manual source save/link | Retrieved text remains supplemental and unverified; it cannot change a numerical finding. |
 | LangSmith | Previewed, explicitly approved metrics export | Historical upload evidence is not continuous telemetry or a new evaluation result. |
 
