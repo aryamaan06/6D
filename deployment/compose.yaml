@@ -23,6 +23,7 @@ services:
       SIXD_STATE_ROOT: /var/lib/sixd
       SIXD_JUDGE_ACCESS_CODE_FILE: /run/secrets/judge-access-code
       SIXD_LIVE_AI_ENABLED: "0"
+      SIXD_OPEN_ACCESS: "1"
     volumes:
       - state:/var/lib/sixd
       - "${SIXD_SECRET_DIRECTORY:?Set an absolute secret directory outside the repository}/judge-access-code:/run/secrets/judge-access-code:ro"

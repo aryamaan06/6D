@@ -24,7 +24,7 @@ def configured_server(environment, *, loopback_preview=False):
         port = int(environment.get('SIXD_PORT', '8080'))
         if not 1 <= port <= 65535 or (loopback_preview and host != '127.0.0.1'):
             raise ValueError('Choose a valid port and loopback bind for local preview.')
-        open_access = environment.get('SIXD_OPEN_ACCESS', '1') == '1'
+        open_access = environment.get('SIXD_OPEN_ACCESS', '0') == '1'
         config = HostedConfig(root, origin, code, allow_loopback_http=loopback_preview, open_access=open_access)
         tavily_key_file = environment.get('SIXD_TAVILY_API_KEY_FILE')
         tavily_key = None
