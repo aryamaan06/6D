@@ -87,7 +87,9 @@
 #sixd-workspace .sd-assistant-context-summary .sd-notice{margin:6px 0 0;padding:7px 10px;font-size:12px}
 #sixd-workspace .sd-conversation-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 5px;flex:none}
 #sixd-workspace .sd-conversation-toolbar>span{flex:1;font-size:12px}
-#sixd-workspace .sd-conversation-toolbar .sd-mini-action{font-size:12px}
+#sixd-workspace .sd-conversation-toolbar .sd-mini-action,#sixd-workspace .sd-conversation-toolbar .sd-button{font-size:12px;padding:4px 8px;min-height:28px}
+#sixd-workspace .sd-conversation-history-actions{display:flex;gap:8px;margin-bottom:10px}
+#sixd-workspace .sd-conversation-history-actions .sd-button{font-size:12px;padding:5px 9px;min-height:28px}
 #sixd-workspace .sd-conversation-compose{flex:none;margin-top:4px;padding:12px 0 0;border-top:1px solid var(--sd-border);background:var(--sd-bg)}
 #sixd-workspace .sd-assistant-compose.sd-conversation-compose .sd-ai-question{min-height:66px;max-height:130px;resize:vertical;font-size:16px;line-height:1.55}
 #sixd-workspace .sd-conversation-compose .sd-field{margin:0 0 7px}
