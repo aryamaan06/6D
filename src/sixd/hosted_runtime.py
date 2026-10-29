@@ -55,9 +55,12 @@ def carried_reservation(path, config):
 
 class HostedRuntimeFactory:
     def __init__(self, state_root, *, config=None, api_key=None, prior_budget_path=None,
-                 daily_cap_usd=None, session_cap_usd=None, transport=None):
+                 daily_cap_usd=None, session_cap_usd=None, transport=None,
+                 tavily_api_key=None, tavily_credit_limit=4125):
         self.state_root = Path(state_root).resolve()
         self.config, self._key, self._transport, self.ledger = config, api_key, transport, None
+        self._tavily_key = tavily_api_key
+        self._tavily_credit_limit = tavily_credit_limit
         if config is None:
             if any(x is not None for x in (api_key, prior_budget_path, daily_cap_usd, session_cap_usd, transport)):
                 raise ValueError('Live inference requires the complete explicit operator configuration.')
@@ -96,6 +99,11 @@ class HostedRuntimeFactory:
                 config_path.write_bytes(encoded)
         runtime = WorkspaceRuntime(folder / 'workspace.sqlite3', ai_local_directory=private,
                                    allow_environment_key=False)
+        if self._tavily_key is not None:
+            runtime.research._key = self._tavily_key
+            runtime.research._credit_limit = self._tavily_credit_limit
+            runtime.research._key_source = 'hosted_operator'
+            runtime.research._remembered = True
         if self.config is not None:
             runtime.ai._key = self._key
             runtime.ai._key_source = 'hosted_operator'

@@ -32,6 +32,7 @@ POST_ROUTES = frozenset({
     '/api/sources', '/api/source-links', '/api/source-links/confirm',
     '/api/actions', '/api/actions/update', '/api/actions/review',
     '/api/design-comparison', '/api/coverage/save', '/api/investigations',
+    '/api/research/search',
 })
 LOGIN_ASSETS = {'/hosted-login.html': 'text/html; charset=utf-8',
                 '/hosted-login.js': 'text/javascript; charset=utf-8',
@@ -323,6 +324,7 @@ class HostedHandler(WorkspaceHandler):
             value['expires_at'] = datetime.fromtimestamp(session['expires'], timezone.utc).isoformat()
             runtime = self._hosted.manager.runtime(session)
             value['live_ai_enabled'] = runtime.ai.status()['configured'] is True
+            value['external_research_enabled'] = runtime.research.status()['key_present'] is True
             spending = getattr(runtime, 'hosted_spending', None)
             if callable(spending):
                 limits = spending()
@@ -414,6 +416,9 @@ class HostedHandler(WorkspaceHandler):
             return
         if method == 'POST' and route == '/api/investigations' and not runtime.ai.status()['configured']:
             self._error(403, 'Live AI is disabled for this hosted deployment. Saved engineering work remains available.')
+            return
+        if method == 'POST' and route == '/api/research/search' and not runtime.research.status()['key_present']:
+            self._error(403, 'External research is disabled for this hosted deployment. Saved source references remain available.')
             return
         original = self.server
         self.server = _Facade(runtime, self._hosted)

@@ -4,7 +4,7 @@
   const restricted = [
     '[data-owner-only]', '[data-action="owner-settings"]', '[data-action="manage-nebius"]', '[data-action="ai-settings"]', '#sd-ai-connect-dialog', '#sd-ai-key', '#sd-ai-connect-button',
     '[data-action="ai-disconnect"]', '[data-action="ai-forget"]',
-    '[data-aq-connect-form]', '.sr-connection', '[data-sr-action="search"]',
+    '[data-aq-connect-form]', '.sr-connection',
     '[data-aq="start"]', '[data-aq="preview"]', '[data-aq="export"]',
     '[data-aq="connect-observability"]', '[data-aq="forget-observability"]',
     '[data-aq="disconnect-observability"]', '#sd-evidence-evaluation', '#sd-ultra-diagnostic',
@@ -23,6 +23,9 @@
     if (storageLabel && storageLabel.textContent !== 'Saved in this isolated hosted workspace') storageLabel.textContent = 'Saved in this isolated hosted workspace';
     if (mode.live_ai_enabled === false) {
       document.querySelectorAll('#sd-ai-start').forEach(node => {if (!node.disabled) node.disabled = true;node.title = 'Live inference is disabled for this hosted deployment.';});
+    }
+    if (mode.external_research_enabled === false) {
+      document.querySelectorAll('[data-sr-action="search"]').forEach(node => {if (!node.disabled) node.disabled = true;node.title = 'External web research is disabled for this hosted deployment.';});
     }
   }
   function expire() {
@@ -45,7 +48,7 @@
     notice.textContent = 'Isolated review workspace · ' + (value.live_ai_enabled === true ? 'AI runs only when explicitly requested, within server limits.' : 'Live AI is disabled for this deployment. Engineering calculations run locally on the hosted server.');
     const detail = document.createElement('p');
     detail.className = 'sixd-hosted-detail';
-    detail.textContent = 'Constructed/public data only. Provider keys and administrative actions are managed by the demo owner. External searches and metrics uploads are unavailable here.';
+    detail.textContent = 'Constructed/public data only. Provider keys and administrative actions are managed by the demo owner.' + (value.external_research_enabled === true ? ' Reference search via Tavily and Nemotron AI are available.' : ' External searches and metrics uploads are unavailable here.');
     if (typeof value.expires_at === 'string' && Number.isFinite(Date.parse(value.expires_at))) detail.textContent += ' Session expires ' + new Date(value.expires_at).toLocaleString() + '.';
     const copy = document.createElement('div');copy.append(notice, detail);
     if (value.live_ai_enabled === true) {

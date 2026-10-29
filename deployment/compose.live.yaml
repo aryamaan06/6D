@@ -10,7 +10,10 @@ services:
       SIXD_PRIOR_BUDGET_FILE: /run/secrets/prior-budget.sqlite3
       SIXD_INFERENCE_DAILY_CAP_USD: "5.0"
       SIXD_INFERENCE_SESSION_CAP_USD: "0.50"
+      SIXD_TAVILY_API_KEY_FILE: /run/secrets/tavily-api-key
+      SIXD_TAVILY_CREDIT_LIMIT: "4125"
     volumes:
       - "${SIXD_SECRET_DIRECTORY}/token-factory.json:/run/secrets/token-factory.json:ro"
       - "${SIXD_SECRET_DIRECTORY}/nebius-api-key:/run/secrets/nebius-api-key:ro"
       - "${SIXD_SECRET_DIRECTORY}/prior-budget.sqlite3:/run/secrets/prior-budget.sqlite3:ro"
+      - "${SIXD_SECRET_DIRECTORY}/tavily-api-key:/run/secrets/tavily-api-key:ro"

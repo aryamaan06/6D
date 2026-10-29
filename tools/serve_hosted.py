@@ -25,6 +25,9 @@ def configured_server(environment, *, loopback_preview=False):
         if not 1 <= port <= 65535 or (loopback_preview and host != '127.0.0.1'):
             raise ValueError('Choose a valid port and loopback bind for local preview.')
         config = HostedConfig(root, origin, code, allow_loopback_http=loopback_preview)
+        tavily_key_file = environment.get('SIXD_TAVILY_API_KEY_FILE')
+        tavily_key = read_private_file(tavily_key_file, 4096).decode('utf-8').strip() if tavily_key_file else None
+        tavily_cap = int(environment.get('SIXD_TAVILY_CREDIT_LIMIT', '4125'))
         if live == '1':
             if environment.get('SIXD_CUMULATIVE_LEDGER_HANDOFF_CONFIRMED') != '1':
                 raise ValueError('Freeze and retire the previous ledger writer before confirming cumulative ledger handoff.')
@@ -33,9 +36,10 @@ def configured_server(environment, *, loopback_preview=False):
             factory = HostedRuntimeFactory(root, config=provider, api_key=key,
                 prior_budget_path=environment['SIXD_PRIOR_BUDGET_FILE'],
                 daily_cap_usd=float(environment['SIXD_INFERENCE_DAILY_CAP_USD']),
-                session_cap_usd=float(environment['SIXD_INFERENCE_SESSION_CAP_USD']))
+                session_cap_usd=float(environment['SIXD_INFERENCE_SESSION_CAP_USD']),
+                tavily_api_key=tavily_key, tavily_credit_limit=tavily_cap)
         else:
-            factory = HostedRuntimeFactory(root)
+            factory = HostedRuntimeFactory(root, tavily_api_key=tavily_key, tavily_credit_limit=tavily_cap)
         return config, factory, host, port
     except (KeyError, OSError, UnicodeError, TypeError, ValueError, ProviderError) as error:
         # Deliberately never echo submitted env values, paths, provider errors or keys.
