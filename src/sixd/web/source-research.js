@@ -176,8 +176,24 @@
     const input=event=>{const field=event.target.dataset.srField;if(field==='query')s.query=event.target.value;if(field==='target'||field==='advanced-target')s.target=event.target.value;if(field==='query'||field==='target'||field==='advanced-target')ctx.onDraftChange?.({query:s.query,target:s.target});controls(s);};
     const click=event=>{const control=event.target.closest('[data-sr-action]');if(!control||!host.contains(control)||control.disabled)return;const action=control.dataset.srAction;
       if(action==='owner-settings'){s.ctx.onOwnerSettings?.();return;}
-      if(action==='new-search'||action==='clear-history'){
-        if(s.profile)s.profile.searches=[];
+      if(action==='clear-history'){
+        void (async()=>{
+          if(s.busy)return;
+          s.busy='load';controls(s);
+          try{
+            await s.ctx.api('/api/research/clear',{project_id:s.ctx.projectId});
+            if(s.profile)s.profile.searches=[];
+            s.receipt=null;s.preview=null;s.query='';s.target='';
+            s.notice='Search history cleared permanently.';
+          }catch(err){
+            s.error=err.message||'Failed to clear search history.';
+          }finally{
+            s.busy='';draw(s);
+          }
+        })();
+        return;
+      }
+      if(action==='new-search'){
         s.receipt=null;s.preview=null;s.query='';s.target='';
         s.notice='Search view reset. Ready for a new search.';
         draw(s);

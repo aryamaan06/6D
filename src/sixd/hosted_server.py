@@ -32,7 +32,7 @@ POST_ROUTES = frozenset({
     '/api/sources', '/api/source-links', '/api/source-links/confirm',
     '/api/actions', '/api/actions/update', '/api/actions/review',
     '/api/design-comparison', '/api/coverage/save', '/api/investigations',
-    '/api/research/search',
+    '/api/research/search', '/api/research/clear',
 })
 LOGIN_ASSETS = {'/hosted-login.html': 'text/html; charset=utf-8',
                 '/hosted-login.js': 'text/javascript; charset=utf-8',

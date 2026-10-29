@@ -341,6 +341,15 @@ class ResearchTests(unittest.TestCase):
             restarted.search(self.identity, 1, 'requirement:thermal_limit', 'Another query', self.sources.summary(self.identity, 1)['digest'])
         self.assertEqual(len(self.calls), 1)
 
+    def test_clear_removes_saved_searches_permanently(self):
+        self.connect()
+        receipt = self.search()
+        self.assertEqual(receipt['state'], 'completed')
+        self.assertEqual(len(self.service.list(self.identity, 1)['searches']), 1)
+        self.service.clear(self.identity)
+        self.assertEqual(len(self.service.list(self.identity, 1)['searches']), 0)
+        self.assertEqual(self.service.status()['reserved_credits'], 0)
+
 
 if __name__ == '__main__':
     unittest.main()

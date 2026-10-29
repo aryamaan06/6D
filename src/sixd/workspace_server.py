@@ -490,7 +490,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 return
             if _code_fingerprint() != RUNTIME_ID:
                 raise ConflictError("6D application code has changed. Restart the local workspace server before saving or running checks.")
-            if route not in {"/api/envelopes/preview", "/api/simulation-imports", "/api/simulation-imports/preview", "/api/projects", "/api/revisions", "/api/impact", "/api/run", "/api/ai/connect", "/api/ai/disconnect", "/api/ai/forget", "/api/investigations", "/api/model-evaluation/start", "/api/workflow-evaluation/start", "/api/ultra-diagnostic/start", "/api/evidence-evaluation/prepare", "/api/evidence-evaluation/start", "/api/simulations", "/api/authoring/preflight", "/api/scenarios", "/api/test-data/preview", "/api/test-comparisons", "/api/test-evidence/impact", "/api/interfaces/preview", "/api/project-intake/inspect", "/api/project-intake/preview", "/api/sources", "/api/source-links", "/api/source-links/confirm", "/api/actions", "/api/actions/update", "/api/actions/review", "/api/design-comparison", "/api/research/connect", "/api/research/forget", "/api/research/disconnect", "/api/research/search", "/api/coverage/save", "/api/ai-quality/prepare", "/api/ai-quality/start", "/api/ultra-workflow/prepare", "/api/ultra-workflow/start", "/api/observability/connect", "/api/observability/forget", "/api/observability/disconnect", "/api/observability/preview", "/api/observability/export"}:
+            if route not in {"/api/envelopes/preview", "/api/simulation-imports", "/api/simulation-imports/preview", "/api/projects", "/api/revisions", "/api/impact", "/api/run", "/api/ai/connect", "/api/ai/disconnect", "/api/ai/forget", "/api/investigations", "/api/model-evaluation/start", "/api/workflow-evaluation/start", "/api/ultra-diagnostic/start", "/api/evidence-evaluation/prepare", "/api/evidence-evaluation/start", "/api/simulations", "/api/authoring/preflight", "/api/scenarios", "/api/test-data/preview", "/api/test-comparisons", "/api/test-evidence/impact", "/api/interfaces/preview", "/api/project-intake/inspect", "/api/project-intake/preview", "/api/sources", "/api/source-links", "/api/source-links/confirm", "/api/actions", "/api/actions/update", "/api/actions/review", "/api/design-comparison", "/api/research/connect", "/api/research/forget", "/api/research/disconnect", "/api/research/search", "/api/research/clear", "/api/coverage/save", "/api/ai-quality/prepare", "/api/ai-quality/start", "/api/ultra-workflow/prepare", "/api/ultra-workflow/start", "/api/observability/connect", "/api/observability/forget", "/api/observability/disconnect", "/api/observability/preview", "/api/observability/export"}:
                 self._error(404, "This workspace action is not available.")
                 return
             if route in {"/api/source-links", "/api/source-links/confirm"}:
@@ -509,6 +509,10 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 self._fields(value, {"project_id", "revision", "target_id", "query", "expected_digest"})
                 view = self.server.research.search(value["project_id"], self._revision(value["revision"]),
                     value["target_id"], value["query"], value["expected_digest"])
+            elif route == "/api/research/clear":
+                self._fields(value, {"project_id"})
+                self.server.research.clear(value["project_id"])
+                view = {"cleared": True, "project_id": value["project_id"]}
             elif route == "/api/coverage/save":
                 self._fields(value, {"project_id", "revision", "spec", "expected_digest"})
                 view = self.server.coverage.save(value["project_id"], self._revision(value["revision"]),

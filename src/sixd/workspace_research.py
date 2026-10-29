@@ -370,6 +370,14 @@ class WorkspaceResearch:
             self.sources._view(connection, project_id, revision)
             return self._get(connection, search_id, project_id, revision)
 
+    def clear(self, project_id=None):
+        with self._lock, self.store._connect(write=True) as connection:
+            if project_id is not None:
+                _text(project_id, 'Project ID', 64)
+                connection.execute('DELETE FROM project_research_versions WHERE project_id=?', (project_id,))
+            else:
+                connection.execute('DELETE FROM project_research_versions')
+
     def search(self, project_id, revision, target_id, query, expected_digest):
         _text(query, 'Search query', 1000)
         _text(target_id, 'Research target', 8192)
