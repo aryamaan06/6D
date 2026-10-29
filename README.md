@@ -6,7 +6,7 @@ An engineering calculation can be correct and still be out of date after a desig
 
 NVIDIA Nemotron through **Nebius Token Factory** investigates the saved evidence and explains next steps. The application keeps calculated values and requirement outcomes authoritative.
 
-**[Current capabilities and known gaps](docs/CURRENT_STATE.md) · [Evidence index](docs/VALIDATION_INDEX.md) · [Repository guide](docs/REPOSITORY_GUIDE.md)**
+**[Current capabilities and known gaps](docs/CURRENT_STATE.md) · [Evidence index](docs/VALIDATION_INDEX.md) · [Repository guide](docs/REPOSITORY_GUIDE.md) · [Nebius & NVIDIA Tool Feedback](docs/NEBIUS_NVIDIA_FEEDBACK.md)**
 
 ![Expanded Ask 6D conversation in the current interface](docs/images/6d-current-workspace.png)
 
