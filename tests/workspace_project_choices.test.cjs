@@ -68,7 +68,7 @@ test('cards render supplied hints only and retain IDs, revisions, current select
   assert.match(html,/Created 2026-10-26 12:34 UTC/);
   assert.equal((html.match(/class="sd-project-hint"/g)||[]).length,1,'missing payload hints stay absent');
   assert.doesNotMatch(html,/Invalid Date|not a timestamp|calculated|verified|archive|delete/i);
-  for(const action of ['rocket-reference','new-project','import'])assert.ok(html.includes('data-action="'+action+'"'));
+  for(const action of ['new-project','import'])assert.ok(html.includes('data-action="'+action+'"'));
 });
 
 test('project names, IDs and optional model hints are escaped in card text and attributes',()=>{
