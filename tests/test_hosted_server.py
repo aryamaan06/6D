@@ -318,7 +318,7 @@ class HostedHTTPTests(unittest.TestCase):
             for connection in connections:connection.close()
 
 
-    def test_open_access_automatically_serves_workspace_and_reuses_session(self):
+    def test_open_access_automatically_serves_workspace_with_isolated_sessions(self):
         self.stop(); self.config = replace(self.config, open_access=True); self.start()
         # Initial visitor without cookie lands directly on workspace.html
         status, page, headers = self.request('/')
@@ -332,16 +332,22 @@ class HostedHTTPTests(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertTrue(value['authenticated'])
         self.assertTrue(value['open_access'])
-        # Projects list is directly available
+        # Projects list is directly available with seeded demo project
         code, projects, _ = self.request('/api/projects', cookie=cookie)
         self.assertEqual(code, 200)
         self.assertEqual(len(projects['projects']), 1)
-        # Another visitor arriving with no cookie reuses the active demo session
+        self.assertEqual(projects['projects'][0]['name'], 'Space Launch Vehicle Review (Judges Demo)')
+        # Another visitor arriving with no cookie receives their own distinct isolated session
         status2, page2, headers2 = self.request('/')
         self.assertEqual(status2, 200)
         self.assertIn(b'/workspace.js', page2)
         cookie2 = headers2.get('Set-Cookie')
-        self.assertEqual(cookie.split(';')[0], cookie2.split(';')[0])
+        self.assertTrue(cookie2.startswith('__Host-sixd_session='))
+        self.assertNotEqual(cookie.split(';')[0], cookie2.split(';')[0])
+        code2, projects2, _ = self.request('/api/projects', cookie=cookie2)
+        self.assertEqual(code2, 200)
+        self.assertEqual(len(projects2['projects']), 1)
+        self.assertEqual(projects2['projects'][0]['name'], 'Space Launch Vehicle Review (Judges Demo)')
 
 
 if __name__=='__main__':unittest.main()
