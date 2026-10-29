@@ -559,6 +559,7 @@
     if(host.dataset.rendered!==html){host.innerHTML=html;host.dataset.rendered=html;}
   }
   function locationSnapshot() {
+    if(state.page==='home')return {page:'home'};
     if(state.page==='projects')return {page:'projects'};
     return {projectId:state.data.project_id,revision:state.data.revision,page:state.page,
       system:state.system,view:state.view,panel:state.panel,
@@ -1935,10 +1936,10 @@
   }
   async function action(name) {
     if(rocket?.isOpen()&&['sources','actions','owner-settings','ai-settings'].includes(name))rocket.close();
-    const pageAction=['projects','engineering','analysis','evidence','setup','owner-settings','ai-settings','system','review-home','guided-overview','guided-table','guided-latest','report','changes','back','systems','chains','attitude','powered-flight','vertical-mode','guided-ascent','staged-ascent','power','sources','actions','coverage','comparison','simulation','scenarios','envelopes','simulation-imports','test-data','author-project','project-investigate','new-project','import','rocket-reference','ai-quality'];
+    const pageAction=['home','projects','engineering','analysis','evidence','setup','owner-settings','ai-settings','system','review-home','guided-overview','guided-table','guided-latest','report','changes','back','systems','chains','attitude','powered-flight','vertical-mode','guided-ascent','staged-ascent','power','sources','actions','coverage','comparison','simulation','scenarios','envelopes','simulation-imports','test-data','author-project','project-investigate','new-project','import','rocket-reference','ai-quality'];
     if(state.stagedProfileEdit&&pageAction.includes(name)){message('Apply or cancel the open thrust-profile edit before navigating. Your edits are still open.');return;}
     if(name==='navigation-back'){if(navigation?.canBack)navigation.back();return;}
-    if(['projects','engineering','analysis','evidence','setup','system'].includes(name)){
+    if(['home','projects','engineering','analysis','evidence','setup','system'].includes(name)){
       state.page=name;state.panel='details';stopInvestigationPolling();root.classList.remove('sd-tree-open');render();return;
     }
     root.querySelectorAll('details.sd-tool-menu[open]').forEach(el=>el.open=false);
@@ -2210,10 +2211,14 @@
     let initial=null;
     try{initial=navigation.getInitial();}catch(error){showError(error);}
     await perform(async()=>{
-      if(initial&&initial.page!=='projects'){
+      if(initial&&initial.page!=='projects'&&initial.page!=='home'){
         try{await load(initial.projectId,initial.revision);await restoreLocation(initial,true);}
-        catch(error){state.page='projects';await load(last||undefined);showError(error);}
-      }else{state.page='projects';try{await load(last||undefined);}catch(error){if(!last)throw error;await load();}}
+        catch(error){state.page='home';await load(last||undefined);showError(error);}
+      }else if(initial&&initial.page==='projects'){
+        state.page='projects';try{await load(last||undefined);}catch(error){if(!last)throw error;await load();}
+      }else{
+        state.page='home';try{await load(last||undefined);}catch(error){if(!last)throw error;await load();}
+      }
     });
     navigationStarting=false;
     if(state.data){navigation.start();renderLocation();icons();}
