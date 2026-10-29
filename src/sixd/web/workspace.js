@@ -1246,8 +1246,8 @@
       if(rocketUI.parkedTests.size>50)rocketUI.parkedTests.delete(rocketUI.parkedTests.keys().next().value);
     }
     ai.scope='requirement';
-    ai.rocketRequirementId=req(requirementId)?requirementId:(allReqs()[0]?.id||null);
-    ai.testSelection=testSelection||rocketUI.parkedTests.get(testParkKey(ai.rocketRequirementId))||null;
+    ai.rocketRequirementId=req(requirementId)?requirementId:null;
+    ai.testSelection=testSelection||(ai.rocketRequirementId?rocketUI.parkedTests.get(testParkKey(ai.rocketRequirementId)):null);
     syncAssistantContext();
     if(preserveQuestion&&question){ai.question=question;rocketUI.notice='Your question was kept. Review the selected evidence before asking.';}
     else rocketUI.notice='';
@@ -1411,8 +1411,8 @@
     const context=assistantDescriptor(),parked=[...rocketUI.parkedTests.keys()].some(key=>key.startsWith(JSON.stringify([context.projectId,context.revision,context.runId]).slice(0,-1)+','));
     let reference=context.references.summary;
     if(context.references.state!=='ready')reference=sourceLinks.error?'References could not be loaded. Open saved references or refresh before relying on them.':'Loading linked references for this saved context…';
-    const scopeTitle=context.scope==='project'?'Whole project':window.SixDSourceTargets?.shortLabel({label:context.requirementTitle||'No check selected',target_id:'requirement:'+context.requirementId})||context.requirementTitle;
-    host.innerHTML='<details class="sd-chat-context-details"><summary><strong>'+esc(scopeTitle)+'</strong> · saved R'+esc(context.revision)+(context.findingStatus?' · '+esc(human(context.findingStatus)):'')+'</summary><p><strong>'+esc(context.title)+' · R'+esc(context.revision)+'</strong></p><p>'+esc(context.requirementTitle||'Whole project')+'</p><p class="sd-small sd-muted">'+esc(context.runId?'Saved calculation '+context.runId:'No saved calculation in this revision')+'</p><p class="sd-small">'+esc(reference)+'</p>'+(context.testSelection?'<p class="sd-small">Selected test row '+esc(context.testSelection.rowNumber)+' from comparison '+esc(context.testSelection.comparisonId)+'.</p><button type="button" class="sd-mini-action" data-action="clear-test-selection">Clear selected test row</button>':parked?'<p class="sd-small sd-notice">A test row is parked for another check; it is not included.</p>':'')+'<button type="button" class="sd-mini-action" data-action="ai-use-page-context">Use this page’s context</button></details>'+(context.hasDraft?'<p class="sd-notice">Your draft is not calculated. This conversation uses the saved revision.</p>':'')+(context.historical?'<p class="sd-notice">Historical saved revision. Reference changes are disabled.</p>':'')+(context.runStale?'<p class="sd-notice">The saved calculation needs rechecking against current sources.</p>':'')+(rocketUI.notice?'<p class="sd-small" role="status">'+esc(rocketUI.notice)+'</p>':'');
+    const scopeTitle=context.scope==='project'?'Whole project':(context.requirementTitle?(window.SixDSourceTargets?.shortLabel({label:context.requirementTitle,target_id:'requirement:'+context.requirementId})||context.requirementTitle):'Choose an engineering check');
+    host.innerHTML='<details class="sd-chat-context-details"><summary><strong>'+esc(scopeTitle)+'</strong> · saved R'+esc(context.revision)+(context.findingStatus?' · '+esc(human(context.findingStatus)):'')+'</summary><p><strong>'+esc(context.title)+' · R'+esc(context.revision)+'</strong></p><p>'+esc(context.requirementTitle||'Choose an engineering check above to discuss.')+'</p><p class="sd-small sd-muted">'+esc(context.runId?'Saved calculation '+context.runId:'No saved calculation in this revision')+'</p><p class="sd-small">'+esc(reference)+'</p>'+(context.testSelection?'<p class="sd-small">Selected test row '+esc(context.testSelection.rowNumber)+' from comparison '+esc(context.testSelection.comparisonId)+'.</p><button type="button" class="sd-mini-action" data-action="clear-test-selection">Clear selected test row</button>':parked?'<p class="sd-small sd-notice">A test row is parked for another check; it is not included.</p>':'')+'<button type="button" class="sd-mini-action" data-action="ai-use-page-context">Use this page’s context</button></details>'+(context.hasDraft?'<p class="sd-notice">Your draft is not calculated. This conversation uses the saved revision.</p>':'')+(context.historical?'<p class="sd-notice">Historical saved revision. Reference changes are disabled.</p>':'')+(context.runStale?'<p class="sd-notice">The saved calculation needs rechecking against current sources.</p>':'')+(rocketUI.notice?'<p class="sd-small" role="status">'+esc(rocketUI.notice)+'</p>':'');
   }
   function aiStatusMarkup(owner=false) {
     const s=ai.status;if(!s)return '<p class="sd-small sd-muted">Reading AI connection status…</p>';
@@ -1491,7 +1491,7 @@
   }
   function aiBlockedReason() {
     if(state.draft)return 'Save or discard the draft, then run its supported checks before investigating.';
-    if(ai.scope==='requirement'&&!req(ai.requirementId))return 'Choose an engineering check or use the whole-project scope before asking.';
+    if(!ai.requirementId||!req(ai.requirementId))return 'Choose an engineering check before asking.';
     if(!currentRun())return 'Run checks for this saved revision before starting an investigation.';
     if(!ai.status)return 'Read the AI configuration before starting.';
     if(!ai.status.key_present)return 'Connect your Nebius key to enable a live investigation.';
@@ -1518,15 +1518,14 @@
   function renderUnifiedAssistant(requirement){
     rocketUI.attachmentController?.dispose();rocketUI.attachmentController=null;ai.attachmentsDisabled=null;
     const requirements=allReqs();
-    if(ai.scope==='project'||!ai.requirementId||!req(ai.requirementId)){
+    if(ai.scope==='project'||(ai.requirementId&&!req(ai.requirementId))){
       ai.scope='requirement';
-      if(requirements.length)ai.requirementId=requirements[0].id;
-      ai.rocketRequirementId=ai.requirementId;
+      if(!req(ai.requirementId)){ai.requirementId=null;ai.rocketRequirementId=null;}
       syncAssistantContext();
     }
     const shortTitle=r=>window.SixDSourceTargets?.shortLabel({label:r.title,target_id:'requirement:'+r.id})||r.title;
-    $('#sd-rocket-ai-context').innerHTML='<div class="sd-assistant-scope-row"><label class="sd-field" for="sd-rocket-requirement">Discuss check<select id="sd-rocket-requirement" class="sd-input">'+requirements.map(r=>'<option value="'+esc(r.id)+'"'+(r.id===ai.requirementId?' selected':'')+'>'+esc(shortTitle(r))+'</option>').join('')+'</select></label>'+modelChoiceMarkup()+'</div>';
-    const context=requirement?'Selected check: '+requirement.title+' ('+requirement.id+'). The saved finding stays authoritative.':'Choose a saved project or engineering check.';
+    $('#sd-rocket-ai-context').innerHTML='<div class="sd-assistant-scope-row"><label class="sd-field" for="sd-rocket-requirement">Discuss check<select id="sd-rocket-requirement" class="sd-input"><option value=""'+(!ai.requirementId?' selected':'')+'>Choose an engineering check…</option>'+requirements.map(r=>'<option value="'+esc(r.id)+'"'+(r.id===ai.requirementId?' selected':'')+'>'+esc(shortTitle(r))+'</option>').join('')+'</select></label>'+modelChoiceMarkup()+'</div>';
+    const context=requirement?'Selected check: '+requirement.title+' ('+requirement.id+'). The saved finding stays authoritative.':'Choose an engineering check to discuss with Nemotron.';
     $('#sd-rocket-ai-body').innerHTML='<section id="sd-ai-context-summary" class="sd-assistant-context-summary" aria-label="Selected saved evidence"></section><div class="sd-conversation-toolbar"><span id="sd-ai-thread-note" class="sd-small sd-muted"></span><button type="button" class="sd-mini-action" data-action="ai-new-conversation">New conversation</button><button type="button" class="sd-mini-action" data-action="ai-refresh">Refresh</button></div><div id="sd-ai-transcript"></div><section class="sd-assistant-compose sd-conversation-compose" aria-label="Ask about saved evidence"><label class="sd-field" for="sd-ai-question"><span class="sr-only">Your question</span><textarea id="sd-ai-question" class="sd-input sd-ai-question" rows="2" maxlength="2000" spellcheck="true" lang="en" autocorrect="off" autocapitalize="sentences" placeholder="Ask anything about this saved design…">'+esc(ai.question)+'</textarea></label><p class="sd-small sd-muted sd-conversation-key-hint">Enter to send · Shift + Enter for a new line</p><div id="sd-ai-attachments"></div><div class="sd-assistant-suggestions" aria-label="Draft a question"><button type="button" class="sd-mini-action" data-action="ai-simple-question">Explain simply</button><button type="button" class="sd-mini-action" data-action="ai-next-question">What next?</button><button type="button" class="sd-mini-action" data-action="ai-project-question">What changed?</button></div><p id="sd-ai-blocked" class="sd-notice" hidden></p><div class="sd-assistant-send-row"><span id="sd-ai-presence" class="sd-small"></span><span id="sd-ai-question-count" class="sd-small sd-muted"></span><button type="button" id="sd-ai-start" class="sd-button sd-primary" data-action="ai-start">Ask Nemotron</button></div><p class="sd-assistant-consent sd-small sd-muted">Your question, image notes and saved evidence go to Nebius. Images stay local.</p></section><div class="sd-chat-extra"><details id="sd-ai-advanced" class="sd-ai-advanced"><summary>Context, sources and settings</summary><div id="sd-ai-status">'+aiStatusMarkup()+'</div><div class="sd-ai-scope"><p>'+esc(context)+'</p><p class="sd-small sd-muted">'+esc(project().name)+' · R'+state.data.revision+'</p></div><p class="sd-small sd-ai-consent">The selected model <span id="sd-ai-consent-model">'+esc(providerModelLabel(selectedAIModel()?.model||ai.status?.model))+'</span> receives scoped saved inputs, findings, model definitions and pinned reference excerpts. A follow-up also includes bounded prior conversation text from this same evidence context. Opening or choosing makes no request.</p><p class="sd-small">Spelling suggestions use your browser settings. Right-click an underlined word to choose a correction; 6D never rewrites your question automatically.</p><div class="sd-action-row"><button type="button" class="sd-button" data-action="ai-source-question">Draft a reference question</button><button type="button" class="sd-button" data-action="sources">Open saved references</button><button type="button" class="sd-mini-action" data-action="ai-settings">Connection settings</button></div></details><details id="sd-ai-history-disclosure" class="sd-ai-history-disclosure"><summary>Saved conversations</summary><div id="sd-ai-history" class="sd-ai-history"></div></details></div>';
     const capturedContext=ai.context,disclosure=$('#sd-ai-history-disclosure');
     rocketUI.historyOpen??=new Map();disclosure.open=rocketUI.historyOpen.get(capturedContext)||false;
@@ -2165,7 +2164,7 @@
     if(state.busy)return;
     const el=event.target;
     if(el.id==='sd-ai-scope'){if(['project','requirement'].includes(el.value))openRocket({scope:el.value,preserveQuestion:true});return;}
-    if(el.id==='sd-rocket-requirement'){if(req(el.value)){changeAssistantContext({scope:'requirement',requirementId:el.value},true);renderRocket(true);}return;}
+    if(el.id==='sd-rocket-requirement'){changeAssistantContext({scope:'requirement',requirementId:el.value||null},true);renderRocket(true);return;}
     if(el.id==='sd-ai-model'){
       if(ai.starting||ai.status?.investigation_active||ai.records.some(investigationActive)){updateModelChoiceControls();return;}
       if(!el.value||modelChoices().some(row=>row.id===el.value)){ai.modelChoice=el.value||null;rocketUI.modelSelections.set(ai.context,ai.modelChoice);const status=$('#sd-ai-status');if(status)status.innerHTML=aiStatusMarkup();updateAiControls();}
