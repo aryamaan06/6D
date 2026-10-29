@@ -318,4 +318,30 @@ class HostedHTTPTests(unittest.TestCase):
             for connection in connections:connection.close()
 
 
+    def test_open_access_automatically_serves_workspace_and_reuses_session(self):
+        self.stop(); self.config = replace(self.config, open_access=True); self.start()
+        # Initial visitor without cookie lands directly on workspace.html
+        status, page, headers = self.request('/')
+        self.assertEqual(status, 200)
+        self.assertIn(b'/workspace.js', page)
+        self.assertIn('Set-Cookie', headers)
+        cookie = headers['Set-Cookie']
+        self.assertTrue(cookie.startswith('__Host-sixd_session='))
+        # Status confirms open_access and authenticated
+        code, value, _ = self.request('/api/hosted/status', cookie=cookie)
+        self.assertEqual(code, 200)
+        self.assertTrue(value['authenticated'])
+        self.assertTrue(value['open_access'])
+        # Projects list is directly available
+        code, projects, _ = self.request('/api/projects', cookie=cookie)
+        self.assertEqual(code, 200)
+        self.assertEqual(len(projects['projects']), 1)
+        # Another visitor arriving with no cookie reuses the active demo session
+        status2, page2, headers2 = self.request('/')
+        self.assertEqual(status2, 200)
+        self.assertIn(b'/workspace.js', page2)
+        cookie2 = headers2.get('Set-Cookie')
+        self.assertEqual(cookie.split(';')[0], cookie2.split(';')[0])
+
+
 if __name__=='__main__':unittest.main()

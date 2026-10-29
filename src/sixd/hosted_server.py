@@ -48,10 +48,11 @@ class HostedConfig:
     public_origin: str
     access_code: str = field(repr=False)
     allow_loopback_http: bool = False
-    max_sessions: int = 20
+    open_access: bool = False
+    max_sessions: int = 100
     session_ttl_seconds: int = 86400
     get_limit: int = 600
-    post_limit: int = 12
+    post_limit: int = 60
     login_limit: int = 60
     max_connections: int = 32
     max_state_bytes: int = 200 * 1024 * 1024
@@ -74,8 +75,8 @@ class HostedConfig:
         if (not isinstance(self.access_code, str) or not 32 <= len(self.access_code) <= 256
                 or any(not 33 <= ord(c) <= 126 for c in self.access_code)):
             raise ValueError('Configure a private invitation code of 32–256 printable characters.')
-        if type(self.allow_loopback_http) is not bool:
-            raise ValueError('The loopback test switch must be boolean.')
+        if type(self.allow_loopback_http) is not bool or type(self.open_access) is not bool:
+            raise ValueError('The test switches must be boolean.')
         for name, lower, upper in (('max_sessions', 1, 100), ('session_ttl_seconds', 60, 86400),
                 ('get_limit', 10, 10000), ('post_limit', 1, 1000), ('login_limit', 1, 100),
                 ('max_connections', 4, 128),
@@ -173,6 +174,44 @@ class HostedManager:
             raise
         with self._db() as db:
             db.execute("UPDATE sessions SET state='active' WHERE id=?", (identity,))
+        return token
+
+    def ensure_open_session(self):
+        now = self.clock()
+        token_file = self.root / 'open_token.txt'
+        token = getattr(self, '_public_token', None)
+        if not token and token_file.is_file():
+            try:
+                candidate = token_file.read_text(encoding='ascii').strip()
+                if len(candidate) == 64:
+                    token = candidate
+                    self._public_token = candidate
+            except OSError:
+                pass
+        if token:
+            with self._lock, self._db() as db:
+                h = sha256(token.encode('ascii')).hexdigest()
+                row = db.execute("SELECT id FROM sessions WHERE token_hash=? AND state='active' AND expires>?", (h, now)).fetchone()
+                if row is not None:
+                    return token
+        # Provision a persistent open demo session
+        with self._lock, self._db() as db:
+            identity, token, now = secrets.token_hex(16), secrets.token_hex(32), self.clock()
+            db.execute('INSERT INTO sessions VALUES (?,?,?,?,?)',
+                (identity, sha256(token.encode('ascii')).hexdigest(), now, now + self.config.session_ttl_seconds, 'provisioning'))
+        try:
+            self._runtime(identity, seed=True)
+        except Exception:
+            with self._db() as db:
+                db.execute("UPDATE sessions SET state='failed' WHERE id=?", (identity,))
+            raise
+        with self._db() as db:
+            db.execute("UPDATE sessions SET state='active' WHERE id=?", (identity,))
+        self._public_token = token
+        try:
+            token_file.write_text(token, encoding='ascii')
+        except OSError:
+            pass
         return token
 
     def session(self, token):
@@ -315,6 +354,7 @@ class HostedHandler(WorkspaceHandler):
     def _status(self, session):
         c = self._hosted.config
         value = {'hosted': True, 'mode': 'hosted_judge', 'authenticated': session is not None,
+                 'open_access': c.open_access,
                  'admin_controls': False, 'external_research_enabled': False, 'metrics_upload_enabled': False,
                  'live_ai_enabled': False, 'inference_available': False,
                  'limits': {'max_sessions': c.max_sessions, 'get_requests_per_minute': c.get_limit,
@@ -338,6 +378,11 @@ class HostedHandler(WorkspaceHandler):
         route, _ = self._query()
         manager = self._hosted.manager
         session = manager.session(self._cookie())
+        if session is None and self._hosted.config.open_access:
+            token = manager.ensure_open_session()
+            if token is not None:
+                self._set_session(token)
+                session = manager.session(token)
         if method == 'GET' and route == '/health':
             status = build_status()
             self._reply(200, {'service': 'sixd-hosted-judge', 'mode': 'hosted_judge',

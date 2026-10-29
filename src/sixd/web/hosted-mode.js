@@ -45,30 +45,35 @@
     notice = document.createElement('p');
     notice.className = 'sixd-hosted-notice';
     notice.setAttribute('role', 'status');
-    notice.textContent = 'Isolated review workspace · ' + (value.live_ai_enabled === true ? 'AI runs only when explicitly requested, within server limits.' : 'Live AI is disabled for this deployment. Engineering calculations run locally on the hosted server.');
+    notice.textContent = (value.open_access === true ? 'Sixth Dimension · 6D Space Mission Assurance' : 'Isolated review workspace') + ' · ' + (value.live_ai_enabled === true ? 'NVIDIA Nemotron 3 AI active.' : 'Engineering calculations run locally on the hosted server.');
     const detail = document.createElement('p');
     detail.className = 'sixd-hosted-detail';
-    detail.textContent = 'Constructed/public data only. Provider keys and administrative actions are managed by the demo owner.' + (value.external_research_enabled === true ? ' Reference search via Tavily and Nemotron AI are available.' : ' External searches and metrics uploads are unavailable here.');
-    if (typeof value.expires_at === 'string' && Number.isFinite(Date.parse(value.expires_at))) detail.textContent += ' Session expires ' + new Date(value.expires_at).toLocaleString() + '.';
+    detail.textContent = 'Constructed/public data only. ' + (value.external_research_enabled === true ? 'Reference search via Tavily and Nemotron AI are available.' : 'Provider keys and administrative actions are managed by the demo owner.');
+    if (value.open_access !== true && typeof value.expires_at === 'string' && Number.isFinite(Date.parse(value.expires_at))) detail.textContent += ' Session expires ' + new Date(value.expires_at).toLocaleString() + '.';
     const copy = document.createElement('div');copy.append(notice, detail);
-    if (value.live_ai_enabled === true) {
+    if (value.live_ai_enabled === true && value.open_access !== true) {
       const budgetNote = document.createElement('p');budgetNote.className='sixd-hosted-detail';
       budgetNote.textContent=value.inference_available===false?'AI usage is currently paused by the workspace limits.':'AI usage is managed by the workspace owner.';
       copy.append(budgetNote);
     }
-    logout = document.createElement('button');
-    logout.type = 'button';logout.className = 'sixd-hosted-logout';logout.textContent = 'Sign out';
-    logout.addEventListener('click', async () => {
-      if (ended) {location.replace('/');return;}
-      logout.disabled = true;
-      try {
-        const response = await fetch('/api/hosted/logout', {method:'POST',credentials:'same-origin',redirect:'error',headers:{'Content-Type':'application/json','Accept':'application/json'},body:'{}'});
-        if (response.ok || response.status === 401) {location.replace('/');return;}
-        notice.textContent = response.status === 409 ? 'Wait for the active investigation to finish before signing out.' : 'Sign-out could not be confirmed. Refresh and try again.';
-      } catch {notice.textContent = 'Sign-out could not be confirmed. Refresh and try again.';}
-      finally {logout.disabled = false;}
-    });
-    banner.append(copy, logout);document.body.prepend(banner);
+    if (value.open_access !== true) {
+      logout = document.createElement('button');
+      logout.type = 'button';logout.className = 'sixd-hosted-logout';logout.textContent = 'Sign out';
+      logout.addEventListener('click', async () => {
+        if (ended) {location.replace('/');return;}
+        logout.disabled = true;
+        try {
+          const response = await fetch('/api/hosted/logout', {method:'POST',credentials:'same-origin',redirect:'error',headers:{'Content-Type':'application/json','Accept':'application/json'},body:'{}'});
+          if (response.ok || response.status === 401) {location.replace('/');return;}
+          notice.textContent = response.status === 409 ? 'Wait for the active investigation to finish before signing out.' : 'Sign-out could not be confirmed. Refresh and try again.';
+        } catch {notice.textContent = 'Sign-out could not be confirmed. Refresh and try again.';}
+        finally {logout.disabled = false;}
+      });
+      banner.append(copy, logout);
+    } else {
+      banner.append(copy);
+    }
+    document.body.prepend(banner);
     document.addEventListener('click', event => {
       const target = event.target instanceof Element ? event.target.closest(restricted) : null;
       if (target) {event.preventDefault();event.stopImmediatePropagation();}
