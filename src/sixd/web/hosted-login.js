@@ -1,31 +1,28 @@
-/* Invitation login only. Credentials never enter URLs or browser storage. */
+/* One-click public workspace launcher. */
 (() => {
   'use strict';
-  const form = document.querySelector('#hosted-login');
-  const input = document.querySelector('#hosted-access-code');
   const button = document.querySelector('#hosted-open');
   const status = document.querySelector('#hosted-login-status');
   const error = document.querySelector('#hosted-login-error');
-  if (!form || !input || !button || !status || !error) return;
+  if (!button || !status || !error) return;
   let busy = false;
-  form.addEventListener('submit', async event => {
-    event.preventDefault();
-    if (busy || !form.reportValidity()) return;
-    const accessCode = input.value;
-    input.value = '';
+  button.addEventListener('click', async () => {
+    if (busy) return;
     busy = true;
     button.disabled = true;
     error.hidden = true;
     error.textContent = '';
-    status.textContent = 'Opening your isolated review workspace…';
+    status.textContent = 'Launching your review workspace…';
     try {
       const response = await fetch('/api/hosted/login', {
         method: 'POST', credentials: 'same-origin', redirect: 'error',
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
-        body: JSON.stringify({access_code: accessCode})
+        body: JSON.stringify({})
       });
       if (!response.ok) {
-        error.textContent = response.status === 429 ? 'Too many attempts. Wait a little before trying again.' : response.status === 503 ? 'Review access is temporarily unavailable. Contact the demo owner.' : 'The invitation could not be accepted. Check the code or contact the demo owner.';
+        error.textContent = response.status === 429
+          ? 'Too many attempts. Wait a little before trying again.'
+          : 'Review access is temporarily unavailable. Refresh and try again.';
         error.hidden = false;
         status.textContent = '';
         return;
@@ -38,8 +35,6 @@
     } finally {
       busy = false;
       button.disabled = false;
-      input.value = '';
-      if (!error.hidden) input.focus();
     }
   });
 })();

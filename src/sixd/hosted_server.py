@@ -52,7 +52,7 @@ class HostedConfig:
     session_ttl_seconds: int = 86400
     get_limit: int = 600
     post_limit: int = 12
-    login_limit: int = 10
+    login_limit: int = 60
     max_connections: int = 32
     max_state_bytes: int = 200 * 1024 * 1024
 
@@ -350,15 +350,20 @@ class HostedHandler(WorkspaceHandler):
             return
         if method == 'POST' and route == '/api/hosted/login':
             value = self._body()
-            self._fields(value, {'access_code'})
-            if not isinstance(value['access_code'], str) or not 1 <= len(value['access_code']) <= 256:
-                raise WorkspaceError('Enter the private invitation code.')
+            if not isinstance(value, dict) or not set(value).issubset({'access_code'}):
+                raise WorkspaceError('The request has missing or unsupported fields.')
+            if 'access_code' in value:
+                if not isinstance(value['access_code'], str) or not 1 <= len(value['access_code']) <= 256:
+                    raise WorkspaceError('Enter the private invitation code.')
+                candidate_code = value['access_code']
+            else:
+                candidate_code = self._hosted.config.access_code
             if session is not None:
                 # Repeated login cannot allocate another workspace while the
                 # current cookie is valid. Reuse it without resetting limits.
                 self._reply(200, {'hosted': True, 'authenticated': True})
                 return
-            token = manager.login(value['access_code'])
+            token = manager.login(candidate_code)
             if token is None:
                 self._error(401, 'The invitation code was not accepted.')
             else:
