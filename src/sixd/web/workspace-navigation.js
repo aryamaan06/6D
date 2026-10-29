@@ -1,7 +1,7 @@
 /* Browser locations contain navigation context only, never project data or credentials. */
 (() => {
   'use strict';
-  const PAGES = new Set(['home','projects','review-home','engineering','analysis','evidence','setup',
+  const PAGES = new Set(['projects','review-home','engineering','analysis','evidence','setup',
     'system','systems','chains','attitude','power','powered-flight','guided-ascent','staged-ascent',
     'simulation','scenarios','envelopes','simulation-imports','test-data','coverage','sources',
     'actions','comparison','changes','report','authoring','ai-quality','owner-settings']);
@@ -13,7 +13,6 @@
   const text = value => typeof value === 'string' && value.length > 0 && value.length <= 500 && !/[\u0000-\u001f\u007f]/.test(value);
   function normalize(value) {
     if (!value || !PAGES.has(value.page)) throw new Error('That 6D view is not available.');
-    if (value.page === 'home') return {page:'home'};
     if (value.page === 'projects') return {page:'projects'};
     if (!text(value.projectId) || !Number.isSafeInteger(value.revision) || value.revision < 1)
       throw new Error('The 6D location needs a valid project and saved revision.');
@@ -39,7 +38,6 @@
   }
   function format(value) {
     const route = normalize(value);
-    if (route.page === 'home') return '#/';
     if (route.page === 'projects') return '#/projects';
     const query = new URLSearchParams();
     if (route.system !== 'overview') query.set('system',route.system);
@@ -55,7 +53,6 @@
   }
   function parse(hash) {
     if (!hash || hash === '#') return null;
-    if (hash === '#/' || hash === '#/home' || hash === '#/home/') return {page:'home'};
     if (typeof hash !== 'string' || hash.length > 4096 || !hash.startsWith('#/projects')) throw new Error('This is not a recognised 6D location.');
     if (hash === '#/projects' || hash === '#/projects/') return {page:'projects'};
     const match = /^#\/projects\/([^/]+)\/r\/([1-9]\d*)\/([^/?]+)(?:\?(.*))?$/.exec(hash);

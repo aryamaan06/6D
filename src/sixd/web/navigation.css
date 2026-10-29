@@ -28,37 +28,6 @@
 #sixd-workspace.sd-navigation-hub #sd-view-content{padding:0;background:transparent;min-height:500px}
 #sixd-workspace.sd-navigation-hub #sd-view-content{padding:4px 26px 34px}
 #sixd-workspace.sd-navigation-hub #sd-review-guide{display:none}
-#sixd-workspace.sd-home-page .sd-sidebar,
-#sixd-workspace.sd-home-page .sd-breadcrumb,
-#sixd-workspace.sd-home-page .sd-heading,
-#sixd-workspace.sd-home-page .sd-toolbar,
-#sixd-workspace.sd-home-page .sd-inspector,
-#sixd-workspace.sd-home-page #sd-review-guide{display:none!important}
-#sixd-workspace.sd-home-page .sd-shell{grid-template-columns:minmax(0,1fr)!important}
-#sixd-workspace.sd-home-page #sd-view-content{padding:28px 48px 60px;max-width:1160px;margin:0 auto;width:100%}
-#sixd-workspace .sd-landing-home{display:flex;flex-direction:column;gap:32px}
-#sixd-workspace .sd-home-section{display:flex;flex-direction:column;gap:14px}
-#sixd-workspace .sd-home-section-header h3{font-size:20px;font-weight:700;letter-spacing:-.5px;color:var(--sd-ink);margin:0 0 6px}
-#sixd-workspace .sd-home-section-header p{font-size:13.5px;color:var(--sd-soft);margin:0}
-#sixd-workspace .sd-hero-secondary{font-weight:600}
-#sixd-workspace .sd-judge-guide{background:#ffffff;border:1px solid var(--sd-border);border-left:4px solid var(--sd-blue);border-radius:12px;padding:20px 24px;box-shadow:0 2px 10px #00000006}
-#sixd-workspace .sd-judge-guide h4{font-size:15px;font-weight:700;color:var(--sd-ink);margin:0 0 10px}
-#sixd-workspace .sd-judge-guide ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px}
-#sixd-workspace .sd-judge-guide li{font-size:13px;line-height:1.6;color:var(--sd-ink)}
-#sixd-workspace .sd-judge-guide em{font-style:normal;font-weight:600;color:var(--sd-blue)}
-#sixd-workspace .sd-hero-banner{background:linear-gradient(180deg,#ffffff 0%,#f5f6f9 100%);border:1px solid var(--sd-border);border-radius:18px;padding:32px 36px 30px;margin:8px 0 32px;box-shadow:0 4px 20px #00000008}
-#sixd-workspace .sd-hero-badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--sd-green);background:var(--sd-green-soft);padding:5px 12px;border-radius:20px;margin-bottom:16px}
-#sixd-workspace .sd-hero-title{font-size:34px;font-weight:750;letter-spacing:-1.2px;line-height:1.15;color:var(--sd-ink);margin:0 0 8px}
-#sixd-workspace .sd-hero-sub{color:var(--sd-blue);font-weight:700}
-#sixd-workspace .sd-hero-tagline{font-size:16px;font-weight:600;color:var(--sd-ink);line-height:1.4;margin:0 0 10px}
-#sixd-workspace .sd-hero-description{font-size:13.5px;color:var(--sd-soft);line-height:1.65;max-width:760px;margin:0 0 22px}
-#sixd-workspace .sd-hero-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:26px}
-#sixd-workspace .sd-hero-cta{font-size:14px;font-weight:600;padding:10px 18px;gap:8px;box-shadow:0 2px 8px #345bd630}
-#sixd-workspace .sd-hero-pillars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding-top:22px;border-top:1px solid #0000000a}
-#sixd-workspace .sd-pillar-card{background:rgba(255,255,255,0.7);border:1px solid var(--sd-border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px}
-#sixd-workspace .sd-pillar-title{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:650;color:var(--sd-ink)}
-#sixd-workspace .sd-pillar-dot{width:7px;height:7px;border-radius:50%;background:var(--sd-blue);display:inline-block}
-#sixd-workspace .sd-pillar-card p{font-size:12px;color:var(--sd-soft);line-height:1.55;margin:0}
 #sixd-workspace .sd-home-intro{max-width:620px;padding:4px 0 26px}
 #sixd-workspace .sd-home-intro h2{font-size:28px;font-weight:600;line-height:1.2;margin:10px 0}
 #sixd-workspace .sd-home-intro p,#sixd-workspace .sd-area-intro{color:var(--sd-soft);font-size:14px;line-height:1.7;max-width:660px}
@@ -92,7 +61,7 @@
 #sixd-workspace .sd-navigation-hint{display:block;color:var(--sd-soft);font-size:13px;line-height:1.6;padding:10px}
 @media(min-width:951px){#sixd-workspace:not(.sd-navigation-hub) .sd-shell{grid-template-columns:214px minmax(0,1fr) 282px}#sixd-workspace.sd-simulation-open .sd-shell{grid-template-columns:214px minmax(0,1fr)}}
 @media(max-width:950px){#sixd-workspace.sd-navigation-hub .sd-shell{grid-template-columns:190px minmax(0,1fr)}#sixd-workspace .sd-destination-grid,#sixd-workspace .sd-project-grid{grid-template-columns:1fr}}
-@media(max-width:650px){#sixd-workspace.sd-navigation-hub .sd-shell{display:block}#sixd-workspace.sd-navigation-hub #sd-view-content{padding:4px 16px 26px}#sixd-workspace .sd-top{padding:12px}#sixd-workspace .sd-preview-tag,#sixd-workspace .sd-separator,#sixd-workspace #sd-ai-header-status{display:none}#sixd-workspace .sd-main{padding:0 0 24px}#sixd-workspace .sd-top-right{gap:6px}#sixd-workspace .sd-top-right .sd-button{padding:7px 9px;font-size:13px}#sixd-workspace .sd-project-card,#sixd-workspace .sd-destination{padding:18px}#sixd-workspace .sd-hero-banner{padding:20px 16px;margin:4px 0 24px}#sixd-workspace .sd-hero-title{font-size:26px}#sixd-workspace .sd-hero-tagline{font-size:14px}#sixd-workspace .sd-hero-pillars{grid-template-columns:1fr;gap:10px}#sixd-workspace .sd-home-intro h2{font-size:24px}#sixd-workspace .sd-location-item{display:none}#sixd-workspace .sd-sidebar{display:none}#sixd-workspace.sd-tree-open .sd-sidebar{display:flex}}
+@media(max-width:650px){#sixd-workspace.sd-navigation-hub .sd-shell{display:block}#sixd-workspace.sd-navigation-hub #sd-view-content{padding:4px 16px 26px}#sixd-workspace .sd-top{padding:12px}#sixd-workspace .sd-preview-tag,#sixd-workspace .sd-separator,#sixd-workspace #sd-ai-header-status{display:none}#sixd-workspace .sd-main{padding:0 0 24px}#sixd-workspace .sd-top-right{gap:6px}#sixd-workspace .sd-top-right .sd-button{padding:7px 9px;font-size:13px}#sixd-workspace .sd-project-card,#sixd-workspace .sd-destination{padding:18px}#sixd-workspace .sd-home-intro h2{font-size:24px}#sixd-workspace .sd-location-item{display:none}#sixd-workspace .sd-sidebar{display:none}#sixd-workspace.sd-tree-open .sd-sidebar{display:flex}}
 @media print{#sixd-workspace .sd-primary-nav,#sixd-workspace .sd-section-menu,#sixd-workspace .sd-breadcrumb{display:none}}
 
 /* Focus layout keeps the same mounted project, form editors and navigation history. */

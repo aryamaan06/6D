@@ -33,7 +33,7 @@
       ['new-project','New project','Create an empty engineering project.'],
       ['owner-settings','Owner settings','Manage connections, usage and verification tools.'] ]}
   ];
-  const hubs = new Set(['home','projects','engineering','analysis','evidence','setup','owner-settings']);
+  const hubs = new Set(['projects','engineering','analysis','evidence','setup','owner-settings']);
   const toolTypes = [
     ['power','power_energy_budget','power_budget'],
     ['attitude','attitude_control','attitude_response'],
@@ -81,12 +81,11 @@
   }
   const toolBadge = (status,compact=false) => status?'<span class="sd-tool-status sd-tool-'+esc(status.state)+'" title="'+esc(status.label+'. '+status.detail)+'">'+esc(compact?status.navLabel:status.label)+'</span>':'';
   function areaFor(page) {
-    if (page === 'projects' || page === 'home') return null;
+    if (page === 'projects') return null;
     if(page==='ai-quality')return areas.find(a=>a.id==='setup');
     return areas.find(a => a.id === page || a.items.some(i => (i[3] || i[0]) === page)) || areas[0];
   }
   function labelFor(page) {
-    if (page === 'home') return 'Home';
     if (page === 'projects') return 'Projects';
     if(page==='ai-quality')return 'Owner AI quality & tools';
     const area = areaFor(page);
@@ -133,43 +132,6 @@
     return '<button type="button" class="sd-project-card" data-open-project="'+esc(id)+'" title="Project ID: '+esc(id)+'" aria-label="'+esc(project.display_name+' · Revision R'+project.revision+' · Project ID: '+id)+'"><span class="sd-label">Saved project'+(project.project_id===currentId?' · Current':'')+'</span><strong>'+esc(project.display_name)+'</strong><span class="sd-project-id">ID '+esc(project.identity_label)+'</span>'+(project.project_hint?'<span class="sd-project-hint">'+esc(project.project_hint)+'</span>':'')+'<span class="sd-project-meta">Revision R'+esc(project.revision)+(created?'<span class="sd-project-created">'+esc(created)+'</span>':'')+'</span><span class="sd-project-open">Open project <i data-lucide="arrow-right" aria-hidden="true"></i></span></button>';
   }
   function hub(page,projects,currentId,tools=null) {
-    if (page === 'home') {
-      return '<section class="sd-landing-home" aria-label="Sixth Dimension Space Mission Assurance">'
-        + '<div class="sd-hero-banner">'
-        + '<div class="sd-hero-badge"><span class="sd-dot sd-green"></span>Nebius AI Hackathon 2026 · NVIDIA Nemotron 3</div>'
-        + '<h1 class="sd-hero-title">Sixth Dimension <span class="sd-hero-sub">· 6D</span></h1>'
-        + '<p class="sd-hero-tagline">Deterministic Space Mission Assurance &amp; AI Engineering Copilot</p>'
-        + '<p class="sd-hero-description">Evaluate mission-critical rocket ascent trajectories, variable-thrust serial staging, aerodynamic constraints, and numerical proofs before hardware commitment. Deterministic physics paired with NVIDIA Nemotron via Nebius Token Factory.</p>'
-        + '<div class="sd-hero-actions">'
-        + '<button type="button" class="sd-button sd-primary sd-hero-cta" data-action="rocket-reference"><i data-lucide="play" aria-hidden="true"></i> Launch Rocket Demonstration</button>'
-        + '<button type="button" class="sd-button sd-hero-secondary" data-action="projects"><i data-lucide="arrow-right" aria-hidden="true"></i> Browse Saved Projects</button>'
-        + '<button type="button" class="sd-button" data-action="new-project"><i data-lucide="plus" aria-hidden="true"></i> Create New Project</button>'
-        + '</div>'
-        + '<div class="sd-hero-pillars">'
-        + '<div class="sd-pillar-card"><div class="sd-pillar-title"><span class="sd-pillar-dot"></span>Deterministic Physics</div><p>10 validated analytical models for planar ascent, staging, and mass dynamics. Numerical proofs remain mathematically evaluated.</p></div>'
-        + '<div class="sd-pillar-card"><div class="sd-pillar-title"><span class="sd-pillar-dot"></span>NVIDIA Nemotron 3</div><p>Intelligent investigation planning, revision rationale, and requirements traceability powered by Nebius Token Factory.</p></div>'
-        + '<div class="sd-pillar-card"><div class="sd-pillar-title"><span class="sd-pillar-dot"></span>Tamper-Evident Receipts</div><p>Cryptographic SHA-256 digests, strict audit ledgers, and immutable engineering receipts for every run.</p></div>'
-        + '</div>'
-        + '</div>'
-        + '<div class="sd-home-section">'
-        + '<div class="sd-home-section-header"><h3>Demonstrated Space Systems</h3><p>Explore tested reference architectures or start your own design review.</p></div>'
-        + '<div class="sd-destination-grid">'
-        + button('rocket-reference','Try the rocket example','Learn how a design change affects recorded conclusions.')
-        + button('projects','View all saved projects','Access existing engineering workspaces, system hierarchy, and revision history.')
-        + button('new-project','Create a project','Start empty and define your own supported checks.')
-        + button('import','Import or use a template','Bring a supported file or choose another reference example.')
-        + '</div>'
-        + '</div>'
-        + '<div class="sd-judge-guide">'
-        + '<h4>Quick Review Guide for Hackathon Judges</h4>'
-        + '<ol>'
-        + '<li><strong>Launch the Demo:</strong> Click <em>Launch Rocket Demonstration</em> to load the staged rocket with planar flight and thrust profiles.</li>'
-        + '<li><strong>Inspect Math:</strong> Open the <em>Canvas</em>, <em>Table</em>, or <em>Reader</em> to examine trajectory plots, stage separation, and mass curves.</li>'
-        + '<li><strong>Ask Nemotron:</strong> Click the <strong>Ask 6D</strong> rocket icon at any time, select <strong>Nemotron 3 Super</strong>, and ask for technical investigation of requirements.</li>'
-        + '</ol>'
-        + '</div>'
-        + '</section>';
-    }
     if (page === 'projects') return '<section class="sd-project-home" aria-label="Your projects"><div class="sd-home-intro"><span class="sd-label">Your workspace</span><h2>Choose a project to begin.</h2><p>Open a saved design, then choose the engineering or review task you want to work on.</p></div><div class="sd-project-grid">'+projectChoices(projects).map(project=>projectCard(project,currentId)).join('')+'</div><section class="sd-home-start"><h3>Start something new</h3><div class="sd-destination-grid">'+button('rocket-reference','Try the rocket example','Learn how a design change affects recorded conclusions.')+button('new-project','Create a project','Start empty and define your own supported checks.')+button('import','Import or use a template','Bring a supported file or choose another reference example.')+'</div></section></section>';
     const area = areaFor(page);
     tools=scopedTools(tools,currentId);
@@ -182,7 +144,6 @@
     tools=scopedTools(tools,project.project_id,revision);
     root.classList.toggle('sd-navigation-hub',isHub);
     root.classList.toggle('sd-projects-home',page==='projects');
-    root.classList.toggle('sd-home-page',page==='home');
     document.querySelector('#sd-primary-nav').innerHTML=areas.map(a=>'<button type="button" class="sd-area-link" data-action="'+a.id+'"'+(a===area?' aria-current="page"':'')+'><i data-lucide="'+a.icon+'" aria-hidden="true"></i>'+esc(a.label)+'</button>').join('');
     const menu=document.querySelector('#sd-section-menu');
     menu.hidden=!area||!area.items.length||isHub;
@@ -205,7 +166,7 @@
       document.querySelector('#sd-page-description').textContent=page==='projects'?'Your saved projects and a clear place to start.':area.description;
     }
     if(page!=='system') document.querySelector('#sd-page-title').dataset.location=labelFor(page)+' · R'+revision;
-    document.title=page==='home'?'Sixth Dimension · 6D':page==='projects'?'Projects | 6D':labelFor(page)+' · '+project.name+' | 6D';
+    document.title=page==='projects'?'Projects | 6D':labelFor(page)+' · '+project.name+' | 6D';
   }
   window.SixDWorkspaceShell={areas,hubs,areaFor,labelFor,toolSummary,projectChoices,hub,renderChrome};
 })();
