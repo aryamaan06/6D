@@ -26,7 +26,14 @@ def configured_server(environment, *, loopback_preview=False):
             raise ValueError('Choose a valid port and loopback bind for local preview.')
         config = HostedConfig(root, origin, code, allow_loopback_http=loopback_preview)
         tavily_key_file = environment.get('SIXD_TAVILY_API_KEY_FILE')
-        tavily_key = read_private_file(tavily_key_file, 4096).decode('utf-8').strip() if tavily_key_file else None
+        tavily_key = None
+        if tavily_key_file:
+            try:
+                p = Path(tavily_key_file)
+                if p.is_file():
+                    tavily_key = read_private_file(p, 4096).decode('utf-8').strip()
+            except (ValueError, OSError):
+                tavily_key = None
         tavily_cap = int(environment.get('SIXD_TAVILY_CREDIT_LIMIT', '4125'))
         if live == '1':
             if environment.get('SIXD_CUMULATIVE_LEDGER_HANDOFF_CONFIRMED') != '1':
