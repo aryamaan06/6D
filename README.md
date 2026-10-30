@@ -1,10 +1,21 @@
-# 6D
+# 6D: Autonomous Mission Assurance for Space Systems
+
+> **Built for the Nebius x NVIDIA Global AI Hackathon — Best Apps & Agents Track**  
+> **[Devpost Submission](https://devpost.com/software/all-in-zoi8v0) · [Live Demo](https://sixthdimension.centralindia.cloudapp.azure.com) · [YouTube Walkthrough](https://youtu.be/XVonImFYLSc)**
 
 **Change a space-system design. See which engineering conclusions need rechecking.**
 
 An engineering calculation can be correct and still be out of date after a design change. 6D connects requirements, explicit inputs, bounded calculations and saved evidence. It traces affected checks, reruns those checks, reuses eligible unchanged results and retains the reason behind each conclusion.
 
 NVIDIA Nemotron through **Nebius Token Factory** investigates the saved evidence and explains next steps. The application keeps calculated values and requirement outcomes authoritative.
+
+```text
+User Parameter Edit (Interactive UI) 
+  ➔ Deterministic Python Solvers (Calculates Physical Ground Truth) 
+  ➔ Dependency Tracing & Targeted Recalculation
+  ➔ Nebius Token Factory (NVIDIA Nemotron Reasoning + Tavily Standards) 
+  ➔ Audit-Ready Immutable Evidence Ledger (SHA-256 Proof Receipts)
+```
 
 **[Current capabilities and known gaps](docs/CURRENT_STATE.md) · [Evidence index](docs/VALIDATION_INDEX.md) · [Repository guide](docs/REPOSITORY_GUIDE.md) · [Nebius & NVIDIA Tool Feedback](docs/NEBIUS_NVIDIA_FEEDBACK.md)**
 
