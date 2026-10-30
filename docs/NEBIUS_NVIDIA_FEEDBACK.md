@@ -20,7 +20,7 @@
 * **Inference Speed & Reliability:** Nebius Token Factory delivered consistent, low latency. In our live qualification runs, multi-turn investigations across four complex space engineering cases completed 16 request reservations in ~31 seconds total observed latency with zero dropped connections.
 * **Adherence to Grounded Numerical Evidence:** When provided with structured JSON receipts of calculated rocket telemetry (e.g., engine cutoff altitude, maximum dynamic pressure, structural margins), Nemotron Super and Ultra accurately cited authoritative numbers (e.g., `6,126.146 m compared with >= 5,000 m`) and explained why a check changed from Met to Unmet without altering the solver values.
 * **Standardized API Contract:** The OpenAI-compatible endpoint design allowed us to build a pure Python standard-library transport (`urllib.request`) with zero third-party dependencies, keeping our deployment completely lightweight and reproducible.
-* **Defense / Air-Gapped Viability:** Because the Nemotron family consists of open-weight models, our architecture validated on Nebius can also be deployed on-premise using Hugging Face TGI or vLLM for ITAR/EAR-compliant defense space operations.
+* **Defense / Air-Gapped Viability:** Because the Nemotron family consists of open-weight models, our architecture validated on Nebius can also be deployed on-premise using vLLM for ITAR/EAR-compliant defense space operations.
 
 ---
 

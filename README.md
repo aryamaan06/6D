@@ -12,6 +12,10 @@ NVIDIA Nemotron through **Nebius Token Factory** investigates the saved evidence
 
 *Actual interface capture from an isolated constructed browser fixture. The displayed assistant answer is synthetic/offline, not a fresh Nemotron response or real mission data.*
 
+## Video demonstration
+
+**Watch the walkthrough demo on YouTube:** [https://youtu.be/XVonImFYLSc](https://youtu.be/XVonImFYLSc)
+
 ## Try the live demo
 
 **Live hosted application:** [https://sixthdimension.centralindia.cloudapp.azure.com](https://sixthdimension.centralindia.cloudapp.azure.com)  
@@ -19,7 +23,7 @@ NVIDIA Nemotron through **Nebius Token Factory** investigates the saved evidence
 
 1. Open the URL directly in your browser.
 2. Explore the **Constructed rocket review** with its 3D interactive vehicle canvas, mass properties, and 6 subsystem disciplines.
-3. Inspect the verified engineering criteria (8 Met, 0 Unmet, 1 Unassessed for Launch GNC).
+3. Inspect the verified engineering criteria (9 Met, 0 Unmet, 1 Unassessed for Launch GNC).
 4. Change a sourced input, preview its dependencies, save the revision and recalculate.
 5. Compare what changed, what ran again and what reused earlier evidence. Open the report for exact values, assumptions and exclusions.
 6. Click the **Ask 6D rocket icon** to question NVIDIA Nemotron about any engineering check or find supporting references through Tavily.
@@ -53,7 +57,7 @@ Engineering calculations work without a model connection. Live questions require
 
 | Tool | Job inside 6D |
 | --- | --- |
-| **NVIDIA Nemotron (Hugging Face / Nebius)** | Open-weight foundation models (`nvidia/Nemotron-3-Nano`, `Super`, `Ultra`) served via high-throughput Nebius Token Factory inference. Architecture supports on-premise air-gapped deployment via Hugging Face TGI / vLLM for defense aerospace ITAR compliance. Live bounded evidence-reading/recheck actions and explanations tied to a saved project/revision. |
+| **NVIDIA Nemotron (Nebius Token Factory)** | Open-weight foundation models (`nvidia/Nemotron-3-Nano`, `Super`, `Ultra`) served via high-throughput Nebius Token Factory inference. Architecture supports on-premise air-gapped deployment for defense aerospace ITAR compliance. Live bounded evidence-reading/recheck actions and explanations tied to a saved project/revision. |
 | **Tavily** | Explicit reference search. Results remain previews until a person reviews, saves and links a passage. Search does not validate a calculation. |
 | **LangSmith** | Optional, previewed and separately approved qualification metrics export. It does not calculate engineering results. |
 
