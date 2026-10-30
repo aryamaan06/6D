@@ -2217,10 +2217,20 @@
     let initial=null;
     try{initial=navigation.getInitial();}catch(error){showError(error);}
     await perform(async()=>{
+      state.page='projects';
       if(initial&&initial.page!=='projects'){
-        try{await load(initial.projectId,initial.revision);await restoreLocation(initial,true);}
-        catch(error){state.page='projects';await load(last||undefined);showError(error);}
-      }else{state.page='projects';try{await load(last||undefined);}catch(error){if(!last)throw error;await load();}}
+        try{await load(initial.projectId,initial.revision);await restoreLocation(initial,true);return;}
+        catch{}
+      }
+      if(last){
+        try{await load(last);return;}
+        catch{try{localStorage.removeItem('sixd.workspace.last-project');}catch{}}
+      }
+      try{await load();}
+      catch(error){
+        try{const p=await api('/api/projects');if(p?.projects?.[0]?.project_id){await load(p.projects[0].project_id);return;}}catch{}
+        throw error;
+      }
     });
     navigationStarting=false;
     if(state.data){navigation.start();renderLocation();icons();}
